@@ -109,7 +109,7 @@ def are_lines_collinear(
     val_list = []
     for combi in itertools.combinations(np.linspace(0, 3, 4, dtype=int), 3):
         val_list.append(are_points_collinear(p1=points[combi[0]], p2=points[combi[1]], p3=points[combi[2]], margin_error_angle=margin_error_angle))
-    print(are_parallel(line1=line1, line2=line2, margin_error_angle=margin_error_angle), val_list)
+    #print(are_parallel(line1=line1, line2=line2, margin_error_angle=margin_error_angle), val_list)
     if are_parallel(line1=line1, line2=line2, margin_error_angle=margin_error_angle) \
             and 1 in val_list:
         return True
