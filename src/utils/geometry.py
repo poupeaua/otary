@@ -4,6 +4,7 @@ This file helps with geometry elements
 
 import numpy as np
 import itertools
+import logging
 
 DEFAULT_MARGIN_ANGLE_ERROR = np.pi / 50
 
@@ -28,8 +29,7 @@ def compute_slope_angle(line: np.array) -> float:
 def are_parallel(
         line1: np.array, 
         line2: np.array, 
-        margin_error_angle: float=DEFAULT_MARGIN_ANGLE_ERROR,
-        is_display_error_angle_enabled: bool=False
+        margin_error_angle: float=DEFAULT_MARGIN_ANGLE_ERROR
     ) -> bool:
     """Check if two lines are parallel by calculating the slope of the two lines
     
@@ -50,8 +50,7 @@ def are_parallel(
     angle2 = compute_slope_angle(line=line2)
     
     angle_difference = np.mod(np.abs(angle1 - angle2), np.pi) 
-    if is_display_error_angle_enabled:
-        print("Angle difference:", angle_difference, "Margin:", margin_error_angle)
+    logging.debug("Angle difference:", angle_difference, "Margin:", margin_error_angle)
     if angle_difference < margin_error_angle or np.abs(angle_difference - np.pi) < margin_error_angle:
         return True
     else:
@@ -61,8 +60,7 @@ def are_points_collinear(
         p1: np.array, 
         p2: np.array, 
         p3: np.array, 
-        margin_error_angle: float=DEFAULT_MARGIN_ANGLE_ERROR,
-        is_display_error_angle_enabled: bool=False
+        margin_error_angle: float=DEFAULT_MARGIN_ANGLE_ERROR
     ) -> bool:
     """Verify whether three points on the plane are collinear or not.
     Method by angle or slope: For three points, slope of any pair of points must be same as other pair.
@@ -88,8 +86,7 @@ def are_points_collinear(
     return are_parallel(
         line1=line1, 
         line2=line2, 
-        margin_error_angle=margin_error_angle, 
-        is_display_error_angle_enabled=is_display_error_angle_enabled
+        margin_error_angle=margin_error_angle
     )
     
 def are_lines_collinear(
@@ -105,6 +102,7 @@ def are_lines_collinear(
     
     line1 = array([[339, 615], [564, 650]], dtype=int32)
     line2 = array([[340, 614], [611, 657]], dtype=int32)
+    are_lines_collinear(line1, line2)
     Angle difference: 0.9397169393235674 Margin: 0.06283185307179587
     False
     
@@ -130,9 +128,27 @@ def are_lines_collinear(
             p3=points[combi[2]], 
             margin_error_angle=margin_error_angle
         )
-    #print(are_parallel(line1=line1, line2=line2, margin_error_angle=margin_error_angle), val_list)
+    logging.debug(f"{are_parallel(line1, line2, margin_error_angle=margin_error_angle)}{val_arr}")
     if are_parallel(line1=line1, line2=line2, margin_error_angle=margin_error_angle) \
             and 1 in val_arr:
         return True
     else:
         return False
+    
+def assert_is_array_of_lines(lines: np.array):
+    """Check whether the array has the appropriate shape
+
+    Args:
+        lines (np.array): array of expected shape (n, 2, 2)
+
+
+    Returns:
+        bool: True if array of lines else raise error
+    """
+    if lines.shape[1:] != (2, 2):
+        raise RuntimeError(
+            f"The input array has not the expected array of lines shape (n, 2, 2).\
+            It has the following shape {lines.shape}."
+        )
+    else:
+        return True
