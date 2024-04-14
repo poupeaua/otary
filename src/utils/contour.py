@@ -16,6 +16,7 @@ class Contour:
         if reduce: # remove consecutive very close points
             self.__reduce()
         self.lines = Contour.points_to_lines(self.points)
+        self.lengths = np.linalg.norm(np.diff(self.lines, axis=1), axis=2)
         self.area = cv2.contourArea(self.points)
         self.perimeter = cv2.arcLength(self.points, True)
     
@@ -140,4 +141,3 @@ class Contour:
     def __reduce(self, min_dist_threshold: float=10):
         #TODO
         pass
- 
