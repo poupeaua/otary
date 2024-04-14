@@ -11,8 +11,10 @@ from src.utils.image import show_image_and_lines
 
 class Contour:
     
-    def __init__(self, points: np.ndarray) -> None:
+    def __init__(self, points: np.ndarray, reduce: bool=True) -> None:
         self.points = copy.deepcopy(points)
+        if reduce: # remove consecutive very close points
+            self.__reduce()
         self.lines = Contour.points_to_lines(self.points)
         self.area = cv2.contourArea(self.points)
         self.perimeter = cv2.arcLength(self.points, True)
@@ -40,7 +42,8 @@ class Contour:
         shifted_lines = np.roll(
             np.array(lines).reshape(nlines*2, 2), shift=1, axis=0).reshape(nlines, 2, 2)
         distances = np.linalg.norm(np.diff(shifted_lines, axis=1), axis=2)
-        if not np.any(distances): # all distances must be equal to 0
+        if np.any(distances): 
+            # a distance is different from 0
             bad_idxs = np.nonzero(distances > 0)
             raise RuntimeError(
                 f"Could not construct the contour from the given lines."
@@ -64,7 +67,7 @@ class Contour:
             lines (np.array): _description_
         """
         img = img.copy()
-        _lines = copy.deepcopy(lines)
+        _lines = copy.deepcopy(np.array(lines))
         construct_contour = []
         is_contour_found = False
         idx_line_closest_point = start_index
@@ -89,6 +92,7 @@ class Contour:
             
             if len(idx_closest_points) > 1: # more than one point close to the current point
                 #TODO
+                # maybe just take the closest may be more complicated than that
                 raise RuntimeError("More than one point close to the current point")
             elif len(idx_closest_points) == 0:
                 first_line = construct_contour[0]
@@ -98,6 +102,7 @@ class Contour:
                     first_geoline = Line(first_line[0], first_line[1])
                     intersect_point = np.array(cur_geoline.intersection(first_geoline)[0].evalf(n=7))
                     construct_contour[-1][1] = intersect_point
+                    construct_contour[0][0] = intersect_point
                     is_contour_found = True
                     break
                 else:
@@ -129,12 +134,10 @@ class Contour:
             
         contour_lines = np.array(construct_contour)
         show_image_and_lines(image=img, lines=contour_lines)
-        contour_points = contour_lines[:, 0]
-        return Contour(points=contour_points)
+        cnt = Contour.from_lines(contour_lines)
+        return cnt
     
-    def as_lines(self):
-        """Return contour as a array of successive points
-        """
+    def __reduce(self, min_dist_threshold: float=10):
         #TODO
         pass
  

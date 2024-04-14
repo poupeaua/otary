@@ -8,7 +8,22 @@ import logging
 
 DEFAULT_MARGIN_ANGLE_ERROR = np.pi / 50
 
-def compute_slope_angle(line: np.array) -> float:
+def slope(line: np.ndarray) -> float:
+    p1, p2 = line[0], line[1]
+    try:
+        return (p2[1] - p1[1]) / (p2[0] - p1[0])
+    except ZeroDivisionError:
+        return np.inf
+    
+def intercept(line: np.ndarray) -> float:
+    p1 = line[0]
+    slope = slope(line)
+    try:
+        return p1[1] - slope * p1[0]
+    except Exception:
+        return None
+
+def compute_slope_angle(line: np.ndarray) -> float:
     """Calculate the slope angle of a single line in the cartesian space
 
     Args:
@@ -19,16 +34,13 @@ def compute_slope_angle(line: np.array) -> float:
     """
     p1, p2 = line[0], line[1]
     try:
-        return np.arctan((p2[1] - p1[1]) / (p2[0] - p1[0] + 1e-6))
+        return np.arctan((p2[1] - p1[1]) / (p2[0] - p1[0] + 1e-9))
     except ZeroDivisionError:
-        if p2[1] - p1[1] > 0:
-            return np.pi / 2
-        else:
-            return -np.pi / 2
+        return np.pi / 2
 
 def are_parallel(
-        line1: np.array, 
-        line2: np.array, 
+        line1: np.ndarray, 
+        line2: np.ndarray, 
         margin_error_angle: float=DEFAULT_MARGIN_ANGLE_ERROR
     ) -> bool:
     """Check if two lines are parallel by calculating the slope of the two lines
@@ -57,9 +69,9 @@ def are_parallel(
         return False
 
 def are_points_collinear(
-        p1: np.array, 
-        p2: np.array, 
-        p3: np.array, 
+        p1: np.ndarray, 
+        p2: np.ndarray, 
+        p3: np.ndarray, 
         margin_error_angle: float=DEFAULT_MARGIN_ANGLE_ERROR
     ) -> bool:
     """Verify whether three points on the plane are collinear or not.
@@ -90,8 +102,8 @@ def are_points_collinear(
     )
     
 def are_lines_collinear(
-        line1: np.array,
-        line2: np.array,
+        line1: np.ndarray,
+        line2: np.ndarray,
         margin_error_angle: float=DEFAULT_MARGIN_ANGLE_ERROR
     ) -> bool:
     """Verify whether two lines on the plane are collinear or not.
@@ -135,7 +147,7 @@ def are_lines_collinear(
     else:
         return False
     
-def assert_is_array_of_lines(lines: np.array):
+def assert_is_array_of_lines(lines: np.ndarray):
     """Check whether the array has the appropriate shape
 
     Args:

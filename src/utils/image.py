@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-def show_image(image: np.array, title=None, conversion=cv2.COLOR_BGR2RGB):
+def show_image(image: np.ndarray, title=None, conversion=cv2.COLOR_BGR2RGB):
     # Converts from one colour space to the other. this is needed as RGB
     # is not the default colour space for OpenCV
     image = cv2.cvtColor(image, conversion)
@@ -25,9 +25,9 @@ def show_image(image: np.array, title=None, conversion=cv2.COLOR_BGR2RGB):
     plt.show()
     
 def show_image_and_lines(
-        image: np.array, 
-        lines: np.array,
-        colors_lines: np.array=None,
+        image: np.ndarray, 
+        lines: np.ndarray,
+        colors_lines: np.ndarray=None,
         title=None, 
         conversion=cv2.COLOR_BGR2RGB,
         default_color = (0, 255, 255)
