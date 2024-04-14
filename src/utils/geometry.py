@@ -2,28 +2,12 @@
 This file helps with geometry elements
 """
 
-import scipy.ndimage
 import numpy as np
 import itertools
 import logging
 
 DEFAULT_MARGIN_ANGLE_ERROR = np.pi / 50
 
-def center_image_to_point(image: np.ndarray, point: np.ndarray, mode: str="constant"):
-    """Shift the image so that the input point ends up in the middle of the new image
-
-    Args:
-        image (np.ndarray): shape (lx, ly)
-        point (np.ndarray): shape (2,)
-    """
-    center_img_vector = (np.array([image.shape[1], image.shape[0]]) / 2).astype(int)
-    shift_vector = center_img_vector - point
-    img2 = scipy.ndimage.shift(input=image, shift=np.roll(shift_vector, 1), mode=mode)
-    return img2
-    
-def center_image_to_line(image: np.ndarray, line: np.ndarray, mode: str="constant"):
-    point_center_line = (np.sum(line, axis=0) / 2).astype(int)
-    return center_image_to_point(image=image, point=point_center_line)
 
 def slope(line: np.ndarray) -> float:
     p1, p2 = line[0], line[1]
@@ -40,20 +24,24 @@ def intercept(line: np.ndarray) -> float:
     except Exception:
         return None
 
-def compute_slope_angle(line: np.ndarray) -> float:
+def compute_slope_angle(line: np.ndarray, degree: bool=False) -> float:
     """Calculate the slope angle of a single line in the cartesian space
 
     Args:
         line (np.array): segment of shape (2, 2)
+        degree (bool): whether to output the result in degree. By default in radian.
 
     Returns:
         float: slope angle in ]-pi/2, pi/2[
     """
     p1, p2 = line[0], line[1]
     try:
-        return np.arctan((p2[1] - p1[1]) / (p2[0] - p1[0] + 1e-9))
+        angle = np.arctan((p2[1] - p1[1]) / (p2[0] - p1[0] + 1e-9))
     except ZeroDivisionError:
-        return np.pi / 2
+        angle = np.pi / 2
+    if degree:
+        angle = np.rad2deg(angle)
+    return angle
 
 def are_parallel(
         line1: np.ndarray, 
