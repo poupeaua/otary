@@ -8,6 +8,23 @@ import logging
 
 DEFAULT_MARGIN_ANGLE_ERROR = np.pi / 50
 
+def rotate_bbox_around_img_center(img: np.ndarray, bbox: np.ndarray):
+    center_img_vector = (np.array([img.shape[1], img.shape[0]]) / 2).astype(int)
+    pmin = np.array([np.min(bbox[:, 0]), np.min(bbox[:, 1])])
+    pmax = np.array([np.max(bbox[:, 0]), np.max(bbox[:, 1])])
+    height_rect = pmax[1] - pmin[1]
+    width_rect = pmax[0] - pmin[0]
+    vect_shift = center_img_vector - pmin
+    new_opposite_point = pmin + 2 * vect_shift
+    [[2, 0], [81, 0], [81, 28], [2, 28]]
+    new_bbox = np.array([
+        new_opposite_point - np.array([width_rect, height_rect]),
+        new_opposite_point - np.array([0, height_rect]),
+        new_opposite_point,
+        new_opposite_point - np.array([width_rect, 0])
+    ])
+    return new_bbox
+    
 
 def slope(line: np.ndarray) -> float:
     p1, p2 = line[0], line[1]
