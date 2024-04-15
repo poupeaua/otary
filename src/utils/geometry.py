@@ -22,7 +22,7 @@ def rotate_bbox_around_img_center(img: np.ndarray, bbox: np.ndarray):
         new_opposite_point - np.array([0, height_rect]),
         new_opposite_point,
         new_opposite_point - np.array([width_rect, 0])
-    ])
+    ]).tolist()
     return new_bbox
     
 
