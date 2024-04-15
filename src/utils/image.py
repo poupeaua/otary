@@ -120,7 +120,7 @@ def crop_image_around_line_horizontal(
         line: np.ndarray,
         heigth_crop_rect: int=100,
         width_crop_rect: int=None,
-        scale_percent: int=100,
+        resize_scale_percent: int=100,
         extra_length_default_width: int=75,
         show_central_points: bool=False
     ):
@@ -147,5 +147,5 @@ def crop_image_around_line_horizontal(
     x1, y1 = int(center_pt_img[1] + heigth_crop_rect / 2), int(center_pt_img[0] + width_crop_rect / 2)
     _img_cropped = _img[x0:x1, y0:y1]
 
-    _img_cropped_resized = resize_image(image=_img_cropped, scale_percent=scale_percent)
+    _img_cropped_resized = resize_image(image=_img_cropped, scale_percent=resize_scale_percent)
     return _img_cropped_resized
