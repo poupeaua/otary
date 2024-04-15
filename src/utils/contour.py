@@ -37,6 +37,9 @@ class Contour:
 
         Args:
             lines (np.ndarray): array of lines of shape (n, 2, 2)
+            
+        Returns:
+            (Contour): a Contour object
         """
         # assert lines quality
         nlines = len(lines)
@@ -57,23 +60,35 @@ class Contour:
     @classmethod
     def from_unordered_lines_approx(
             cls,
-            img,
+            img: np.ndarray,
             lines: np.ndarray,
             min_dist_threshold: float=50,
-            start_index: int=0
+            max_iteration: int=50,
+            start_line_index: int=0
         ):
-        """_summary_
+        """Create a Contour object from an unordered list of lines that approximate a closed-shape.
+        They approximate in the sense that they do not necessarily share common points.
+        We have to extract the intersection point
 
         Args:
-            lines (np.array): _description_
+            img (_type_): array of shape (lx, ly)
+            lines (np.ndarray): array of lines of shape (n, 2, 2)
+            min_dist_threshold (float, optional): For any given point, the minimum distance . Defaults to 50.
+            max_iteration (float, optional): Maximum number of iterations before finding a
+                contour. It defines also the maximum number of lines in the contour to find.
+            start_line_index (int, optional): The starting line to find searching for the
+                contour. Defaults to 0.
+
+        Returns:
+            (Contour): a Contour object
         """
         img = img.copy()
         _lines = copy.deepcopy(np.array(lines))
         construct_contour = []
         is_contour_found = False
-        idx_line_closest_point = start_index
+        idx_line_closest_point = start_line_index
         i = 0
-        while not is_contour_found and i < 50:
+        while not is_contour_found and i < max_iteration:
             cur_line = _lines[idx_line_closest_point]
             cur_geoline = Line(cur_line[0], cur_line[1])
             cur_point = cur_line[1]
@@ -139,5 +154,6 @@ class Contour:
         return cnt
     
     def __reduce(self, min_dist_threshold: float=10):
+        # remove consecutive very close points
         #TODO
         pass
