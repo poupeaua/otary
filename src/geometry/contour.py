@@ -6,30 +6,25 @@ import cv2
 import copy
 import numpy as np
 from sympy.geometry import Line
-from src.utils.geometry import assert_is_array_of_lines
+from src.geometry.entity import GeometryEntity
 from src.utils.image import show_image_and_lines
 
-class Contour:
-    
+class Contour(GeometryEntity):
+          
     def __init__(self, points: np.ndarray, reduce: bool=True) -> None:
-        self.points = copy.deepcopy(points)
         if reduce: # remove consecutive very close points
-            self.__reduce()
-        self.lines = Contour.points_to_lines(self.points)
-        self.lengths = np.linalg.norm(np.diff(self.lines, axis=1), axis=2)
-        self.area = cv2.contourArea(self.points)
-        self.perimeter = cv2.arcLength(self.points, True)
+            points = Contour.__reduce(points)
+        super().__init__(points)
+        
+    @property
+    def lines(self):
+        return Contour.points_to_lines(self.points)
     
-    def points_to_lines(points: np.ndarray) -> np.ndarray:
-        """Static method to convert a contour described by points to lines
-
-        Args:
-            points (np.ndarray): array of points of shape (n, 2)
-
-        Returns:
-            np.ndarray: array of lines of shape (n, 2, 2)
-        """
-        return np.stack([points, np.roll(points, shift=-1, axis=0)], axis=1)
+    @property
+    def lengths(self):
+        return np.linalg.norm(np.diff(self.lines, axis=1), axis=2)
+        
+    # ---------------------------------- OTHER CONSTRUCTORS --------------------------------------
     
     @classmethod
     def from_lines(cls, lines: np.ndarray):
@@ -153,7 +148,36 @@ class Contour:
         cnt = Contour.from_lines(contour_lines)
         return cnt
     
-    def __reduce(self, min_dist_threshold: float=10):
-        # remove consecutive very close points
+    # ---------------------------------- STATIC METHODS -----------------------------------------
+    
+    def points_to_lines(points: np.ndarray) -> np.ndarray:
+        """Static method to convert a contour described by points to lines
+
+        Args:
+            points (np.ndarray): array of points of shape (n, 2)
+
+        Returns:
+            np.ndarray: array of lines of shape (n, 2, 2)
+        """
+        return np.stack([points, np.roll(points, shift=-1, axis=0)], axis=1)
+    
+    def is_auto_intersected(lines: np.ndarray) -> bool:
+        """Whether the any of the lines intersect another line in the same set
+
+        Args:
+            lines (np.ndarray): shape (n, 2, 2)
+
+        Returns:
+            bool: True is two lines intersect, False otherwise
+        """
         #TODO
         pass
+    
+    def __reduce(points: np.ndarray, min_dist_threshold: float=10):
+        # remove consecutive very close points
+        #TODO
+        return points
+    
+    # ---------------------------------- CLASSIC METHODS -----------------------------------------
+    
+    
