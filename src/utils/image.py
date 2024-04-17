@@ -6,12 +6,16 @@ import cv2
 import scipy.ndimage
 import numpy as np
 import matplotlib.pyplot as plt
+from src.geometry.segment import Segment
 from src.utils.geometry import compute_slope_angle
 
 def show_image(image: np.ndarray, title=None, conversion=cv2.COLOR_BGR2RGB):
     # Converts from one colour space to the other. this is needed as RGB
     # is not the default colour space for OpenCV
-    image = cv2.cvtColor(image, conversion)
+    image = image.copy()
+    
+    if conversion is not None:
+        image = cv2.cvtColor(image, conversion)
 
     # Show the image
     plt.imshow(image)
@@ -34,6 +38,7 @@ def show_image_and_lines(
         conversion=cv2.COLOR_BGR2RGB,
         default_color = (0, 255, 255)
     ):
+    lines = lines.astype(int)
     if colors_lines is None:
         colors_lines = [default_color for i in range(len(lines))]
     assert len(lines) == len(colors_lines)
@@ -131,7 +136,7 @@ def crop_image_around_line_horizontal(
         width_crop_rect: int=None,
         resize_scale_percent: int=100,
         extra_length_default_width: int=75,
-        show_central_points: bool=False
+        show_translation: bool=False
     ):
     _img = image.copy()
     
@@ -139,19 +144,23 @@ def crop_image_around_line_horizontal(
     center_pt_img = (np.array([_img.shape[1], _img.shape[0]]) / 2).astype(int)
     _img = center_image_to_line(image=_img, line=line)
     
-    if show_central_points:
+    if show_translation:
         middle_pt_line = (np.sum(line, axis=0) / 2).astype(int)
-        cv2.circle(_img, center=middle_pt_line, radius=2, color=(0, 0, 255), thickness=5)
-        cv2.circle(_img, center=center_pt_img, radius=2, color=(0, 0, 255), thickness=5)
+        _img2 = cv2.cvtColor(_img, cv2.COLOR_GRAY2RGB)
+        cv2.circle(_img2, center=middle_pt_line, radius=2, color=(0, 0, 255), thickness=5)
+        cv2.circle(_img2, center=center_pt_img, radius=2, color=(0, 0, 255), thickness=5)
+        cv2.arrowedLine(_img2, pt1=middle_pt_line, pt2=center_pt_img, color=(0, 0, 255), thickness=5)
+        show_image(_img2)
 
     # rotate the image so that the line is horizontal
     angle_degree = compute_slope_angle(line, degree=True)
-    _img = scipy.ndimage.rotate(input=_img, angle=angle_degree, reshape=False)
+    _img = scipy.ndimage.rotate(input=_img, angle=angle_degree, reshape=True)
 
     # crop the image
+    center_pt_img = (np.array([_img.shape[1], _img.shape[0]]) / 2).astype(int)
     if width_crop_rect is None:
         # default the width for crop to be a bit more than line length
-        width_crop_rect = np.linalg.norm(np.diff(line, axis=0)) + extra_length_default_width
+        width_crop_rect = Segment(line).length + extra_length_default_width
     x0, y0 = int(center_pt_img[1] - heigth_crop_rect / 2), int(center_pt_img[0] - width_crop_rect / 2)
     x1, y1 = int(center_pt_img[1] + heigth_crop_rect / 2), int(center_pt_img[0] + width_crop_rect / 2)
     _img_cropped = _img[x0:x1, y0:y1]

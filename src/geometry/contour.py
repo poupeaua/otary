@@ -55,11 +55,12 @@ class Contour(GeometryEntity):
     @classmethod
     def from_unordered_lines_approx(
             cls,
-            img: np.ndarray,
             lines: np.ndarray,
             min_dist_threshold: float=50,
             max_iteration: int=50,
-            start_line_index: int=0
+            start_line_index: int=0,
+            img: np.ndarray=None,
+            debug: bool=False
         ):
         """Create a Contour object from an unordered list of lines that approximate a closed-shape.
         They approximate in the sense that they do not necessarily share common points.
@@ -77,7 +78,18 @@ class Contour(GeometryEntity):
         Returns:
             (Contour): a Contour object
         """
-        img = img.copy()
+        def display(lines):
+            if debug:
+                show_image_and_lines(
+                    image=img, 
+                    lines=lines, 
+                    colors_lines=[(50 * i, 255 - 50 * i, 255) for i in range(len(_lines))]
+                )
+
+        if debug:
+            assert img is not None
+            img = img.copy()
+            
         _lines = copy.deepcopy(np.array(lines))
         construct_contour = []
         is_contour_found = False
@@ -93,7 +105,7 @@ class Contour(GeometryEntity):
             if len(_lines) == 0:
                 print("No more lines will do the same operation as no point detected")
                         
-            #show_image_and_lines(image=img, lines=_lines, colors_lines=[(50 * i, 255 - 50 * i, 255) for i in range(len(_lines))])
+            display(lines=_lines)
             
             # find the closest point to the current one and associated line 
             lines2points = _lines.reshape(len(_lines)*2, 2)
@@ -111,6 +123,8 @@ class Contour(GeometryEntity):
                 distance_end_to_first_points = np.linalg.norm(first_point - cur_point)
                 if distance_end_to_first_points < min_dist_threshold:
                     first_geoline = Line(first_line[0], first_line[1])
+                    # TODO sometimes multiples intersection example 7
+                    # print(cur_geoline.intersection(first_geoline)[0].evalf(n=7))
                     intersect_point = np.array(cur_geoline.intersection(first_geoline)[0].evalf(n=7))
                     construct_contour[-1][1] = intersect_point
                     construct_contour[0][0] = intersect_point
@@ -128,7 +142,7 @@ class Contour(GeometryEntity):
             if idx_point_in_line == 1: # flip points positions
                 _lines[idx_line_closest_point] = np.flip(line_closest_point, axis=0)
             
-            #show_image_and_lines(image=img, lines=[cur_line, line_closest_point], colors_lines=[(0, 255, 255), (255, 0, 255)])
+            display(lines=[cur_line, line_closest_point])
             
             # find intersection point between the two lines
             geoline_closest_point = Line(line_closest_point[0], line_closest_point[1])
@@ -139,12 +153,12 @@ class Contour(GeometryEntity):
             line_closest_point[0] = intersect_point
             construct_contour[i][1] = intersect_point
             
-            #show_image_and_lines(image=img, lines=[cur_line, line_closest_point], colors_lines=[(0, 255, 255), (255, 0, 255)])
+            display(lines=[cur_line, line_closest_point])
             
             i += 1
             
         contour_lines = np.array(construct_contour)
-        show_image_and_lines(image=img, lines=contour_lines)
+        display(lines=[cur_line, line_closest_point])
         cnt = Contour.from_lines(contour_lines)
         return cnt
     
