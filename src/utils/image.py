@@ -52,16 +52,25 @@ def show_image_ocr(
         conversion=cv2.COLOR_BGR2RGB,
         default_bbox_color=(125, 125, 230)
     ):
+    """Show the image and the bounding boxes from the OCR output.
+    It allows you to show bounding boxes that can have an angle, not necessarily vertical or
+    horizontal.
+
+    Args:
+        image (np.ndarray): _description_
+        ocr_output (np.ndarray): _description_
+        title (_type_, optional): _description_. Defaults to None.
+        conversion (_type_, optional): _description_. Defaults to cv2.COLOR_BGR2RGB.
+        default_bbox_color (tuple, optional): _description_. Defaults to (125, 125, 230).
+    """
     _img = image.copy()
     _img = cv2.cvtColor(_img, cv2.COLOR_GRAY2RGB)
     for o in ocr_output:
         bbox = np.array(o[0])
         text = o[1]
         confidence_level = o[2]
-        sums_coord = bbox.sum(axis=1)
-        start_point, end_point = np.array(bbox[np.argmin(sums_coord)], dtype=int), \
-                                np.array(bbox[np.argmax(sums_coord)], dtype=int)
-        _img = cv2.rectangle(img=_img, pt1=start_point, pt2=end_point, thickness=2, color=default_bbox_color)
+        cnt = [np.array(bbox).reshape((-1,1,2)).astype(np.int32)]
+        _img = cv2.drawContours(_img, contours=cnt, contourIdx=-1, thickness=2, color=default_bbox_color)
     show_image(image=_img, title=title, conversion=conversion)
     
 def center_image_to_point(image: np.ndarray, point: np.ndarray, mode: str="constant"):
