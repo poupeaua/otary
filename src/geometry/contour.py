@@ -6,7 +6,7 @@ import cv2
 import copy
 import numpy as np
 from sympy.geometry import Line
-from src.geometry.entity import GeometryEntity
+from src.geometry import GeometryEntity, Segment
 import src.utils.image  as image
 
 class Contour(GeometryEntity):
@@ -175,23 +175,31 @@ class Contour(GeometryEntity):
         """
         return np.stack([points, np.roll(points, shift=-1, axis=0)], axis=1)
     
-    def is_auto_intersected(lines: np.ndarray) -> bool:
-        """Whether the any of the lines intersect another line in the same set
-
-        Args:
-            lines (np.ndarray): shape (n, 2, 2)
+    def __reduce(points: np.ndarray, max_dist_threshold: float=10):
+        # remove consecutive very close points
+        idx_to_remove = []
+        for i, cur_point in enumerate(points):
+            if i == len(points):
+                i = -1 # so that next point is the first in that case
+            next_point = points[i+1]
+            distance = Segment(points=[cur_point, next_point]).length
+            if distance < max_dist_threshold:
+                idx_to_remove.append(i)
+                
+        reduced_points = np.delete(np.asarray(points), idx_to_remove, 0)
+            
+        return reduced_points
+    
+    # ---------------------------------- CLASSIC METHODS -----------------------------------------
+    
+    def is_auto_intersected(self) -> bool:
+        """Whether any of the segments intersect another segment in the same set
 
         Returns:
-            bool: True is two lines intersect, False otherwise
+            bool: True if at least two lines intersect, False otherwise
         """
         #TODO
         pass
     
-    def __reduce(points: np.ndarray, min_dist_threshold: float=10):
-        # remove consecutive very close points
-        #TODO
-        return points
-    
-    # ---------------------------------- CLASSIC METHODS -----------------------------------------
-    
-    
+    def add_point(self, point: np.ndarray, index: int):
+        self.points = np.concatenate([self.points[:index], [point], self.points[index:]])
