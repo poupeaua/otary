@@ -9,7 +9,7 @@ from src.geometry.entity import GeometryEntity
 class Point(GeometryEntity):
     
     def __init__(self, point: np.ndarray) -> None:
-        super().__init__(points=np.array(point))
+        super().__init__(points=point)
     
     @property
     def asarray(self):

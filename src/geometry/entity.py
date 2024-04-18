@@ -11,7 +11,7 @@ import copy
 class GeometryEntity(ABC):
     
     def __init__(self, points) -> None:
-        self.points = copy.deepcopy(points)
+        self.points = copy.deepcopy(np.array(points))
           
     @property
     def asarray(self) -> np.ndarray:
@@ -24,6 +24,15 @@ class GeometryEntity(ABC):
     @property
     def perimeter(self) -> float:
         return cv2.arcLength(self.points, True)
+    
+    @property
+    def centroid(self) -> float:
+        moments = cv2.moments(self.points)
+        if moments['m00'] != 0:
+            centroid = np.array([moments['m10']/moments['m00'], moments['m01']/moments['m00']])
+        else:
+            centroid = None
+        return centroid
     
     def rotate(
             self,
@@ -46,6 +55,7 @@ class GeometryEntity(ABC):
         
         # Translate the point back to its original space and return
         self.points = rotated_points + pivot
+        return self
         
     def rotate_around_image_center(
             self,
@@ -53,12 +63,13 @@ class GeometryEntity(ABC):
             angle: float, 
             degree: bool=False
         ):
-        img_center_point = (np.array([img.shape[1], img.shape[0]]) / 2).astype(int)
-        self.rotate(angle=angle, pivot=img_center_point, degree=degree)
+        img_center_point = np.array([img.shape[1], img.shape[0]]) / 2
+        return self.rotate(angle=angle, pivot=img_center_point, degree=degree)
         
     
     def shift(
             self,
             vector: np.ndarray
         ):
-        return self.asarray + vector
+        self.points = self.points + vector
+        return self

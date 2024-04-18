@@ -18,3 +18,7 @@ class Segment(GeometryEntity):
     @property
     def length(self):
         return self.perimeter
+    
+    @property
+    def centroid(self) -> float:
+        return np.sum(self.points, axis=0) / 2

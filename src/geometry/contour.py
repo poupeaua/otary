@@ -7,7 +7,7 @@ import copy
 import numpy as np
 from sympy.geometry import Line
 from src.geometry.entity import GeometryEntity
-from src.utils.image import show_image_and_lines
+import src.utils.image  as image
 
 class Contour(GeometryEntity):
           
@@ -80,7 +80,7 @@ class Contour(GeometryEntity):
         """
         def display(lines):
             if debug:
-                show_image_and_lines(
+                image.show_image_and_lines(
                     image=img, 
                     lines=lines, 
                     colors_lines=[(50 * i, 255 - 50 * i, 255) for i in range(len(_lines))]
