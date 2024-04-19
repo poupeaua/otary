@@ -11,14 +11,16 @@ from src.utils.image import Image
 class UrbanDocExtract:
     """Class for keeping track of a Urban Document extracted information"""
     image: Image
+    _id: str
     surface: float
     scale: str
     creation_date: str
-    drawer: str
-    register: str
-    email: str
-    ciudad: str
-    locality: str
+    drawer_name: str
+    drawer_register: str
+    drawer_email: str
+    region: str 
+    ciudad: str # municipio
+    locality: str # localidad
     use: str
     type: str
     
