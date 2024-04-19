@@ -22,3 +22,30 @@ class Segment(GeometryEntity):
     @property
     def centroid(self) -> float:
         return np.sum(self.points, axis=0) / 2
+    
+    @property
+    def slope(self) -> float:
+        p1, p2 = self.points[0], self.points[1]
+        try:
+            slope = (p2[1] - p1[1]) / (p2[0] - p1[0] + 1e-9)
+        except ZeroDivisionError:
+            slope = np.inf
+        return slope
+    
+    @property
+    def slope_cv2(self) -> float:
+        return -self.slope 
+    
+    def slope_angle(self, degree: bool=False, is_cv2: bool=False) -> float:
+        """Calculate the slope angle of a single line in the cartesian space
+
+        Args:
+            degree (bool): whether to output the result in degree. By default in radian.
+
+        Returns:
+            float: slope angle in ]-pi/2, pi/2[
+        """
+        angle = np.arctan(self.slope_cv2) if is_cv2 else np.arctan(self.slope)
+        if degree:
+            angle = np.rad2deg(angle)
+        return angle

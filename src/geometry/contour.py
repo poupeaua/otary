@@ -179,7 +179,7 @@ class Contour(GeometryEntity):
         # remove consecutive very close points
         idx_to_remove = []
         for i, cur_point in enumerate(points):
-            if i == len(points):
+            if i == len(points)-1:
                 i = -1 # so that next point is the first in that case
             next_point = points[i+1]
             distance = Segment(points=[cur_point, next_point]).length
@@ -203,3 +203,20 @@ class Contour(GeometryEntity):
     
     def add_point(self, point: np.ndarray, index: int):
         self.points = np.concatenate([self.points[:index], [point], self.points[index:]])
+        return self
+        
+    def rearrange_first_point_is_at_index(
+            self,
+            index: int
+        ): 
+        self.points = np.concatenate([self.points[index:], self.points[:index]])
+        return self
+        
+    def rearrange_first_point_closest_to_reference_point(
+            self,
+            reference_point: np.ndarray=np.zeros(shape=(2,))
+        ):
+        shifted_points = self.points - reference_point
+        distances = np.linalg.norm(shifted_points, axis=1)
+        idx_min_dist = np.argmin(distances)
+        return self.rearrange_first_point_is_at_index(index=idx_min_dist)
