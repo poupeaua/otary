@@ -43,6 +43,7 @@ def show_image(image: np.ndarray, title=None, conversion=cv2.COLOR_BGR2RGB):
 def show_image_and_lines(
         image: np.ndarray, 
         lines: np.ndarray,
+        as_vectors: bool=False,
         colors_lines: np.ndarray=None,
         title=None, 
         conversion=cv2.COLOR_BGR2RGB,
@@ -56,7 +57,10 @@ def show_image_and_lines(
     img_copy = image.copy()
     img_copy = cv2.cvtColor(img_copy, cv2.COLOR_GRAY2BGR)
     for line, color in zip(lines, colors_lines):
-        cv2.line(img_copy, line[0], line[1], color, 3, cv2.LINE_AA)
+        if as_vectors:
+            cv2.arrowedLine(img_copy, line[0], line[1], color, 3, cv2.LINE_AA)
+        else:
+            cv2.line(img_copy, line[0], line[1], color, 3, cv2.LINE_AA)
     show_image(image=img_copy, title=title, conversion=conversion)
     
     
