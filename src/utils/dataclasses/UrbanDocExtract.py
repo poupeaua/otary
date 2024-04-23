@@ -4,13 +4,12 @@ for each line
 """
 
 from dataclasses import dataclass
-import src
-from src.utils.image import Image
+import numpy as np
 
 @dataclass
 class UrbanDocExtract:
     """Class for keeping track of a Urban Document extracted information"""
-    image: Image
+    image: np.ndarray
     _id: str
     surface: float
     scale: str

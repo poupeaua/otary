@@ -2,12 +2,10 @@
 Contour class to handle complexity with contour calculation
 """
 
-import cv2
 import copy
 import numpy as np
 from sympy.geometry import Line
 from src.geometry import GeometryEntity, Segment
-import src.utils.image  as image
 
 class Contour(GeometryEntity):
           

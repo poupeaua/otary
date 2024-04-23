@@ -2,7 +2,6 @@
 Vectors class they are like segments, but with a given direction
 """
 
-import cv2
 import numpy as np
 from metpy.calc import angle_to_direction
 from src.geometry import Segment
@@ -11,6 +10,10 @@ class Vector(Segment):
     
     def __init__(self, points) -> None:
         super().__init__(points)
+        
+    @property
+    def cv2_space_coords(self):
+        return np.roll(self.points, 1)
         
     @property
     def is_x0_greater_than_x1(self):

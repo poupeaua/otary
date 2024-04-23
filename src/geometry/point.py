@@ -9,8 +9,15 @@ from src.geometry.entity import GeometryEntity
 class Point(GeometryEntity):
     
     def __init__(self, point: np.ndarray) -> None:
+        point = np.asarray(point)
+        if point.shape == (2,):
+            point = point.reshape((1, 2))
         super().__init__(points=point)
     
     @property
     def asarray(self):
         return self.points[0]
+    
+    @property
+    def centroid(self):
+        return self.asarray
