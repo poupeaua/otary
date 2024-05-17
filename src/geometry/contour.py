@@ -2,6 +2,7 @@
 Contour class to handle complexity with contour calculation
 """
 
+from __future__ import annotations
 import copy
 import numpy as np
 from sympy.geometry import Line
@@ -9,23 +10,23 @@ from src.geometry import GeometryEntity, Segment
 
 class Contour(GeometryEntity):
           
-    def __init__(self, points: np.ndarray, reduce: bool=True) -> None:
+    def __init__(self, points: np.ndarray, reduce: bool=False) -> None:
         if reduce: # remove consecutive very close points
             points = Contour._reduce(points)
         super().__init__(points)
         
     @property
-    def lines(self):
+    def lines(self) -> np.ndarray:
         return Contour.points_to_lines(self.points)
     
     @property
-    def lengths(self):
+    def lengths(self) -> np.ndarray:
         return np.linalg.norm(np.diff(self.lines, axis=1), axis=2)
         
     # ---------------------------------- OTHER CONSTRUCTORS --------------------------------------
     
     @classmethod
-    def from_lines(cls, lines: np.ndarray):
+    def from_lines(cls, lines: np.ndarray) -> Contour:
         """The lines should describe a perfect closed shape contour
 
         Args:
@@ -59,7 +60,7 @@ class Contour(GeometryEntity):
             start_line_index: int=0,
             img: np.ndarray=None,
             debug: bool=False
-        ):
+        ) -> Contour:
         """Create a Contour object from an unordered list of lines that approximate a closed-shape.
         They approximate in the sense that they do not necessarily share common points.
         We have to extract the intersection point
@@ -261,3 +262,14 @@ class Contour(GeometryEntity):
         distances = np.linalg.norm(shifted_points, axis=1)
         idx_min_dist = np.argmin(distances)
         return self.rearrange_first_point_is_at_index(index=idx_min_dist)
+    
+    # -------------------------------- fundamental methods ---------------------------------------
+    
+    def is_equal(self, contour: Contour, dist_margin_error: float=5):
+        new_cnt = contour.copy().rearrange_first_point_closest_to_reference_point(self.points[0])
+        points_diff = new_cnt.points - self.points
+        distances = np.linalg.norm(points_diff, axis=1)
+        print(distances)
+        max_distance = np.max(distances)
+        return (max_distance <= dist_margin_error)
+        

@@ -169,6 +169,31 @@ class Image:
         
         return Image(im)
     
+    def add_contours(
+            self,
+            contours: list[geo.Contour],
+            as_vectors: bool=False,
+            colors_segments: np.ndarray=None,
+            default_color = (0, 0, 255),
+            thickness: int=3,
+            line_type: int=cv2.LINE_AA,
+            tip_length: int=20
+        ):
+        im = self.copy()
+        
+        for cnt in contours:
+            im.add_segments(
+                segments=cnt.lines, 
+                as_vectors=as_vectors,
+                colors_segments=colors_segments,
+                default_color=default_color,
+                thickness=thickness,
+                line_type=line_type,
+                tip_length=tip_length
+            )
+        
+        return Image(im)
+    
     
     def add_ocr_outputs(
             self,

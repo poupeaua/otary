@@ -34,6 +34,9 @@ class GeometryEntity(ABC):
             centroid = None
         return centroid
     
+    def copy(self):
+        return copy.deepcopy(self)
+    
     def rotate(
             self,
             angle: float, 
