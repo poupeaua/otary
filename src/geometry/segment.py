@@ -83,7 +83,8 @@ class Segment(GeometryEntity):
         else:
             return False
         
-    def __is_points_collinear(
+    @staticmethod
+    def is_points_collinear(
             p1: np.ndarray, 
             p2: np.ndarray, 
             p3: np.ndarray, 
@@ -130,7 +131,7 @@ class Segment(GeometryEntity):
         Returns:
             bool: _description_
         """
-        return self.__is_points_collinear(
+        return self.is_points_collinear(
             p1=self.asarray[0], p2=self.asarray[1], p3=point, margin_error_angle=margin_error_angle
         )
             
@@ -165,7 +166,7 @@ class Segment(GeometryEntity):
         points = np.concatenate(cur2lines, axis=0)
         val_arr = np.zeros(shape=4)
         for i, combi in enumerate(itertools.combinations(np.linspace(0, 3, 4, dtype=int), 3)):
-            val_arr[i] = Segment.__is_points_collinear(
+            val_arr[i] = Segment.is_points_collinear(
                 p1=points[combi[0]], 
                 p2=points[combi[1]], 
                 p3=points[combi[2]], 

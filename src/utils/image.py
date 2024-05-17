@@ -16,12 +16,20 @@ class Image:
         self.asarray: np.ndarray = image.copy()
         
     @property
+    def is_gray(self):
+        return len(self.asarray.shape) == 2
+        
+    @property
     def height(self):
         return self.asarray.shape[0]
     
     @property
     def width(self):
         return self.asarray.shape[1]
+    
+    @property
+    def area(self):
+        return self.width * self.height
     
     @property
     def center(self):
@@ -33,7 +41,11 @@ class Image:
     
     # ----------------------------------- DISPLAY METHODS -----------------------------------------
 
-    def show(self, title: str=None, color_conversion: int=cv2.COLOR_BGR2RGB) -> None:
+    def show(
+            self, 
+            title: str=None,
+            figsize: tuple[int]=[8.0, 6.0],
+            color_conversion: int=cv2.COLOR_BGR2RGB) -> None:
         """Display the image
 
         Args:
@@ -44,6 +56,8 @@ class Image:
         # is not the default colour space for OpenCV        
         if color_conversion is not None:
             im = cv2.cvtColor(self.asarray, color_conversion)
+        
+        plt.figure(figsize=figsize)
 
         # Show the image
         plt.imshow(im)
@@ -96,7 +110,8 @@ class Image:
             )
         
         # draw points in image
-        im = cv2.cvtColor(im, cv2.COLOR_GRAY2BGR)
+        if Image(im).is_gray:
+            im = cv2.cvtColor(im, cv2.COLOR_GRAY2BGR)
         for pt, color in zip(points, colors_points):
             cv2.circle(img=im, center=pt, radius=radius, color=color, thickness=thickness)
         
@@ -143,7 +158,8 @@ class Image:
             )
         
         # draw segments in image
-        im = cv2.cvtColor(im, cv2.COLOR_GRAY2BGR)
+        if Image(im).is_gray:
+            im = cv2.cvtColor(im, cv2.COLOR_GRAY2BGR)
         for seg, color in zip(segments, colors_segments):
             if as_vectors:
                 cv2.arrowedLine(im, seg[0], seg[1], color, thickness, line_type, 
@@ -173,7 +189,8 @@ class Image:
             (Image): a new image with the bounding boxes displayed
         """
         im = self.asarray.copy()
-        im = cv2.cvtColor(im, cv2.COLOR_GRAY2RGB)
+        if Image(im).is_gray:
+            im = cv2.cvtColor(im, cv2.COLOR_GRAY2BGR)
         for ocrso in ocr_outputs:
             cnt = [ocrso.bbox.asarray.reshape((-1,1,2)).astype(np.int32)]
             im = cv2.drawContours(im, contours=cnt, contourIdx=-1, thickness=thickness, 

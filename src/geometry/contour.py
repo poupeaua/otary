@@ -11,7 +11,7 @@ class Contour(GeometryEntity):
           
     def __init__(self, points: np.ndarray, reduce: bool=True) -> None:
         if reduce: # remove consecutive very close points
-            points = Contour.__reduce(points)
+            points = Contour._reduce(points)
         super().__init__(points)
         
     @property
@@ -173,7 +173,50 @@ class Contour(GeometryEntity):
         """
         return np.stack([points, np.roll(points, shift=-1, axis=0)], axis=1)
     
-    def __reduce(points: np.ndarray, max_dist_threshold: float=10):
+    def _reduce_noise(points: np.ndarray, max_dist_threshold: float=5) -> np.ndarray:
+        """Remove some points that describe an unwanted noise.
+
+        Args:
+            points (np.ndarray): array of shape (n, 2)
+            max_dist_threshold (float, optional): minimum distance to suppress points. 
+                Defaults to 5.
+            
+        Returns:
+            (np.ndarray): points without noisy and close points
+        """
+        #TODO
+        return 0
+    
+    def _reduce_collinear(points: np.ndarray, max_dist_threshold: float=5) -> np.ndarray:
+        """Remove close collinear points. Useful to clean a contour with a lot of points.
+
+        Args:
+            points (np.ndarray): array of shape (n, 2)
+            max_dist_threshold (float, optional): minimum distance to suppress points. 
+                Defaults to 5.
+            
+        Returns:
+            (np.ndarray): points without any collinear close points
+        """
+        #TODO
+        idx_to_remove = []
+        for i, cur_point in enumerate(points):
+            if i == len(points)-1:
+                i = -1 # so that next point is the first in that case
+            elif i == len(points)-2:
+                i = -2
+            next_point = points[i+1]
+            next_next_point = points[i+2]
+            seg1 = Segment(points=[cur_point, next_point])
+            seg2 = Segment(points=[cur_point, next_next_point])
+            if seg1.is_collinear(segment=seg2):
+                idx_to_remove.append(i+1)
+                
+        reduced_points = np.delete(np.asarray(points), idx_to_remove, 0)
+            
+        return reduced_points
+        
+    def _reduce(points: np.ndarray, max_dist_threshold: float=5) -> np.ndarray:
         # remove consecutive very close points
         idx_to_remove = []
         for i, cur_point in enumerate(points):

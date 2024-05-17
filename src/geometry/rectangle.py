@@ -13,7 +13,19 @@ class Rectangle(Contour):
         super().__init__(points, reduce=False)
     
     @classmethod
-    def from_center(cls, center: np.ndarray, width: float, height: float):
+    def from_center(cls, center: np.ndarray, width: float, height: float, angle: float=0):
+        """Create a Rectangle object using the center point, width, height and angle.
+        The angle is defined as the 
+
+        Args:
+            center (np.ndarray): _description_
+            width (float): _description_
+            height (float): _description_
+            angle (float, optional): _description_. Defaults to 0.
+
+        Returns:
+            _type_: _description_
+        """
         # compute the halves lengths
         half_width = width / 2
         half_height = height / 2
@@ -26,7 +38,10 @@ class Rectangle(Contour):
         top_right_corner = np.array([center_x + half_width, center_y + half_height])
         bottom_left_corner = np.array([center_x - half_width, center_y - half_height])
         bottom_right_corner = np.array([center_x + half_width, center_y - half_height])
-        rectangle = np.array([top_left_corner, top_right_corner, 
+        points = np.array([top_left_corner, top_right_corner, 
                             bottom_left_corner, bottom_right_corner])
         
-        return rectangle
+        rect = Rectangle(points)
+        rect = rect.rotate(angle=angle, pivot=center)
+        
+        return rect
