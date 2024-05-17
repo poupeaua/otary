@@ -4,14 +4,13 @@ architectural plan
 """
 
 from dataclasses import dataclass
-import src
-from src.utils.image import Image
-from src.utils.dataclasses import VectorExtract
+import numpy as np
+from src.utils.dataclasses.VectorExtract import VectorExtract
 
 @dataclass
 class ArchiPlanExtract:
     """Class for keeping track of a architectural plan"""
-    image: Image
+    image: np.ndarray
     surface: float
     perimeter: float
     estimate_distance_scale: float
