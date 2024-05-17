@@ -269,7 +269,6 @@ class Contour(GeometryEntity):
         new_cnt = contour.copy().rearrange_first_point_closest_to_reference_point(self.points[0])
         points_diff = new_cnt.points - self.points
         distances = np.linalg.norm(points_diff, axis=1)
-        print(distances)
         max_distance = np.max(distances)
         return (max_distance <= dist_margin_error)
         
