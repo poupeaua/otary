@@ -7,13 +7,18 @@ import copy
 import numpy as np
 from sympy.geometry import Line
 from src.geometry import GeometryEntity, Segment
+from src.geometry import DEFAULT_MARGIN_ANGLE_ERROR
 
 class Contour(GeometryEntity):
           
     def __init__(self, points: np.ndarray, reduce: bool=False) -> None:
         if reduce: # remove consecutive very close points
-            points = Contour._reduce(points)
+            points = Contour._reduce_by_distance(points)
         super().__init__(points)
+    
+    @property
+    def n_points(self) -> int:
+        return len(self.points)
         
     @property
     def lines(self) -> np.ndarray:
@@ -188,18 +193,20 @@ class Contour(GeometryEntity):
         #TODO
         return 0
     
-    def _reduce_collinear(points: np.ndarray, max_dist_threshold: float=5) -> np.ndarray:
+    def _reduce_collinear(
+            points: np.ndarray, 
+            margin_error_angle: float=DEFAULT_MARGIN_ANGLE_ERROR
+        ) -> np.ndarray:
         """Remove close collinear points. Useful to clean a contour with a lot of points.
 
         Args:
             points (np.ndarray): array of shape (n, 2)
-            max_dist_threshold (float, optional): minimum distance to suppress points. 
-                Defaults to 5.
+            margin_error_angle (float, optional): minimum distance to suppress points. 
+                Defaults to DEFAULT_MARGIN_ANGLE_ERROR.
             
         Returns:
             (np.ndarray): points without any collinear close points
         """
-        #TODO
         idx_to_remove = []
         for i, cur_point in enumerate(points):
             if i == len(points)-1:
@@ -209,15 +216,15 @@ class Contour(GeometryEntity):
             next_point = points[i+1]
             next_next_point = points[i+2]
             seg1 = Segment(points=[cur_point, next_point])
-            seg2 = Segment(points=[cur_point, next_next_point])
-            if seg1.is_collinear(segment=seg2):
+            seg2 = Segment(points=[next_point, next_next_point])
+            if seg1.is_collinear(segment=seg2, margin_error_angle=margin_error_angle):
                 idx_to_remove.append(i+1)
                 
         reduced_points = np.delete(np.asarray(points), idx_to_remove, 0)
             
         return reduced_points
         
-    def _reduce(points: np.ndarray, max_dist_threshold: float=5) -> np.ndarray:
+    def _reduce_by_distance(points: np.ndarray, max_dist_threshold: float=2) -> np.ndarray:
         # remove consecutive very close points
         idx_to_remove = []
         for i, cur_point in enumerate(points):
@@ -266,6 +273,11 @@ class Contour(GeometryEntity):
     # -------------------------------- fundamental methods ---------------------------------------
     
     def is_equal(self, contour: Contour, dist_margin_error: float=5):
+        if self.n_points != contour.n_points:
+            # if the contours do not have the same number of points they can not be similar
+            return False
+        
+        # check if each points composing the contours are close to each other
         new_cnt = contour.copy().rearrange_first_point_closest_to_reference_point(self.points[0])
         points_diff = new_cnt.points - self.points
         distances = np.linalg.norm(points_diff, axis=1)

@@ -294,7 +294,16 @@ class Image:
         return self.center_image_to_point(
             point=geo.Segment(segment).centroid, mode=mode, return_shift_vector=return_shift_vector
         )
-
+    
+    def resize_fixed(
+            self, 
+            dim: tuple[int ,int],
+            interpolation: int=cv2.INTER_AREA
+        ) -> Image:
+        im = self.asarray.copy()
+        im = cv2.resize(src=im, dsize=dim, interpolation=interpolation)
+        return Image(im)
+    
     def resize(
             self, 
             scale_percent: float,
@@ -311,14 +320,11 @@ class Image:
         """
         if scale_percent == 100:
             return self
-        
-        im = self.asarray.copy()
-        
+                
         width = int(self.width * scale_percent / 100)
         height = int(self.height * scale_percent / 100)
         dim = (width, height)
-        im = cv2.resize(src=im, dsize=dim, interpolation=interpolation)
-        return Image(im)
+        return self.resize_fixed(dim=dim, interpolation=interpolation)
 
     def crop_image_horizontal(self, x0: int, y0: int, x1: int, y1: int) -> Image:
         """Crop an image
