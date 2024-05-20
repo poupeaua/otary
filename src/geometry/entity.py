@@ -19,19 +19,34 @@ class GeometryEntity(ABC):
     
     @property
     def area(self) -> float:
+        """Compute the area of the geometry entity
+
+        Returns:
+            float: area value
+        """
         return cv2.contourArea(self.points)
     
     @property
     def perimeter(self) -> float:
+        """Compute the perimeter of the geometry entity
+
+        Returns:
+            float: perimeter value
+        """
         return cv2.arcLength(self.points, True)
     
     @property
-    def centroid(self) -> float:
+    def centroid(self) -> np.ndarray:
+        """Compute the centroid point which can be seen as the center of gravity of the shape
+
+        Returns:
+            float: centroid point
+        """
         moments = cv2.moments(self.points)
         if moments['m00'] != 0:
             centroid = np.array([moments['m10']/moments['m00'], moments['m01']/moments['m00']])
         else:
-            centroid = None
+            centroid = np.mean(self.points, axis=0) # useful for the point entity
         return centroid
     
     def copy(self):
