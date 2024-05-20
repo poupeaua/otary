@@ -10,6 +10,7 @@ from src.geometry.contour import Contour
 class Rectangle(Contour):
     
     def __init__(self, points: np.ndarray) -> None:
+        assert len(points) == 4
         super().__init__(points, reduce=False)
     
     @classmethod

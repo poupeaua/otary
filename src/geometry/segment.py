@@ -14,6 +14,7 @@ from src.geometry.constants import DEFAULT_MARGIN_ANGLE_ERROR
 class Segment(GeometryEntity):
     
     def __init__(self, points) -> None:
+        assert len(points) == 2
         super().__init__(points)
         
     @property

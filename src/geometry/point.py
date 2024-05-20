@@ -12,6 +12,7 @@ class Point(GeometryEntity):
         point = np.asarray(point)
         if point.shape == (2,):
             point = point.reshape((1, 2))
+        assert len(point) == 1
         super().__init__(points=point)
     
     @property

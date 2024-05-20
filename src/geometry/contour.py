@@ -224,7 +224,7 @@ class Contour(GeometryEntity):
             
         return reduced_points
         
-    def _reduce_by_distance(points: np.ndarray, max_dist_threshold: float=2) -> np.ndarray:
+    def _reduce_by_distance(points: np.ndarray, min_dist_threshold: float=2) -> np.ndarray:
         # remove consecutive very close points
         idx_to_remove = []
         for i, cur_point in enumerate(points):
@@ -232,12 +232,141 @@ class Contour(GeometryEntity):
                 i = -1 # so that next point is the first in that case
             next_point = points[i+1]
             distance = Segment(points=[cur_point, next_point]).length
-            if distance < max_dist_threshold:
+            if distance < min_dist_threshold:
                 idx_to_remove.append(i)
                 
         reduced_points = np.delete(np.asarray(points), idx_to_remove, 0)
             
         return reduced_points
+    
+    def _reduce_by_distance_limit_n_successive_deletion(
+            points: np.ndarray, 
+            min_dist_threshold: float=2,
+            limit_n_successive_deletion: int=2
+        ) -> np.ndarray:
+        # remove consecutive very close points
+        idx_to_remove = []
+        for i, cur_point in enumerate(points):
+            if i == len(points)-1:
+                i = -1 # so that next point is the first in that case
+            next_point = points[i+1]
+            distance = Segment(points=[cur_point, next_point]).length
+            if distance < min_dist_threshold:
+                if len(idx_to_remove) == 0 or(len(idx_to_remove) > 0 and i == idx_to_remove[-1] + 1):
+                    idx_to_remove.append(i)
+                else:
+                    idx_to_remove = []
+            else:
+                idx_to_remove = []
+            # print("Segment:", [cur_point.tolist(), next_point.tolist()], "distance", distance, idx_to_remove)
+            if len(idx_to_remove) >= limit_n_successive_deletion:
+                break
+                
+        if len(idx_to_remove) >= limit_n_successive_deletion:
+            last_idx_pt = idx_to_remove[-1]
+            centroid_point = Contour(points=points[idx_to_remove[0]: last_idx_pt]).centroid.astype(int)
+            points[last_idx_pt] = centroid_point
+            points = np.delete(np.asarray(points), idx_to_remove[:-1], 0)
+            return Contour._reduce_by_distance_limit_n_successive_deletion(
+                points=points,
+                min_dist_threshold=min_dist_threshold,
+                limit_n_successive_deletion=limit_n_successive_deletion
+            )
+
+        return points
+    
+    def _reduce_by_triangle_area(
+            points: np.ndarray, 
+            min_triangle_area: float=1
+        ) -> np.ndarray:
+        """This an implementation of the Visvalingam–Whyatt algorithm.
+        An introduction for the algorithm can be found here:
+        https://en.wikipedia.org/wiki/Visvalingam%E2%80%93Whyatt_algorithm
+        
+        The idea of the original algorithm is to conserve points in a contour construction which
+        form, with its two closest neighbour points, a triangle with a sufficiently big area > A,
+        having A as a parameter. The points which form a triangle area < A are descarded. 
+
+        Args:
+            points (np.ndarray): _description_
+            min_triangle_area (float, optional): _description_. Defaults to 1.
+            
+        Returns:
+            (np.ndarray): points with a minimum triangle area
+        """
+        idx_to_remove = []
+        for i, _ in enumerate(points):
+            if i == len(points)-1:
+                i = -1 # so that next point is the first in that case
+            area = Contour(points=points[i-1:i+2]).area
+            if area < min_triangle_area:
+                idx_to_remove.append(i)
+                
+        reduced_points = np.delete(np.asarray(points), idx_to_remove, 0)
+            
+        return reduced_points
+    
+    def _reduce_by_weighted_orders_areas(
+            points: np.ndarray, 
+            min_importance: float=1,
+            order: int=1,
+            weights: np.ndarray=None,
+            metric: str="geo"
+        ):
+        """This an extension of the implementation of the Visvalingam–Whyatt algorithm.
+        This algorithm is defined in the reduce by triangle areas method.
+        
+        The idea of this algorithm is to better detect the edges and keep these precious points.
+        So we want to put a lot of importance on the edge but very very low importance on the points
+        very close to the optimum edge point. For this we extend the Visvalingam–Whyatt algorithm.
+        
+        The resumed idea is: put a lot of importance on order-0 area and a lot less on the order-k
+        areas for all k > 1.
+
+        Args:
+            points (np.ndarray): _description_
+            min_triangle_area (float, optional): _description_. Defaults to 1.
+            extension_order (int, optional): a
+            weights (np.ndarray, optional):
+            metric (str, optional):
+        """
+        if order == 0:
+            return Contour._reduce_by_triangle_area(points=points, min_triangle_area=min_importance)
+        n_points = len(points)
+        n_areas = order+1
+        areas = np.zeros(shape=n_areas)
+        if weights is None or len(weights) != n_areas: 
+            weights = np.full(shape=n_areas, fill_value=1/n_areas)
+        idx_to_remove = []
+        for i in range(n_points):
+            if i == n_points-1-n_areas:
+                i = -1-n_areas # so that next point is the first in that case
+            for k in range(n_areas):
+                areas[k] = Contour(points=points[i-1-k:i+2+k]).area
+                
+            if metric == "geo":
+                importance = np.prod(np.power(areas, weights))
+            elif metric == "add":
+                importance = np.sum(np.dot(areas, weights))
+                
+            if importance < min_importance:
+                idx_to_remove.append(i)
+                
+        reduced_points = np.delete(np.asarray(points), idx_to_remove, 0)
+            
+        return reduced_points
+    
+    def _reduce_by_distance_with_edges_detection(
+            points: np.ndarray,
+            max_dist_threshold: float=2
+        ) -> np.ndarray:
+        # remove consecutive very close points
+        #TODO
+        pass
+    
+    def _reduce_by_distance_collinear_combined(points: np.ndarray) -> np.ndarray:
+        #TODO
+        pass
     
     # ---------------------------------- CLASSIC METHODS -----------------------------------------
     
@@ -278,9 +407,11 @@ class Contour(GeometryEntity):
             return False
         
         # check if each points composing the contours are close to each other
+        print("Contour", contour)
+        print("self", self)
         new_cnt = contour.copy().rearrange_first_point_closest_to_reference_point(self.points[0])
+        print("New contour", new_cnt)
         points_diff = new_cnt.points - self.points
         distances = np.linalg.norm(points_diff, axis=1)
         max_distance = np.max(distances)
         return (max_distance <= dist_margin_error)
-        
