@@ -208,8 +208,9 @@ class Contour(GeometryEntity):
         Returns:
             (np.ndarray): points without any collinear close points
         """
-        for _ in range(n_iterations+1):
+        for _ in range(n_iterations):
             idx_to_remove = []
+            before_n_points = len(points)
             for i, cur_point in enumerate(points):
                 if i == len(points)-1:
                     i = -1 # so that next point is the first in that case
@@ -222,7 +223,12 @@ class Contour(GeometryEntity):
                 if seg1.is_collinear(segment=seg2, margin_error_angle=margin_error_angle):
                     idx_to_remove.append(i+1)
                     
-            points = np.delete(np.asarray(points), idx_to_remove, 0)
+            points = np.delete(points, idx_to_remove, 0)
+            
+            # verify that the current iteration reduced the number of points
+            after_n_points = len(points)
+            if before_n_points == after_n_points:
+                break
             
         return points
         
@@ -244,36 +250,40 @@ class Contour(GeometryEntity):
     def _reduce_by_distance_limit_n_successive_deletion(
             points: np.ndarray, 
             min_dist_threshold: float=2,
-            limit_n_successive_deletion: int=2
+            limit_n_successive_deletion: int=2,
+            n_iterations: int=1
         ) -> np.ndarray:
         # remove consecutive very close points
-        idx_to_remove = []
-        for i, cur_point in enumerate(points):
-            if i == len(points)-1:
-                i = -1 # so that next point is the first in that case
-            next_point = points[i+1]
-            distance = Segment(points=[cur_point, next_point]).length
-            if distance < min_dist_threshold:
-                if len(idx_to_remove) == 0 or(len(idx_to_remove) > 0 and i == idx_to_remove[-1] + 1):
-                    idx_to_remove.append(i)
+        for _ in range(n_iterations):
+            idx_to_remove = []
+            cur_idx_to_remove = []
+            before_n_points = len(points)
+            for i, cur_point in enumerate(points):
+                if i == len(points)-1:
+                    i = -1 # so that next point is the first in that case
+                next_point = points[i+1]
+                distance = Segment(points=[cur_point, next_point]).length
+                if distance < min_dist_threshold:
+                    if len(cur_idx_to_remove) == 0 or(len(cur_idx_to_remove) > 0 and i == cur_idx_to_remove[-1] + 1):
+                        cur_idx_to_remove.append(i)
+                    else:
+                        cur_idx_to_remove = []
                 else:
-                    idx_to_remove = []
-            else:
-                idx_to_remove = []
-            # print("Segment:", [cur_point.tolist(), next_point.tolist()], "distance", distance, idx_to_remove)
-            if len(idx_to_remove) >= limit_n_successive_deletion:
+                    cur_idx_to_remove = []
+                # print("Segment:", [cur_point.tolist(), next_point.tolist()], "distance", distance, idx_to_remove)
+                if len(cur_idx_to_remove) >= limit_n_successive_deletion:
+                    first_idx_pt, last_idx_pt = cur_idx_to_remove[0], cur_idx_to_remove[-1]
+                    centroid_point = Contour(points=points[first_idx_pt:last_idx_pt]).centroid.astype(int)
+                    points[first_idx_pt] = centroid_point
+                    idx_to_remove = idx_to_remove + cur_idx_to_remove[1:] # all except first point idx
+                    cur_idx_to_remove = []
+
+            points = np.delete(points, idx_to_remove, 0)
+            
+            # verify that the current iteration reduced the number of points
+            after_n_points = len(points)
+            if before_n_points == after_n_points:
                 break
-                
-        if len(idx_to_remove) >= limit_n_successive_deletion:
-            last_idx_pt = idx_to_remove[-1]
-            centroid_point = Contour(points=points[idx_to_remove[0]: last_idx_pt]).centroid.astype(int)
-            points[last_idx_pt] = centroid_point
-            points = np.delete(np.asarray(points), idx_to_remove[:-1], 0)
-            return Contour._reduce_by_distance_limit_n_successive_deletion(
-                points=points,
-                min_dist_threshold=min_dist_threshold,
-                limit_n_successive_deletion=limit_n_successive_deletion
-            )
 
         return points
     
@@ -297,10 +307,11 @@ class Contour(GeometryEntity):
             (np.ndarray): points with a minimum triangle area
         """
         idx_to_remove = []
-        for i, _ in enumerate(points):
+        for i, cur_point in enumerate(points):
             if i == len(points)-1:
                 i = -1 # so that next point is the first in that case
-            area = Contour(points=points[i-1:i+2]).area
+            prev_point, next_point = points[i-1], points[i+1]
+            area = Contour(points=[prev_point, cur_point, next_point]).area
             if area < min_triangle_area:
                 idx_to_remove.append(i)
                 
@@ -350,9 +361,7 @@ class Contour(GeometryEntity):
                 importance = np.prod(np.power(areas, weights))
             elif metric == "add":
                 importance = (1+areas[0])**weights[0] - np.sum(np.dot(1+areas[1:], weights[1:]))
-                
-            print(points[i], importance)
-            
+                            
             if importance < min_importance:
                 idx_to_remove.append(i)
                 
@@ -411,10 +420,7 @@ class Contour(GeometryEntity):
             return False
         
         # check if each points composing the contours are close to each other
-        print("Contour", contour)
-        print("self", self)
         new_cnt = contour.copy().rearrange_first_point_closest_to_reference_point(self.points[0])
-        print("New contour", new_cnt)
         points_diff = new_cnt.points - self.points
         distances = np.linalg.norm(points_diff, axis=1)
         max_distance = np.max(distances)
