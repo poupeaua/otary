@@ -195,7 +195,8 @@ class Contour(GeometryEntity):
     
     def _reduce_collinear(
             points: np.ndarray, 
-            margin_error_angle: float=DEFAULT_MARGIN_ANGLE_ERROR
+            margin_error_angle: float=DEFAULT_MARGIN_ANGLE_ERROR,
+            n_iterations: int=1
         ) -> np.ndarray:
         """Remove close collinear points. Useful to clean a contour with a lot of points.
 
@@ -207,22 +208,23 @@ class Contour(GeometryEntity):
         Returns:
             (np.ndarray): points without any collinear close points
         """
-        idx_to_remove = []
-        for i, cur_point in enumerate(points):
-            if i == len(points)-1:
-                i = -1 # so that next point is the first in that case
-            elif i == len(points)-2:
-                i = -2
-            next_point = points[i+1]
-            next_next_point = points[i+2]
-            seg1 = Segment(points=[cur_point, next_point])
-            seg2 = Segment(points=[next_point, next_next_point])
-            if seg1.is_collinear(segment=seg2, margin_error_angle=margin_error_angle):
-                idx_to_remove.append(i+1)
-                
-        reduced_points = np.delete(np.asarray(points), idx_to_remove, 0)
+        for _ in range(n_iterations+1):
+            idx_to_remove = []
+            for i, cur_point in enumerate(points):
+                if i == len(points)-1:
+                    i = -1 # so that next point is the first in that case
+                elif i == len(points)-2:
+                    i = -2
+                next_point = points[i+1]
+                next_next_point = points[i+2]
+                seg1 = Segment(points=[cur_point, next_point])
+                seg2 = Segment(points=[next_point, next_next_point])
+                if seg1.is_collinear(segment=seg2, margin_error_angle=margin_error_angle):
+                    idx_to_remove.append(i+1)
+                    
+            points = np.delete(np.asarray(points), idx_to_remove, 0)
             
-        return reduced_points
+        return points
         
     def _reduce_by_distance(points: np.ndarray, min_dist_threshold: float=2) -> np.ndarray:
         # remove consecutive very close points
@@ -347,8 +349,10 @@ class Contour(GeometryEntity):
             if metric == "geo":
                 importance = np.prod(np.power(areas, weights))
             elif metric == "add":
-                importance = np.sum(np.dot(areas, weights))
+                importance = (1+areas[0])**weights[0] - np.sum(np.dot(1+areas[1:], weights[1:]))
                 
+            print(points[i], importance)
+            
             if importance < min_importance:
                 idx_to_remove.append(i)
                 
