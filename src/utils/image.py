@@ -3,6 +3,7 @@ File utils for image manipulation
 """
 
 from __future__ import annotations
+from typing import Optional
 import cv2
 import scipy.ndimage
 import numpy as np
@@ -36,6 +37,13 @@ class Image:
         # return as type int because the center needs to be a defined XY coordinates of a pixel
         return (np.array([self.width, self.height]) / 2).astype(int)
     
+    @property
+    def norm_side_length(self):
+        return np.sqrt(self.area)
+    
+    def margin_distance_error(self, pct: float=0.01):
+        return self.norm_side_length * pct
+    
     def copy(self) -> Image:
         return Image(self.asarray.copy())
     
@@ -43,9 +51,11 @@ class Image:
 
     def show(
             self, 
-            title: str=None,
+            title: Optional[str]=None,
             figsize: tuple[int]=[8.0, 6.0],
-            color_conversion: int=cv2.COLOR_BGR2RGB) -> None:
+            color_conversion: int=cv2.COLOR_BGR2RGB,
+            save_filepath: Optional[str]=None
+        ) -> None:
         """Display the image
 
         Args:
@@ -69,6 +79,9 @@ class Image:
         # if a title is provided, show it
         if title is not None:
             plt.title(title)
+        
+        if save_filepath is not None:
+            plt.savefig(save_filepath)
 
         plt.show()
         
@@ -396,3 +409,6 @@ class Image:
             return im_crop, translation_vector, angle, crop_translation_vector
         else:
             return im_crop
+
+    def save(self, save_filepath: str):
+        self.show(save_filepath=save_filepath)
