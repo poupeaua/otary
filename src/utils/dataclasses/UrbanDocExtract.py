@@ -4,11 +4,14 @@ for each line
 """
 
 from dataclasses import dataclass
+
 import numpy as np
+
 
 @dataclass
 class UrbanDocExtract:
     """Class for keeping track of a Urban Document extracted information"""
+
     image: np.ndarray
     _id: str
     surface: float
@@ -17,9 +20,8 @@ class UrbanDocExtract:
     drawer_name: str
     drawer_register: str
     drawer_email: str
-    region: str 
-    ciudad: str # municipio
-    locality: str # localidad
+    region: str
+    ciudad: str  # municipio
+    locality: str  # localidad
     use: str
     type: str
-    
