@@ -9,6 +9,8 @@ from src.geometry.contour import Contour
 
 
 class Rectangle(Contour):
+    """Rectangle class to manipulate rectangle object"""
+
     def __init__(self, points: np.ndarray) -> None:
         assert len(points) == 4
         super().__init__(points, reduce=False)

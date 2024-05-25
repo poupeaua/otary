@@ -20,18 +20,24 @@ class Contour(GeometryEntity):
         super().__init__(points)
 
     @property
-    def n_points(self) -> int:
-        return len(self.points)
-
-    @property
     def lines(self) -> np.ndarray:
+        """Expresses the Contour as a list of segments.
+
+        Returns:
+            np.ndarray: _description_
+        """
         return Contour.points_to_lines(self.points)
 
     @property
     def lengths(self) -> np.ndarray:
+        """Returns the length of all the segments that make up the Contour
+
+        Returns:
+            np.ndarray: array of shape (n_points)
+        """
         return np.linalg.norm(np.diff(self.lines, axis=1), axis=2)
 
-    # ---------------------------------- OTHER CONSTRUCTORS --------------------------------------
+    # ---------------------------------- OTHER CONSTRUCTORS ----------------------------
 
     @classmethod
     def from_lines(cls, lines: np.ndarray) -> Contour:
@@ -199,21 +205,6 @@ class Contour(GeometryEntity):
         return np.stack([points, np.roll(points, shift=-1, axis=0)], axis=1)
 
     @staticmethod
-    def _reduce_noise(points: np.ndarray, max_dist_threshold: float = 5) -> np.ndarray:
-        """Remove some points that describe an unwanted noise.
-
-        Args:
-            points (np.ndarray): array of shape (n, 2)
-            max_dist_threshold (float, optional): minimum distance to suppress points.
-                Defaults to 5.
-
-        Returns:
-            (np.ndarray): points without noisy and close points
-        """
-        # TODO
-        return np.zeros(0)
-
-    @staticmethod
     def _reduce_collinear(
         points: np.ndarray,
         margin_error_angle: float = DEFAULT_MARGIN_ANGLE_ERROR,
@@ -260,7 +251,23 @@ class Contour(GeometryEntity):
     def _reduce_by_distance(
         points: np.ndarray, min_dist_threshold: float = 2
     ) -> np.ndarray:
-        # remove consecutive very close points
+        """Given a list of points, reduce the list by discarding the points that are
+        close to each other.
+
+        This reduce by distance function has a big drawback: it
+        will remove potentially too much points between two given points A and B
+        as long as there exists a suite of points that close enough to each others
+        between A and B. In order to avoid this disadvantage please refer to the
+        method named :func:`~Contour._reduce_by_distance_limit_n_successive_deletion`.
+
+        Args:
+            points (np.ndarray): list of points of shape (n, 2)
+            min_dist_threshold (float, optional): if two points have a distance
+                lower that this value, delete one point. Defaults to 2.
+
+        Returns:
+            np.ndarray: filtered list of points
+        """
         idx_to_remove = []
         for i, cur_point in enumerate(points):
             if i == len(points) - 1:
@@ -281,7 +288,20 @@ class Contour(GeometryEntity):
         limit_n_successive_deletion: int = 2,
         n_iterations: int = 1,
     ) -> np.ndarray:
-        # remove consecutive very close points
+        """Given a list of points, reduce the list by discarding the points that are
+        close to each other and by making sure that we limit the number of successive
+        points that can be deleted.
+
+        It can be seen as an enhanced version of the function
+        :func:`~Contour._reduce_by_distance`.
+
+        Args:
+            points (np.ndarray): list of points of shape (n, 2)
+            min_dist_threshold (float, optional): _description_. Defaults to 2.
+
+        Returns:
+            np.ndarray: filtered list of points
+        """
         for _ in range(n_iterations):
             idx_to_remove: list[int] = []
             cur_idx_to_remove: list[int] = []
@@ -300,7 +320,8 @@ class Contour(GeometryEntity):
                         cur_idx_to_remove = []
                 else:
                     cur_idx_to_remove = []
-                # print("Segment:", [cur_point.tolist(), next_point.tolist()], "distance", distance, idx_to_remove)
+                # print("Segment:", [cur_point.tolist(), next_point.tolist()], \
+                # "distance", distance, idx_to_remove)
                 if len(cur_idx_to_remove) >= limit_n_successive_deletion:
                     first_idx_pt, last_idx_pt = (
                         cur_idx_to_remove[0],
@@ -372,8 +393,8 @@ class Contour(GeometryEntity):
         precious points. So we want to put a lot of importance on the edge but very
         low importance on the points very close to the optimum edge point.
 
-        The resumed idea is: put a lot of importance on order-0 area and a lot less on the order-k
-        areas for all k > 1.
+        The resumed idea is: put a lot of importance on order-0 area and a lot less on
+        the order-k areas for all k > 1.
 
         Args:
             points (np.ndarray): _description_
@@ -423,19 +444,52 @@ class Contour(GeometryEntity):
         # TODO
         return False
 
-    def add_point(self, point: np.ndarray, index: int):
+    def add_point(self, point: np.ndarray, index: int) -> Contour:
+        """Add a point at a given index in the Contour object
+
+        Args:
+            point (np.ndarray): point to be added
+            index (int): index where the point will be added
+
+        Returns:
+            Contour: Contour object with an added point
+        """
         self.points = np.concatenate(
             [self.points[:index], [point], self.points[index:]]
         )
         return self
 
-    def rearrange_first_point_is_at_index(self, index: int):
+    def rearrange_first_point_is_at_index(self, index: int) -> Contour:
+        """Rearrange the list of points that defines the Contour so that the first
+        point in the list of points is the one at index given by the argument of this
+        function.
+
+        Args:
+            index (int): index value
+
+        Returns:
+            Contour: Contour which is the exact same one but with a rearranged list
+                of points.
+        """
         self.points = np.concatenate([self.points[index:], self.points[:index]])
         return self
 
     def rearrange_first_point_closest_to_reference_point(
         self, reference_point: np.ndarray = np.zeros(shape=(2,))
-    ):
+    ) -> Contour:
+        """Rearrange the list of points that defines the Contour so that the first
+        point in the list of points is the one that is the closest (by distance) to the
+        reference point.
+
+        Args:
+            reference_point (np.ndarray): point that is taken as a reference in the
+                space to find the one in the Contour list of points that is the
+                closest to this reference point.
+
+        Returns:
+            Contour: Contour which is the exact same one but with a rearranged list
+                of points.
+        """
         shifted_points = self.points - reference_point
         distances = np.linalg.norm(shifted_points, axis=1)
         idx_min_dist = np.argmin(distances).astype(int)
@@ -443,9 +497,20 @@ class Contour(GeometryEntity):
 
     # ------------------------------- Fundamental Methods ------------------------------
 
-    def is_equal(self, contour: Contour, dist_margin_error: float = 5):
+    def is_equal(self, contour: Contour, dist_margin_error: float = 5) -> bool:
+        """Check whether two contours objects are equal.
+        Allows a margin of error.
+
+        Args:
+            contour (Contour): Contour object
+            dist_margin_error (float, optional): distance margin of error.
+                Defaults to 5.
+
+        Returns:
+            bool: True if the contour are equal, False otherwise
+        """
         if self.n_points != contour.n_points:
-            # if the contours do not have the same number of points they can not be similar
+            # if contours do not have the same number of points they can not be similar
             return False
 
         # check if each points composing the contours are close to each other

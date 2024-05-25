@@ -1,4 +1,9 @@
-""" """
+"""
+GeometryEntity module which allows to define transformation and property shared
+by all type of geometry objects
+"""
+
+from __future__ import annotations
 
 import copy
 from abc import ABC
@@ -8,11 +13,27 @@ import numpy as np
 
 
 class GeometryEntity(ABC):
+    """GeometryEntity class which is the abstract base class for all geometry classes"""
+
     def __init__(self, points) -> None:
         self.points = copy.deepcopy(np.array(points))
 
     @property
+    def n_points(self) -> int:
+        """Returns the number of points this geometric object is made of
+
+        Returns:
+            int: number of points that composes the geomtric object
+        """
+        return self.points.shape[0]
+
+    @property
     def asarray(self) -> np.ndarray:
+        """Representation of the object as a numpy array
+
+        Returns:
+            np.ndarray: numpy array representation of the object
+        """
         return self.points
 
     @property
@@ -39,7 +60,7 @@ class GeometryEntity(ABC):
         the shape
 
         Returns:
-            float: centroid point
+            np.ndarray: centroid point
         """
         moments = cv2.moments(self.points)
         if moments["m00"] != 0:
@@ -51,6 +72,11 @@ class GeometryEntity(ABC):
         return centroid
 
     def copy(self):
+        """Create a copy of the geometry entity object
+
+        Returns:
+            GeometryEntity: copy of the geometry entity object
+        """
         return copy.deepcopy(self)
 
     def rotate(
@@ -59,6 +85,19 @@ class GeometryEntity(ABC):
         pivot: np.ndarray = np.zeros(shape=(2,)),
         degree: bool = False,
     ):
+        """Rotate the geometry entity object.
+        A pivot point can be passed as an argument to rotate the object around the pivot
+
+        Args:
+            angle (float): rotation angle
+            pivot (np.ndarray, optional): pivot point.
+                Defaults to np.zeros(shape=(2,)).
+            degree (bool, optional): whether the angle is in degree or radian.
+                Defaults to False which means radians.
+
+        Returns:
+            GeometryEntity: rotated geometry entity object.
+        """
         if degree:  # transform angle to radian if in degree
             angle = np.deg2rad(angle)
 
@@ -80,10 +119,30 @@ class GeometryEntity(ABC):
     def rotate_around_image_center(
         self, img: np.ndarray, angle: float, degree: bool = False
     ):
+        """Given an geometric object and an image, rotate the object around
+        the image center point.
+
+        Args:
+            img (np.ndarray): image as a shape (x, y) sized array
+            angle (float): rotation angle
+            degree (bool, optional): whether the angle is in degree or radian.
+                Defaults to False which means radians.
+
+        Returns:
+            GeometryEntity: rotated geometry entity object.
+        """
         img_center_point = np.array([img.shape[1], img.shape[0]]) / 2
         return self.rotate(angle=angle, pivot=img_center_point, degree=degree)
 
     def shift(self, vector: np.ndarray):
+        """Shift the geometry entity by the vector direction
+
+        Args:
+            vector (np.ndarray): vector that describes the shift
+
+        Returns:
+            GeometryEntity: shifted geometrical object
+        """
         self.points = self.points + vector
         return self
 

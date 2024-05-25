@@ -8,6 +8,8 @@ from src.geometry.entity import GeometryEntity
 
 
 class Point(GeometryEntity):
+    """Point class"""
+
     def __init__(self, point: np.ndarray) -> None:
         point = np.asarray(point)
         if point.shape == (2,):

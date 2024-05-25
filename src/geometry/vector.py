@@ -9,15 +9,25 @@ from src.geometry import Segment
 
 
 class Vector(Segment):
-    def __init__(self, points) -> None:
-        super().__init__(points)
+    """Vector class to manipulate vector which can be seen as Segment with direction"""
 
     @property
-    def cv2_space_coords(self):
+    def cv2_space_coords(self) -> np.ndarray:
+        """Inverted coordinates in the cv2 space
+
+        Returns:
+            np.ndarray: with inverted coordinates
+        """
         return np.roll(self.points, 1)
 
     @property
-    def is_x0_greater_than_x1(self):
+    def is_x0_greater_than_x1(self) -> bool:
+        """Whether the x coordinate of the first point is greater than the x
+        coordinate of the second point that forms the segment
+
+        Returns:
+            bool: if x0 > x1 returns True, else False
+        """
         return bool(self.points[0][0] > self.points[1][0])
 
     @property
@@ -45,7 +55,18 @@ class Vector(Segment):
         cardinal_degree = np.mod(360 + angle, 360)  # avoid negative value case
         return cardinal_degree
 
-    def cardinal_direction(self, full: bool = False, level: int = 2):
+    def cardinal_direction(self, full: bool = False, level: int = 2) -> str:
+        """Cardinal direction
+
+        Args:
+            full (bool, optional): True returns full text (South), False returns
+                abbreviated text (S). Defaults to False.
+            level (int, optional): Level of detail (3 = N/NNE/NE/ENE/E...
+                2 = N/NE/E/SE... 1 = N/E/S/W). Defaults to 2.
+
+        Returns:
+            str: _description_
+        """
         return angle_to_direction(
             input_angle=self.cardinal_degree, full=full, level=level
         )

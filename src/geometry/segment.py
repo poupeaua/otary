@@ -5,7 +5,6 @@ Segment class to describe defined lines and segments
 from __future__ import annotations
 
 import itertools
-import logging
 
 import cv2
 import numpy as np
@@ -15,24 +14,46 @@ from src.geometry.entity import GeometryEntity
 
 
 class Segment(GeometryEntity):
+    """Segment Class to manipulate easily segments objects"""
+
     def __init__(self, points) -> None:
         assert len(points) == 2
         super().__init__(points)
 
     @property
     def perimeter(self) -> float:
+        """Perimeter of the segment which we define to be its length
+
+        Returns:
+            float: segment perimeter
+        """
         return cv2.arcLength(self.points, False)
 
     @property
     def length(self) -> float:
+        """Length of the segment in Euclidian norm
+
+        Returns:
+            float: segment length
+        """
         return self.perimeter
 
     @property
     def centroid(self) -> np.ndarray:
+        """Returns the center point of the segment
+
+        Returns:
+            np.ndarray: point of shape (1, 2)
+        """
         return np.sum(self.points, axis=0) / 2
 
     @property
     def slope(self) -> float:
+        """Returns the segment slope in the classical XY coordinates referential
+
+        Returns:
+            float: segment slope value
+        """
         p1, p2 = self.points[0], self.points[1]
         try:
             slope = (p2[1] - p1[1]) / (p2[0] - p1[0] + 1e-9)
@@ -42,6 +63,11 @@ class Segment(GeometryEntity):
 
     @property
     def slope_cv2(self) -> float:
+        """Compute the slope seen as in the cv2 coordinates with y-axis inverted
+
+        Returns:
+            float: segment slope value
+        """
         return -self.slope
 
     def slope_angle(self, degree: bool = False, is_cv2: bool = False) -> float:
@@ -80,16 +106,11 @@ class Segment(GeometryEntity):
         angle_difference = np.mod(
             np.abs(self.slope_angle() - segment.slope_angle()), np.pi
         )
-        logging.debug(
-            "Angle difference:", angle_difference, "Margin:", margin_error_angle
-        )
-        if (
+        test = bool(
             angle_difference < margin_error_angle
             or np.abs(angle_difference - np.pi) < margin_error_angle
-        ):
-            return True
-        else:
-            return False
+        )
+        return test
 
     @staticmethod
     def is_points_collinear(
@@ -193,8 +214,4 @@ class Segment(GeometryEntity):
             segment=segment, margin_error_angle=margin_error_angle
         )
         _is_collinear = 1 in val_arr
-        logging.debug(f"{_is_parallel}{val_arr}")
-        if _is_parallel and _is_collinear:
-            return True
-        else:
-            return False
+        return bool(_is_parallel and _is_collinear)
