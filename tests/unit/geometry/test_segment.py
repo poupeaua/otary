@@ -40,7 +40,7 @@ class TestSegmentSlopeCalculation:
 
     def test_compute_slope_angle_posx_pi_over_4(self):
         seg = np.array([[0, 0], [1, 1]])
-        assert Segment(seg).slope_angle() == np.pi / 4
+        assert np.isclose(Segment(seg).slope_angle(), np.pi / 4)
 
     def test_compute_slope_angle_posx_neg_pi_over_4(self):
         seg = np.array([[0, 0], [1, -1]])
@@ -48,7 +48,7 @@ class TestSegmentSlopeCalculation:
 
     def test_compute_slope_angle_negx_pi_over_4(self):
         seg = np.array([[0, 0], [-1, 1]])
-        assert Segment(seg).slope_angle() == -np.pi / 4
+        assert np.isclose(Segment(seg).slope_angle(), -np.pi / 4)
 
     def test_compute_slope_angle_negx_neg_pi_over_4(self):
         seg = np.array([[0, 0], [-1, -1]])
