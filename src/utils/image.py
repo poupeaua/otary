@@ -16,40 +16,92 @@ from src.utils.dataclasses.OcrSingleOutput import OcrSingleOutput
 
 
 class Image:
+    """Image Manipulation class"""
+
     def __init__(self, image: np.ndarray | Image) -> None:
         if isinstance(image, Image):
             image = image.asarray
         self.asarray: np.ndarray = image.copy()
 
     @property
-    def is_gray(self):
-        return len(self.asarray.shape) == 2
+    def is_gray(self) -> bool:
+        """Whether the image is a grayscale image or not
+
+        Returns:
+            bool: True if image is in grayscale, 0 otherwise
+        """
+        return bool(len(self.asarray.shape) == 2)
 
     @property
-    def height(self):
+    def height(self) -> int:
+        """Height of the image. In cv2 it is defined as the first image shape value
+
+        Returns:
+            int: image height
+        """
         return self.asarray.shape[0]
 
     @property
-    def width(self):
+    def width(self) -> int:
+        """Width of the image. In cv2 it is defined as the second image shape value
+
+        Returns:
+            int: image width
+        """
         return self.asarray.shape[1]
 
     @property
-    def area(self):
+    def area(self) -> int:
+        """Area of the image
+
+        Returns:
+            int: image area
+        """
         return self.width * self.height
 
     @property
-    def center(self):
-        # return as type int because the center needs to represent XY coords of a pixel
+    def center(self) -> np.ndarray:
+        """Center of the image.
+
+        Please note that it is returned as type int because the center needs to
+        represent a X-Y coords of a pixel.
+
+        Returns:
+            np.ndarray: center point of the image
+        """
         return (np.array([self.width, self.height]) / 2).astype(int)
 
     @property
-    def norm_side_length(self):
-        return np.sqrt(self.area)
+    def norm_side_length(self) -> int:
+        """Returns the normalized side length of the image.
+        This is the side length if the image had the same area but
+        the shape of a square (four sides of the same length).
 
-    def margin_distance_error(self, pct: float = 0.01):
+        Returns:
+            int: normalized side length
+        """
+        return int(np.sqrt(self.area))
+
+    def margin_distance_error(self, pct: float = 0.01) -> float:
+        """Acceptable distance error margin. It is calculated based on the
+        normalized side length.
+
+        Args:
+            pct (float, optional): pourcentage of distance error. Defaults to 0.01,
+                which means 1% of the normalized side length as the
+                default margin distance error.
+
+        Returns:
+            float: margin distance error
+        """
         return self.norm_side_length * pct
 
     def copy(self) -> Image:
+        """Copy of the image
+
+        Returns:
+            Image: image copy
+        """
         return Image(self.asarray.copy())
 
     # ------------------------------- DISPLAY METHODS ----------------------------------
@@ -71,6 +123,8 @@ class Image:
         # is not the default colour space for OpenCV
         if color_conversion is not None:
             im = cv2.cvtColor(self.asarray, color_conversion)
+        else:
+            im = self.asarray
 
         plt.figure(figsize=figsize)
 
@@ -96,7 +150,7 @@ class Image:
         self,
         points: np.ndarray,
         colors_points: Optional[list] = None,
-        default_color=(0, 0, 255),
+        default_color: tuple[int, int, int] = (0, 0, 255),
         radius: int = 3,
         thickness: int = 3,
     ) -> Image:
@@ -144,7 +198,7 @@ class Image:
         segments: np.ndarray,
         as_vectors: bool = False,
         colors_segments: Optional[list] = None,
-        default_color=(0, 0, 255),
+        default_color: tuple[int, int, int] = (0, 0, 255),
         thickness: int = 3,
         line_type: int = cv2.LINE_AA,
         tip_length: int = 20,
@@ -207,11 +261,30 @@ class Image:
         contours: list[geo.Contour],
         as_vectors: bool = False,
         colors_segments: Optional[list] = None,
-        default_color=(0, 0, 255),
+        default_color: tuple[int, int, int] = (0, 0, 255),
         thickness: int = 3,
         line_type: int = cv2.LINE_AA,
         tip_length: int = 20,
-    ):
+    ) -> Image:
+        """Add a contour in a image
+
+        Args:
+            contours (list[geo.Contour]): list of Contour objects
+            as_vectors (bool, optional): whether to show the contours as a succession
+                of vector (arrow) or segments. Defaults to False.
+            colors_segments (Optional[list], optional): a color for each segment.
+                Defaults to None.
+            default_color (tuple[int, int, int], optional): color by default.
+                Defaults to (0, 0, 255).
+            thickness (int, optional): thickness of the segments. Defaults to 3.
+            line_type (int, optional): lien type of the segment.
+                Defaults to cv2.LINE_AA.
+            tip_length (int, optional): in case the segment are shown as vectors.
+                Defaults to 20.
+
+        Returns:
+            Image: image with the added contours
+        """
         im = self.copy()
 
         for cnt in contours:
@@ -230,7 +303,7 @@ class Image:
     def add_ocr_outputs(
         self,
         ocr_outputs: list[OcrSingleOutput],
-        default_bbox_color: tuple = (0, 0, 255),
+        default_bbox_color: tuple[int, int, int] = (0, 0, 255),
         thickness: int = 2,
     ) -> Image:
         """Return a new image with the bounding boxes displayed from a list of OCR
@@ -314,8 +387,7 @@ class Image:
         im = self.shift(shift=shift_vector, mode=mode)
         if return_shift_vector:
             return im, shift_vector
-        else:
-            return im
+        return im
 
     def center_image_to_segment(
         self,
@@ -343,6 +415,17 @@ class Image:
     def resize_fixed(
         self, dim: tuple[int, int], interpolation: int = cv2.INTER_AREA
     ) -> Image:
+        """Resize the image using a fixed dimension well defined.
+        This function can result in a distorted image.
+
+        Args:
+            dim (tuple[int, int]): a tuple with two integer, width, height.
+            interpolation (int, optional): resize interpolation.
+                Defaults to cv2.INTER_AREA.
+
+        Returns:
+            Image: image object
+        """
         im = self.asarray.copy()
         im = cv2.resize(src=im, dsize=dim, interpolation=interpolation)
         return Image(im)
@@ -444,8 +527,12 @@ class Image:
 
         if return_transfo_bricks:
             return im_crop, translation_vector, angle, crop_translation_vector
-        else:
-            return im_crop
+        return im_crop
 
     def save(self, save_filepath: str):
+        """Save the image in a local file
+
+        Args:
+            save_filepath (str): path to the file
+        """
         self.show(save_filepath=save_filepath)

@@ -16,8 +16,7 @@ from src.geometry import Segment
 
 
 class Contour(GeometryEntity):
-    def __init__(self, points: np.ndarray | list, reduce: bool = False) -> None:
-        super().__init__(points)
+    """Contour class which defines a contour object of any closed-shape"""
 
     @property
     def lines(self) -> np.ndarray:
@@ -95,16 +94,16 @@ class Contour(GeometryEntity):
             (Contour): a Contour object
         """
 
-        def display(lines):
-            if debug:
-                # image.show_image_and_lines(
-                #     image=img,
-                #     lines=lines,
-                #     colors_lines=[
-                #         (50 * i, 255 - 50 * i, 255) for i in range(len(_lines))
-                #     ],
-                # )
-                pass
+        # def display(lines):
+        #     if debug:
+        #         #TODO
+        #         image.show_image_and_lines(
+        #             image=img,
+        #             lines=lines,
+        #             colors_lines=[
+        #                 (50 * i, 255 - 50 * i, 255) for i in range(len(_lines))
+        #             ],
+        #         )
 
         if debug:
             assert img is not None
@@ -125,12 +124,12 @@ class Contour(GeometryEntity):
             if len(_lines) == 0:
                 print("No more lines will do the same operation as no point detected")
 
-            display(lines=_lines)
+            # display(lines=_lines)
 
             # find the closest point to the current one and associated line
             lines2points = _lines.reshape(len(_lines) * 2, 2)
             distances_from_cur_point = np.linalg.norm(lines2points - cur_point, axis=1)
-            # print(len(_lines), len(distances_from_cur_point), distances_from_cur_point)
+            # print(len(_lines), len(distances_from_cur_point),distances_from_cur_point)
             idx_closest_points = np.nonzero(
                 distances_from_cur_point < min_dist_threshold
             )[0]
@@ -141,7 +140,7 @@ class Contour(GeometryEntity):
                 # TODO
                 # maybe just take the closest may be more complicated than that
                 raise RuntimeError("More than one point close to the current point")
-            elif len(idx_closest_points) == 0:
+            if len(idx_closest_points) == 0:
                 first_line = construct_contour[0]
                 first_point = first_line[0]
                 distance_end_to_first_points = np.linalg.norm(first_point - cur_point)
@@ -156,8 +155,7 @@ class Contour(GeometryEntity):
                     construct_contour[0][0] = intersect_point
                     is_contour_found = True
                     break
-                else:
-                    raise RuntimeError("No point detected close to the current point")
+                raise RuntimeError("No point detected close to the current point")
 
             idx_closest_point = int(idx_closest_points[0])
             idx_line_closest_point = int(np.floor(idx_closest_point / 2))
@@ -168,7 +166,7 @@ class Contour(GeometryEntity):
             if idx_point_in_line == 1:  # flip points positions
                 _lines[idx_line_closest_point] = np.flip(line_closest_point, axis=0)
 
-            display(lines=[cur_line, line_closest_point])
+            # display(lines=[cur_line, line_closest_point])
 
             # find intersection point between the two lines
             geoline_closest_point = Line(line_closest_point[0], line_closest_point[1])
@@ -181,12 +179,12 @@ class Contour(GeometryEntity):
             line_closest_point[0] = intersect_point
             construct_contour[i][1] = intersect_point
 
-            display(lines=[cur_line, line_closest_point])
+            # display(lines=[cur_line, line_closest_point])
 
             i += 1
 
         contour_lines = np.array(construct_contour)
-        display(lines=[cur_line, line_closest_point])
+        # display(lines=[cur_line, line_closest_point])
         cnt = Contour.from_lines(contour_lines)
         return cnt
 
@@ -205,7 +203,7 @@ class Contour(GeometryEntity):
         return np.stack([points, np.roll(points, shift=-1, axis=0)], axis=1)
 
     @staticmethod
-    def _reduce_collinear(
+    def reduce_collinear(
         points: np.ndarray,
         margin_error_angle: float = DEFAULT_MARGIN_ANGLE_ERROR,
         n_iterations: int = 1,
@@ -248,7 +246,7 @@ class Contour(GeometryEntity):
         return points
 
     @staticmethod
-    def _reduce_by_distance(
+    def reduce_by_distance(
         points: np.ndarray, min_dist_threshold: float = 2
     ) -> np.ndarray:
         """Given a list of points, reduce the list by discarding the points that are
@@ -258,7 +256,7 @@ class Contour(GeometryEntity):
         will remove potentially too much points between two given points A and B
         as long as there exists a suite of points that close enough to each others
         between A and B. In order to avoid this disadvantage please refer to the
-        method named :func:`~Contour._reduce_by_distance_limit_n_successive_deletion`.
+        method named :func:`~Contour.reduce_by_distance_limit_n_successive_deletion`.
 
         Args:
             points (np.ndarray): list of points of shape (n, 2)
@@ -282,7 +280,7 @@ class Contour(GeometryEntity):
         return reduced_points
 
     @staticmethod
-    def _reduce_by_distance_limit_n_successive_deletion(
+    def reduce_by_distance_limit_n_successive_deletion(
         points: np.ndarray,
         min_dist_threshold: float = 2,
         limit_n_successive_deletion: int = 2,
@@ -293,7 +291,7 @@ class Contour(GeometryEntity):
         points that can be deleted.
 
         It can be seen as an enhanced version of the function
-        :func:`~Contour._reduce_by_distance`.
+        :func:`~Contour.reduce_by_distance`.
 
         Args:
             points (np.ndarray): list of points of shape (n, 2)
@@ -346,7 +344,7 @@ class Contour(GeometryEntity):
         return points
 
     @staticmethod
-    def _reduce_by_triangle_area(
+    def reduce_by_triangle_area(
         points: np.ndarray, min_triangle_area: float = 1
     ) -> np.ndarray:
         """This an implementation of the Visvalingam–Whyatt algorithm.
@@ -379,7 +377,7 @@ class Contour(GeometryEntity):
         return reduced_points
 
     @staticmethod
-    def _reduce_by_weighted_orders_areas(
+    def reduce_by_weighted_orders_areas(
         points: np.ndarray,
         min_importance: float = 1,
         order: int = 1,
@@ -404,7 +402,7 @@ class Contour(GeometryEntity):
             metric (str, optional):
         """
         if order == 0:
-            return Contour._reduce_by_triangle_area(
+            return Contour.reduce_by_triangle_area(
                 points=points, min_triangle_area=min_importance
             )
         n_points = len(points)
@@ -425,6 +423,8 @@ class Contour(GeometryEntity):
                 importance = (1 + areas[0]) ** weights[0] - np.sum(
                     np.dot(1 + areas[1:], weights[1:])
                 )
+            else:
+                raise RuntimeError("The metric {metric} is not in [geo, add].")
 
             if importance < min_importance:
                 idx_to_remove.append(i)

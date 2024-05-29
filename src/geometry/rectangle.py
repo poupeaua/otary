@@ -13,7 +13,7 @@ class Rectangle(Contour):
 
     def __init__(self, points: np.ndarray) -> None:
         assert len(points) == 4
-        super().__init__(points, reduce=False)
+        super().__init__(points)
 
     @classmethod
     def from_center(
