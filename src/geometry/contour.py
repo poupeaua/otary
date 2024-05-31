@@ -9,6 +9,7 @@ from typing import Optional
 
 import numpy as np
 from sympy.geometry import Line
+from shapely import LinearRing
 
 from src.geometry import DEFAULT_MARGIN_ANGLE_ERROR
 from src.geometry import GeometryEntity
@@ -19,11 +20,21 @@ class Contour(GeometryEntity):
     """Contour class which defines a contour object of any closed-shape"""
 
     @property
+    def shapely(self) -> LinearRing:
+        """Returns the Shapely.LinearRing representation of the contour.
+        See https://shapely.readthedocs.io/en/stable/reference/shapely.LineString.html
+
+        Returns:
+            LinearRing: shapely.LinearRing object
+        """
+        return LinearRing(coordinates=self.asarray)
+
+    @property
     def lines(self) -> np.ndarray:
         """Expresses the Contour as a list of segments.
 
         Returns:
-            np.ndarray: _description_
+            np.ndarray: segments representation of the contour
         """
         return Contour.points_to_lines(self.points)
 
@@ -435,14 +446,13 @@ class Contour(GeometryEntity):
 
     # ------------------------------- CLASSIC METHODS ----------------------------------
 
-    def is_auto_intersected(self) -> bool:
+    def is_self_intersected(self) -> bool:
         """Whether any of the segments intersect another segment in the same set
 
         Returns:
             bool: True if at least two lines intersect, False otherwise
         """
-        # TODO
-        return False
+        return not self.shapely.is_simple
 
     def add_point(self, point: np.ndarray, index: int) -> Contour:
         """Add a point at a given index in the Contour object

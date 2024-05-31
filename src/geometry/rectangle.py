@@ -3,6 +3,8 @@ Rectangle class.
 It will be particularly useful for the AITT project for describing bounding boxes.
 """
 
+from __future__ import annotations
+
 import numpy as np
 
 from src.geometry.contour import Contour
@@ -17,34 +19,34 @@ class Rectangle(Contour):
 
     @classmethod
     def from_center(
-        cls, center: np.ndarray, width: float, height: float, angle: float = 0
-    ):
+        cls, center: np.ndarray, dim: tuple[float], angle: float = 0
+    ) -> Rectangle:
         """Create a Rectangle object using the center point, width, height and angle.
         The angle is defined as the
 
         Args:
-            center (np.ndarray): _description_
-            width (float): _description_
-            height (float): _description_
+            center (np.ndarray): center point of the rectangle
+            dim (tuple[float]): dimension of the rectangle (width, height)
             angle (float, optional): _description_. Defaults to 0.
 
         Returns:
-            _type_: _description_
+            Rectangle: Rectangle object
         """
         # compute the halves lengths
-        half_width = width / 2
-        half_height = height / 2
+        half_width = dim[0] / 2
+        half_height = dim[1] / 2
 
         # get center coordinates
         center_x, center_y = center[0], center[1]
 
         # get the rectangle coordinates
-        top_left_corner = np.array([center_x - half_width, center_y + half_height])
-        top_right_corner = np.array([center_x + half_width, center_y + half_height])
-        bottom_left_corner = np.array([center_x - half_width, center_y - half_height])
-        bottom_right_corner = np.array([center_x + half_width, center_y - half_height])
         points = np.array(
-            [top_left_corner, top_right_corner, bottom_left_corner, bottom_right_corner]
+            [
+                [center_x - half_width, center_y + half_height],
+                [center_x + half_width, center_y + half_height],
+                [center_x + half_width, center_y - half_height],
+                [center_x - half_width, center_y - half_height],
+            ]
         )
 
         rect = Rectangle(points)

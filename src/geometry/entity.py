@@ -5,6 +5,7 @@ by all type of geometry objects
 
 from __future__ import annotations
 
+from typing import Optional
 import copy
 from abc import ABC
 
@@ -80,10 +81,7 @@ class GeometryEntity(ABC):
         return copy.deepcopy(self)
 
     def rotate(
-        self,
-        angle: float,
-        pivot: np.ndarray = np.zeros(shape=(2,)),
-        degree: bool = False,
+        self, angle: float, degree: bool = False, pivot: Optional[np.ndarray] = None
     ):
         """Rotate the geometry entity object.
         A pivot point can be passed as an argument to rotate the object around the pivot
@@ -91,13 +89,17 @@ class GeometryEntity(ABC):
         Args:
             angle (float): rotation angle
             pivot (np.ndarray, optional): pivot point.
-                Defaults to np.zeros(shape=(2,)).
+                Defaults to None which means that by default the centroid point of
+                the shape is taken as the pivot point.
             degree (bool, optional): whether the angle is in degree or radian.
                 Defaults to False which means radians.
 
         Returns:
             GeometryEntity: rotated geometry entity object.
         """
+        if pivot is None:
+            pivot = self.centroid
+
         if degree:  # transform angle to radian if in degree
             angle = np.deg2rad(angle)
 
@@ -134,15 +136,37 @@ class GeometryEntity(ABC):
         img_center_point = np.array([img.shape[1], img.shape[0]]) / 2
         return self.rotate(angle=angle, pivot=img_center_point, degree=degree)
 
+    def __validate_shift_vector(self, vector: np.ndarray) -> np.ndarray:
+        """Validate the shift vector before executing operation
+
+        Args:
+            vector (np.ndarray): shift vector
+
+        Returns:
+            np.ndarray: validated vector
+        """
+        vector = np.asarray(vector)
+        if vector.shape == (2, 2):
+            vector = vector[1] - vector[0]  # set the vector to be defined as one point
+        if vector.shape != (2,):
+            raise ValueError(
+                "The input vector {vector} does not have the expected shape."
+            )
+        return vector
+
     def shift(self, vector: np.ndarray):
         """Shift the geometry entity by the vector direction
 
         Args:
-            vector (np.ndarray): vector that describes the shift
+            vector (np.ndarray): vector that describes the shift as a array with
+                two elements. Example: [2, -8] which describes the
+                vector [[0, 0], [2, -8]]. The vector can also be a vector of shape
+                (2, 2) of the form [[2, 6], [1, 3]].
 
         Returns:
             GeometryEntity: shifted geometrical object
         """
+        vector = self.__validate_shift_vector(vector=vector)
         self.points = self.points + vector
         return self
 
