@@ -17,7 +17,6 @@ class ArchiPlanExtract:
     image: np.ndarray
     surface: float
     perimeter: float
-    estimate_distance_scale: float
     shape_category: str  # regular or irregular
     contour_extract: list[
         VectorExtract
