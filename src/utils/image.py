@@ -26,10 +26,15 @@ from src.utils.dataclasses.DrawingRender import (
 class BaseImage(ABC):
     """Base Image class"""
 
-    def __init__(self, image: np.ndarray | Image) -> None:
-        if isinstance(image, Image):
+    def __init__(self, image: np.ndarray | Image | BaseImage) -> None:
+        if isinstance(image, (Image, BaseImage)):
             image = image.asarray
         self.__asarray: np.ndarray = image.copy()
+
+    @property
+    def baseimage(self) -> BaseImage:
+        """BaseImage object"""
+        return self
 
     @property
     def asarray(self) -> np.ndarray:
@@ -46,7 +51,7 @@ class BaseImage(ABC):
         return bool(len(self.asarray.shape) == 2)
 
     @property
-    def shape(self) -> tuple[int]:
+    def shape(self) -> tuple:
         """Returns the image shape value
 
         Returns:
@@ -148,7 +153,7 @@ class BaseImage(ABC):
         return Image(self.asarray.copy())
 
 
-def is_constituted_type(_list: list, _type: Any) -> bool:
+def is_constituted_type(_list: list | np.ndarray, _type: Any) -> bool:
     """Assert that a given list is only constituted by elements of the given type
 
     Args:
@@ -158,10 +163,12 @@ def is_constituted_type(_list: list, _type: Any) -> bool:
     Returns:
         bool: True if all the element in the list are made of element of type "type"
     """
-    return np.all([isinstance(_list[i], _type) for i in range(len(_list))])
+    return bool(np.all([isinstance(_list[i], _type) for i in range(len(_list))]))
 
 
-def convert_from_type_to_array(objects: list, _type: Any):
+def convert_from_type_to_array(
+    objects: list | np.ndarray, _type: Any
+) -> list | np.ndarray:
     """Convert a list of geometric objects to a given type
 
     Args:
@@ -181,7 +188,9 @@ def convert_from_type_to_array(objects: list, _type: Any):
 class DrawerImage(BaseImage, ABC):
     """Image Drawer class to draw objects on a given image"""
 
-    def __pre_draw(self, objects: list, render: DrawingRender) -> Image:
+    def __pre_draw(
+        self, objects: list | np.ndarray, render: DrawingRender
+    ) -> np.ndarray:
         im = self.asarray.copy()
 
         # draw points in image
@@ -193,7 +202,7 @@ class DrawerImage(BaseImage, ABC):
 
     def draw_points(
         self,
-        points: list[np.ndarray | geo.Point],
+        points: list[np.ndarray | geo.Point] | np.ndarray,
         render: PointsRender = PointsRender(),
     ) -> Image:
         """Add points on an image
@@ -204,21 +213,21 @@ class DrawerImage(BaseImage, ABC):
         Returns:
             Image: new image
         """
-        points = convert_from_type_to_array(objects=points, _type=geo.Point)
-        im = self.__pre_draw(objects=points, render=render)
-        for point, color in zip(points, render.colors):
+        _points = convert_from_type_to_array(objects=points, _type=geo.Point)
+        im_array = self.__pre_draw(objects=points, render=render)
+        for point, color in zip(_points, render.colors):
             cv2.circle(
-                img=im,
+                img=im_array,
                 center=point,
                 radius=render.radius,
                 color=color,
                 thickness=render.thickness,
             )
-        return Image(im)
+        return Image(im_array)
 
     def draw_segments(
         self,
-        segments: list[np.ndarray | geo.Segment],
+        segments: list[np.ndarray | geo.Segment] | np.ndarray,
         render: SegmentsRender = SegmentsRender(),
     ) -> Image:
         """Add segments on an image. It can be arrowed segments (vectors) too.
@@ -229,12 +238,12 @@ class DrawerImage(BaseImage, ABC):
         Returns:
             (Image): a new image that contains the segments drawn
         """
-        segments = convert_from_type_to_array(objects=segments, _type=geo.Segment)
-        im = self.__pre_draw(objects=segments, render=render)
+        _segments = convert_from_type_to_array(objects=segments, _type=geo.Segment)
+        im_array = self.__pre_draw(objects=segments, render=render)
         if render.as_vectors:
-            for segment, color in zip(segments, render.colors):
+            for segment, color in zip(_segments, render.colors):
                 cv2.arrowedLine(
-                    img=im,
+                    img=im_array,
                     pt1=segment[0],
                     pt2=segment[1],
                     color=color,
@@ -245,14 +254,14 @@ class DrawerImage(BaseImage, ABC):
         else:
             for segment, color in zip(segments, render.colors):
                 cv2.line(
-                    img=im,
+                    img=im_array,
                     pt1=segment[0],
                     pt2=segment[1],
                     color=color,
                     thickness=render.thickness,
                     lineType=render.line_type,
                 )
-        return Image(im)
+        return Image(im_array)
 
     def draw_contours(
         self, contours: list[geo.Contour], render: ContoursRender = ContoursRender()
@@ -286,17 +295,17 @@ class DrawerImage(BaseImage, ABC):
         Returns:
             (Image): a new image with the bounding boxes displayed
         """
-        im = self.__pre_draw(objects=ocr_outputs, render=render)
+        im_array = self.__pre_draw(objects=ocr_outputs, render=render)
         for ocrso, color in zip(ocr_outputs, render.colors):
             cnt = [ocrso.bbox.asarray.reshape((-1, 1, 2)).astype(np.int32)]
-            im = cv2.drawContours(
-                im,
+            im_array = cv2.drawContours(
+                image=im_array,
                 contours=cnt,
                 contourIdx=-1,
                 thickness=render.thickness,
                 color=color,
             )
-        return Image(im)
+        return Image(im_array)
 
 
 class TransformerImage(BaseImage, ABC):
@@ -335,11 +344,8 @@ class TransformerImage(BaseImage, ABC):
         return Image(im)
 
     def center_image_to_point(
-        self,
-        point: np.ndarray,
-        mode: str = "constant",
-        return_shift_vector: bool = False,
-    ) -> Image | tuple[Image, np.ndarray]:
+        self, point: np.ndarray, mode: str = "constant"
+    ) -> tuple[Image, np.ndarray]:
         """Shift the image so that the input point ends up in the middle of the
         new image
 
@@ -353,16 +359,11 @@ class TransformerImage(BaseImage, ABC):
         """
         shift_vector = self.center - point
         im = self.shift(shift=shift_vector, mode=mode)
-        if return_shift_vector:
-            return im, shift_vector
-        return im
+        return im, shift_vector
 
     def center_image_to_segment(
-        self,
-        segment: np.ndarray,
-        mode: str = "constant",
-        return_shift_vector: bool = False,
-    ) -> Image | tuple[Image, np.ndarray]:
+        self, segment: np.ndarray, mode: str = "constant"
+    ) -> tuple[Image, np.ndarray]:
         """Shift the image so that the line middle point ends up in the middle
         of the new image
 
@@ -375,9 +376,7 @@ class TransformerImage(BaseImage, ABC):
             (tuple[Image, np.ndarray]): Image, vector_shift
         """
         return self.center_image_to_point(
-            point=geo.Segment(segment).centroid,
-            mode=mode,
-            return_shift_vector=return_shift_vector,
+            point=geo.Segment(segment).centroid, mode=mode
         )
 
     def resize_fixed(
@@ -411,7 +410,7 @@ class TransformerImage(BaseImage, ABC):
             (Image): new resized image
         """
         if scale_percent == 100:
-            return self
+            return Image(self.baseimage)
 
         width = int(self.width * scale_percent / 100)
         height = int(self.height * scale_percent / 100)
@@ -437,10 +436,9 @@ class TransformerImage(BaseImage, ABC):
     def crop_around_segment_horizontal(
         self,
         segment: np.ndarray,
-        dim_crop_rect: tuple[int] = (None, 100),
+        dim_crop_rect: tuple[int, int] = (-1, 100),
         default_extra_width: int = 75,
-        return_transfo_bricks: bool = False,
-    ) -> Image | tuple[Image, np.ndarray, float, np.ndarray]:
+    ) -> tuple[Image, np.ndarray, float, np.ndarray]:
         """Crop around a specific segment in the image. This is done in three
         specific steps:
         1) shift image so that the middle of the segment is in the middle of the image
@@ -457,19 +455,18 @@ class TransformerImage(BaseImage, ABC):
             tuple[Image, np.ndarray, float]: _description_
         """
         width_crop_rect, height_crop_rect = dim_crop_rect
+        assert width_crop_rect > 0 and height_crop_rect > 0
         im = self.copy()
 
         # center the image based on the middle of the line
         geo_segment = geo.Segment(segment)
-        im, translation_vector = im.center_image_to_segment(
-            segment=segment, return_shift_vector=True
-        )
+        im, translation_vector = im.center_image_to_segment(segment=segment)
 
         # rotate the image so that the line is horizontal
         angle = geo_segment.slope_angle(degree=True)
         im = im.rotate(angle=angle)
 
-        if width_crop_rect is None:
+        if width_crop_rect == -1:
             # default the width for crop to be a bit more than line length
             width_crop_rect = int(geo_segment.length + default_extra_width)
 
@@ -482,10 +479,7 @@ class TransformerImage(BaseImage, ABC):
         )
 
         crop_translation_vector = self.center - im_crop.center
-
-        if return_transfo_bricks:
-            return im_crop, translation_vector, angle, crop_translation_vector
-        return im_crop
+        return im_crop, translation_vector, angle, crop_translation_vector
 
 
 class AnalyzerImage(BaseImage, ABC):
@@ -493,7 +487,14 @@ class AnalyzerImage(BaseImage, ABC):
 
     def adaptative_thresholding(
         self, ksize: int = 5, adaptative_method: int = cv2.ADAPTIVE_THRESH_GAUSSIAN_C
-    ):
+    ) -> Image:
+        """Apply Adaptative thresholding.
+        A blur is applied before for better masking results.
+        See https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html
+
+        Returns:
+            Image: image thresholded where its values are now pure 0 or 255
+        """
         blur = cv2.medianBlur(src=self.asarray, ksize=ksize)
         masked_img = cv2.adaptiveThreshold(
             src=blur,
@@ -503,7 +504,7 @@ class AnalyzerImage(BaseImage, ABC):
             blockSize=11,
             C=2,
         )
-        return masked_img
+        return Image(masked_img)
 
     def otsu_thresholding(self, ksize: int = 5) -> Image:
         """Apply Ostu thresholding. A blur is applied before for better masking results.

@@ -19,7 +19,7 @@ class Rectangle(Contour):
 
     @classmethod
     def from_center(
-        cls, center: np.ndarray, dim: tuple[float], angle: float = 0
+        cls, center: np.ndarray, dim: tuple[float, float], angle: float = 0
     ) -> Rectangle:
         """Create a Rectangle object using the center point, width, height and angle.
         The angle is defined as the
