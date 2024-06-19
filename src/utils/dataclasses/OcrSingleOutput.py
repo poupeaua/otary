@@ -21,19 +21,19 @@ class OcrSingleOutput:
     def convert_easyocr(ocr_output: list) -> list[OcrSingleOutput]:
         """Convert an easyocr formatted output from the read method into a common
         OcrSingleOutput format. The idea is to make the code agnostic of the OCR used.
+        The OCR could be EasyOCR, Tesserocr, KerasOCR, etc... this would not affect the
+        program.
 
         Args:
             ocr_output (list): In easyocr package currently the output is a list of
-                tuples that contains in this order the bounding box, the text read and
+                tuples that contains in this order the bounding box, the text and
                 the confidence about the text read.
 
         Returns:
             list[OcrSingleOutput]: list of OcrSingleOutput objects
         """
-        tmp_list: list[OcrSingleOutput] = []
-        for element in ocr_output:
-            ocr = OcrSingleOutput(
-                bbox=geo.Rectangle(element[0]), text=element[1], confidence=element[2]
-            )
-            tmp_list.append(ocr)
-        return tmp_list
+        ocrsos: list[OcrSingleOutput] = [
+            OcrSingleOutput(bbox=geo.Rectangle(e[0]), text=e[1], confidence=e[2])
+            for e in ocr_output
+        ]
+        return ocrsos

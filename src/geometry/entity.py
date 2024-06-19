@@ -170,6 +170,53 @@ class GeometryEntity(ABC):
         self.points = self.points + vector
         return self
 
+    def get_shared_close_points(
+        self, other: GeometryEntity, margin_dist_error: float = 5
+    ) -> np.ndarray:
+        """Get the shared points between two geometric objects.
+        A point is considered shared if it is close to another point in the other
+        geometric structure.
+
+        Args:
+            other (GeometryEntity): a GeometryEntity object, could be anything
+            margin_dist_error (float, optional): the threshold to define a point as
+                shared or not. Defaults to 5.
+
+        Returns:
+            np.ndarray: list of points identified as shared between the two geometric
+                objects
+        """
+        list_shared_points = []
+        for pt in self.asarray:
+            distances = np.linalg.norm(other.asarray - pt)
+            indices = np.nonzero(distances < margin_dist_error)[0].astype(int)
+            if len(indices) > 0:
+                list_shared_points.append(pt)
+        return np.array(list_shared_points)
+
+    def get_points_far_from(
+        self, points: np.ndarray, margin_dist_error: float = 5
+    ) -> np.ndarray:
+        """Get points far from the points in parameters that belongs to the geometric
+        structure.
+
+        Args:
+            points (np.ndarray): points that should be remove of the geometric structure
+            margin_dist_error (float, optional): the threshold to define a point as
+                shared or not. Defaults to 5.
+
+        Returns:
+            np.ndarray: points that belongs to the geometric structure and that
+                do not belong / are far from to
+        """
+        list_far_points = []
+        for pt in self.asarray:
+            distances = np.linalg.norm(points - pt)
+            indices = np.nonzero(distances < margin_dist_error)[0].astype(int)
+            if len(indices) == 0:
+                list_far_points.append(pt)
+        return np.array(list_far_points)
+
     def __str__(self) -> str:
         return self.__class__.__name__ + "(" + self.asarray.tolist().__str__() + ")"
 

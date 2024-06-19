@@ -3,7 +3,7 @@ Drawing Render used to makes easy drawings
 """
 
 from typing import Any
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from abc import ABC
 
 import cv2
@@ -35,7 +35,7 @@ class DrawingRender(ABC):
     thickness: int = DEFAULT_RENDER_THICKNESS
     line_type: int = cv2.LINE_AA
     default_color: tuple[int, int, int] = DEFAULT_RENDER_COLOR
-    colors: list[tuple[int, int, int]] = []
+    colors: list[tuple[int, int, int]] = field(default_factory=list)
 
     def adjust_colors_length(self, n: int) -> None:
         """Correct the color parameter in case the objects has not the same length
@@ -53,7 +53,7 @@ class DrawingRender(ABC):
         """DrawingRender post-initialization method"""
         # check that the colors parameter is conform
         for i, color in enumerate(self.colors):
-            if not self.is_color_tuple(color):
+            if not is_color_tuple(color):
                 self.colors[i] = self.default_color
 
 

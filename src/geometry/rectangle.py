@@ -53,3 +53,22 @@ class Rectangle(Contour):
         rect = rect.rotate(angle=angle, pivot=center)
 
         return rect
+
+    def join(self, rect: Rectangle, margin_dist_error: float = 5) -> Rectangle:
+        shared_points = self.get_shared_close_points(rect, margin_dist_error)
+        n_shared_points = len(shared_points)
+
+        if n_shared_points == 1:
+            # TODO
+            pass
+        elif n_shared_points == 2:
+            new_rect_points = np.concatenate(
+                (
+                    self.get_points_far_from(shared_points, margin_dist_error),
+                    rect.get_points_far_from(shared_points, margin_dist_error),
+                ),
+                axis=0,
+            )
+            return Rectangle(points=new_rect_points)
+        else:
+            return rect
