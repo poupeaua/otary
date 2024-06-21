@@ -455,20 +455,20 @@ class TransformerImage(BaseImage, ABC):
             tuple[Image, np.ndarray, float]: _description_
         """
         width_crop_rect, height_crop_rect = dim_crop_rect
-        assert width_crop_rect > 0 and height_crop_rect > 0
         im = self.copy()
 
         # center the image based on the middle of the line
         geo_segment = geo.Segment(segment)
         im, translation_vector = im.center_image_to_segment(segment=segment)
 
-        # rotate the image so that the line is horizontal
-        angle = geo_segment.slope_angle(degree=True)
-        im = im.rotate(angle=angle)
-
         if width_crop_rect == -1:
             # default the width for crop to be a bit more than line length
             width_crop_rect = int(geo_segment.length + default_extra_width)
+        assert width_crop_rect > 0 and height_crop_rect > 0
+
+        # rotate the image so that the line is horizontal
+        angle = geo_segment.slope_angle(degree=True)
+        im = im.rotate(angle=angle)
 
         # cropping
         im_crop = im.crop_image_horizontal(
