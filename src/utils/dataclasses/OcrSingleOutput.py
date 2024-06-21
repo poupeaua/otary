@@ -17,6 +17,10 @@ class OcrSingleOutput:
     text: str
     confidence: float
 
+    @property
+    def succeeded(self) -> bool:
+        return self.bbox is not None
+
     @staticmethod
     def convert_easyocr(ocr_output: list) -> list[OcrSingleOutput]:
         """Convert an easyocr formatted output from the read method into a common

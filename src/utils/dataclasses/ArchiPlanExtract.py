@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from src.geometry import Contour
 from src.utils.dataclasses.VectorExtract import VectorExtract
 
 
@@ -15,9 +16,5 @@ class ArchiPlanExtract:
     """Class for keeping track of a architectural plan"""
 
     image: np.ndarray
-    surface: float
-    perimeter: float
-    shape_category: str  # regular or irregular
-    contour_extract: list[
-        VectorExtract
-    ]  # TODO verify is contour and first line with point most at north-east
+    cnt: Contour
+    vextracts: list[VectorExtract]
