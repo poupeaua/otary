@@ -8,7 +8,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from src.geometry import Contour
-from src.utils.dataclasses.VectorExtract import VectorExtract
+from src.utils.dataclasses.VectorExtract import MultiVectorExtract
 
 
 @dataclass
@@ -17,4 +17,4 @@ class ArchiPlanExtract:
 
     image: np.ndarray
     cnt: Contour
-    vextracts: list[VectorExtract]
+    mve: MultiVectorExtract

@@ -394,6 +394,19 @@ class TransformerImage(BaseImage, ABC):
             Image: image object
         """
         im = self.asarray.copy()
+
+        if dim[0] < 0 and dim[1] < 0:
+            raise RuntimeError(
+                f"The dim argument {dim} if not appropriate for" f"image resize"
+            )
+
+        # compute width or height
+        dim = list(dim)
+        if dim[0] <= 0:
+            dim[0] = int(self.width * (dim[1] / self.height))
+        if dim[1] <= 0:
+            dim[1] = int(self.height * (dim[0] / self.width))
+
         im = cv2.resize(src=im, dsize=dim, interpolation=interpolation)
         return Image(im)
 
