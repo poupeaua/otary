@@ -16,7 +16,7 @@ from src.geometry.entity import GeometryEntity
 class Segment(GeometryEntity):
     """Segment Class to manipulate easily segments objects"""
 
-    def __init__(self, points) -> None:
+    def __init__(self, points: np.ndarray | list) -> None:
         assert len(points) == 2
         super().__init__(points)
 

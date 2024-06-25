@@ -5,6 +5,7 @@ It will be particularly useful for the AITT project for describing bounding boxe
 
 from __future__ import annotations
 
+from typing import Optional
 import numpy as np
 
 from src.geometry.contour import Contour
@@ -13,7 +14,7 @@ from src.geometry.contour import Contour
 class Rectangle(Contour):
     """Rectangle class to manipulate rectangle object"""
 
-    def __init__(self, points: np.ndarray) -> None:
+    def __init__(self, points: np.ndarray | list) -> None:
         assert len(points) == 4
         super().__init__(points)
 
@@ -54,14 +55,30 @@ class Rectangle(Contour):
 
         return rect
 
-    def join(self, rect: Rectangle, margin_dist_error: float = 5) -> Rectangle:
+    def join(
+        self, rect: Rectangle, margin_dist_error: float = 5
+    ) -> Optional[Rectangle]:
+        """Join two rectangles into a single one.
+        If they share no point in common or only a single point returns None.
+        If they share two points, returns a new Rectangle that is the concatenation
+        of the two rectangles.
+        If they share 3 or more points they represent the same rectangle, thus
+        returns this object.
+
+        Args:
+            rect (Rectangle): the other Rectangle object
+            margin_dist_error (float, optional): the threshold to consider whether the
+                rectangle share a common point. Defaults to 5.
+
+        Returns:
+            Rectangle: the join new Rectangle object
+        """
         shared_points = self.get_shared_close_points(rect, margin_dist_error)
         n_shared_points = len(shared_points)
 
-        if n_shared_points == 1:
-            # TODO
-            pass
-        elif n_shared_points == 2:
+        if n_shared_points in (0, 1):
+            return None
+        if n_shared_points == 2:
             new_rect_points = np.concatenate(
                 (
                     self.get_points_far_from(shared_points, margin_dist_error),
@@ -70,5 +87,5 @@ class Rectangle(Contour):
                 axis=0,
             )
             return Rectangle(points=new_rect_points)
-        else:
-            return rect
+        # if 3 or more points in common it is the same rectangle
+        return self

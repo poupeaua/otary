@@ -217,6 +217,11 @@ class GeometryEntity(ABC):
                 list_far_points.append(pt)
         return np.array(list_far_points)
 
+    def __eq__(self, value: object) -> bool:
+        if not isinstance(value, GeometryEntity):
+            return NotImplemented
+        return np.array_equal(self.asarray, value.asarray)
+
     def __str__(self) -> str:
         return self.__class__.__name__ + "(" + self.asarray.tolist().__str__() + ")"
 

@@ -99,7 +99,7 @@ class MultiVectorExtract:
                 about this number.
         """
         assert not self.is_fully_unsucceeded
-        mse_value = 0
+        mse_value: float = 0
         for vextract in self.vextracts:
             if vextract.ocrso.succeeded:
                 mse_value += vextract.scale_estimate
@@ -129,7 +129,7 @@ class MultiVectorExtract:
         for i, vextract in enumerate(self.vextracts):
             if not vextract.ocrso.succeeded:
                 new_vextracts[i].ocrso = OcrSingleOutput(
-                    bbox=None,
+                    bbox=None,  # type: ignore
                     text=str(
                         round(
                             self.mean_scale_estimate * vextract.vector.length, ndecimals

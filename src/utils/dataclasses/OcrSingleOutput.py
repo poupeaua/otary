@@ -4,7 +4,7 @@ OCR Output used to gather information about the output of any OCR model
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import src.geometry as geo
 
@@ -13,9 +13,9 @@ import src.geometry as geo
 class OcrSingleOutput:
     """Class for keeping track of a OCR extracted information from an image"""
 
-    bbox: geo.Rectangle
-    text: str
-    confidence: float
+    bbox: geo.Rectangle = field(default=None)  # type: ignore
+    text: str = field(default=None)  # type: ignore
+    confidence: float = field(default=None)  # type: ignore
 
     @property
     def succeeded(self) -> bool:

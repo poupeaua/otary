@@ -395,25 +395,27 @@ class TransformerImage(BaseImage, ABC):
         """
         im = self.asarray.copy()
 
-        if dim[0] < 0 and dim[1] < 0:
+        if dim[0] < 0 and dim[1] < 0:  # check that the dim should be positive
             raise RuntimeError(
                 f"The dim argument {dim} if not appropriate for" f"image resize"
             )
 
         # compute width or height
-        dim = list(dim)
-        if dim[0] <= 0:
-            dim[0] = int(self.width * (dim[1] / self.height))
+        _dim = list(dim)
+        if _dim[0] <= 0:
+            _dim[0] = int(self.width * (_dim[1] / self.height))
         if dim[1] <= 0:
-            dim[1] = int(self.height * (dim[0] / self.width))
+            _dim[1] = int(self.height * (_dim[0] / self.width))
 
-        im = cv2.resize(src=im, dsize=dim, interpolation=interpolation)
+        im = cv2.resize(src=im, dsize=_dim, interpolation=interpolation)
         return Image(im)
 
     def resize(
         self, scale_percent: float, interpolation: int = cv2.INTER_AREA
     ) -> Image:
-        """Resize the image to a new size
+        """Resize the image to a new size using a scaling percentage value that
+        will be applied to all dimensions (width and height).
+        Applying this method can not result in a distorted image.
 
         Args:
             scale_percent (float): scale to resize the image. A value 100 does not
