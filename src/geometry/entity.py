@@ -44,7 +44,7 @@ class GeometryEntity(ABC):
         Returns:
             float: area value
         """
-        return cv2.contourArea(self.points)
+        return cv2.contourArea(self.points.astype(int))
 
     @property
     def perimeter(self) -> float:

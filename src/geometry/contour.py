@@ -47,6 +47,15 @@ class Contour(GeometryEntity):
         """
         return np.linalg.norm(np.diff(self.lines, axis=1), axis=2)
 
+    @property
+    def is_self_intersected(self) -> bool:
+        """Whether any of the segments intersect another segment in the same set
+
+        Returns:
+            bool: True if at least two lines intersect, False otherwise
+        """
+        return not self.shapely.is_simple
+
     # ---------------------------------- OTHER CONSTRUCTORS ----------------------------
 
     @classmethod
@@ -446,7 +455,7 @@ class Contour(GeometryEntity):
 
     # ------------------------------- CLASSIC METHODS ----------------------------------
 
-    def is_regular(self, margin_area_error: float = 25) -> bool:
+    def is_regular(self, margin_area_error_pct: float = 0.01) -> bool:
         """Identifies whether a contour is regular, this means is rectangular or is
         a square.
 
@@ -456,22 +465,12 @@ class Contour(GeometryEntity):
         Returns:
             bool: True if the contour describes a rectangle or square.
         """
-        if not len(self.asarray) != 4:
+        if len(self.asarray) != 4:
             return False
-        if (
-            np.abs(np.min(self.lengths) * np.max(self.lengths) - self.area)
-            > margin_area_error
-        ):
+        area_rect = np.min(self.lengths) * np.max(self.lengths)
+        if np.abs(area_rect - self.area) > self.area * margin_area_error_pct:
             return False
         return True
-
-    def is_self_intersected(self) -> bool:
-        """Whether any of the segments intersect another segment in the same set
-
-        Returns:
-            bool: True if at least two lines intersect, False otherwise
-        """
-        return not self.shapely.is_simple
 
     def add_point(self, point: np.ndarray, index: int) -> Contour:
         """Add a point at a given index in the Contour object
