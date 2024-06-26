@@ -305,6 +305,7 @@ class Contour(GeometryEntity):
         min_dist_threshold: float = 2,
         limit_n_successive_deletion: int = 2,
         n_iterations: int = 1,
+        mode: str = "base",
     ) -> np.ndarray:
         """Given a list of points, reduce the list by discarding the points that are
         close to each other and by making sure that we limit the number of successive
@@ -322,7 +323,7 @@ class Contour(GeometryEntity):
         """
         for _ in range(n_iterations):
             idx_to_remove: list[int] = []
-            cur_idx_to_remove: list[int] = []
+            cur_idx_to_remove: np.ndarray = []
             before_n_points = len(points)
             for i, cur_point in enumerate(points):
                 if i == len(points) - 1:
@@ -338,17 +339,17 @@ class Contour(GeometryEntity):
                         cur_idx_to_remove = []
                 else:
                     cur_idx_to_remove = []
-                # print("Segment:", [cur_point.tolist(), next_point.tolist()], \
-                # "distance", distance, idx_to_remove)
+
                 if len(cur_idx_to_remove) >= limit_n_successive_deletion:
-                    first_idx_pt, last_idx_pt = (
-                        cur_idx_to_remove[0],
-                        cur_idx_to_remove[-1],
-                    )
-                    centroid_point = Contour(
-                        points=points[first_idx_pt:last_idx_pt]
-                    ).centroid.astype(int)
-                    points[first_idx_pt] = centroid_point
+                    if mode == "mean":
+                        first_idx_pt, last_idx_pt = (
+                            cur_idx_to_remove[0],
+                            cur_idx_to_remove[-1],
+                        )
+                        centroid_point = Contour(
+                            points=points[first_idx_pt : (last_idx_pt + 1)]
+                        ).centroid.astype(int)
+                        points[first_idx_pt] = centroid_point
                     idx_to_remove = (
                         idx_to_remove + cur_idx_to_remove[1:]
                     )  # all except first point idx

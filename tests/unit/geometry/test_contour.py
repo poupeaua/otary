@@ -165,7 +165,7 @@ class TestContourReduceMethods:
         "input,output",
         (
             (
-                [[0, 0], [100, 100], [500, 500], [0, 250], [0, 2], [0, 3], [1, 5]],
+                [[0, 0], [100, 100], [500, 500], [0, 250], [0, 2], [0, 5], [1, 5]],
                 [[0, 0], [100, 100], [500, 500], [0, 250], [0, 2], [1, 5]],
             ),
             (
@@ -211,4 +211,47 @@ class TestContourReduceMethods:
         points = Contour.reduce_by_distance_limit_n_successive_deletion(
             points=input, min_dist_threshold=5
         )
+        assert np.array_equal(points, output)
+
+    @pytest.mark.parametrize(
+        "input,output",
+        (
+            (
+                [[0, 0], [100, 100], [500, 500], [0, 250], [0, 10], [0, 5], [1, 2]],
+                [[0, 0], [500, 500], [0, 250]],
+            ),
+            (
+                [
+                    [0, 0],
+                    [100, 100],
+                    [200, 325],
+                    [351, 348],
+                    [0, 350],
+                    [0, 200],
+                    [0, 50],
+                ],
+                [[0, 0], [100, 100], [200, 325], [351, 348], [0, 350]],
+            ),
+            (
+                [
+                    [0, 0],
+                    [0, 100],
+                    [0, 200],
+                    [100, 200],
+                    [200, 200],
+                    [200, 100],
+                    [200, 0],
+                    [100, 0],
+                ],
+                [
+                    [0, 0],
+                    [0, 200],
+                    [200, 200],
+                    [200, 0],
+                ],
+            ),
+        ),
+    )
+    def test_contour_reduce_by_triangle_area(self, input, output):
+        points = Contour.reduce_by_triangle_area(points=input, min_triangle_area=50)
         assert np.array_equal(points, output)
