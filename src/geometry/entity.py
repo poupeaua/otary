@@ -7,7 +7,14 @@ from __future__ import annotations
 
 from typing import Optional
 import copy
-from abc import ABC
+from abc import ABC, abstractmethod
+from shapely import (
+    GeometryCollection,
+    MultiPoint,
+    Point as SPoint,
+    LineString,
+    MultiLineString,
+)
 
 import cv2
 import numpy as np
@@ -18,6 +25,11 @@ class GeometryEntity(ABC):
 
     def __init__(self, points) -> None:
         self.points = copy.deepcopy(np.array(points))
+
+    @property
+    @abstractmethod
+    def shapely(self) -> GeometryCollection:
+        pass
 
     @property
     def n_points(self) -> int:
@@ -63,14 +75,7 @@ class GeometryEntity(ABC):
         Returns:
             np.ndarray: centroid point
         """
-        moments = cv2.moments(self.points)
-        if moments["m00"] != 0:
-            centroid = np.array(
-                [moments["m10"] / moments["m00"], moments["m01"] / moments["m00"]]
-            )
-        else:
-            centroid = np.mean(self.points, axis=0)  # useful for the point entity
-        return centroid
+        return np.mean(self.points, axis=0)
 
     def copy(self):
         """Create a copy of the geometry entity object
@@ -170,6 +175,24 @@ class GeometryEntity(ABC):
         self.points = self.points + vector
         return self
 
+    def intersection(
+        self, other: GeometryEntity, only_points: bool = True
+    ) -> np.ndarray:
+        it = self.shapely.intersection(other=other.shapely)
+
+        if isinstance(it, SPoint):  # only one intersection point
+            return np.array([[it.x, it.y]])
+        if isinstance(it, MultiPoint):  # several intersection points
+            return np.asanyarray([[pt.x, pt.y] for pt in it.geoms])
+        if isinstance(it, LineString) and not only_points:  # one intersection line
+            return NotImplemented
+        if isinstance(it, MultiLineString) and not only_points:  # multilines
+            return NotImplemented
+        if isinstance(it, GeometryCollection):  # lines and pts
+            return NotImplemented
+
+        return np.array([])
+
     def get_shared_close_points(
         self, other: GeometryEntity, margin_dist_error: float = 5
     ) -> np.ndarray:
@@ -219,8 +242,14 @@ class GeometryEntity(ABC):
 
     def __eq__(self, value: object) -> bool:
         if not isinstance(value, GeometryEntity):
-            return NotImplemented
+            raise RuntimeError(
+                f"The parameter value has type {type(value)}. "
+                f"The type expected was GeometryEntity"
+            )
         return np.array_equal(self.asarray, value.asarray)
+
+    def __len__(self) -> int:
+        return self.n_points
 
     def __str__(self) -> str:
         return self.__class__.__name__ + "(" + self.asarray.tolist().__str__() + ")"

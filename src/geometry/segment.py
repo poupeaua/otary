@@ -8,6 +8,7 @@ import itertools
 
 import cv2
 import numpy as np
+from shapely import LineString
 
 from src.geometry.constants import DEFAULT_MARGIN_ANGLE_ERROR
 from src.geometry.entity import GeometryEntity
@@ -69,6 +70,16 @@ class Segment(GeometryEntity):
             float: segment slope value
         """
         return -self.slope
+
+    @property
+    def shapely(self) -> LineString:
+        """Returns the Shapely.LineString representation of the contour.
+        See https://shapely.readthedocs.io/en/stable/reference/shapely.LineString.html
+
+        Returns:
+            LineString: shapely.LineString object
+        """
+        return LineString(coordinates=self.asarray)
 
     def slope_angle(self, degree: bool = False, is_cv2: bool = False) -> float:
         """Calculate the slope angle of a single line in the cartesian space
@@ -161,7 +172,7 @@ class Segment(GeometryEntity):
                 collinearity. Defaults to DEFAULT_MARGIN_ANGLE_ERROR.
 
         Returns:
-            bool: _description_
+            bool: True if the point is collinear with the segment
         """
         return self.is_points_collinear(
             p1=self.asarray[0],

@@ -5,7 +5,29 @@ Test GeometryEntity file
 import pytest
 import numpy as np
 
-from src.geometry import Segment
+from src.geometry import Segment, Rectangle
+
+
+class TestEntityBasics:
+    def test_perimeter(self):
+        rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
+        assert rect.perimeter == 4
+
+    def test_eq_true(self):
+        rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
+        rect2 = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
+        assert rect == rect2
+
+    def test_eq_false(self):
+        rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
+        rect2 = Rectangle([[0, 1], [0, 1], [1, 1], [1, 0]])
+        assert not (rect == rect2)
+
+    def test_eq_error(self):
+        rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
+        rect2 = "mystr"
+        with pytest.raises(RuntimeError):
+            rect == rect2
 
 
 class TestEntityShift:
@@ -93,3 +115,25 @@ class TestEntityRotate:
             seg.rotate_around_image_center(img=img, angle=np.pi / 2).asarray,
             np.array([[side - 1, 1], [side - 2, 2]]),
         )
+
+
+class TestEntityIntersection:
+    def test_intersection_no_point(self):
+        seg = Segment([[0, 0], [10, 10]])
+        seg1 = Segment([[0, 10], [0, 50]])
+        intersection = seg.intersection(other=seg1)
+        assert np.array_equal(intersection, np.array([]))
+
+    def test_intersection_one_point(self):
+        seg = Segment([[0, 0], [10, 10]])
+        seg1 = Segment([[0, 10], [10, 0]])
+        intersection = seg.intersection(other=seg1)
+        assert np.array_equal(intersection, np.array([[5, 5]]))
+
+    def test_intersection_two_points(self):
+        seg = Segment([[0, 0], [0, 10]])
+        seg1 = Rectangle([[-2, 2], [-2, 5], [2, 5], [2, 2]])
+        intersection = seg.intersection(other=seg1)
+        assert np.array_equal(
+            intersection, np.array([[0, 2], [0, 5]])
+        ) or np.array_equal(intersection, np.array([[0, 5], [0, 2]]))

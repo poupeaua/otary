@@ -120,7 +120,7 @@ class TestContourReduceMethods:
         ),
     )
     def test_contour_reduce_collinear(self, input, output):
-        points = Contour.reduce_collinear(points=input)
+        points = Contour.reduce_collinear(points=input, n_iterations=3)
         assert np.array_equal(points, output)
 
     @pytest.mark.parametrize(
@@ -207,11 +207,36 @@ class TestContourReduceMethods:
             ),
         ),
     )
-    def test_contour_reduce_by_distance_limit(self, input, output):
-        points = Contour.reduce_by_distance_limit_n_successive_deletion(
-            points=input, min_dist_threshold=5
+    def test_contour_reduce_by_distance_unsuccessive(self, input, output):
+        points = Contour.reduce_by_distance_unsuccessive(
+            points=input, min_dist_threshold=5, n_iterations=3
         )
         assert np.array_equal(points, output)
+
+    @pytest.mark.parametrize(
+        "input,output",
+        (
+            (
+                [[0, 0], [100, 100], [500, 500], [0, 250], [0, 2], [0, 4], [2, 0]],
+                [[0, 0], [100, 100], [500, 500], [0, 250], [0, 3], [2, 0]],
+            ),
+            (
+                [[0, 0], [100, 100], [200, 325], [351, 348], [0, 0], [2, 0], [4, 2]],
+                [[0, 0], [100, 100], [200, 325], [351, 348], [1, 0], [4, 2]],
+            ),
+        ),
+    )
+    def test_contour_reduce_by_distance_unsuccessive_mode_mean(self, input, output):
+        points = Contour.reduce_by_distance_unsuccessive(
+            points=input, min_dist_threshold=5, mode="mean"
+        )
+        assert np.array_equal(points, output)
+
+    def test_contour_reduce_by_distance_unsuccessive_invalid_mode(self):
+        with pytest.raises(ValueError):
+            Contour.reduce_by_distance_unsuccessive(
+                points=[], min_dist_threshold=5, mode="no-existing-mode"
+            )
 
     @pytest.mark.parametrize(
         "input,output",
@@ -255,3 +280,88 @@ class TestContourReduceMethods:
     def test_contour_reduce_by_triangle_area(self, input, output):
         points = Contour.reduce_by_triangle_area(points=input, min_triangle_area=50)
         assert np.array_equal(points, output)
+
+
+class TestContourClassMethods:
+    def test_construct_from_lines(self):
+        lines = np.array([[[0, 0], [2, 2]], [[2, 2], [5, 5]], [[5, 5], [0, 0]]])
+        cnt = Contour.from_lines(lines=lines)
+        assert np.array_equal(cnt.lines, lines)
+
+    def test_construct_from_lines_fails(self):
+        lines = [[[0, 0], [2, 2]], [[2, 3], [5, 5]], [[5, 5], [0, 0]]]
+        with pytest.raises(ValueError):
+            Contour.from_lines(lines=lines)
+
+    def test_construct_from_lines_fails_last(self):
+        lines = [[[0, 0], [2, 2]], [[2, 2], [5, 5]], [[5, 5], [0, 1]]]
+        with pytest.raises(ValueError):
+            Contour.from_lines(lines=lines)
+
+
+class TestContourAddPoint:
+    def test_add_point(self):
+        cnt = Contour([[0, 0], [1, 1], [1, 0]])
+        pt = [0, 1]
+        assert np.array_equal(
+            cnt.add_point(point=pt, index=1).asarray, [[0, 0], [0, 1], [1, 1], [1, 0]]
+        )
+
+    def test_add_point_last(self):
+        cnt = Contour([[0, 0], [1, 1], [1, 0]])
+        pt = [0, 1]
+        assert np.array_equal(
+            cnt.add_point(point=pt, index=-1).asarray, [[0, 0], [1, 1], [1, 0], [0, 1]]
+        )
+
+    def test_add_point_first_neg(self):
+        cnt = Contour([[0, 0], [1, 1], [1, 0]])
+        pt = [0, 1]
+        assert np.array_equal(
+            cnt.add_point(point=pt, index=-4).asarray, [[0, 1], [0, 0], [1, 1], [1, 0]]
+        )
+
+    def test_add_point_first(self):
+        cnt = Contour([[0, 0], [1, 1], [1, 0]])
+        pt = [0, 1]
+        assert np.array_equal(
+            cnt.add_point(point=pt, index=0).asarray, [[0, 1], [0, 0], [1, 1], [1, 0]]
+        )
+
+    def test_add_point_index_too_big(self):
+        cnt = Contour([[0, 0], [1, 1], [1, 0]])
+        pt = [0, 1]
+        with pytest.raises(ValueError):
+            cnt.add_point(point=pt, index=4)
+
+    def test_add_point_index_too_small(self):
+        cnt = Contour([[0, 0], [1, 1], [1, 0]])
+        pt = [0, 1]
+        with pytest.raises(ValueError):
+            cnt.add_point(point=pt, index=-5)
+
+
+class TestContourRearrange:
+    def test_rearrange_first_point_at_index_pos(self):
+        cnt = Contour([[0, 0], [1, 1], [1, 0]])
+        assert np.array_equal(
+            cnt.rearrange_first_point_at_index(index=1).asarray,
+            [[1, 1], [1, 0], [0, 0]],
+        )
+
+    def test_rearrange_first_point_at_index_neg(self):
+        cnt = Contour([[0, 0], [1, 1], [1, 0]])
+        assert np.array_equal(
+            cnt.rearrange_first_point_at_index(index=-2).asarray,
+            [[1, 1], [1, 0], [0, 0]],
+        )
+
+    def test_rearrange_first_point_at_index_too_big(self):
+        cnt = Contour([[0, 0], [1, 1], [1, 0]])
+        with pytest.raises(ValueError):
+            cnt.rearrange_first_point_at_index(index=3)
+
+    def test_rearrange_first_point_at_index_too_small(self):
+        cnt = Contour([[0, 0], [1, 1], [1, 0]])
+        with pytest.raises(ValueError):
+            cnt.rearrange_first_point_at_index(index=-4)
