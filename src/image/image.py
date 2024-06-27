@@ -1,5 +1,5 @@
 """
-File utils for image manipulation
+Image manipulation module
 """
 
 from __future__ import annotations
@@ -13,9 +13,9 @@ import numpy as np
 import scipy.ndimage
 
 import src.geometry as geo
-from src.utils.dataclasses.OcrSingleOutput import OcrSingleOutput
-from src.utils.dataclasses.DrawingRender import (
-    DrawingRender,
+from src.core.dataclass.ocrsingleoutput import OcrSingleOutput
+from src.image.render import (
+    Render,
     PointsRender,
     SegmentsRender,
     ContoursRender,
@@ -188,9 +188,7 @@ def convert_from_type_to_array(
 class DrawerImage(BaseImage, ABC):
     """Image Drawer class to draw objects on a given image"""
 
-    def __pre_draw(
-        self, objects: list | np.ndarray, render: DrawingRender
-    ) -> np.ndarray:
+    def __pre_draw(self, objects: list | np.ndarray, render: Render) -> np.ndarray:
         im = self.asarray.copy()
 
         # draw points in image
@@ -594,10 +592,12 @@ class AnalyzerImage(BaseImage, ABC):
                  is contained within the original image
         """
         # create all-white image of same size as original with the geometry entity
-        cnt_render = ContoursRender(thickness=1, default_color=(0, 0, 0))
         other = Image(
             np.full(shape=self.shape, fill_value=255, dtype=int)
-        ).draw_contours(contours=[contour], render=cnt_render)
+        ).draw_contours(
+            contours=[contour],
+            render=ContoursRender(thickness=1, default_color=(0, 0, 0)),
+        )
         return self.score_contains(other=other)
 
 

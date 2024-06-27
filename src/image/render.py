@@ -31,7 +31,7 @@ def is_color_tuple(color: Any) -> bool:
 
 
 @dataclass(kw_only=True)
-class DrawingRender(ABC):
+class Render(ABC):
     thickness: int = DEFAULT_RENDER_THICKNESS
     line_type: int = cv2.LINE_AA
     default_color: tuple[int, int, int] = DEFAULT_RENDER_COLOR
@@ -58,7 +58,7 @@ class DrawingRender(ABC):
 
 
 @dataclass
-class GeometryRender(DrawingRender, ABC):
+class GeometryRender(Render, ABC):
     pass
 
 
@@ -79,5 +79,5 @@ class ContoursRender(SegmentsRender):
 
 
 @dataclass
-class OcrSingleOutputRender(DrawingRender):
+class OcrSingleOutputRender(Render):
     pass
