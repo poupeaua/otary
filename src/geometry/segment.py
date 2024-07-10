@@ -9,6 +9,7 @@ import itertools
 import cv2
 import numpy as np
 from shapely import LineString
+from sympy.geometry import Line
 
 from src.geometry.constants import DEFAULT_MARGIN_ANGLE_ERROR
 from src.geometry.entity import GeometryEntity
@@ -226,3 +227,20 @@ class Segment(GeometryEntity):
         )
         _is_collinear = 1 in val_arr
         return bool(_is_parallel and _is_collinear)
+
+    def intersection_line(self, other: Segment) -> np.ndarray:
+        """Compute the intersection point that would exist between two segments if we
+        consider them as lines - which means as lines with infinite length.
+
+        Args:
+            other (Segment): other Segment object
+
+        Returns:
+            np.ndarray: intersection point between the two lines
+        """
+        if self.is_parallel(segment=other, margin_error_angle=0):
+            return np.array([])
+        line0 = Line(self.asarray[0], self.asarray[1])
+        line1 = Line(other.asarray[0], other.asarray[1])
+        intersection = np.array(line0.intersection(line1)[0].evalf(n=7))
+        return intersection

@@ -2,36 +2,21 @@
 Drawing Render used to makes easy drawings
 """
 
-from typing import Any
 from dataclasses import dataclass, field
 from abc import ABC
 
 import cv2
-import numpy as np
+
+from src.image.tools import is_color_tuple
 
 DEFAULT_RENDER_THICKNESS = 3
 DEFAULT_RENDER_COLOR = (0, 0, 255)
 
 
-def is_color_tuple(color: Any) -> bool:
-    """Identify if the input color parameter is in the expected format for a color
-
-    Args:
-        color (tuple): an expected python object to define a color
-
-    Returns:
-        bool: True if the input is a good color, False otherwise
-    """
-    cond = bool(
-        isinstance(color, tuple)
-        and len(color) == 3
-        and np.all([isinstance(c, int) for c in color])
-    )
-    return cond
-
-
 @dataclass(kw_only=True)
 class Render(ABC):
+    """Render class used to facilitate the rendering of objects when drawing them"""
+
     thickness: int = DEFAULT_RENDER_THICKNESS
     line_type: int = cv2.LINE_AA
     default_color: tuple[int, int, int] = DEFAULT_RENDER_COLOR
@@ -59,25 +44,30 @@ class Render(ABC):
 
 @dataclass
 class GeometryRender(Render, ABC):
-    pass
+    """Base class for the rendering of GeometryEntity objects"""
 
 
 @dataclass
 class PointsRender(GeometryRender):
+    """Render for Point objects"""
+
     radius: int = 3
 
 
 @dataclass
 class SegmentsRender(GeometryRender):
+    """Render for Segment objects"""
+
     as_vectors: bool = False
     tip_length: int = 20
 
 
 @dataclass
 class ContoursRender(SegmentsRender):
-    pass
+    """Render for Contour objects. It inherits from SegmentsRender because
+    Contour are drawn as a succession of drawn segments."""
 
 
 @dataclass
 class OcrSingleOutputRender(Render):
-    pass
+    """Render for OcrSingleOutput objects"""

@@ -4,7 +4,7 @@ Image manipulation module
 
 from __future__ import annotations
 
-from typing import Optional, Any
+from typing import Optional
 
 from abc import ABC
 import cv2
@@ -14,6 +14,7 @@ import scipy.ndimage
 
 import src.geometry as geo
 from src.core.dataclass.ocrsingleoutput import OcrSingleOutput
+from src.image.tools import prep_obj_draw
 from src.image.render import (
     Render,
     PointsRender,
@@ -153,54 +154,21 @@ class BaseImage(ABC):
         return Image(self.asarray.copy())
 
 
-def is_constituted_type(_list: list | np.ndarray, _type: Any) -> bool:
-    """Assert that a given list is only constituted by elements of the given type
-
-    Args:
-        l (list): input list
-        type (Any): expected type for all elements
-
-    Returns:
-        bool: True if all the element in the list are made of element of type "type"
-    """
-    return bool(np.all([isinstance(_list[i], _type) for i in range(len(_list))]))
-
-
-def convert_from_type_to_array(
-    objects: list | np.ndarray, _type: Any
-) -> list | np.ndarray:
-    """Convert a list of geometric objects to a given type
-
-    Args:
-        objects (list): list of geometric objects
-        _type (Any): type to transform
-    """
-    if is_constituted_type(_list=objects, _type=_type):
-        if _type in [geo.Point, geo.Segment, geo.Vector]:
-            objects = [s.asarray.astype(int) for s in objects]
-        elif _type == geo.Contour:
-            objects = [s.lines.astype(int) for s in objects]
-        else:
-            raise RuntimeError(f"The type {_type} is unexpected.")
-    return objects
-
-
 class DrawerImage(BaseImage, ABC):
     """Image Drawer class to draw objects on a given image"""
 
-    def __pre_draw(self, objects: list | np.ndarray, render: Render) -> np.ndarray:
+    def __pre_draw(self, n_objects: int, render: Render) -> np.ndarray:
         im = self.asarray.copy()
 
-        # draw points in image
         if Image(im).is_gray:
             im = cv2.cvtColor(im, cv2.COLOR_GRAY2BGR)
 
-        render.adjust_colors_length(n=len(objects))
+        render.adjust_colors_length(n=n_objects)
         return im
 
     def draw_points(
         self,
-        points: list[np.ndarray | geo.Point] | np.ndarray,
+        points: np.ndarray | list[geo.Point],
         render: PointsRender = PointsRender(),
     ) -> Image:
         """Add points on an image
@@ -211,8 +179,9 @@ class DrawerImage(BaseImage, ABC):
         Returns:
             Image: new image
         """
-        _points = convert_from_type_to_array(objects=points, _type=geo.Point)
-        im_array = self.__pre_draw(objects=points, render=render)
+        assert isinstance(render, PointsRender)
+        _points = prep_obj_draw(objects=points, _type=geo.Point)
+        im_array = self.__pre_draw(n_objects=len(_points), render=render)
         for point, color in zip(_points, render.colors):
             cv2.circle(
                 img=im_array,
@@ -225,7 +194,7 @@ class DrawerImage(BaseImage, ABC):
 
     def draw_segments(
         self,
-        segments: list[np.ndarray | geo.Segment] | np.ndarray,
+        segments: np.ndarray | list[geo.Segment],
         render: SegmentsRender = SegmentsRender(),
     ) -> Image:
         """Add segments on an image. It can be arrowed segments (vectors) too.
@@ -236,8 +205,9 @@ class DrawerImage(BaseImage, ABC):
         Returns:
             (Image): a new image that contains the segments drawn
         """
-        _segments = convert_from_type_to_array(objects=segments, _type=geo.Segment)
-        im_array = self.__pre_draw(objects=segments, render=render)
+        assert isinstance(render, SegmentsRender)
+        _segments = prep_obj_draw(objects=segments, _type=geo.Segment)
+        im_array = self.__pre_draw(n_objects=len(segments), render=render)
         if render.as_vectors:
             for segment, color in zip(_segments, render.colors):
                 cv2.arrowedLine(
@@ -272,6 +242,7 @@ class DrawerImage(BaseImage, ABC):
         Returns:
             Image: image with the added contours
         """
+        assert isinstance(render, ContoursRender)
         im = self.copy()
         for cnt in contours:
             im = im.draw_segments(segments=cnt.lines, render=render)
@@ -293,7 +264,8 @@ class DrawerImage(BaseImage, ABC):
         Returns:
             (Image): a new image with the bounding boxes displayed
         """
-        im_array = self.__pre_draw(objects=ocr_outputs, render=render)
+        assert isinstance(render, OcrSingleOutputRender)
+        im_array = self.__pre_draw(n_objects=len(ocr_outputs), render=render)
         for ocrso, color in zip(ocr_outputs, render.colors):
             cnt = [ocrso.bbox.asarray.reshape((-1, 1, 2)).astype(np.int32)]
             im_array = cv2.drawContours(

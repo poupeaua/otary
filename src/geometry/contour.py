@@ -8,8 +8,9 @@ import copy
 from abc import ABC
 from typing import Optional
 
+import cv2
+import matplotlib.pyplot as plt
 import numpy as np
-from sympy.geometry import Line
 from shapely import LinearRing
 
 from src.geometry import DEFAULT_MARGIN_ANGLE_ERROR
@@ -331,11 +332,11 @@ class Contour(GeometryEntity, ContourReducer):
     def from_unordered_lines_approx(
         cls,
         lines: np.ndarray,
-        min_dist_threshold: float = 50,
+        max_dist_thresh: float = 50,
         max_iteration: int = 50,
         start_line_index: int = 0,
         img: Optional[np.ndarray] = None,
-        debug: bool = False,
+        is_debug_enabled: bool = False,
     ) -> Contour:
         """Create a Contour object from an unordered list of lines that approximate a
         closed-shape. They approximate in the sense that they do not necessarily
@@ -344,7 +345,7 @@ class Contour(GeometryEntity, ContourReducer):
         Args:
             img (_type_): array of shape (lx, ly)
             lines (np.ndarray): array of lines of shape (n, 2, 2)
-            min_dist_threshold (float, optional): For any given point,
+            min_dist_thresh (float, optional): For any given point,
                 the minimum distance . Defaults to 50.
             max_iteration (float, optional): Maximum number of iterations before
                 finding a contour.
@@ -356,98 +357,76 @@ class Contour(GeometryEntity, ContourReducer):
             (Contour): a Contour object
         """
 
-        # def display(lines):
-        #     if debug:
-        #         #TODO
-        #         image.show_image_and_lines(
-        #             image=img,
-        #             lines=lines,
-        #             colors_lines=[
-        #                 (50 * i, 255 - 50 * i, 255) for i in range(len(_lines))
-        #             ],
-        #         )
-
-        if debug:
-            assert img is not None
-            img = img.copy()
+        # pylint: disable=too-many-locals
+        def debug_visualize(seg: np.ndarray):
+            if is_debug_enabled and img is not None:
+                im = img.copy()
+                im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+                im = cv2.line(
+                    img=im, pt1=seg[0], pt2=seg[1], color=(0, 250, 126), thickness=5
+                )
+                plt.imshow(im)
+                plt.xticks([])
+                plt.yticks([])
+                plt.show()
 
         _lines = copy.deepcopy(np.array(lines))
-        construct_contour = []
+        list_build_cnt = []
         is_contour_found = False
-        idx_line_closest_point = start_line_index
+        idx_seg_closest = start_line_index
         i = 0
         while not is_contour_found and i < max_iteration:
-            cur_line = _lines[idx_line_closest_point]
-            cur_geoline = Line(cur_line[0], cur_line[1])
-            cur_point = cur_line[1]
-            construct_contour.append(cur_line)
-            _lines = np.delete(_lines, idx_line_closest_point, axis=0)
+            curseg = Segment(_lines[idx_seg_closest])
+            curpoint = curseg.asarray[1]
+            list_build_cnt.append(curseg.asarray)
+            _lines = np.delete(_lines, idx_seg_closest, axis=0)
 
             if len(_lines) == 0:
                 print("No more lines will do the same operation as no point detected")
 
-            # display(lines=_lines)
-
             # find the closest point to the current one and associated line
             lines2points = _lines.reshape(len(_lines) * 2, 2)
-            distances_from_cur_point = np.linalg.norm(lines2points - cur_point, axis=1)
-            # print(len(_lines), len(distances_from_cur_point),distances_from_cur_point)
-            idx_closest_points = np.nonzero(
-                distances_from_cur_point < min_dist_threshold
-            )[0]
+            dist_from_curpoint = np.linalg.norm(lines2points - curpoint, axis=1)
+            idx_closest_points = np.nonzero(dist_from_curpoint < max_dist_thresh)[0]
 
-            if (
-                len(idx_closest_points) > 1
-            ):  # more than one point close to the current point
-                # TODO
-                # maybe just take the closest may be more complicated than that
-                raise RuntimeError("More than one point close to the current point")
+            debug_visualize(seg=curseg.asarray)
+
+            if len(idx_closest_points) > 1:
+                # more than one point close to the current point - take the closest
+                idx_closest_points = np.array([np.argmin(dist_from_curpoint)])
             if len(idx_closest_points) == 0:
-                first_line = construct_contour[0]
-                first_point = first_line[0]
-                distance_end_to_first_points = np.linalg.norm(first_point - cur_point)
-                if distance_end_to_first_points < min_dist_threshold:
-                    first_geoline = Line(first_line[0], first_line[1])
+                # no point detected - can mean that the contour is done or not
+                first_seg = Segment(list_build_cnt[0])
+                if np.linalg.norm(first_seg.asarray[0] - curpoint) < max_dist_thresh:
                     # TODO sometimes multiples intersection example 7
-                    # print(cur_geoline.intersection(first_geoline)[0].evalf(n=7))
-                    intersect_point = np.array(
-                        cur_geoline.intersection(first_geoline)[0].evalf(n=7)
-                    )
-                    construct_contour[-1][1] = intersect_point
-                    construct_contour[0][0] = intersect_point
+                    intersect_point = curseg.intersection_line(first_seg)
+                    list_build_cnt[-1][1] = intersect_point
+                    list_build_cnt[0][0] = intersect_point
                     is_contour_found = True
                     break
                 raise RuntimeError("No point detected close to the current point")
 
-            idx_closest_point = int(idx_closest_points[0])
-            idx_line_closest_point = int(np.floor(idx_closest_point / 2))
+            # nly one closest point - get indices of unique closest point an segment
+            idx_point_closest = int(idx_closest_points[0])
+            idx_seg_closest = int(np.floor(idx_point_closest / 2))
 
             # arrange the line so that the closest point is in the first place
-            idx_point_in_line = 0 if (idx_closest_point / 2).is_integer() else 1
-            line_closest_point = _lines[idx_line_closest_point]
+            idx_point_in_line = 0 if (idx_point_closest / 2).is_integer() else 1
+            seg_closest = _lines[idx_seg_closest]
             if idx_point_in_line == 1:  # flip points positions
-                _lines[idx_line_closest_point] = np.flip(line_closest_point, axis=0)
-
-            # display(lines=[cur_line, line_closest_point])
+                seg_closest = np.flip(seg_closest, axis=0)
+            _lines[idx_seg_closest] = seg_closest
 
             # find intersection point between the two lines
-            geoline_closest_point = Line(line_closest_point[0], line_closest_point[1])
-            intersect_point = np.array(
-                cur_geoline.intersection(geoline_closest_point)[0].evalf(n=7)
-            )
+            intersect_point = curseg.intersection_line(Segment(seg_closest))
 
-            # update values in arrays
-            cur_line[1] = intersect_point
-            line_closest_point[0] = intersect_point
-            construct_contour[i][1] = intersect_point
-
-            # display(lines=[cur_line, line_closest_point])
+            # update arrays with the intersection point
+            _lines[idx_seg_closest][0] = intersect_point
+            list_build_cnt[i][1] = intersect_point
 
             i += 1
 
-        contour_lines = np.array(construct_contour)
-        # display(lines=[cur_line, line_closest_point])
-        cnt = Contour.from_lines(contour_lines)
+        cnt = Contour.from_lines(np.array(list_build_cnt))
         return cnt
 
     # ------------------------------ STATIC METHODS ------------------------------------

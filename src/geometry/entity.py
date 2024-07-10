@@ -29,7 +29,7 @@ class GeometryEntity(ABC):
     @property
     @abstractmethod
     def shapely(self) -> GeometryCollection:
-        pass
+        """Representation of the geometric object in the shapely library"""
 
     @property
     def n_points(self) -> int:
@@ -178,6 +178,18 @@ class GeometryEntity(ABC):
     def intersection(
         self, other: GeometryEntity, only_points: bool = True
     ) -> np.ndarray:
+        """Compute the intersections between two geometric objects.
+        If the only_points parameter is True, then we only consider intersection points
+        as valid. We can not have another type of intersection.
+
+        Args:
+            other (GeometryEntity): other GeometryEntity object
+            only_points (bool, optional): whether to consider only points.
+                Defaults to True.
+
+        Returns:
+            np.ndarray: list of n points of shape (n, 2)
+        """
         it = self.shapely.intersection(other=other.shapely)
 
         if isinstance(it, SPoint):  # only one intersection point
