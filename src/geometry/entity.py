@@ -5,8 +5,16 @@ by all type of geometry objects
 
 from __future__ import annotations
 
+from typing import Optional
 import copy
-from abc import ABC
+from abc import ABC, abstractmethod
+from shapely import (
+    GeometryCollection,
+    MultiPoint,
+    Point as SPoint,
+    LineString,
+    MultiLineString,
+)
 
 import cv2
 import numpy as np
@@ -17,6 +25,11 @@ class GeometryEntity(ABC):
 
     def __init__(self, points) -> None:
         self.points = copy.deepcopy(np.array(points))
+
+    @property
+    @abstractmethod
+    def shapely(self) -> GeometryCollection:
+        """Representation of the geometric object in the shapely library"""
 
     @property
     def n_points(self) -> int:
@@ -43,7 +56,7 @@ class GeometryEntity(ABC):
         Returns:
             float: area value
         """
-        return cv2.contourArea(self.points)
+        return cv2.contourArea(self.points.astype(int))
 
     @property
     def perimeter(self) -> float:
@@ -62,14 +75,7 @@ class GeometryEntity(ABC):
         Returns:
             np.ndarray: centroid point
         """
-        moments = cv2.moments(self.points)
-        if moments["m00"] != 0:
-            centroid = np.array(
-                [moments["m10"] / moments["m00"], moments["m01"] / moments["m00"]]
-            )
-        else:
-            centroid = np.mean(self.points, axis=0)  # useful for the point entity
-        return centroid
+        return np.mean(self.points, axis=0)
 
     def copy(self):
         """Create a copy of the geometry entity object
@@ -80,10 +86,7 @@ class GeometryEntity(ABC):
         return copy.deepcopy(self)
 
     def rotate(
-        self,
-        angle: float,
-        pivot: np.ndarray = np.zeros(shape=(2,)),
-        degree: bool = False,
+        self, angle: float, degree: bool = False, pivot: Optional[np.ndarray] = None
     ):
         """Rotate the geometry entity object.
         A pivot point can be passed as an argument to rotate the object around the pivot
@@ -91,13 +94,17 @@ class GeometryEntity(ABC):
         Args:
             angle (float): rotation angle
             pivot (np.ndarray, optional): pivot point.
-                Defaults to np.zeros(shape=(2,)).
+                Defaults to None which means that by default the centroid point of
+                the shape is taken as the pivot point.
             degree (bool, optional): whether the angle is in degree or radian.
                 Defaults to False which means radians.
 
         Returns:
             GeometryEntity: rotated geometry entity object.
         """
+        if pivot is None:
+            pivot = self.centroid
+
         if degree:  # transform angle to radian if in degree
             angle = np.deg2rad(angle)
 
@@ -134,17 +141,127 @@ class GeometryEntity(ABC):
         img_center_point = np.array([img.shape[1], img.shape[0]]) / 2
         return self.rotate(angle=angle, pivot=img_center_point, degree=degree)
 
+    def __validate_shift_vector(self, vector: np.ndarray) -> np.ndarray:
+        """Validate the shift vector before executing operation
+
+        Args:
+            vector (np.ndarray): shift vector
+
+        Returns:
+            np.ndarray: validated vector
+        """
+        vector = np.asarray(vector)
+        if vector.shape == (2, 2):
+            vector = vector[1] - vector[0]  # set the vector to be defined as one point
+        if vector.shape != (2,):
+            raise ValueError(
+                "The input vector {vector} does not have the expected shape."
+            )
+        return vector
+
     def shift(self, vector: np.ndarray):
         """Shift the geometry entity by the vector direction
 
         Args:
-            vector (np.ndarray): vector that describes the shift
+            vector (np.ndarray): vector that describes the shift as a array with
+                two elements. Example: [2, -8] which describes the
+                vector [[0, 0], [2, -8]]. The vector can also be a vector of shape
+                (2, 2) of the form [[2, 6], [1, 3]].
 
         Returns:
             GeometryEntity: shifted geometrical object
         """
+        vector = self.__validate_shift_vector(vector=vector)
         self.points = self.points + vector
         return self
+
+    def intersection(
+        self, other: GeometryEntity, only_points: bool = True
+    ) -> np.ndarray:
+        """Compute the intersections between two geometric objects.
+        If the only_points parameter is True, then we only consider intersection points
+        as valid. We can not have another type of intersection.
+
+        Args:
+            other (GeometryEntity): other GeometryEntity object
+            only_points (bool, optional): whether to consider only points.
+                Defaults to True.
+
+        Returns:
+            np.ndarray: list of n points of shape (n, 2)
+        """
+        it = self.shapely.intersection(other=other.shapely)
+
+        if isinstance(it, SPoint):  # only one intersection point
+            return np.array([[it.x, it.y]])
+        if isinstance(it, MultiPoint):  # several intersection points
+            return np.asanyarray([[pt.x, pt.y] for pt in it.geoms])
+        if isinstance(it, LineString) and not only_points:  # one intersection line
+            return NotImplemented
+        if isinstance(it, MultiLineString) and not only_points:  # multilines
+            return NotImplemented
+        if isinstance(it, GeometryCollection):  # lines and pts
+            return NotImplemented
+
+        return np.array([])
+
+    def get_shared_close_points(
+        self, other: GeometryEntity, margin_dist_error: float = 5
+    ) -> np.ndarray:
+        """Get the shared points between two geometric objects.
+        A point is considered shared if it is close to another point in the other
+        geometric structure.
+
+        Args:
+            other (GeometryEntity): a GeometryEntity object, could be anything
+            margin_dist_error (float, optional): the threshold to define a point as
+                shared or not. Defaults to 5.
+
+        Returns:
+            np.ndarray: list of points identified as shared between the two geometric
+                objects
+        """
+        list_shared_points = []
+        for pt in self.asarray:
+            distances = np.linalg.norm(other.asarray - pt)
+            indices = np.nonzero(distances < margin_dist_error)[0].astype(int)
+            if len(indices) > 0:
+                list_shared_points.append(pt)
+        return np.array(list_shared_points)
+
+    def get_points_far_from(
+        self, points: np.ndarray, margin_dist_error: float = 5
+    ) -> np.ndarray:
+        """Get points far from the points in parameters that belongs to the geometric
+        structure.
+
+        Args:
+            points (np.ndarray): points that should be remove of the geometric structure
+            margin_dist_error (float, optional): the threshold to define a point as
+                shared or not. Defaults to 5.
+
+        Returns:
+            np.ndarray: points that belongs to the geometric structure and that
+                do not belong / are far from to
+        """
+        list_far_points = []
+        for pt in self.asarray:
+            distances = np.linalg.norm(points - pt)
+            indices = np.nonzero(distances < margin_dist_error)[0].astype(int)
+            if len(indices) == 0:
+                list_far_points.append(pt)
+        return np.array(list_far_points)
+
+    def __eq__(self, value: object) -> bool:
+        if not isinstance(value, GeometryEntity):
+            raise RuntimeError(
+                f"The parameter value has type {type(value)}. "
+                f"The type expected was GeometryEntity"
+            )
+        return np.array_equal(self.asarray, value.asarray)
+
+    def __len__(self) -> int:
+        return self.n_points
 
     def __str__(self) -> str:
         return self.__class__.__name__ + "(" + self.asarray.tolist().__str__() + ")"

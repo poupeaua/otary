@@ -8,6 +8,8 @@ import itertools
 
 import cv2
 import numpy as np
+from shapely import LineString
+from sympy.geometry import Line
 
 from src.geometry.constants import DEFAULT_MARGIN_ANGLE_ERROR
 from src.geometry.entity import GeometryEntity
@@ -16,7 +18,7 @@ from src.geometry.entity import GeometryEntity
 class Segment(GeometryEntity):
     """Segment Class to manipulate easily segments objects"""
 
-    def __init__(self, points) -> None:
+    def __init__(self, points: np.ndarray | list) -> None:
         assert len(points) == 2
         super().__init__(points)
 
@@ -69,6 +71,24 @@ class Segment(GeometryEntity):
             float: segment slope value
         """
         return -self.slope
+
+    @property
+    def shapely(self) -> LineString:
+        """Returns the Shapely.LineString representation of the contour.
+        See https://shapely.readthedocs.io/en/stable/reference/shapely.LineString.html
+
+        Returns:
+            LineString: shapely.LineString object
+        """
+        return LineString(coordinates=self.asarray)
+
+    @staticmethod
+    def assert_list_of_lines(lines: np.ndarray) -> None:
+        if lines.shape[1:] != (2, 2):
+            raise ValueError(
+                "The input segments argument has not the expected shape. "
+                f"Input shape {lines.shape[1:]}, expected shape (2, 2)."
+            )
 
     def slope_angle(self, degree: bool = False, is_cv2: bool = False) -> float:
         """Calculate the slope angle of a single line in the cartesian space
@@ -161,7 +181,7 @@ class Segment(GeometryEntity):
                 collinearity. Defaults to DEFAULT_MARGIN_ANGLE_ERROR.
 
         Returns:
-            bool: _description_
+            bool: True if the point is collinear with the segment
         """
         return self.is_points_collinear(
             p1=self.asarray[0],
@@ -215,3 +235,20 @@ class Segment(GeometryEntity):
         )
         _is_collinear = 1 in val_arr
         return bool(_is_parallel and _is_collinear)
+
+    def intersection_line(self, other: Segment) -> np.ndarray:
+        """Compute the intersection point that would exist between two segments if we
+        consider them as lines - which means as lines with infinite length.
+
+        Args:
+            other (Segment): other Segment object
+
+        Returns:
+            np.ndarray: intersection point between the two lines
+        """
+        if self.is_parallel(segment=other, margin_error_angle=0):
+            return np.array([])
+        line0 = Line(self.asarray[0], self.asarray[1])
+        line1 = Line(other.asarray[0], other.asarray[1])
+        intersection = np.array(line0.intersection(line1)[0].evalf(n=7))
+        return intersection

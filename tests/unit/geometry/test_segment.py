@@ -2,6 +2,7 @@
 Test geometry file
 """
 
+import pytest
 import numpy as np
 
 from src.geometry import Segment
@@ -19,6 +20,25 @@ class TestSegmentProperties:
     def test_centroid(self):
         seg = Segment([[0, 0], [1, 0]])
         assert np.equal(seg.centroid, np.array([0.5, 0])).all()
+
+    def test_slope_0(self):
+        seg = Segment([[0, 0], [1, 0]])
+        assert np.isclose(seg.slope, 0)
+
+    def test_slope_1(self):
+        seg = Segment([[0, 0], [1, 1]])
+        assert np.isclose(seg.slope, 1)
+
+    @pytest.mark.parametrize(
+        "slope", [-1e10, -10, -5, -3, -1, -1 / 2, 0, 1 / 2, 1, 3, 5, 10, 1e10]
+    )
+    def test_slope_parametrized_slope(self, slope):
+        seg = Segment([[0, 0], [1, slope]])
+        assert np.isclose(seg.slope, slope)
+
+    def test_slope_cv2(self):
+        seg = Segment([[0, 0], [1, 1]])
+        assert np.isclose(seg.slope_cv2, -1)
 
 
 class TestSegmentSlopeCalculation:
@@ -88,93 +108,100 @@ class TestAreParallel:
 
 
 class TestArePointsCollinear:
-    def test_are_points_collinear_trivial(self):
+    def test_is_points_collinear_trivial(self):
         p1 = [0, 0]
         p2 = [0, 1]
         p3 = [0, 2]
         assert Segment.is_points_collinear(p1, p2, p3) is True
 
-    def test_are_points_collinear_false(self):
+    def test_is_points_collinear_false(self):
         p1 = [0, 0]
         p2 = [7, 1]
         p3 = [0, 2]
         assert Segment.is_points_collinear(p1, p2, p3) is False
 
-    def test_are_points_collinear_very_close(self):
+    def test_is_points_collinear_very_close(self):
         p1 = [-0.05, 0]
         p2 = [0, 1.01]
         p3 = [0.001, 2.02]
         assert Segment.is_points_collinear(p1, p2, p3) is True
 
-    def test_are_points_collinear_spaced_points(self):
+    def test_is_points_collinear_spaced_points(self):
         p1 = [0, 0]
         p2 = [0, 1000]
         p3 = [0, 30000]
         assert Segment.is_points_collinear(p1, p2, p3) is True
 
-    def test_are_points_collinear_spaced_points_false(self):
+    def test_is_points_collinear_spaced_points_false(self):
         p1 = [0, 15000]
         p2 = [50000, 1000]
         p3 = [-500, 30000]
         assert Segment.is_points_collinear(p1, p2, p3) is False
 
-    def test_are_points_collinear_2_points_equal(self):
+    def test_is_points_collinear_2_points_equal(self):
         p1 = [0, 0]
         p2 = [0, 0]
         p3 = [-500, 30000]
         assert Segment.is_points_collinear(p1, p2, p3) is True
 
-    def test_are_points_collinear_2_close_points_false(self):
+    def test_is_points_collinear_2_close_points_false(self):
         p1 = [0, 1]
         p2 = [1, 2]
         p3 = [-500, 30000]
         assert Segment.is_points_collinear(p1, p2, p3) is False
 
-    def test_are_points_collinear_2_very_close_points_true(self):
+    def test_is_points_collinear_2_very_close_points_true(self):
         p1 = [0, 1]
         p2 = [0.05, 0.99]
         p3 = [-500, 30000]
         assert Segment.is_points_collinear(p1, p2, p3) is False
 
-    def test_are_points_collinear_3_points_equal(self):
+    def test_is_points_collinear_3_points_equal(self):
         p1 = [0, 0]
         p2 = [0, 0]
         p3 = [0, 0]
         assert Segment.is_points_collinear(p1, p2, p3) is True
 
+    def test_is_point_collinear(self):
+        p1 = [0, 0]
+        p2 = [0, 1000]
+        p3 = [0, 30000]
+        seg = Segment(points=[p1, p2])
+        assert seg.is_point_collinear(p3) is True
+
 
 class TestAreLinesCollinear:
-    def test_are_lines_collinear_equal(self):
+    def test_is_lines_collinear_equal(self):
         # case with two segments equal
         seg1 = Segment([[-1, 0], [-2, 0.01]])
         seg2 = Segment([[-1, 0], [-2, 0.01]])
         assert seg1.is_collinear(seg2) is True
 
-    def test_are_lines_collinear_out(self):
+    def test_is_lines_collinear_out(self):
         # out case or space-separated lines
         seg1 = Segment([[0, 0], [1, 1]])
         seg2 = Segment([[300, 300], [1000, 1000]])
         assert seg1.is_collinear(seg2) is True
 
-    def test_are_lines_collinear_sup(self):
+    def test_is_lines_collinear_sup(self):
         # lines superposed case
         seg1 = Segment([[0, 0], [500, 500]])
         seg2 = Segment([[300, 300], [1000, 1000]])
         assert seg1.is_collinear(seg2) is True
 
-    def test_are_lines_collinear_in(self):
+    def test_is_lines_collinear_in(self):
         # a segment is bigger and envelop the smallest one
         seg1 = Segment([[0, 0], [500, 500]])
         seg2 = Segment([[300, 300], [400, 400]])
         assert seg1.is_collinear(seg2) is True
 
-    def test_are_lines_collinear_only_parallel(self):
+    def test_is_lines_collinear_only_parallel(self):
         # the two segments are just parallel but not collinear
         seg1 = Segment([[1, 0], [2, 1]])
         seg2 = Segment([[0, 1], [1, 2]])
         assert seg1.is_collinear(seg2) is False
 
-    def test_are_lines_collinear_3_points_collinear(self):
+    def test_is_lines_collinear_3_points_collinear(self):
         # three points are points collinear but the segments are not collinear
         seg1 = Segment([[0, 0], [2, 2]])
         seg2 = Segment([[1, 1], [-355, 56]])
