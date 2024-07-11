@@ -365,3 +365,60 @@ class TestContourRearrange:
         cnt = Contour([[0, 0], [1, 1], [1, 0]])
         with pytest.raises(ValueError):
             cnt.rearrange_first_point_at_index(index=-4)
+
+
+class TestContourFromUnorderedLinesApprox:
+    @pytest.mark.parametrize(
+        "input,output",
+        (
+            (
+                [  # square
+                    [[0, 0], [0, 100]],
+                    [[0, 101], [102, 98]],
+                    [[101, 96], [102, 0]],
+                    [[99, -1], [-1, 1]],
+                ],
+                [
+                    [[0, 0], [0, 101]],
+                    [[0, 101], [100, 98]],
+                    [[100, 98], [102, -1]],
+                    [[102, -1], [0, 0]],
+                ],
+            ),
+            (
+                [  # triangle
+                    [[0, 0], [50, 100]],
+                    [[50, 101], [102, 0]],
+                    [[101, 0], [-1, 0]],
+                ],
+                [[[0, 0], [50, 100]], [[50, 100], [102, 0]], [[102, 0], [0, 0]]],
+            ),
+        ),
+    )
+    def test_cnt_fula_general(self, input: list, output: list):
+        cnt = Contour.from_unordered_lines_approx(input)
+        assert np.all([o in output for o in cnt.lines.tolist()])
+
+    @pytest.mark.parametrize(
+        "input",
+        (
+            (
+                [  # square
+                    [[0, 0], [0, 100]],
+                    [[0, 115], [102, 98]],
+                    [[101, 96], [102, 0]],
+                    [[99, -1], [-1, 1]],
+                ]
+            ),
+            (
+                [  # triangle
+                    [[0, 0], [50, 100]],
+                    [[50, 101], [102, 0]],
+                    [[101, 0], [12, 0]],
+                ]
+            ),
+        ),
+    )
+    def test_cnt_fula_dist_sup_thresh(self, input: list):
+        with pytest.raises(RuntimeError):
+            Contour.from_unordered_lines_approx(input, max_dist_thresh=10)

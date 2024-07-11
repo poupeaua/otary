@@ -82,6 +82,14 @@ class Segment(GeometryEntity):
         """
         return LineString(coordinates=self.asarray)
 
+    @staticmethod
+    def assert_list_of_lines(lines: np.ndarray) -> None:
+        if lines.shape[1:] != (2, 2):
+            raise ValueError(
+                "The input segments argument has not the expected shape. "
+                f"Input shape {lines.shape[1:]}, expected shape (2, 2)."
+            )
+
     def slope_angle(self, degree: bool = False, is_cv2: bool = False) -> float:
         """Calculate the slope angle of a single line in the cartesian space
 

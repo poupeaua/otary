@@ -171,6 +171,8 @@ class ContourReducer(ABC):
                     len(cur_idx_to_rm) > 0 and i == cur_idx_to_rm[-1] + 1
                 ):
                     cur_idx_to_rm.append(i)
+                else:
+                    cur_idx_to_rm = []
             else:
                 cur_idx_to_rm = []
 
@@ -358,6 +360,9 @@ class Contour(GeometryEntity, ContourReducer):
         """
 
         # pylint: disable=too-many-locals
+        lines = np.asarray(lines)
+        Segment.assert_list_of_lines(lines=lines)
+
         def debug_visualize(seg: np.ndarray):
             if is_debug_enabled and img is not None:
                 im = img.copy()
@@ -370,7 +375,7 @@ class Contour(GeometryEntity, ContourReducer):
                 plt.yticks([])
                 plt.show()
 
-        _lines = copy.deepcopy(np.array(lines))
+        _lines = copy.deepcopy(lines)
         list_build_cnt = []
         is_contour_found = False
         idx_seg_closest = start_line_index
