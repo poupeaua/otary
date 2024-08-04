@@ -95,7 +95,7 @@ class ContourReducer(ABC):
 
         This reduce by distance function has a big drawback: it will remove
         potentially too much points between two given points A and B
-        as long as there exists a suite of points that close enough to each others
+        as long as there exists a suite of points that are close enough to each others
         between A and B. In order to avoid this disadvantage, please refer to the
         method named :func:`~ContourReducer.reduce_by_distance_unsuccessive`.
 
