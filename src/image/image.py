@@ -120,6 +120,30 @@ class BaseImage(ABC):
         """
         return self.asarray / 255
 
+    @property
+    def to_grayscale(self) -> Image:
+        """Generate the image in grayscale of shape (height, width)
+
+        Returns:
+            Image: original image in grayscale
+        """
+        if self.is_gray:
+            return self
+        return Image(cv2.cvtColor(self.asarray, cv2.COLOR_BGR2GRAY))
+
+    @property
+    def to_colorscale(self) -> Image:
+        """Generate the image in colorscale (height, width, 3).
+        This property can be useful when we wish to draw objects in a given color
+        on a grayscale image.
+
+        Returns:
+            Image: original image in color
+        """
+        if not self.is_gray:
+            return self
+        return Image(cv2.cvtColor(self.asarray, cv2.COLOR_GRAY2BGR))
+
     def is_equal_shape(self, other: Image) -> bool:
         """Check whether two images have the same shape
 
@@ -131,9 +155,9 @@ class BaseImage(ABC):
         """
         return self.shape == other.shape
 
-    def margin_distance_error(self, pct: float = 0.01) -> float:
-        """Acceptable distance error margin. It is calculated based on the
-        normalized side length.
+    def dist_pct(self, pct: float = 0.01) -> float:
+        """Distance percentage that can be used an acceptable distance error margin.
+        It is calculated based on the normalized side length.
 
         Args:
             pct (float, optional): pourcentage of distance error. Defaults to 0.01,
@@ -477,10 +501,13 @@ class AnalyzerImage(BaseImage, ABC):
         A blur is applied before for better masking results.
         See https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html
 
+        As the input image must be a grayscale before applying any thresholding
+        methods we convert the image to grayscale.
+
         Returns:
             Image: image thresholded where its values are now pure 0 or 255
         """
-        blur = cv2.medianBlur(src=self.asarray, ksize=ksize)
+        blur = cv2.medianBlur(src=self.to_grayscale.asarray, ksize=ksize)
         masked_img = cv2.adaptiveThreshold(
             src=blur,
             maxValue=255,
@@ -493,12 +520,17 @@ class AnalyzerImage(BaseImage, ABC):
 
     def otsu_thresholding(self, ksize: int = 5) -> Image:
         """Apply Ostu thresholding. A blur is applied before for better masking results.
-        See https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html
+        See https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html.
+
+        As the input image must be a grayscale before applying any thresholding
+        methods we convert the image to grayscale.
 
         Returns:
             Image: image thresholded where its values are now pure 0 or 255
         """
-        blur = cv2.GaussianBlur(src=self.asarray, ksize=(ksize, ksize), sigmaX=0)
+        blur = cv2.GaussianBlur(
+            src=self.to_grayscale.asarray, ksize=(ksize, ksize), sigmaX=0
+        )
         _, masked_img = cv2.threshold(
             src=blur, thresh=0, maxval=255, type=cv2.THRESH_BINARY + cv2.THRESH_OTSU
         )
@@ -512,7 +544,7 @@ class AnalyzerImage(BaseImage, ABC):
         Returns:
             np.ndarray: array where its inner values are 0 or 1
         """
-        return self.otsu_thresholding().asarray_norm
+        return self.otsu_thresholding().asarray_norm.astype(np.uint8)
 
     @property
     def rmask(self) -> np.ndarray:
@@ -553,8 +585,18 @@ class AnalyzerImage(BaseImage, ABC):
         other_rmask = other.rmask
         return np.sum(self.rmask * other_rmask) / np.sum(other_rmask)
 
-    def score_contains_contour(self, contour: geo.Contour) -> float:
-        """Check how much the contour is contained in the original image
+    def score_contains_contour(
+        self,
+        contour: geo.Contour,
+        dilate_kernel: tuple = (5, 5),
+        dilate_iterations: int = 1,
+    ) -> float:
+        """Check how much the contour is contained in the original image.
+
+        Beware: this method is different from the score_contains method because in
+        this case we emphasize the base image by dilating its content.
+        Everything that is a 1 in the rmask will be dilated to give more chance for the
+        contour to be contained within the image in the calculation.
 
         Args:
             contour (Contour): Contour object
@@ -564,13 +606,74 @@ class AnalyzerImage(BaseImage, ABC):
                  is contained within the original image
         """
         # create all-white image of same size as original with the geometry entity
-        other = Image(
-            np.full(shape=self.shape, fill_value=255, dtype=int)
-        ).draw_contours(
-            contours=[contour],
-            render=ContoursRender(thickness=1, default_color=(0, 0, 0)),
+        other = (
+            Image(np.full(shape=self.shape, fill_value=255, dtype=np.uint8))
+            .draw_contours(
+                contours=[contour],
+                render=ContoursRender(thickness=1, default_color=(0, 0, 0)),
+            )
+            .to_grayscale
         )
-        return self.score_contains(other=other)
+
+        # dilate the original image
+        im = Image(
+            (
+                1
+                - cv2.dilate(
+                    self.rmask,
+                    kernel=np.ones(dilate_kernel, np.uint8),
+                    iterations=dilate_iterations,
+                )
+            )
+            * 255
+        )
+        return im.score_contains(other=other)
+
+    def score_distance_from_center(
+        self, point: np.ndarray, sigma: float = 1.0, method: str = "gaussian"
+    ) -> float:
+        """Compute a score to evaluate how far a point is from the
+        image center point. A score equal to 1 means that the contour and image centers
+        coincide.
+
+        A score close to 0 means that the point and the image center are far away.
+        A score close to 1 means that the point and the image center are close.
+
+        This method can be used to compute a score for a contour centroid:
+        - A small score should be taken into account and informs us that the contour
+        found is probably wrong.
+        - On the contrary, a high score does not ensure a high quality contour.
+
+        Args:
+            point (np.ndarray): 2D point
+            sigma (float, optional): the standard variation for the
+                score evaluation function. Defaults to 1.0.
+
+        Returns:
+            float: a score from 0 to 1.
+        """
+
+        def gaussian2D(
+            x: float,
+            y: float,
+            x0: float = 0.0,
+            y0: float = 0.0,
+            amplitude: float = 1,
+            sigmax: float = 1.0,
+            sigmay: float = 1.0,
+        ) -> float:
+            return amplitude * np.exp(
+                -((x - x0) ** 2) / (2 * sigmax) - (y - y0) ** 2 / (2 * sigmay)
+            )
+
+        return gaussian2D(
+            x=point[0],
+            y=point[1],
+            x0=self.center[0],
+            y0=self.center[1],
+            sigmax=sigma,
+            sigmay=sigma,
+        )
 
 
 class Image(DrawerImage, TransformerImage, AnalyzerImage):
