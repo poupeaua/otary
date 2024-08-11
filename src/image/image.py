@@ -121,7 +121,7 @@ class BaseImage(ABC):
         return self.asarray / 255
 
     @property
-    def to_grayscale(self) -> Image:
+    def as_grayscale(self) -> Image:
         """Generate the image in grayscale of shape (height, width)
 
         Returns:
@@ -132,7 +132,7 @@ class BaseImage(ABC):
         return Image(cv2.cvtColor(self.asarray, cv2.COLOR_BGR2GRAY))
 
     @property
-    def to_colorscale(self) -> Image:
+    def as_colorscale(self) -> Image:
         """Generate the image in colorscale (height, width, 3).
         This property can be useful when we wish to draw objects in a given color
         on a grayscale image.
@@ -143,6 +143,31 @@ class BaseImage(ABC):
         if not self.is_gray:
             return self
         return Image(cv2.cvtColor(self.asarray, cv2.COLOR_GRAY2BGR))
+
+    @property
+    def as_white(self) -> Image:
+        """Returns an entirely white image with the same dimension as the original.
+
+        Returns:
+            Image: new white image
+        """
+        return self.as_filled(fill_value=255)
+
+    @property
+    def corners(self) -> np.ndarray:
+        """Returns the corners in the following order:
+
+        0. bottom left corner
+        1. bottom right corner
+        2. top right corner
+        3. top left corner
+
+        Returns:
+            np.ndarray: array containing the corners
+        """
+        return np.array(
+            [[0, 0], [self.width, 0], [self.width, self.height], [0, self.height]]
+        )
 
     def is_equal_shape(self, other: Image) -> bool:
         """Check whether two images have the same shape
@@ -168,6 +193,20 @@ class BaseImage(ABC):
             float: margin distance error
         """
         return self.norm_side_length * pct
+
+    def as_filled(self, fill_value: int | np.ndarray = 255) -> Image:
+        """Returns an entirely white image of the same size as the original.
+        Can be useful to get an empty representation of the same image to paint
+        and draw things on an image of the same dimension.
+
+        Args:
+            fill_value (int | np.ndarray, optional): color to fill the new empty image.
+                Defaults to 255 which means that is returns a entirely white image.
+
+        Returns:
+            Image: new image with a single color of the same size as original.
+        """
+        return Image(np.full(shape=self.shape, fill_value=fill_value, dtype=np.uint8))
 
     def copy(self) -> Image:
         """Copy of the image
@@ -507,7 +546,7 @@ class AnalyzerImage(BaseImage, ABC):
         Returns:
             Image: image thresholded where its values are now pure 0 or 255
         """
-        blur = cv2.medianBlur(src=self.to_grayscale.asarray, ksize=ksize)
+        blur = cv2.medianBlur(src=self.as_grayscale.asarray, ksize=ksize)
         masked_img = cv2.adaptiveThreshold(
             src=blur,
             maxValue=255,
@@ -529,7 +568,7 @@ class AnalyzerImage(BaseImage, ABC):
             Image: image thresholded where its values are now pure 0 or 255
         """
         blur = cv2.GaussianBlur(
-            src=self.to_grayscale.asarray, ksize=(ksize, ksize), sigmaX=0
+            src=self.as_grayscale.asarray, ksize=(ksize, ksize), sigmaX=0
         )
         _, masked_img = cv2.threshold(
             src=blur, thresh=0, maxval=255, type=cv2.THRESH_BINARY + cv2.THRESH_OTSU
@@ -606,14 +645,10 @@ class AnalyzerImage(BaseImage, ABC):
                  is contained within the original image
         """
         # create all-white image of same size as original with the geometry entity
-        other = (
-            Image(np.full(shape=self.shape, fill_value=255, dtype=np.uint8))
-            .draw_contours(
-                contours=[contour],
-                render=ContoursRender(thickness=1, default_color=(0, 0, 0)),
-            )
-            .to_grayscale
-        )
+        other = self.as_white.draw_contours(
+            contours=[contour],
+            render=ContoursRender(thickness=1, default_color=(0, 0, 0)),
+        ).as_grayscale
 
         # dilate the original image
         im = Image(
@@ -666,14 +701,17 @@ class AnalyzerImage(BaseImage, ABC):
                 -((x - x0) ** 2) / (2 * sigmax) - (y - y0) ** 2 / (2 * sigmay)
             )
 
-        return gaussian2D(
-            x=point[0],
-            y=point[1],
-            x0=self.center[0],
-            y0=self.center[1],
-            sigmax=sigma,
-            sigmay=sigma,
-        )
+        if method == "gaussian":
+            return gaussian2D(
+                x=point[0],
+                y=point[1],
+                x0=self.center[0],
+                y0=self.center[1],
+                sigmax=sigma,
+                sigmay=sigma,
+            )
+        else:
+            raise NotImplementedError(f"The method {method} is not implemented.")
 
 
 class Image(DrawerImage, TransformerImage, AnalyzerImage):
