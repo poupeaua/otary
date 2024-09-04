@@ -181,7 +181,7 @@ class Image(DrawerImage, TransformerImage):
         return score_segments
 
     def score_distance_from_center(
-        self, point: np.ndarray, sigma: float, method: str = "gaussian"
+        self, point: np.ndarray, method: str = "gaussian"
     ) -> float:
         """Compute a score to evaluate how far a point is from the
         image center point.
@@ -200,13 +200,13 @@ class Image(DrawerImage, TransformerImage):
 
         Args:
             point (np.ndarray): 2D point
-            sigma (float): the standard variation for the
-                score evaluation function.
             method (str): the method to be used to compute the score
 
         Returns:
             float: a score from 0 to 1.
         """
+        valid_score_dist_methods = ["linear", "gaussian"]
+        assert method in valid_score_dist_methods
 
         def gaussian2D(
             x: float,
@@ -218,17 +218,38 @@ class Image(DrawerImage, TransformerImage):
             sigmay: float = 1.0,
         ) -> float:
             return amplitude * np.exp(
-                -((x - x0) ** 2) / (2 * sigmax) - (y - y0) ** 2 / (2 * sigmay)
+                -((x - x0) ** 2 / (2 * sigmax**2) + (y - y0) ** 2 / (2 * sigmay**2))
             )
 
-        if method == "gaussian":
+        def conePositive2D(
+            x: float,
+            y: float,
+            x0: float = 0.0,
+            y0: float = 0.0,
+            amplitude: float = 1,
+            radius: float = 1,
+        ) -> float:
+            r = np.sqrt((x - x0) ** 2 + (y - y0) ** 2)
+            if r >= radius:
+                return 0
+            return amplitude * (1 - r / radius)
+
+        if method == "linear":
+            return conePositive2D(
+                x=point[0],
+                y=point[1],
+                x0=self.center[0],
+                y0=self.center[1],
+                radius=self.norm_side_length / 2,
+            )
+        elif method == "gaussian":
             return gaussian2D(
                 x=point[0],
                 y=point[1],
                 x0=self.center[0],
                 y0=self.center[1],
-                sigmax=sigma,
-                sigmay=sigma,
+                sigmax=self.dist_pct(0.1),
+                sigmay=self.dist_pct(0.1),
             )
         else:
             raise NotImplementedError(f"The method {method} is not implemented.")
