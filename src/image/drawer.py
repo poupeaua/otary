@@ -1,5 +1,5 @@
 """
-Image manipulation module
+Image Drawer module. It only contains methods to draw objects in images.
 """
 
 from __future__ import annotations

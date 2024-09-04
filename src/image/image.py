@@ -1,5 +1,5 @@
 """
-Image manipulation module
+Image module for image processing
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from src.image.transformer import TransformerImage
 
 
 class Image(DrawerImage, TransformerImage):
-    """Image Manipulation class"""
+    """Image class"""
 
     def show(
         self,
@@ -148,6 +148,9 @@ class Image(DrawerImage, TransformerImage):
         dilate_iterations: int = 1,
     ) -> np.ndarray:
         """Compute the contain score for each individual segment.
+        This method is better than :func:`~Image.score_contains_contour()` in the sense
+        that it provides the score for each single segments. This way it is better to
+        identify which segments are good and bad.
 
         Args:
             segments (np.ndarray | list[geo.Segment]): a list of segments
@@ -155,7 +158,8 @@ class Image(DrawerImage, TransformerImage):
             dilate_iterations (int, optional): dilate iterations param. Defaults to 1.
 
         Returns:
-            np.ndarray: _description_
+            np.ndarray: list of score for each individual segment in the same order
+                as the list of segments
         """
         score_segments = np.zeros(shape=len(segments))
         for i, segment in enumerate(segments):
@@ -177,14 +181,17 @@ class Image(DrawerImage, TransformerImage):
         return score_segments
 
     def score_distance_from_center(
-        self, point: np.ndarray, sigma: float = 1.0, method: str = "gaussian"
+        self, point: np.ndarray, sigma: float, method: str = "gaussian"
     ) -> float:
         """Compute a score to evaluate how far a point is from the
-        image center point. A score equal to 1 means that the contour and image centers
-        coincide.
+        image center point.
 
         A score close to 0 means that the point and the image center are far away.
         A score close to 1 means that the point and the image center are close.
+
+        It is particularly useful when calling it where the point argument is a
+        contour centroid. Then, a score equal to 1 means that the contour and image
+        centers coincide.
 
         This method can be used to compute a score for a contour centroid:
         - A small score should be taken into account and informs us that the contour
@@ -193,8 +200,9 @@ class Image(DrawerImage, TransformerImage):
 
         Args:
             point (np.ndarray): 2D point
-            sigma (float, optional): the standard variation for the
-                score evaluation function. Defaults to 1.0.
+            sigma (float): the standard variation for the
+                score evaluation function.
+            method (str): the method to be used to compute the score
 
         Returns:
             float: a score from 0 to 1.

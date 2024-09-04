@@ -1,5 +1,6 @@
 """
-Image manipulation module
+Base Image module for basic image processing.
+It only contains very low-level, basic and generic image methods.
 """
 
 from __future__ import annotations
@@ -109,7 +110,7 @@ class BaseImage(ABC):
         Returns:
             np.ndarray: an array with value in [0, 1]
         """
-        return self.asarray / 255
+        return (self.asarray / 255).astype(np.uint8)
 
     @property
     def corners(self) -> np.ndarray:

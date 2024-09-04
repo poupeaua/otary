@@ -1,5 +1,5 @@
 """
-Image manipulation module
+Image Trasnformation module. it only contains advanced image transformation methods.
 """
 
 from __future__ import annotations
@@ -17,32 +17,54 @@ from src.image.base import BaseImage
 
 
 class TransformerImage(BaseImage, ABC):
-    """Transform images utility class"""
+    """Transformer images utility class"""
 
-    def binary(self) -> np.ndarray:
+    def binary(self, method: str = "sauvola") -> np.ndarray:
         """Binary representation of the image with values that can be only 0 or 1.
         The value 0 is now 0 and value of 255 are now 1. Black is 0 and white is 1.
 
+        Args:
+            method (str, optional): the binarization method to apply.
+                Defaults to "sauvola".
+
         Returns:
             np.ndarray: array where its inner values are 0 or 1
         """
-        return self.threshold_otsu().asarray_norm.astype(np.uint8)
+        valid_binarization_methods = ["otsu", "sauvola"]
+        assert method in valid_binarization_methods
 
-    def binaryrev(self) -> np.ndarray:
+        if method == "otsu":
+            return self.threshold_otsu().asarray_norm
+        elif method == "sauvola":
+            return self.threshold_sauvola().asarray_norm
+
+    def binaryrev(self, method: str = "sauvola") -> np.ndarray:
         """Reversed binary representation of the image.
         The value 0 is now 1 and value of 255 are now 0. Black is 1 and white is 0.
 
+        Args:
+            method (str, optional): the binarization method to apply.
+                Defaults to "sauvola".
+
         Returns:
             np.ndarray: array where its inner values are 0 or 1
         """
-        return 1 - self.binary()
+        return 1 - self.binary(method=method)
 
-    def threshold_otsu(self, is_blur_enabled: bool = True, blur_ksize: int = 5) -> Self:
+    def threshold_otsu(
+        self, is_blur_enabled: bool = False, blur_ksize: int = 5
+    ) -> Self:
         """Apply Ostu thresholding. A blur is applied before for better masking results.
         See https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html.
 
         As the input image must be a grayscale before applying any thresholding
         methods we convert the image to grayscale.
+
+        Args:
+            is_blur_enabled (bool, optional): whether to apply blur before applying
+                the otsu thresholding. Defaults to False.
+            blur_ksize (int, optional): the size of the kernel for blurring.
+                Defaults to 5.
 
         Returns:
             Self: image thresholded where its values are now pure 0 or 255
@@ -55,22 +77,33 @@ class TransformerImage(BaseImage, ABC):
         else:
             im_arr = self.asarray
 
-        self.asarray = (im_arr > threshold_otsu(im_arr)) * 255
+        self.asarray = np.asarray((im_arr > threshold_otsu(im_arr)) * 255).astype(
+            np.uint8
+        )
         return self
 
-    def threshold_sauvola(self) -> Self:
+    def threshold_sauvola(self, window_size: int = 15, k: float = 0.2) -> Self:
         """Apply Sauvola thresholding.
         See https://scikit-image.org/docs/stable/auto_examples/segmentation/plot_niblack_sauvola.html.
 
         As the input image must be a grayscale before applying any thresholding
         methods we convert the image to grayscale.
 
+        Args:
+            window_size (int, optional): the sauvola window size to apply on the
+                image. Defaults to 15.
+            k (float, optional): the sauvola k factor to apply to regulate the impact
+                of the std. Defaults to 0.2.
+
         Returns:
             Self: image thresholded where its values are now pure 0 or 255
         """
         self.as_grayscale()
         im_arr = self.asarray
-        self.asarray = (im_arr > threshold_sauvola(im_arr)) * 255
+        self.asarray = np.asarray(
+            (im_arr > threshold_sauvola(image=im_arr, window_size=window_size, k=k))
+            * 255
+        ).astype(np.uint8)
         return self
 
     def dilate(self, kernel: tuple = (5, 5), iterations: int = 1) -> Self:
