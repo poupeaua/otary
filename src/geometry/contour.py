@@ -335,7 +335,7 @@ class Contour(GeometryEntity, ContourReducer):
         cls,
         lines: np.ndarray,
         max_dist_thresh: float = 50,
-        max_iteration: int = 50,
+        max_iterations: int = 50,
         start_line_index: int = 0,
         img: Optional[np.ndarray] = None,
         is_debug_enabled: bool = False,
@@ -347,9 +347,9 @@ class Contour(GeometryEntity, ContourReducer):
         Args:
             img (_type_): array of shape (lx, ly)
             lines (np.ndarray): array of lines of shape (n, 2, 2)
-            min_dist_thresh (float, optional): For any given point,
+            max_dist_thresh (float, optional): For any given point,
                 the minimum distance . Defaults to 50.
-            max_iteration (float, optional): Maximum number of iterations before
+            max_iterations (float, optional): Maximum number of iterations before
                 finding a contour.
                 It defines also the maximum number of lines in the contour to find.
             start_line_index (int, optional): The starting line to find searching for
@@ -380,7 +380,7 @@ class Contour(GeometryEntity, ContourReducer):
         is_contour_found = False
         idx_seg_closest = start_line_index
         i = 0
-        while not is_contour_found and i < max_iteration:
+        while not is_contour_found and i < max_iterations:
             curseg = Segment(_lines[idx_seg_closest])
             curpoint = curseg.asarray[1]
             list_build_cnt.append(curseg.asarray)
@@ -535,7 +535,7 @@ class Contour(GeometryEntity, ContourReducer):
         Args:
             reference_point (np.ndarray): point that is taken as a reference in the
                 space to find the one in the Contour list of points that is the
-                closest to this reference point.
+                closest to this reference point. Default to origin point [0, 0].
 
         Returns:
             Contour: Contour which is the exact same one but with a rearranged list

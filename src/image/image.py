@@ -64,14 +64,6 @@ class Image(DrawerImage, TransformerImage):
         """
         self.show(save_filepath=save_filepath)
 
-    def copy(self) -> Image:
-        """Copy of the image
-
-        Returns:
-            Image: image copy
-        """
-        return Image(self.asarray.copy())
-
     def iou(self, other: Image) -> float:
         """Compute the intersection over union score
 
@@ -127,8 +119,7 @@ class Image(DrawerImage, TransformerImage):
         """
         # create all-white image of same size as original with the geometry entity
         other = (
-            self.copy()
-            .as_white()
+            Image.from_fillvalue(value=255, shape=self.shape)
             .draw_contours(
                 contours=[contour],
                 render=ContoursRender(thickness=1, default_color=(0, 0, 0)),
@@ -161,21 +152,20 @@ class Image(DrawerImage, TransformerImage):
             np.ndarray: list of score for each individual segment in the same order
                 as the list of segments
         """
+        # dilate the original image
+        im = self.copy().dilate(kernel=dilate_kernel, iterations=dilate_iterations)
+
         score_segments = np.zeros(shape=len(segments))
         for i, segment in enumerate(segments):
             # create all-white image of same size as original with the geometry entity
             other = (
-                self.copy()
-                .as_white()
+                Image.from_fillvalue(value=255, shape=self.shape)
                 .draw_segments(
                     segments=[segment],
                     render=SegmentsRender(thickness=1, default_color=(0, 0, 0)),
                 )
                 .as_grayscale()
             )
-
-            # dilate the original image
-            im = self.copy().dilate(kernel=dilate_kernel, iterations=dilate_iterations)
 
             score_segments[i] = im.score_contains(other=other)
         return score_segments

@@ -20,6 +20,27 @@ class BaseImage(ABC):
             image = image.asarray
         self.__asarray: np.ndarray = image.copy()
 
+    @classmethod
+    def from_fillvalue(cls, value: int = 255, shape: tuple = (128, 128, 3)) -> Self:
+        """Class method to create an image from a single value
+
+        Args:
+            value (int, optional): value in [0, 255]. Defaults to 255.
+            shape (tuple, optional): image shape. If it has three elements then
+                the last one must be a 3 for a coloscale image.
+                Defaults to (128, 128, 3).
+
+        Returns:
+            Self: new image with a single value
+        """
+        if value < 0 or value > 255:
+            raise ValueError(f"The value {value} must be in [0, 255]")
+        if len(shape) < 2 or len(shape) >= 4:
+            raise ValueError(f"The shape {shape} must be of length 2 or 3")
+        if len(shape) == 3 and shape[-1] != 3:
+            raise ValueError(f"The last value of {shape} must be 3")
+        return cls(np.full(shape=shape, fill_value=value, dtype=np.uint8))
+
     @property
     def asarray(self) -> np.ndarray:
         """Array representation of the image"""
@@ -200,3 +221,11 @@ class BaseImage(ABC):
             float: margin distance error
         """
         return self.norm_side_length * pct
+
+    def copy(self) -> Self:
+        """Copy of the image
+
+        Returns:
+            Image: image copy
+        """
+        return type(self)(image=self.asarray.copy())

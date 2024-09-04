@@ -41,6 +41,7 @@ class TransformerImage(BaseImage, ABC):
     def binaryrev(self, method: str = "sauvola") -> np.ndarray:
         """Reversed binary representation of the image.
         The value 0 is now 1 and value of 255 are now 0. Black is 1 and white is 0.
+        This is why it is called the "binary rev" or "binary reversed".
 
         Args:
             method (str, optional): the binarization method to apply.
