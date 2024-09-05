@@ -450,7 +450,7 @@ class Contour(GeometryEntity, ContourReducer):
 
     # ------------------------------- CLASSIC METHODS ----------------------------------
 
-    def is_regular(self, margin_area_error_pct: float = 0.01) -> bool:
+    def is_regular(self, margin_dist_error_pct: float = 0.01) -> bool:
         """Identifies whether a contour is regular, this means is rectangular or is
         a square.
 
@@ -460,11 +460,42 @@ class Contour(GeometryEntity, ContourReducer):
         Returns:
             bool: True if the contour describes a rectangle or square.
         """
+        # check we have four points
         if len(self.asarray) != 4:
             return False
-        area_rect = np.min(self.lengths) * np.max(self.lengths)
-        if np.abs(area_rect - self.area) > self.area * margin_area_error_pct:
+
+        # compute diagonal 1 = taking reference index as 1st point in list - index 0
+        refpoint = self.asarray[0]
+        distances = np.linalg.norm(self.asarray - refpoint, axis=1)
+        idx_max_dist = np.argmax(distances).astype(int)
+        farther_point = self.asarray[idx_max_dist]
+        diag1 = Segment(points=[refpoint, farther_point])
+
+        # compute diagonal 2
+        diag2_idxs = [1, 2, 3]  # every index except 0
+        diag2_idxs.remove(idx_max_dist)  # delete index of point in first diag
+        diag2 = Segment(points=self.asarray[diag2_idxs])
+
+        print(diag1, diag2)
+
+        # rectangular criteria = the diagonals bisect on the center + have same lengths
+        normed_length = np.sqrt(diag1.length * diag2.length)
+        if np.abs(diag1.length - diag2.length) > normed_length * margin_dist_error_pct:
             return False
+
+        intersection_points = diag1.intersection(other=diag2)
+        if len(intersection_points) != 1:
+            return False
+
+        cross_point = intersection_points[0]
+        dist_mid_cross_diag1 = np.linalg.norm(cross_point - diag1.centroid)
+        dist_mid_cross_diag2 = np.linalg.norm(cross_point - diag2.centroid)
+        if (
+            np.abs(dist_mid_cross_diag1) > normed_length * margin_dist_error_pct
+            or np.abs(dist_mid_cross_diag2) > normed_length * margin_dist_error_pct
+        ):
+            return False
+
         return True
 
     def add_point(self, point: np.ndarray, index: int) -> Contour:

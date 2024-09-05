@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import itertools
 
-import cv2
 import numpy as np
 from shapely import LineString
 from sympy.geometry import Line
@@ -29,7 +28,7 @@ class Segment(GeometryEntity):
         Returns:
             float: segment perimeter
         """
-        return cv2.arcLength(self.points, False)
+        return self.length
 
     @property
     def length(self) -> float:
@@ -38,7 +37,7 @@ class Segment(GeometryEntity):
         Returns:
             float: segment length
         """
-        return self.perimeter
+        return np.linalg.norm(self.asarray[0] - self.asarray[1])
 
     @property
     def centroid(self) -> np.ndarray:
