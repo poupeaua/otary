@@ -171,7 +171,7 @@ class Image(DrawerImage, TransformerImage):
         return score_segments
 
     def score_distance_from_center(
-        self, point: np.ndarray, method: str = "gaussian"
+        self, point: np.ndarray, method: str = "linear"
     ) -> float:
         """Compute a score to evaluate how far a point is from the
         image center point.
@@ -190,7 +190,8 @@ class Image(DrawerImage, TransformerImage):
 
         Args:
             point (np.ndarray): 2D point
-            method (str): the method to be used to compute the score
+            method (str): the method to be used to compute the score. Defaults to
+                "linear".
 
         Returns:
             float: a score from 0 to 1.

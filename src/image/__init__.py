@@ -10,3 +10,4 @@ from src.image.render import (
     OcrSingleOutputRender,
 )
 from src.image.image import Image
+from src.image.tools import interpolate_color

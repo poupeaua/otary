@@ -73,7 +73,7 @@ class Rectangle(Contour):
         Returns:
             Rectangle: the join new Rectangle object
         """
-        shared_points = self.get_shared_close_points(rect, margin_dist_error)
+        shared_points = self.shared_close_points(rect, margin_dist_error)
         n_shared_points = len(shared_points)
 
         if n_shared_points in (0, 1):
@@ -81,8 +81,8 @@ class Rectangle(Contour):
         if n_shared_points == 2:
             new_rect_points = np.concatenate(
                 (
-                    self.get_points_far_from(shared_points, margin_dist_error),
-                    rect.get_points_far_from(shared_points, margin_dist_error),
+                    self.points_far_from(shared_points, margin_dist_error),
+                    rect.points_far_from(shared_points, margin_dist_error),
                 ),
                 axis=0,
             )

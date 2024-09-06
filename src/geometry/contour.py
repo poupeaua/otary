@@ -6,7 +6,8 @@ from __future__ import annotations
 
 import copy
 from abc import ABC
-from typing import Optional
+from typing import Optional, Self
+import logging
 
 import cv2
 import matplotlib.pyplot as plt
@@ -387,7 +388,7 @@ class Contour(GeometryEntity, ContourReducer):
             _lines = np.delete(_lines, idx_seg_closest, axis=0)
 
             if len(_lines) == 0:
-                print("No more lines will do the same operation as no point detected")
+                logging.debug("No more lines to be processed.")
 
             # find the closest point to the current one and associated line
             lines2points = _lines.reshape(len(_lines) * 2, 2)
@@ -411,7 +412,7 @@ class Contour(GeometryEntity, ContourReducer):
                     break
                 raise RuntimeError("No point detected close to the current point")
 
-            # nly one closest point - get indices of unique closest point an segment
+            # only one closest point - get indices of unique closest point on segment
             idx_point_closest = int(idx_closest_points[0])
             idx_seg_closest = int(np.floor(idx_point_closest / 2))
 
@@ -466,8 +467,7 @@ class Contour(GeometryEntity, ContourReducer):
 
         # compute diagonal 1 = taking reference index as 1st point in list - index 0
         refpoint = self.asarray[0]
-        distances = np.linalg.norm(self.asarray - refpoint, axis=1)
-        idx_max_dist = np.argmax(distances).astype(int)
+        idx_max_dist = self.index_farthest_point_from(point=refpoint)
         farther_point = self.asarray[idx_max_dist]
         diag1 = Segment(points=[refpoint, farther_point])
 
@@ -476,17 +476,17 @@ class Contour(GeometryEntity, ContourReducer):
         diag2_idxs.remove(idx_max_dist)  # delete index of point in first diag
         diag2 = Segment(points=self.asarray[diag2_idxs])
 
-        print(diag1, diag2)
-
-        # rectangular criteria = the diagonals bisect on the center + have same lengths
+        # rectangular criteria = the diagonals have same lengths
         normed_length = np.sqrt(diag1.length * diag2.length)
         if np.abs(diag1.length - diag2.length) > normed_length * margin_dist_error_pct:
             return False
 
+        # there should exist only one intersection point
         intersection_points = diag1.intersection(other=diag2)
         if len(intersection_points) != 1:
             return False
 
+        # diagonals bisect on the center of both diagonal
         cross_point = intersection_points[0]
         dist_mid_cross_diag1 = np.linalg.norm(cross_point - diag1.centroid)
         dist_mid_cross_diag2 = np.linalg.norm(cross_point - diag2.centroid)
@@ -498,7 +498,29 @@ class Contour(GeometryEntity, ContourReducer):
 
         return True
 
-    def add_point(self, point: np.ndarray, index: int) -> Contour:
+    def score_contains_points(
+        self, points: np.ndarray, min_distance: float
+    ) -> np.ndarray:
+        """Returns a score of 0 or 1 for each point in the contour if it is close
+        enough to any point in the input points.
+
+        Args:
+            points (np.ndarray): list of 2D points
+            margin_dist_error (float): mininum distance to consider two points as
+                close enough to be considered as the same points
+
+        Returns:
+            np.ndarray: a list of score for each point in the contour
+        """
+        indices = self.indices_shared_close_points(
+            other=Contour(points=points), margin_dist_error=min_distance
+        )
+        score = np.bincount(indices, minlength=len(self))
+        return score
+
+    # ---------------------------- MODIFICATION METHODS -------------------------------
+
+    def add_point(self, point: np.ndarray, index: int) -> Self:
         """Add a point at a given index in the Contour object
 
         Args:
@@ -527,7 +549,7 @@ class Contour(GeometryEntity, ContourReducer):
         )
         return self
 
-    def rearrange_first_point_at_index(self, index: int) -> Contour:
+    def rearrange_first_point_at_index(self, index: int) -> Self:
         """Rearrange the list of points that defines the Contour so that the first
         point in the list of points is the one at index given by the argument of this
         function.
@@ -572,9 +594,7 @@ class Contour(GeometryEntity, ContourReducer):
             Contour: Contour which is the exact same one but with a rearranged list
                 of points.
         """
-        shifted_points = self.points - reference_point
-        distances = np.linalg.norm(shifted_points, axis=1)
-        idx_min_dist = np.argmin(distances).astype(int)
+        idx_min_dist = self.index_closest_point_from(point=reference_point)
         return self.rearrange_first_point_at_index(index=idx_min_dist)
 
     # ------------------------------- Fundamental Methods ------------------------------

@@ -109,9 +109,8 @@ class Segment(GeometryEntity):
         """Check if two lines are parallel by calculating the slope of the two lines
 
         Angle Difference = |theta_0 - theta_1| mod pi
-        Beware this will always return positive results due to the modulo.
-        So we took into account the special case where
-        angle difference = np.pi - epsilon ~ 3.139,
+        Because always returns positive results due to the modulo we took into account
+        the special case where angle difference = np.pi - epsilon ~ 3.139,
         this implies also two parralel lines.
 
         Args:

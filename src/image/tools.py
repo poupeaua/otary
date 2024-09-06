@@ -72,3 +72,37 @@ def prep_obj_draw(objects: list | np.ndarray, _type: Any) -> np.ndarray:
     except Exception as e:
         raise RuntimeError("Could not prepare the objects to draw") from e
     return objects
+
+
+def interpolate_color(alpha: float) -> tuple:
+    """Interpolates between red, yellow, and green based on the parameter alpha.
+
+    Args:
+        alpha (float): Parameter ranging from 0 to 1.
+            0 corresponds to red, 0.5 to yellow, and 1 to green.
+
+    Returns:
+        tuple: RGB color as a tuple (R, G, B) where each value is in the range [0, 255].
+    """
+    if alpha < 0 or alpha > 1:
+        raise ValueError("Alpha must be between 0 and 1")
+
+    # Define RGB colors
+    red = (255, 0, 0)
+    yellow = (255, 255, 0)
+    green = (0, 255, 0)
+
+    if alpha <= 0.5:
+        # Interpolate between red and yellow
+        t = alpha * 2
+        r = int((1 - t) * red[0] + t * yellow[0])
+        g = int((1 - t) * red[1] + t * yellow[1])
+        b = int((1 - t) * red[2] + t * yellow[2])
+    else:
+        # Interpolate between yellow and green
+        t = (alpha - 0.5) * 2
+        r = int((1 - t) * yellow[0] + t * green[0])
+        g = int((1 - t) * yellow[1] + t * green[1])
+        b = int((1 - t) * yellow[2] + t * green[2])
+
+    return (r, g, b)
