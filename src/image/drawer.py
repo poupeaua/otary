@@ -130,6 +130,8 @@ class DrawerImage(BaseImage, ABC):
         assert isinstance(render, OcrSingleOutputRender)
         im_array = self.__pre_draw(n_objects=len(ocr_outputs), render=render)
         for ocrso, color in zip(ocr_outputs, render.colors):
+            if not isinstance(ocrso, OcrSingleOutput) or ocrso.bbox is None:
+                continue
             cnt = [ocrso.bbox.asarray.reshape((-1, 1, 2)).astype(np.int32)]
             im_array = cv2.drawContours(
                 image=im_array,
