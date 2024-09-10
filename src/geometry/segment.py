@@ -37,7 +37,7 @@ class Segment(GeometryEntity):
         Returns:
             float: segment length
         """
-        return np.linalg.norm(self.asarray[0] - self.asarray[1])
+        return float(np.linalg.norm(self.asarray[0] - self.asarray[1]))
 
     @property
     def centroid(self) -> np.ndarray:
@@ -83,6 +83,11 @@ class Segment(GeometryEntity):
 
     @staticmethod
     def assert_list_of_lines(lines: np.ndarray) -> None:
+        """Check that the lines argument is really a list of lines
+
+        Args:
+            lines (np.ndarray): a expected list of lines
+        """
         if lines.shape[1:] != (2, 2):
             raise ValueError(
                 "The input segments argument has not the expected shape. "

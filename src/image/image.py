@@ -10,7 +10,7 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import src.geometry as geo
-from src.image import ContoursRender, SegmentsRender
+from src.image.render import ContoursRender, SegmentsRender
 from src.image.drawer import DrawerImage
 from src.image.transformer import TransformerImage
 
@@ -199,7 +199,7 @@ class Image(DrawerImage, TransformerImage):
         valid_score_dist_methods = ["linear", "gaussian"]
         assert method in valid_score_dist_methods
 
-        def gaussian2D(
+        def gaussian_2d(
             x: float,
             y: float,
             x0: float = 0.0,
@@ -208,11 +208,12 @@ class Image(DrawerImage, TransformerImage):
             sigmax: float = 1.0,
             sigmay: float = 1.0,
         ) -> float:
+            # pylint: disable=too-many-arguments
             return amplitude * np.exp(
                 -((x - x0) ** 2 / (2 * sigmax**2) + (y - y0) ** 2 / (2 * sigmay**2))
             )
 
-        def conePositive2D(
+        def cone_positive_2d(
             x: float,
             y: float,
             x0: float = 0.0,
@@ -220,21 +221,22 @@ class Image(DrawerImage, TransformerImage):
             amplitude: float = 1,
             radius: float = 1,
         ) -> float:
+            # pylint: disable=too-many-arguments
             r = np.sqrt((x - x0) ** 2 + (y - y0) ** 2)
             if r >= radius:
                 return 0
             return amplitude * (1 - r / radius)
 
         if method == "linear":
-            return conePositive2D(
+            return cone_positive_2d(
                 x=point[0],
                 y=point[1],
                 x0=self.center[0],
                 y0=self.center[1],
                 radius=self.norm_side_length / 2,
             )
-        elif method == "gaussian":
-            return gaussian2D(
+        if method == "gaussian":
+            return gaussian_2d(
                 x=point[0],
                 y=point[1],
                 x0=self.center[0],
@@ -242,5 +244,4 @@ class Image(DrawerImage, TransformerImage):
                 sigmax=self.dist_pct(0.1),
                 sigmay=self.dist_pct(0.1),
             )
-        else:
-            raise NotImplementedError(f"The method {method} is not implemented.")
+        raise NotImplementedError(f"The method {method} is not implemented.")

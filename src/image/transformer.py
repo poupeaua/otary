@@ -10,6 +10,8 @@ from abc import ABC
 import cv2
 import numpy as np
 import scipy.ndimage
+
+# pylint: disable=no-name-in-module
 from skimage.filters import threshold_sauvola, threshold_otsu
 
 import src.geometry as geo
@@ -31,12 +33,13 @@ class TransformerImage(BaseImage, ABC):
             np.ndarray: array where its inner values are 0 or 1
         """
         valid_binarization_methods = ["otsu", "sauvola"]
-        assert method in valid_binarization_methods
 
         if method == "otsu":
             return self.threshold_otsu().asarray_norm
-        elif method == "sauvola":
+        if method == "sauvola":
             return self.threshold_sauvola().asarray_norm
+
+        raise ValueError(f"The method {method} is not in {valid_binarization_methods}")
 
     def binaryrev(self, method: str = "sauvola") -> np.ndarray:
         """Reversed binary representation of the image.
@@ -85,7 +88,8 @@ class TransformerImage(BaseImage, ABC):
 
     def threshold_sauvola(self, window_size: int = 15, k: float = 0.2) -> Self:
         """Apply Sauvola thresholding.
-        See https://scikit-image.org/docs/stable/auto_examples/segmentation/plot_niblack_sauvola.html.
+        See https://scikit-image.org/docs/stable/auto_examples/segmentation/\
+            plot_niblack_sauvola.html.
 
         As the input image must be a grayscale before applying any thresholding
         methods we convert the image to grayscale.
@@ -121,10 +125,13 @@ class TransformerImage(BaseImage, ABC):
         """
         self.asarray = (
             1
-            - cv2.dilate(
-                self.binaryrev(),
-                kernel=np.ones(kernel, np.uint8),
-                iterations=iterations,
+            - np.asarray(
+                cv2.dilate(
+                    self.binaryrev(),
+                    kernel=np.ones(kernel, np.uint8),
+                    iterations=iterations,
+                ),
+                dtype=np.uint8,
             )
         ) * 255
         return self

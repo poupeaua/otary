@@ -341,6 +341,7 @@ class Contour(GeometryEntity, ContourReducer):
         img: Optional[np.ndarray] = None,
         is_debug_enabled: bool = False,
     ) -> Contour:
+        # pylint: disable=too-many-arguments
         """Create a Contour object from an unordered list of lines that approximate a
         closed-shape. They approximate in the sense that they do not necessarily
         share common points. This method computes the intersection points between lines.
@@ -349,7 +350,7 @@ class Contour(GeometryEntity, ContourReducer):
             img (_type_): array of shape (lx, ly)
             lines (np.ndarray): array of lines of shape (n, 2, 2)
             max_dist_thresh (float, optional): For any given point,
-                the minimum distance . Defaults to 50.
+                the maximum distance to consider two points as close. Defaults to 50.
             max_iterations (float, optional): Maximum number of iterations before
                 finding a contour.
                 It defines also the maximum number of lines in the contour to find.
