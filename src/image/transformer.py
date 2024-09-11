@@ -239,23 +239,28 @@ class TransformerImage(BaseImage, ABC):
         self.asarray = cv2.resize(src=im, dsize=_dim, interpolation=interpolation)
         return self
 
-    def resize(self, scale_percent: float, interpolation: int = cv2.INTER_AREA) -> Self:
+    def resize(self, scale_pct: float, interpolation: int = cv2.INTER_AREA) -> Self:
         """Resize the image to a new size using a scaling percentage value that
         will be applied to all dimensions (width and height).
         Applying this method can not result in a distorted image.
 
         Args:
-            scale_percent (float): scale to resize the image. A value 100 does not
+            scale_pct (float): scale to resize the image. A value 100 does not
                 change the image. 200 double the image size.
 
         Returns:
             (Self): resized image
         """
-        if scale_percent == 100:
+        if scale_pct < 0:
+            raise ValueError(f"The scale percent value {scale_pct} must be >0")
+        if scale_pct > 5:
+            raise ValueError(f"The scale percent value {scale_pct} is probably to big.")
+
+        if scale_pct == 1:
             return self
 
-        width = int(self.width * scale_percent / 100)
-        height = int(self.height * scale_percent / 100)
+        width = int(self.width * scale_pct)
+        height = int(self.height * scale_pct)
         dim = (width, height)
         return self.resize_fixed(dim=dim, interpolation=interpolation)
 
