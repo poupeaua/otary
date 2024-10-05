@@ -252,9 +252,13 @@ class TransformerImage(BaseImage, ABC):
             (Self): resized image
         """
         if scale_pct < 0:
-            raise ValueError(f"The scale percent value {scale_pct} must be >0")
+            raise ValueError(
+                f"The scale percent value {scale_pct} must be stricly positive"
+            )
         if scale_pct > 5:
-            raise ValueError(f"The scale percent value {scale_pct} is probably to big.")
+            raise ValueError(
+                f"The scale percent value {scale_pct} is probably too big"
+            )
 
         if scale_pct == 1:
             return self
