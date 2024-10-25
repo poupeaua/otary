@@ -31,25 +31,55 @@ class TestContourIsEqual:
 
 
 class TestContourIsregular:
-    def test_contour_is_regular(self):
+    def test_contour_is_regular_square(self):
         cnt1 = Contour([[0, 0], [1, 0], [1, 1], [0, 1]])
-        assert cnt1.is_regular(margin_area_error_pct=0)
+        assert cnt1.is_regular(margin_dist_error_pct=0.0001)
 
-    def test_contour_is_regular_margin_error(self):
+    def test_contour_is_regular_rectangle(self):
+        cnt1 = Contour([[0, 0], [10, 0], [10, 100], [0, 100]])
+        assert cnt1.is_regular(margin_dist_error_pct=0.0001)
+
+    def test_contour_is_regular_almost_perfect(self):
         cnt1 = Contour([[0, 0], [100, 0], [100, 101.2], [0, 100]])
-        assert cnt1.is_regular(margin_area_error_pct=0.02)
+        assert cnt1.is_regular(margin_dist_error_pct=0.01)
+
+    def test_contour_is_not_regular_almost_perfect(self):
+        cnt1 = Contour([[0, 0], [100, 0], [100, 101.2], [0, 100]])
+        assert not cnt1.is_regular(margin_dist_error_pct=0.001)
 
     def test_contour_is_not_regular(self):
         cnt1 = Contour([[0, 0], [100, 0], [101, 100], [0, 100]])
-        assert not cnt1.is_regular(margin_area_error_pct=0)
+        assert not cnt1.is_regular(margin_dist_error_pct=0)
+
+    @pytest.mark.parametrize("alpha", (2, 3, 5, 25, 50))
+    def test_contour_is_not_regular_hard_case(self, alpha: float):
+        height_big_rect = 100
+        height_small_rect = 10
+        cnt1 = Contour(
+            [
+                [0, 0],
+                [alpha * height_big_rect, 0],
+                [alpha * height_big_rect, height_big_rect],
+                [alpha * height_small_rect, height_big_rect + height_small_rect],
+            ]
+        )
+        assert not cnt1.is_regular(margin_dist_error_pct=0.01)
+
+    def test_contour_is_not_regular_losange(self):
+        cnt1 = Contour([[0, 0], [10, 100], [200, 0], [-10, 100]])
+        assert not cnt1.is_regular(margin_dist_error_pct=0.01)
+
+    def test_contour_is_not_regular_trapeze_equal_length_diagonals(self):
+        cnt1 = Contour([[0, 0], [100, 10], [100, 50], [0, 60]])
+        assert not cnt1.is_regular(margin_dist_error_pct=0.01)
 
     def test_contour_is_not_regular_more_than_four_points(self):
         cnt1 = Contour([[0, 0], [1, 0], [1, 1], [0, 0.5], [0.5, 0.5]])
-        assert not cnt1.is_regular(margin_area_error_pct=0)
+        assert not cnt1.is_regular(margin_dist_error_pct=10)
 
     def test_contour_is_not_regular_less_than_four_points(self):
         cnt1 = Contour([[0, 0], [1, 0], [1.5, 1]])
-        assert not cnt1.is_regular(margin_area_error_pct=5)
+        assert not cnt1.is_regular(margin_dist_error_pct=10)
 
 
 class TestContourSelfIntersect:

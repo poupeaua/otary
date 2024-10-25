@@ -6,7 +6,8 @@ from __future__ import annotations
 
 import copy
 from abc import ABC
-from typing import Optional
+from typing import Optional, Self
+import logging
 
 import cv2
 import matplotlib.pyplot as plt
@@ -95,7 +96,7 @@ class ContourReducer(ABC):
 
         This reduce by distance function has a big drawback: it will remove
         potentially too much points between two given points A and B
-        as long as there exists a suite of points that close enough to each others
+        as long as there exists a suite of points that are close enough to each others
         between A and B. In order to avoid this disadvantage, please refer to the
         method named :func:`~ContourReducer.reduce_by_distance_unsuccessive`.
 
@@ -335,11 +336,12 @@ class Contour(GeometryEntity, ContourReducer):
         cls,
         lines: np.ndarray,
         max_dist_thresh: float = 50,
-        max_iteration: int = 50,
+        max_iterations: int = 50,
         start_line_index: int = 0,
         img: Optional[np.ndarray] = None,
         is_debug_enabled: bool = False,
     ) -> Contour:
+        # pylint: disable=too-many-arguments
         """Create a Contour object from an unordered list of lines that approximate a
         closed-shape. They approximate in the sense that they do not necessarily
         share common points. This method computes the intersection points between lines.
@@ -347,9 +349,9 @@ class Contour(GeometryEntity, ContourReducer):
         Args:
             img (_type_): array of shape (lx, ly)
             lines (np.ndarray): array of lines of shape (n, 2, 2)
-            min_dist_thresh (float, optional): For any given point,
-                the minimum distance . Defaults to 50.
-            max_iteration (float, optional): Maximum number of iterations before
+            max_dist_thresh (float, optional): For any given point,
+                the maximum distance to consider two points as close. Defaults to 50.
+            max_iterations (float, optional): Maximum number of iterations before
                 finding a contour.
                 It defines also the maximum number of lines in the contour to find.
             start_line_index (int, optional): The starting line to find searching for
@@ -380,14 +382,14 @@ class Contour(GeometryEntity, ContourReducer):
         is_contour_found = False
         idx_seg_closest = start_line_index
         i = 0
-        while not is_contour_found and i < max_iteration:
+        while not is_contour_found and i < max_iterations:
             curseg = Segment(_lines[idx_seg_closest])
             curpoint = curseg.asarray[1]
             list_build_cnt.append(curseg.asarray)
             _lines = np.delete(_lines, idx_seg_closest, axis=0)
 
             if len(_lines) == 0:
-                print("No more lines will do the same operation as no point detected")
+                logging.debug("No more lines to be processed.")
 
             # find the closest point to the current one and associated line
             lines2points = _lines.reshape(len(_lines) * 2, 2)
@@ -411,7 +413,7 @@ class Contour(GeometryEntity, ContourReducer):
                     break
                 raise RuntimeError("No point detected close to the current point")
 
-            # nly one closest point - get indices of unique closest point an segment
+            # only one closest point - get indices of unique closest point on segment
             idx_point_closest = int(idx_closest_points[0])
             idx_seg_closest = int(np.floor(idx_point_closest / 2))
 
@@ -450,7 +452,7 @@ class Contour(GeometryEntity, ContourReducer):
 
     # ------------------------------- CLASSIC METHODS ----------------------------------
 
-    def is_regular(self, margin_area_error_pct: float = 0.01) -> bool:
+    def is_regular(self, margin_dist_error_pct: float = 0.01) -> bool:
         """Identifies whether a contour is regular, this means is rectangular or is
         a square.
 
@@ -460,14 +462,66 @@ class Contour(GeometryEntity, ContourReducer):
         Returns:
             bool: True if the contour describes a rectangle or square.
         """
+        # check we have four points
         if len(self.asarray) != 4:
             return False
-        area_rect = np.min(self.lengths) * np.max(self.lengths)
-        if np.abs(area_rect - self.area) > self.area * margin_area_error_pct:
+
+        # compute diagonal 1 = taking reference index as 1st point in list - index 0
+        refpoint = self.asarray[0]
+        idx_max_dist = self.index_farthest_point_from(point=refpoint)
+        farther_point = self.asarray[idx_max_dist]
+        diag1 = Segment(points=[refpoint, farther_point])
+
+        # compute diagonal 2
+        diag2_idxs = [1, 2, 3]  # every index except 0
+        diag2_idxs.remove(idx_max_dist)  # delete index of point in first diag
+        diag2 = Segment(points=self.asarray[diag2_idxs])
+
+        # rectangular criteria = the diagonals have same lengths
+        normed_length = np.sqrt(diag1.length * diag2.length)
+        if np.abs(diag1.length - diag2.length) > normed_length * margin_dist_error_pct:
             return False
+
+        # there should exist only one intersection point
+        intersection_points = diag1.intersection(other=diag2)
+        if len(intersection_points) != 1:
+            return False
+
+        # diagonals bisect on the center of both diagonal
+        cross_point = intersection_points[0]
+        dist_mid_cross_diag1 = np.linalg.norm(cross_point - diag1.centroid)
+        dist_mid_cross_diag2 = np.linalg.norm(cross_point - diag2.centroid)
+        if (
+            np.abs(dist_mid_cross_diag1) > normed_length * margin_dist_error_pct
+            or np.abs(dist_mid_cross_diag2) > normed_length * margin_dist_error_pct
+        ):
+            return False
+
         return True
 
-    def add_point(self, point: np.ndarray, index: int) -> Contour:
+    def score_contains_points(
+        self, points: np.ndarray, min_distance: float
+    ) -> np.ndarray:
+        """Returns a score of 0 or 1 for each point in the contour if it is close
+        enough to any point in the input points.
+
+        Args:
+            points (np.ndarray): list of 2D points
+            margin_dist_error (float): mininum distance to consider two points as
+                close enough to be considered as the same points
+
+        Returns:
+            np.ndarray: a list of score for each point in the contour
+        """
+        indices = self.indices_shared_close_points(
+            other=Contour(points=points), margin_dist_error=min_distance
+        )
+        score = np.bincount(indices, minlength=len(self))
+        return score
+
+    # ---------------------------- MODIFICATION METHODS -------------------------------
+
+    def add_point(self, point: np.ndarray, index: int) -> Self:
         """Add a point at a given index in the Contour object
 
         Args:
@@ -496,7 +550,7 @@ class Contour(GeometryEntity, ContourReducer):
         )
         return self
 
-    def rearrange_first_point_at_index(self, index: int) -> Contour:
+    def rearrange_first_point_at_index(self, index: int) -> Self:
         """Rearrange the list of points that defines the Contour so that the first
         point in the list of points is the one at index given by the argument of this
         function.
@@ -535,15 +589,13 @@ class Contour(GeometryEntity, ContourReducer):
         Args:
             reference_point (np.ndarray): point that is taken as a reference in the
                 space to find the one in the Contour list of points that is the
-                closest to this reference point.
+                closest to this reference point. Default to origin point [0, 0].
 
         Returns:
             Contour: Contour which is the exact same one but with a rearranged list
                 of points.
         """
-        shifted_points = self.points - reference_point
-        distances = np.linalg.norm(shifted_points, axis=1)
-        idx_min_dist = np.argmin(distances).astype(int)
+        idx_min_dist = self.index_closest_point_from(point=reference_point)
         return self.rearrange_first_point_at_index(index=idx_min_dist)
 
     # ------------------------------- Fundamental Methods ------------------------------

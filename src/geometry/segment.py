@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import itertools
 
-import cv2
 import numpy as np
 from shapely import LineString
 from sympy.geometry import Line
@@ -29,7 +28,7 @@ class Segment(GeometryEntity):
         Returns:
             float: segment perimeter
         """
-        return cv2.arcLength(self.points, False)
+        return self.length
 
     @property
     def length(self) -> float:
@@ -38,7 +37,7 @@ class Segment(GeometryEntity):
         Returns:
             float: segment length
         """
-        return self.perimeter
+        return float(np.linalg.norm(self.asarray[0] - self.asarray[1]))
 
     @property
     def centroid(self) -> np.ndarray:
@@ -84,6 +83,11 @@ class Segment(GeometryEntity):
 
     @staticmethod
     def assert_list_of_lines(lines: np.ndarray) -> None:
+        """Check that the lines argument is really a list of lines
+
+        Args:
+            lines (np.ndarray): a expected list of lines
+        """
         if lines.shape[1:] != (2, 2):
             raise ValueError(
                 "The input segments argument has not the expected shape. "
@@ -110,9 +114,8 @@ class Segment(GeometryEntity):
         """Check if two lines are parallel by calculating the slope of the two lines
 
         Angle Difference = |theta_0 - theta_1| mod pi
-        Beware this will always return positive results due to the modulo.
-        So we took into account the special case where
-        angle difference = np.pi - epsilon ~ 3.139,
+        Because always returns positive results due to the modulo we took into account
+        the special case where angle difference = np.pi - epsilon ~ 3.139,
         this implies also two parralel lines.
 
         Args:

@@ -205,11 +205,61 @@ class GeometryEntity(ABC):
 
         return np.array([])
 
-    def get_shared_close_points(
+    def index_farthest_point_from(self, point: np.ndarray) -> int:
+        """Get the index of the farthest point from a given point
+
+        Args:
+            point (np.ndarray): 2D point
+
+        Returns:
+            int: the index of the farthest point in the entity from the input point
+        """
+        distances = np.linalg.norm(self.asarray - point, axis=1)
+        return np.argmax(distances).astype(int)
+
+    def index_closest_point_from(self, point: np.ndarray) -> int:
+        """Get the index of the closest point from a given point
+
+        Args:
+            point (np.ndarray): 2D point
+
+        Returns:
+            int: the index of the closest point in the entity from the input point
+        """
+        distances = np.linalg.norm(self.asarray - point, axis=1)
+        return np.argmin(distances).astype(int)
+
+    def indices_shared_close_points(
+        self, other: GeometryEntity, margin_dist_error: float = 5
+    ) -> np.ndarray:
+        """Compute the point indices from this entity that correspond to shared
+        points with the other geometric entity.
+
+        A point is considered shared if it is close enough to another point in the other
+        geometric structure.
+
+        Args:
+            other (GeometryEntity): other Geometry entity
+            margin_dist_error (float, optional): minimum distance to have two points
+                considered as close enough to be shared. Defaults to 5.
+
+        Returns:
+            np.ndarray: list of indices
+        """
+        list_index_shared_points = []
+        for i, pt in enumerate(self.asarray):
+            distances = np.linalg.norm(other.asarray - pt, axis=1)
+            indices = np.nonzero(distances < margin_dist_error)[0].astype(int)
+            if len(indices) > 0:
+                list_index_shared_points.append(i)
+        return np.array(list_index_shared_points).astype(int)
+
+    def shared_close_points(
         self, other: GeometryEntity, margin_dist_error: float = 5
     ) -> np.ndarray:
         """Get the shared points between two geometric objects.
-        A point is considered shared if it is close to another point in the other
+
+        A point is considered shared if it is close enough to another point in the other
         geometric structure.
 
         Args:
@@ -221,24 +271,21 @@ class GeometryEntity(ABC):
             np.ndarray: list of points identified as shared between the two geometric
                 objects
         """
-        list_shared_points = []
-        for pt in self.asarray:
-            distances = np.linalg.norm(other.asarray - pt)
-            indices = np.nonzero(distances < margin_dist_error)[0].astype(int)
-            if len(indices) > 0:
-                list_shared_points.append(pt)
-        return np.array(list_shared_points)
+        indices = self.indices_shared_close_points(
+            other=other, margin_dist_error=margin_dist_error
+        )
+        return self.asarray[indices]
 
-    def get_points_far_from(
-        self, points: np.ndarray, margin_dist_error: float = 5
+    def points_far_from(
+        self, points: np.ndarray, min_distance: float = 5
     ) -> np.ndarray:
         """Get points far from the points in parameters that belongs to the geometric
         structure.
 
         Args:
             points (np.ndarray): points that should be remove of the geometric structure
-            margin_dist_error (float, optional): the threshold to define a point as
-                shared or not. Defaults to 5.
+            min_distance (float, optional): the threshold to define a point as
+                far enough or not. Defaults to 5.
 
         Returns:
             np.ndarray: points that belongs to the geometric structure and that
@@ -246,8 +293,8 @@ class GeometryEntity(ABC):
         """
         list_far_points = []
         for pt in self.asarray:
-            distances = np.linalg.norm(points - pt)
-            indices = np.nonzero(distances < margin_dist_error)[0].astype(int)
+            distances = np.linalg.norm(points - pt, axis=1)
+            indices = np.nonzero(distances < min_distance)[0].astype(int)
             if len(indices) == 0:
                 list_far_points.append(pt)
         return np.array(list_far_points)
