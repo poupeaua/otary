@@ -11,8 +11,8 @@ import numpy as np
 
 import src.geometry as geo
 from src.core.dataclass.ocrsingleoutput import OcrSingleOutput
-from src.image.tools import prep_obj_draw
-from src.image.render import (
+from src.image.utils.tools import prep_obj_draw
+from src.image.utils.render import (
     Render,
     PointsRender,
     SegmentsRender,

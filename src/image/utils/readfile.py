@@ -6,13 +6,12 @@ import io
 from typing import Optional
 import numpy as np
 import pymupdf
-from pymupdf import Page
 from PIL import Image
 
+
 def read_pdf_to_images(
-        filepath_or_stream: str | io.BytesIO, 
-        resolution: Optional[int] = 3508
-    ) -> list[np.ndarray]:
+    filepath_or_stream: str | io.BytesIO, resolution: Optional[int] = 3508
+) -> list[np.ndarray]:
     """Read a pdf and turn it into a list of images in a given image resolution.
 
     Args:
@@ -26,6 +25,10 @@ def read_pdf_to_images(
     if isinstance(filepath_or_stream, io.BytesIO):
         pages = pymupdf.open(stream=filepath_or_stream, filetype="pdf")
     else:
+        valid_format = ["pdf"]
+        file_format = filepath_or_stream.split(".")[-1]
+        if file_format not in valid_format:
+            raise ValueError(f"The filepath is not in any valid format {valid_format}")
         pages = pymupdf.open(filename=filepath_or_stream)
 
     images: list[np.ndarray] = []
@@ -33,16 +36,18 @@ def read_pdf_to_images(
         # computing the rendering for the current page
         if resolution is not None:
             factor = resolution / max(page.rect[-2], page.rect[-1])
-            rendering = page.get_pixmap(alpha=False, matrix=pymupdf.Matrix(factor, factor))
+            rendering = page.get_pixmap(
+                alpha=False, matrix=pymupdf.Matrix(factor, factor)
+            )
         else:
             rendering = page.get_pixmap(alpha=False)
-        
+
         # getting the array
         array = np.array(Image.open(io.BytesIO(rendering.pil_tobytes(format="PNG"))))
 
-        if not array.dtype.type is np.uint8:
+        if array.dtype.type is not np.uint8:
             raise TypeError("The array has not the expected type ")
-        
+
         images.append(array)
 
     return images

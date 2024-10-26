@@ -7,7 +7,7 @@ from abc import ABC
 
 import cv2
 
-from src.image.tools import is_color_tuple
+from src.image.utils.tools import is_color_tuple
 
 DEFAULT_RENDER_THICKNESS = 3
 DEFAULT_RENDER_COLOR = (0, 0, 255)

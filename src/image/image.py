@@ -10,7 +10,7 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import src.geometry as geo
-from src.image.render import ContoursRender, SegmentsRender
+from src.image.utils.render import ContoursRender, SegmentsRender
 from src.image.drawer import DrawerImage
 from src.image.transformer import TransformerImage
 
@@ -208,7 +208,7 @@ class Image(DrawerImage, TransformerImage):
             sigmax: float = 1.0,
             sigmay: float = 1.0,
         ) -> float:
-            # pylint: disable=too-many-arguments
+            # pylint: disable=too-many-positional-arguments,too-many-arguments
             return amplitude * np.exp(
                 -((x - x0) ** 2 / (2 * sigmax**2) + (y - y0) ** 2 / (2 * sigmay**2))
             )
@@ -221,7 +221,7 @@ class Image(DrawerImage, TransformerImage):
             amplitude: float = 1,
             radius: float = 1,
         ) -> float:
-            # pylint: disable=too-many-arguments
+            # pylint: disable=too-many-positional-arguments,too-many-arguments
             r = np.sqrt((x - x0) ** 2 + (y - y0) ** 2)
             if r >= radius:
                 return 0

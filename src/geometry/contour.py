@@ -341,7 +341,7 @@ class Contour(GeometryEntity, ContourReducer):
         img: Optional[np.ndarray] = None,
         is_debug_enabled: bool = False,
     ) -> Contour:
-        # pylint: disable=too-many-arguments
+        # pylint: disable=too-many-positional-arguments,too-many-arguments
         """Create a Contour object from an unordered list of lines that approximate a
         closed-shape. They approximate in the sense that they do not necessarily
         share common points. This method computes the intersection points between lines.
