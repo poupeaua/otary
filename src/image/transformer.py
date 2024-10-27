@@ -63,7 +63,24 @@ class TransformerImage(BaseImage, ABC):
                 white pixels become black.
         """
         self.as_grayscale()
-        self.asarray = np.asarray(self.binaryrev() * 255)
+        self.asarray = np.asarray(self.binaryrev() * 255, dtype=np.uint8)
+        return self
+    
+    def threshold_simple(self, threshold_value: int) -> Self:
+        """Compute the image thesholded by a single value T.
+        All pixels with value v < T are turned black and those with value v > T are 
+        turned white.
+
+        Args:
+            threshold_value (int): value to separate the black from the white pixels.
+
+        Returns:
+            Self: new image thresholded
+        """
+        self.as_grayscale
+        self.asarray = np.asarray((self.asarray > threshold_value) * 255).astype(
+            np.uint8
+        )
         return self
 
     def threshold_otsu(
@@ -120,6 +137,20 @@ class TransformerImage(BaseImage, ABC):
             (im_arr > threshold_sauvola(image=im_arr, window_size=window_size, k=k))
             * 255
         ).astype(np.uint8)
+        return self
+    
+    def blur(self, kernel: tuple = (5, 5), iterations: int = 1) -> Self:
+        """Blur the images
+
+        Args:
+            kernel (tuple, optional): blur kernel size. Defaults to (5, 5).
+            iterations (int, optional): number of iterations. Defaults to 1.
+
+        Returns:
+            Self: the new image blurred
+        """
+        for _ in range(iterations):
+            self.asarray = cv2.blur(src=self.asarray, ksize=kernel)
         return self
 
     def dilate(
