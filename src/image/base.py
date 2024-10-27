@@ -189,7 +189,7 @@ class BaseImage(ABC):
         Returns:
             np.ndarray: an array with value in [0, 1]
         """
-        return (self.asarray / 255).astype(np.uint8)
+        return (self.asarray / 255).astype(np.float32)
 
     @property
     def corners(self) -> np.ndarray:
@@ -255,7 +255,7 @@ class BaseImage(ABC):
         self.as_filled(fill_value=255)
         return self
 
-    def is_equal_shape(self, other: BaseImage) -> bool:
+    def is_equal_shape(self, other: BaseImage, consider_channel: bool = True) -> bool:
         """Check whether two images have the same shape
 
         Args:
@@ -264,7 +264,13 @@ class BaseImage(ABC):
         Returns:
             bool: True if the objects have the same shape, False otherwise
         """
-        return self.shape == other.shape
+        if consider_channel:
+            shape0 = self.shape
+            shape1 = other.shape
+        else:
+            shape0 = self.shape if len(self.shape) == 2 else self.shape[:-1]
+            shape1 = self.shape if len(self.shape) == 2 else self.shape[:-1]
+        return shape0 == shape1
 
     def dist_pct(self, pct: float = 0.01) -> float:
         """Distance percentage that can be used an acceptable distance error margin.
