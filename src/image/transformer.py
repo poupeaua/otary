@@ -54,6 +54,17 @@ class TransformerImage(BaseImage, ABC):
             np.ndarray: array where its inner values are 0 or 1
         """
         return 1 - self.binary(method=method)
+    
+    def rev(self) -> Self:
+        """Reverse the image
+
+        Returns:
+            Self: the Image in reversed. The black pixel becomes white and the
+                white pixels become black.
+        """
+        self.as_grayscale()
+        self.asarray = np.asarray(self.binaryrev() * 255)
+        return self
 
     def threshold_otsu(
         self, is_blur_enabled: bool = False, blur_ksize: int = 5
@@ -111,7 +122,12 @@ class TransformerImage(BaseImage, ABC):
         ).astype(np.uint8)
         return self
 
-    def dilate(self, kernel: tuple = (5, 5), iterations: int = 1) -> Self:
+    def dilate(
+            self, 
+            kernel: tuple = (5, 5), 
+            iterations: int = 1, 
+            dilate_black_pixels: bool = True
+    ) -> Self:
         """Dilate the image by making the black pixels expand in the image.
         The dilatation can be parametrize thanks to the kernel and iterations
         arguments.
@@ -123,17 +139,27 @@ class TransformerImage(BaseImage, ABC):
         Returns:
             Self: image dilated
         """
-        self.asarray = (
-            1
-            - np.asarray(
-                cv2.dilate(
-                    self.binaryrev(),
-                    kernel=np.ones(kernel, np.uint8),
-                    iterations=iterations,
-                ),
-                dtype=np.uint8,
-            )
-        ) * 255
+        if dilate_black_pixels:
+            self.asarray = (
+                1
+                - np.asarray(
+                    cv2.dilate(
+                        self.binaryrev(),
+                        kernel=np.ones(kernel, np.uint8),
+                        iterations=iterations,
+                    ),
+                    dtype=np.uint8,
+                )
+            ) * 255
+        else:
+            self.asarray = np.asarray(
+                    cv2.dilate(
+                        self.binary(),
+                        kernel=np.ones(kernel, np.uint8),
+                        iterations=iterations,
+                    ),
+                    dtype=np.uint8,
+            ) * 255
         return self
 
     def shift(self, shift: np.ndarray, mode: str = "constant") -> Self:
