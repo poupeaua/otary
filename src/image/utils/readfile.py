@@ -1,5 +1,5 @@
 """
-Utily module to read files (.pdf) 
+Utility module to read files (.pdf) 
 """
 
 import io

@@ -54,7 +54,7 @@ class TransformerImage(BaseImage, ABC):
             np.ndarray: array where its inner values are 0 or 1
         """
         return 1 - self.binary(method=method)
-    
+
     def rev(self) -> Self:
         """Reverse the image
 
@@ -65,10 +65,10 @@ class TransformerImage(BaseImage, ABC):
         self.as_grayscale()
         self.asarray = np.asarray(self.binaryrev() * 255, dtype=np.uint8)
         return self
-    
+
     def threshold_simple(self, threshold_value: int) -> Self:
         """Compute the image thesholded by a single value T.
-        All pixels with value v < T are turned black and those with value v > T are 
+        All pixels with value v < T are turned black and those with value v > T are
         turned white.
 
         Args:
@@ -77,7 +77,7 @@ class TransformerImage(BaseImage, ABC):
         Returns:
             Self: new image thresholded
         """
-        self.as_grayscale
+        self.as_grayscale()
         self.asarray = np.asarray((self.asarray > threshold_value) * 255).astype(
             np.uint8
         )
@@ -86,7 +86,8 @@ class TransformerImage(BaseImage, ABC):
     def threshold_otsu(
         self, is_blur_enabled: bool = False, blur_ksize: int = 5
     ) -> Self:
-        """Apply Ostu thresholding. A blur is applied before for better masking results.
+        """Apply Ostu thresholding.
+        A blur is applied before for better thresholding results.
         See https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html.
 
         As the input image must be a grayscale before applying any thresholding
@@ -138,7 +139,7 @@ class TransformerImage(BaseImage, ABC):
             * 255
         ).astype(np.uint8)
         return self
-    
+
     def blur(self, kernel: tuple = (5, 5), iterations: int = 1) -> Self:
         """Blur the images
 
@@ -154,10 +155,10 @@ class TransformerImage(BaseImage, ABC):
         return self
 
     def dilate(
-            self, 
-            kernel: tuple = (5, 5), 
-            iterations: int = 1, 
-            dilate_black_pixels: bool = True
+        self,
+        kernel: tuple = (5, 5),
+        iterations: int = 1,
+        dilate_black_pixels: bool = True,
     ) -> Self:
         """Dilate the image by making the black pixels expand in the image.
         The dilatation can be parametrize thanks to the kernel and iterations
@@ -183,14 +184,17 @@ class TransformerImage(BaseImage, ABC):
                 )
             ) * 255
         else:
-            self.asarray = np.asarray(
+            self.asarray = (
+                np.asarray(
                     cv2.dilate(
                         self.binary(),
                         kernel=np.ones(kernel, np.uint8),
                         iterations=iterations,
                     ),
                     dtype=np.uint8,
-            ) * 255
+                )
+                * 255
+            )
         return self
 
     def shift(self, shift: np.ndarray, mode: str = "constant") -> Self:

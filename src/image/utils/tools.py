@@ -22,6 +22,7 @@ def is_color_tuple(color: Any) -> bool:
         isinstance(color, tuple)
         and len(color) == 3
         and np.all([isinstance(c, int) for c in color])
+        and np.all([c >= 0 and c <= 255 for c in color])
     )
     return cond
 
@@ -47,9 +48,9 @@ def cast_geometry_to_array(objects: list | np.ndarray, _type: Any):
         _type (Any): type to transform into array
     """
     if _type in [geo.Point, geo.Segment, geo.Vector]:
-        objects = [s.asarray.astype(int) for s in objects]
+        objects = [s.asarray.astype(np.int64) for s in objects]
     elif _type == geo.Contour:
-        objects = [s.lines.astype(int) for s in objects]
+        objects = [s.lines.astype(np.int64) for s in objects]
     else:
         raise RuntimeError(f"The type {_type} is unexpected.")
     return objects
@@ -68,7 +69,7 @@ def prep_obj_draw(objects: list | np.ndarray, _type: Any) -> np.ndarray:
     if is_list_elements_type(_list=objects, _type=_type):
         objects = cast_geometry_to_array(objects=objects, _type=_type)
     try:
-        objects = np.asanyarray(objects).astype(int)
+        objects = np.asanyarray(objects).astype(np.int64)
     except Exception as e:
         raise RuntimeError("Could not prepare the objects to draw") from e
     return objects
