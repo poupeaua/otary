@@ -48,7 +48,7 @@ class GeometryRender(Render, ABC):
 
 
 @dataclass
-class PointsRender(GeometryRender):
+class CirclesRender(GeometryRender):
     """Render for Point objects"""
 
     radius: int = 3

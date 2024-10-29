@@ -14,7 +14,7 @@ from src.core.dataclass.ocrsingleoutput import OcrSingleOutput
 from src.image.utils.tools import prep_obj_draw
 from src.image.utils.render import (
     Render,
-    PointsRender,
+    CirclesRender,
     SegmentsRender,
     ContoursRender,
     OcrSingleOutputRender,
@@ -29,10 +29,10 @@ class DrawerImage(BaseImage, ABC):
         render.adjust_colors_length(n=n_objects)
         return self.as_colorscale().asarray
 
-    def draw_points(
+    def draw_circles(
         self,
         points: np.ndarray | list[geo.Point],
-        render: PointsRender = PointsRender(),
+        render: CirclesRender = CirclesRender(),
     ) -> Self:
         """Add points in the image
 
@@ -42,7 +42,7 @@ class DrawerImage(BaseImage, ABC):
         Returns:
             Image: new image
         """
-        assert isinstance(render, PointsRender)
+        assert isinstance(render, CirclesRender)
         _points = prep_obj_draw(objects=points, _type=geo.Point)
         im_array = self.__pre_draw(n_objects=len(_points), render=render)
         for point, color in zip(_points, render.colors):
