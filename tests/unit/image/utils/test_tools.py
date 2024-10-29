@@ -12,30 +12,30 @@ from src.image.utils.tools import is_color_tuple, interpolate_color, prep_obj_dr
 class TestToolsIsColorTuple:
 
     @pytest.mark.parametrize(
-            "color",
-            [
-                (0, 0, 0),
-                (255, 255, 255),
-                (255, 0, 0),
-                (0, 255, 0),
-                (0, 0, 255),
-                (127, 205, 97)
-            ]
+        "color",
+        [
+            (0, 0, 0),
+            (255, 255, 255),
+            (255, 0, 0),
+            (0, 255, 0),
+            (0, 0, 255),
+            (127, 205, 97),
+        ],
     )
     def test_is_color_tuple_true(self, color):
         assert is_color_tuple(color=color)
 
     @pytest.mark.parametrize(
-            "color",
-            [
-                (0, 0),
-                (255, 255, 255, 255),
-                (267, 0, 0),
-                (0, -34, 0),
-                (10000, -1, 255),
-                (127, 205, "87"),
-                (45, 67, (34, 45, 78))
-            ]
+        "color",
+        [
+            (0, 0),
+            (255, 255, 255, 255),
+            (267, 0, 0),
+            (0, -34, 0),
+            (10000, -1, 255),
+            (127, 205, "87"),
+            (45, 67, (34, 45, 78)),
+        ],
     )
     def test_is_color_tuple_false(self, color):
         assert not is_color_tuple(color=color)
@@ -52,10 +52,11 @@ class TestToolsInterpolateColor:
     def test_interpolate_color_error_alpha_neg(self):
         with pytest.raises(ValueError):
             interpolate_color(-0.001)
-            
+
     def test_interpolate_color_error_alpha_toobig(self):
         with pytest.raises(ValueError):
             interpolate_color(alpha=1.001)
+
 
 class TestPrepObjDraw:
 
