@@ -21,8 +21,7 @@ def is_color_tuple(color: Any) -> bool:
     cond = bool(
         isinstance(color, tuple)
         and len(color) == 3
-        and np.all([isinstance(c, int) for c in color])
-        and np.all([c >= 0 and c <= 255 for c in color])
+        and np.all([isinstance(c, int) and 0 <= c <= 255 for c in color])
     )
     return cond
 

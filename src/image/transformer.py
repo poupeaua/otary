@@ -37,7 +37,7 @@ class TransformerImage(BaseImage, ABC):
         return self
 
     def threshold_otsu(
-        self, is_blur_enabled: bool = False, blur_ksize: int = 5
+        self
     ) -> Self:
         """Apply Ostu thresholding.
         A blur is applied before for better thresholding results.

@@ -84,7 +84,7 @@ class DrawerImage(BaseImage, ABC):
                     tipLength=render.tip_length / geo.Segment(segment).length,
                 )
         else:
-            for segment, color in zip(segments, render.colors):
+            for segment, color in zip(_segments, render.colors):
                 cv2.line(
                     img=im_array,
                     pt1=segment[0],

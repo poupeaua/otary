@@ -75,9 +75,9 @@ class Image(DrawerImage, TransformerImage):
                 image is equal to the original image
         """
         assert self.is_equal_shape(other)
-        mask0 = self.copy().binary()
-        mask1 = other.copy().binary()
-        return 2 * (mask0 * mask1) / (mask0 + mask1)
+        mask0 = self.binaryrev()
+        mask1 = other.binaryrev()
+        return np.sum(mask0 * mask1) / np.count_nonzero(mask0 + mask1)
 
     def score_contains(self, other: Image) -> float:
         """How much the other image is contained in the original image
@@ -90,10 +90,8 @@ class Image(DrawerImage, TransformerImage):
                 image is contained within the original image
         """
         assert self.is_equal_shape(other)
-        other_binaryrev = other.copy().binaryrev()
-        return np.sum(self.copy().binaryrev() * other_binaryrev) / np.sum(
-            other_binaryrev
-        )
+        other_binaryrev = other.binaryrev()
+        return np.sum(self.binaryrev() * other_binaryrev) / np.sum(other_binaryrev)
 
     def score_contains_contour(
         self,
@@ -197,7 +195,6 @@ class Image(DrawerImage, TransformerImage):
             float: a score from 0 to 1.
         """
         valid_score_dist_methods = ["linear", "gaussian"]
-        assert method in valid_score_dist_methods
 
         def gaussian_2d(
             x: float,
@@ -244,4 +241,8 @@ class Image(DrawerImage, TransformerImage):
                 sigmax=self.dist_pct(0.1),
                 sigmay=self.dist_pct(0.1),
             )
-        raise NotImplementedError(f"The method {method} is not implemented.")
+
+        raise ValueError(
+            f"The method {method} should be in the valid methods" 
+            f"{valid_score_dist_methods}"
+        )

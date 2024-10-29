@@ -7,10 +7,10 @@ import numpy as np
 
 from src.core.dataclass.ocrsingleoutput import OcrSingleOutput
 from src.geometry import Contour, Rectangle
-from src.image import Image, SegmentsRender, OcrSingleOutputRender
+from src.image import Image, SegmentsRender
 
 
-class TestDrawer:
+class TestDrawerImage:
 
     def test_draw_circles(self):
         points = np.array([[0, 0], [1, 1], [2, 3]])
