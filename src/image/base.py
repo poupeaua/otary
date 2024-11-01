@@ -10,6 +10,7 @@ from abc import ABC
 
 import cv2
 import numpy as np
+from PIL import Image as ImagePIL
 
 from src.image.utils.readfile import read_pdf_to_images
 
@@ -206,6 +207,14 @@ class BaseImage(ABC):
         return np.array(
             [[0, 0], [self.width, 0], [self.width, self.height], [0, self.height]]
         )
+
+    def as_pil(self) -> ImagePIL:
+        """Return the image as PIL Image
+
+        Returns:
+            ImagePIL: PIL Image
+        """
+        return ImagePIL.fromarray(self.asarray)
 
     def as_grayscale(self) -> Self:
         """Generate the image in grayscale of shape (height, width)
