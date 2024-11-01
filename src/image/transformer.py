@@ -36,9 +36,7 @@ class TransformerImage(BaseImage, ABC):
         self.asarray = np.array((self.asarray > thresh) * 255, dtype=np.uint8)
         return self
 
-    def threshold_otsu(
-        self
-    ) -> Self:
+    def threshold_otsu(self) -> Self:
         """Apply Ostu thresholding.
         A blur is applied before for better thresholding results.
         See https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html.

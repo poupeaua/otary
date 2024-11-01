@@ -243,6 +243,6 @@ class Image(DrawerImage, TransformerImage):
             )
 
         raise ValueError(
-            f"The method {method} should be in the valid methods" 
+            f"The method {method} should be in the valid methods"
             f"{valid_score_dist_methods}"
         )

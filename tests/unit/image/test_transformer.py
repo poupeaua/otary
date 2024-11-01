@@ -89,7 +89,10 @@ class TestTransformerImageGlobalMethods:
         assert np.all(img.asarray == 155)
 
     def test_blur(self):
-        img = Image.from_fillvalue(shape=(5, 5), value=0).blur()
+        img = Image.from_fillvalue(shape=(5, 5), value=0)
+        img.asarray[2, 2] = 255
+        img.blur()
+        assert img.asarray[2, 1] > 0
 
     def test_dilate_black(self):
         img = Image.from_fillvalue(shape=(5, 5), value=255)
