@@ -4,6 +4,7 @@ Unit tests BaseImage class
 
 import pytest
 import numpy as np
+import pymupdf
 
 from src.image import Image
 
@@ -76,6 +77,14 @@ class TestBaseImageFromPdf:
 
     def test_init_image_class_method_from_pdf_neg_page_nb(self, pdf_filepath):
         img = Image.from_pdf(filepath=pdf_filepath, page_nb=-1, resolution=50)
+        assert len(img.shape) == 3
+
+    def test_init_image_class_method_from_pdf_clip(self, pdf_filepath):
+        img = Image.from_pdf(
+            filepath=pdf_filepath,
+            resolution=50,
+            clip_pct=pymupdf.Rect(x0=0, y0=0, x1=10, y1=10),
+        )
         assert len(img.shape) == 3
 
 

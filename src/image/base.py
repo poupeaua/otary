@@ -10,6 +10,7 @@ from abc import ABC
 
 import cv2
 import numpy as np
+import pymupdf
 from PIL import Image as ImagePIL
 
 from src.image.utils.readfile import read_pdf_to_images
@@ -70,6 +71,7 @@ class BaseImage(ABC):
         as_grayscale: bool = False,
         page_nb: int = 0,
         resolution: Optional[int] = 3508,
+        clip_pct: Optional[pymupdf.Rect] = None,
     ) -> Self:
         """Create an Image object from a pdf file.
 
@@ -81,19 +83,20 @@ class BaseImage(ABC):
                 page that will be turned into an image. Defaults to 0.
             resolution (Optional[int], optional): resolution of the loaded image.
                 Defaults to 3508.
+            clip_pct (pymmupdf.Rect, optional): optional zone to extract in the image.
+                This is particularly useful to load into memory only a small part of the
+                image without loading everything into memory. This reduces considerably
+                the image loading time especially combined with a high resolution.
 
         Returns:
             Self: Image object
         """
-        images = read_pdf_to_images(filepath_or_stream=filepath, resolution=resolution)
-
-        try:
-            arr = images[page_nb]
-        except IndexError as exc:
-            raise IndexError(
-                f"The page number {page_nb} is not correct as the pdf contains \
-                {len(images)}"
-            ) from exc
+        arr = read_pdf_to_images(
+            filepath_or_stream=filepath,
+            resolution=resolution,
+            page_nb=page_nb,
+            clip_pct=clip_pct,
+        )[0]
 
         if as_grayscale:
             arr = cv2.cvtColor(arr, cv2.COLOR_BGR2GRAY)
