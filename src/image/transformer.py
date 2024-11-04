@@ -180,6 +180,38 @@ class TransformerImage(BaseImage, ABC):
             )
         return self
 
+    def erode(
+        self,
+        kernel: tuple = (5, 5),
+        iterations: int = 1,
+        erode_black_pixels: bool = True,
+    ) -> Self:
+        if erode_black_pixels:
+            self.asarray = (
+                1
+                - np.asarray(
+                    cv2.erode(
+                        self.binaryrev(),
+                        kernel=np.ones(kernel, np.uint8),
+                        iterations=iterations,
+                    ),
+                    dtype=np.uint8,
+                )
+            ) * 255
+        else:
+            self.asarray = (
+                np.asarray(
+                    cv2.erode(
+                        self.binary(),
+                        kernel=np.ones(kernel, np.uint8),
+                        iterations=iterations,
+                    ),
+                    dtype=np.uint8,
+                )
+                * 255
+            )
+        return self
+
     def shift(self, shift: np.ndarray, mode: str = "constant") -> Self:
         """Shift the image doing a translation operation
 
