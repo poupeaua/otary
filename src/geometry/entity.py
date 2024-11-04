@@ -23,8 +23,9 @@ import numpy as np
 class GeometryEntity(ABC):
     """GeometryEntity class which is the abstract base class for all geometry classes"""
 
-    def __init__(self, points) -> None:
-        self.points = copy.deepcopy(np.array(points))
+    def __init__(self, points, is_cast_int: bool = False) -> None:
+        _arr = np.asarray(points) if not is_cast_int else np.asarray(points).astype(int)
+        self.points = copy.deepcopy(_arr)
 
     @property
     @abstractmethod

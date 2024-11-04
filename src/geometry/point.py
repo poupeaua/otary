@@ -11,12 +11,12 @@ from src.geometry.entity import GeometryEntity
 class Point(GeometryEntity):
     """Point class"""
 
-    def __init__(self, point: np.ndarray) -> None:
+    def __init__(self, point: np.ndarray, is_cast_int: bool = False) -> None:
         point = np.asarray(point)
         if point.shape == (2,):
             point = point.reshape((1, 2))
         assert len(point) == 1
-        super().__init__(points=point)
+        super().__init__(points=point, is_cast_int=is_cast_int)
 
     @property
     def asarray(self):

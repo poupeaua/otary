@@ -17,9 +17,9 @@ from src.geometry.entity import GeometryEntity
 class Segment(GeometryEntity):
     """Segment Class to manipulate easily segments objects"""
 
-    def __init__(self, points: np.ndarray | list) -> None:
+    def __init__(self, points: np.ndarray | list, is_cast_int: bool = False) -> None:
         assert len(points) == 2
-        super().__init__(points)
+        super().__init__(points=points, is_cast_int=is_cast_int)
 
     @property
     def perimeter(self) -> float:
