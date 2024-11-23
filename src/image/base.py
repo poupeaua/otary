@@ -127,8 +127,8 @@ class BaseImage(ABC):
         return bool(len(self.asarray.shape) == 2)
 
     @property
-    def shape(self) -> tuple:
-        """Returns the image shape value
+    def shape_array(self) -> tuple:
+        """Returns the array shape value (height, width, channel)
 
         Returns:
             tuple[int]: image shape
@@ -255,7 +255,9 @@ class BaseImage(ABC):
         Returns:
             Self: new image with a single color of the same size as original.
         """
-        self.asarray = np.full(shape=self.shape, fill_value=fill_value, dtype=np.uint8)
+        self.asarray = np.full(
+            shape=self.shape_array, fill_value=fill_value, dtype=np.uint8
+        )
         return self
 
     def as_white(self) -> Self:
@@ -277,11 +279,19 @@ class BaseImage(ABC):
             bool: True if the objects have the same shape, False otherwise
         """
         if consider_channel:
-            shape0 = self.shape
-            shape1 = other.shape
+            shape0 = self.shape_array
+            shape1 = other.shape_array
         else:
-            shape0 = self.shape if len(self.shape) == 2 else self.shape[:-1]
-            shape1 = self.shape if len(self.shape) == 2 else self.shape[:-1]
+            shape0 = (
+                self.shape_array
+                if len(self.shape_array) == 2
+                else self.shape_array[:-1]
+            )
+            shape1 = (
+                self.shape_array
+                if len(self.shape_array) == 2
+                else self.shape_array[:-1]
+            )
         return shape0 == shape1
 
     def dist_pct(self, pct: float = 0.01) -> float:

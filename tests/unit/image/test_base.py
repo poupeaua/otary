@@ -23,7 +23,7 @@ class TestBaseImageFromFillValue:
 
     def test_init_image_class_method_from_fillvalue(self):
         img = Image.from_fillvalue(shape=(5, 5, 3), value=0)
-        assert len(img.shape) == 3
+        assert len(img.shape_array) == 3
 
     def test_init_image_class_method_from_fillvalue_error_val_toobig(self):
         with pytest.raises(ValueError):
@@ -50,11 +50,11 @@ class TestBaseImageFromFileImage:
 
     def test_init_image_class_method_from_jpg(self, jpg_filepath):
         img = Image.from_fileimage(filepath=jpg_filepath)
-        assert len(img.shape) == 3
+        assert len(img.shape_array) == 3
 
     def test_init_image_class_method_from_jpg_grayscale(self, jpg_filepath):
         img = Image.from_fileimage(filepath=jpg_filepath, as_grayscale=True)
-        assert len(img.shape) == 2
+        assert len(img.shape_array) == 2
 
     def test_init_image_class_method_from_jpg_error_file_format(self, pdf_filepath):
         with pytest.raises(ValueError):
@@ -65,11 +65,11 @@ class TestBaseImageFromPdf:
 
     def test_init_image_class_method_from_pdf(self, pdf_filepath):
         img = Image.from_pdf(filepath=pdf_filepath, resolution=50)
-        assert len(img.shape) == 3
+        assert len(img.shape_array) == 3
 
     def test_init_image_class_method_from_pdf_grayscale(self, pdf_filepath):
         img = Image.from_pdf(filepath=pdf_filepath, as_grayscale=True, resolution=50)
-        assert len(img.shape) == 2
+        assert len(img.shape_array) == 2
 
     def test_init_image_class_method_from_pdf_error_page_nb(self, pdf_filepath):
         with pytest.raises(IndexError):
@@ -77,7 +77,7 @@ class TestBaseImageFromPdf:
 
     def test_init_image_class_method_from_pdf_neg_page_nb(self, pdf_filepath):
         img = Image.from_pdf(filepath=pdf_filepath, page_nb=-1, resolution=50)
-        assert len(img.shape) == 3
+        assert len(img.shape_array) == 3
 
     def test_init_image_class_method_from_pdf_clip(self, pdf_filepath):
         img = Image.from_pdf(
@@ -85,19 +85,19 @@ class TestBaseImageFromPdf:
             resolution=50,
             clip_pct=pymupdf.Rect(x0=0, y0=0, x1=10, y1=10),
         )
-        assert len(img.shape) == 3
+        assert len(img.shape_array) == 3
 
 
 class TestBaseImageGlobalMethods:
 
     def test_init_image_from_array(self):
         img = Image(image=np.full(shape=(5, 5, 3), fill_value=0))
-        assert len(img.shape) == 3
+        assert len(img.shape_array) == 3
 
     def test_init_image_from_other_image(self):
         img_other = Image(image=np.full(shape=(5, 5, 3), fill_value=0))
         img = Image(img_other)
-        assert len(img.shape) == 3
+        assert len(img.shape_array) == 3
 
     def test_asarray_getter(self):
         shape = (5, 5, 3)
@@ -200,19 +200,19 @@ class TestBaseImageAsMethods:
 
     def test_as_grayscale(self):
         img = Image.from_fillvalue(shape=(5, 5, 3), value=0).as_grayscale()
-        assert len(img.shape) == 2
+        assert len(img.shape_array) == 2
 
     def test_as_grayscale_nochange(self):
         img = Image.from_fillvalue(shape=(5, 5), value=0).as_grayscale()
-        assert len(img.shape) == 2
+        assert len(img.shape_array) == 2
 
     def test_as_colorscale(self):
         img = Image.from_fillvalue(shape=(5, 5), value=0).as_colorscale()
-        assert len(img.shape) == 3
+        assert len(img.shape_array) == 3
 
     def test_as_colorscale_nochange(self):
         img = Image.from_fillvalue(shape=(5, 5, 3), value=0).as_colorscale()
-        assert len(img.shape) == 3
+        assert len(img.shape_array) == 3
 
     def test_as_filled(self):
         val = 127

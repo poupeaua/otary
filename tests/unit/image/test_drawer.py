@@ -2,7 +2,6 @@
 Unit Tests for the drawer image methods
 """
 
-import pytest
 import numpy as np
 
 from src.core.dataclass.ocrsingleoutput import OcrSingleOutput

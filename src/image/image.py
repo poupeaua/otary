@@ -117,7 +117,7 @@ class Image(DrawerImage, TransformerImage):
         """
         # create all-white image of same size as original with the geometry entity
         other = (
-            Image.from_fillvalue(value=255, shape=self.shape)
+            Image.from_fillvalue(value=255, shape=self.shape_array)
             .draw_contours(
                 contours=[contour],
                 render=ContoursRender(thickness=1, default_color=(0, 0, 0)),
@@ -157,7 +157,7 @@ class Image(DrawerImage, TransformerImage):
         for i, segment in enumerate(segments):
             # create all-white image of same size as original with the geometry entity
             other = (
-                Image.from_fillvalue(value=255, shape=self.shape)
+                Image.from_fillvalue(value=255, shape=self.shape_array)
                 .draw_segments(
                     segments=[segment],
                     render=SegmentsRender(thickness=1, default_color=(0, 0, 0)),

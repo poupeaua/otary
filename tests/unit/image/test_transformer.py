@@ -157,19 +157,19 @@ class TestTransformerImageResizeMethods:
         img = Image.from_fillvalue(shape=(5, 5), value=0)
         new_shape = (10, 15)
         img.resize_fixed(dim=new_shape)
-        assert img.shape == new_shape
+        assert img.shape_array == new_shape
 
     def test_resize_fixed_height_neg(self):
         img = Image.from_fillvalue(shape=(5, 7), value=0)
         new_shape = (10, -1)
         img.resize_fixed(dim=new_shape)
-        assert img.shape == (10, 14)
+        assert img.shape_array == (10, 14)
 
     def test_resize_fixed_width_neg(self):
         img = Image.from_fillvalue(shape=(10, 20), value=0)
         new_shape = (-1, 10)
         img.resize_fixed(dim=new_shape)
-        assert img.shape == (5, 10)
+        assert img.shape_array == (5, 10)
 
     def test_resize_fixed_error(self):
         img = Image.from_fillvalue(shape=(5, 5), value=0)
@@ -182,7 +182,7 @@ class TestTransformerImageResizeMethods:
         init_shape = (10, 10)
         img = Image.from_fillvalue(shape=init_shape, value=0)
         img.resize(factor=factor)
-        assert img.shape == tuple(np.array(init_shape) * factor)
+        assert img.shape_array == tuple(np.array(init_shape) * factor)
 
     def test_resize_factor_neg(self):
         img = Image.from_fillvalue(shape=(5, 5), value=0)
@@ -200,11 +200,11 @@ class TestTransformerImageCropMethods:
     def test_crop(self):
         img = Image.from_fillvalue(shape=(5, 5), value=0)
         img.crop(1, 1, 4, 3)
-        assert img.shape == (4, 3)
+        assert img.shape_array == (3, 4)
 
     def test_crop_around_segment_horizontal(self):
         img = Image.from_fillvalue(shape=(5, 5), value=0)
         img, _, _, _ = img.crop_around_segment_horizontal(
             segment=[[1, 2], [3, 2]], dim_crop_rect=(-1, 2), default_extra_width=0
         )
-        assert img.shape == (3, 3)
+        assert img.shape_array == (3, 3)
