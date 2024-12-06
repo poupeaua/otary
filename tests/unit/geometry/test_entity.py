@@ -130,10 +130,59 @@ class TestEntityIntersection:
         intersection = seg.intersection(other=seg1)
         assert np.array_equal(intersection, np.array([[5, 5]]))
 
-    def test_intersection_two_points(self):
+    def test_intersection_two_points_vertical_line(self):
         seg = Segment([[0, 0], [0, 10]])
-        seg1 = Rectangle([[-2, 2], [-2, 5], [2, 5], [2, 2]])
-        intersection = seg.intersection(other=seg1)
+        rect = Rectangle([[-2, 2], [-2, 5], [2, 5], [2, 2]])
+        intersection = seg.intersection(other=rect)
         assert np.array_equal(
             intersection, np.array([[0, 2], [0, 5]])
         ) or np.array_equal(intersection, np.array([[0, 5], [0, 2]]))
+
+    def test_intersection_two_points_horizontal_line(self):
+        seg = Segment([[-5, 4], [5, 4]])
+        rect = Rectangle([[-2, 2], [-2, 6], [2, 6], [2, 2]])
+        intersection = seg.intersection(other=rect)
+        assert np.array_equal(
+            intersection, np.array([[2, 4], [-2, 4]])
+        ) or np.array_equal(intersection, np.array([[-2, 4], [2, 4]]))
+
+    def test_intersection_two_points_diagonal_line(self):
+        seg = Segment([[0, 0], [5, 5]])
+        rect = Rectangle([[-2, 1], [-2, 4], [2, 4], [2, 1]])
+        intersection = seg.intersection(other=rect)
+        assert np.array_equal(
+            intersection, np.array([[1, 1], [2, 2]])
+        ) or np.array_equal(intersection, np.array([[2, 2], [1, 1]]))
+
+
+class TestEntityContains:
+    def test_rect_contained_equal_shapes(self):
+        rect1 = Rectangle.unit()
+        assert rect1.contains(rect1)
+
+    def test_rect_contained_in_rect_no_common_border(self):
+        rect1 = Rectangle.unit()
+        rect2 = Rectangle.unit()
+        rect1.asarray += 1
+        rect2.asarray = rect2.asarray * 3
+        assert rect2.contains(rect1)
+
+    def test_rect_contained_in_rect_common_borders(self):
+        rect1 = Rectangle.unit()
+        rect2 = Rectangle.unit()
+        rect2.asarray = rect2.asarray * 2
+        assert rect2.contains(rect1)
+
+    def test_rect_not_contained_without_intersection(self):
+        rect1 = Rectangle.unit()
+        rect2 = Rectangle.unit()
+        rect2.asarray = rect2.asarray + 1
+        rect1.asarray = rect1.asarray * (-1) - 1
+        assert not rect2.contains(rect1)
+
+    def test_rect_not_contained_with_intersection(self):
+        rect1 = Rectangle.unit()
+        rect2 = Rectangle.unit()
+        rect2.asarray = rect2.asarray * 2
+        rect1.asarray = rect1.asarray * 2 - 1
+        assert not rect2.contains(rect1)
