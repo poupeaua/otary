@@ -12,7 +12,7 @@ import logging
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-from shapely import LinearRing
+from shapely import LinearRing, Polygon
 
 from src.geometry import DEFAULT_MARGIN_ANGLE_ERROR
 from src.geometry import GeometryEntity
@@ -269,12 +269,22 @@ class Contour(GeometryEntity, ContourReducer):
     """Contour class which defines a contour object of any closed-shape"""
 
     @property
-    def shapely(self) -> LinearRing:
-        """Returns the Shapely.LinearRing representation of the contour.
-        See https://shapely.readthedocs.io/en/stable/reference/shapely.LinearRing.html
+    def shapely_surface(self) -> Polygon:
+        """Returns the Shapely.Polygon as an enclosed representation of the Contour.
+        See https://shapely.readthedocs.io/en/stable/reference/shapely.Polygon.html
 
         Returns:
-            LinearRing: shapely.LinearRing object
+            Polygon: shapely.Polygon object
+        """
+        return Polygon(self.asarray, holes=None)
+
+    @property
+    def shapely_curve(self) -> LinearRing:
+        """Returns the Shapely.LinearRing as a curved representation of the Contour.
+        See https://shapely.readthedocs.io/en/stable/reference/shapely.Polygon.html
+
+        Returns:
+            Polygon: shapely.LinearRing object
         """
         return LinearRing(coordinates=self.asarray)
 
@@ -303,7 +313,7 @@ class Contour(GeometryEntity, ContourReducer):
         Returns:
             bool: True if at least two lines intersect, False otherwise
         """
-        return not self.shapely.is_simple
+        return not self.shapely_curve.is_simple
 
     # ---------------------------------- OTHER CONSTRUCTORS ----------------------------
 

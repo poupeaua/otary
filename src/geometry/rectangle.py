@@ -19,6 +19,15 @@ class Rectangle(Contour):
         super().__init__(points=points, is_cast_int=is_cast_int)
 
     @classmethod
+    def unit(cls) -> Rectangle:
+        """Create a unit Rectangle object
+
+        Returns:
+            Rectangle: new Rectangle object
+        """
+        return cls(points=[[0, 0], [0, 1], [1, 1], [1, 0]])
+
+    @classmethod
     def from_center(
         cls, center: np.ndarray, dim: tuple[float, float], angle: float = 0
     ) -> Rectangle:

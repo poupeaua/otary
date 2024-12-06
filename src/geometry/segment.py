@@ -72,14 +72,24 @@ class Segment(GeometryEntity):
         return -self.slope
 
     @property
-    def shapely(self) -> LineString:
-        """Returns the Shapely.LineString representation of the contour.
+    def shapely_curve(self) -> LineString:
+        """Returns the Shapely.LineString representation of the segment.
         See https://shapely.readthedocs.io/en/stable/reference/shapely.LineString.html
 
         Returns:
             LineString: shapely.LineString object
         """
         return LineString(coordinates=self.asarray)
+
+    @property
+    def shapely_surface(self) -> LineString:
+        """Returns the Shapely.LineString representation of the segment.
+        See https://shapely.readthedocs.io/en/stable/reference/shapely.LineString.html
+
+        Returns:
+            LineString: shapely.LineString object
+        """
+        return self.shapely_curve
 
     @staticmethod
     def assert_list_of_lines(lines: np.ndarray) -> None:

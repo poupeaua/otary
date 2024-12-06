@@ -27,14 +27,23 @@ class Point(GeometryEntity):
         return self.asarray
 
     @property
-    def shapely(self) -> SPoint:
-        """Returns the Shapely.Point representation of the contour.
+    def shapely_curve(self) -> SPoint:
+        """Returns the Shapely.Point representation of the point.
         See https://shapely.readthedocs.io/en/stable/reference/shapely.Point.html
 
         Returns:
             Point: shapely.Point object
         """
         return SPoint(self.asarray)
+
+    @property
+    def shapely_surface(self) -> SPoint:
+        """Same as shapely curve in this case
+
+        Returns:
+            SPoint: shapely.Point object
+        """
+        return self.shapely_surface
 
     @staticmethod
     def order_idxs_points_by_dist(points: np.ndarray, desc: bool = False) -> np.ndarray:

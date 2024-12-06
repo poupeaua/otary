@@ -29,8 +29,19 @@ class GeometryEntity(ABC):
 
     @property
     @abstractmethod
-    def shapely(self) -> GeometryCollection:
-        """Representation of the geometric object in the shapely library"""
+    def shapely_curve(self) -> GeometryCollection:
+        """Representation of the geometric object in the shapely library
+        as a geometrical object defined only as a curve with no area. Particularly
+        useful to look for points intersections
+        """
+
+    @property
+    @abstractmethod
+    def shapely_surface(self) -> GeometryCollection:
+        """Representation of the geometric object in the shapely library
+        as a geometrical object with an area and a border. Particularly useful
+        to check if two geometrical objects are contained within each other or not.
+        """
 
     @property
     def n_points(self) -> int:
@@ -43,12 +54,17 @@ class GeometryEntity(ABC):
 
     @property
     def asarray(self) -> np.ndarray:
-        """Representation of the object as a numpy array
-
-        Returns:
-            np.ndarray: numpy array representation of the object
-        """
+        """Array representation of the image"""
         return self.points
+
+    @asarray.setter
+    def asarray(self, value: np.ndarray):
+        """Setter for the asarray property
+
+        Args:
+            value (np.ndarray): value of the asarray to be changed
+        """
+        self.points = value
 
     @property
     def area(self) -> float:
@@ -191,7 +207,7 @@ class GeometryEntity(ABC):
         Returns:
             np.ndarray: list of n points of shape (n, 2)
         """
-        it = self.shapely.intersection(other=other.shapely)
+        it = self.shapely_curve.intersection(other=other.shapely_curve)
 
         if isinstance(it, SPoint):  # only one intersection point
             return np.array([[it.x, it.y]])
@@ -205,6 +221,17 @@ class GeometryEntity(ABC):
             return NotImplemented
 
         return np.array([])
+
+    def contains(self, other: GeometryEntity) -> bool:
+        """Whether the geometry contains the other or not
+
+        Args:
+            other (GeometryEntity): a GeometryEntity object
+
+        Returns:
+            bool: True if the entity contains the other
+        """
+        return self.shapely_surface.contains(other.shapely_surface)
 
     def index_farthest_point_from(self, point: np.ndarray) -> int:
         """Get the index of the farthest point from a given point
