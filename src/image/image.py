@@ -95,7 +95,7 @@ class Image(DrawerImage, TransformerImage):
 
     def score_contains_contour(
         self,
-        contour: geo.Contour,
+        contour: geo.Polygon,
         dilate_kernel: tuple = (5, 5),
         dilate_iterations: int = 1,
     ) -> float:

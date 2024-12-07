@@ -8,10 +8,10 @@ from __future__ import annotations
 from typing import Optional
 import numpy as np
 
-from src.geometry.contour import Contour
+from src.geometry.polygon import Polygon
 
 
-class Rectangle(Contour):
+class Rectangle(Polygon):
     """Rectangle class to manipulate rectangle object"""
 
     def __init__(self, points: np.ndarray | list, is_cast_int: bool = False) -> None:

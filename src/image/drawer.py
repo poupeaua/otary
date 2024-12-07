@@ -10,7 +10,7 @@ import cv2
 import numpy as np
 
 import src.geometry as geo
-from src.core.dataclass.ocrsingleoutput import OcrSingleOutput
+from src.cv.ocr.dataclass.ocrsingleoutput import OcrSingleOutput
 from src.image.utils.tools import prep_obj_draw
 from src.image.utils.render import (
     Render,
@@ -97,7 +97,7 @@ class DrawerImage(BaseImage, ABC):
         return self
 
     def draw_contours(
-        self, contours: list[geo.Contour], render: ContoursRender = ContoursRender()
+        self, contours: list[geo.Polygon], render: ContoursRender = ContoursRender()
     ) -> Self:
         """Add contours in the image
 
@@ -109,7 +109,7 @@ class DrawerImage(BaseImage, ABC):
         """
         assert isinstance(render, ContoursRender)
         for cnt in contours:
-            self.draw_segments(segments=cnt.lines, render=render)
+            self.draw_segments(segments=cnt.segments, render=render)
         return self
 
     def draw_ocr_outputs(

@@ -12,16 +12,16 @@ import logging
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-from shapely import LinearRing, Polygon
+from shapely import LinearRing, Polygon as SPolygon
 
 from src.geometry import DEFAULT_MARGIN_ANGLE_ERROR
 from src.geometry import GeometryEntity
 from src.geometry import Segment
 
 
-class ContourReducer(ABC):
+class PolygonReducer(ABC):
     """
-    Class to manage all the contour reducer methods.
+    Class to manage all the polygon reducer methods.
     Contour reduction means identifying the edge points in a given contour that could
     be composed of tons of useless points.
     """
@@ -78,7 +78,7 @@ class ContourReducer(ABC):
         """
         for _ in range(n_iterations):
             n_pts_before = len(points)
-            points = ContourReducer.__reduce_collinear(
+            points = PolygonReducer.__reduce_collinear(
                 points=points, margin_error_angle=margin_error_angle
             )
             n_pts_after = len(points)
@@ -155,10 +155,10 @@ class ContourReducer(ABC):
         Returns:
             np.ndarray: filtered list of points
         """
-        if mode not in ContourReducer.REDUCE_BY_DISTANCE_UNSUCCESSIVE_MODES:
+        if mode not in PolygonReducer.REDUCE_BY_DISTANCE_UNSUCCESSIVE_MODES:
             raise ValueError(
                 f"The mode {mode} is not a valid mode. It should be in"
-                f"{ContourReducer.REDUCE_BY_DISTANCE_UNSUCCESSIVE_MODES}"
+                f"{PolygonReducer.REDUCE_BY_DISTANCE_UNSUCCESSIVE_MODES}"
             )
         idx_to_rm: list[int] = []
         cur_idx_to_rm: list[int] = []
@@ -183,7 +183,7 @@ class ContourReducer(ABC):
                         cur_idx_to_rm[0],
                         cur_idx_to_rm[-1],
                     )
-                    centroid_point = Contour(
+                    centroid_point = Polygon(
                         points=points[first_idx_pt : (last_idx_pt + 1)]
                     ).centroid.astype(int)
                     points[first_idx_pt] = centroid_point
@@ -222,7 +222,7 @@ class ContourReducer(ABC):
         """
         for _ in range(n_iterations):
             n_pts_before = len(points)
-            points = ContourReducer.__reduce_by_distance_unsuccessive(
+            points = PolygonReducer.__reduce_by_distance_unsuccessive(
                 points=points, min_dist_threshold=min_dist_threshold, n=n, mode=mode
             )
             n_pts_after = len(points)
@@ -256,7 +256,7 @@ class ContourReducer(ABC):
             if i == len(points) - 1:
                 i = -1  # so that next point is the first in that case
             prev_point, next_point = points[i - 1], points[i + 1]
-            area = Contour(points=[prev_point, cur_point, next_point]).area
+            area = Polygon(points=[prev_point, cur_point, next_point]).area
             if area < min_triangle_area:
                 idx_to_remove.append(i)
 
@@ -265,37 +265,37 @@ class ContourReducer(ABC):
         return reduced_points
 
 
-class Contour(GeometryEntity, ContourReducer):
-    """Contour class which defines a contour object of any closed-shape"""
+class Polygon(GeometryEntity, PolygonReducer):
+    """Polygon class which defines a contour object which means any closed-shape"""
 
     @property
-    def shapely_surface(self) -> Polygon:
-        """Returns the Shapely.Polygon as an enclosed representation of the Contour.
+    def shapely_surface(self) -> SPolygon:
+        """Returns the Shapely.Polygon as an surface representation of the Polygon.
         See https://shapely.readthedocs.io/en/stable/reference/shapely.Polygon.html
 
         Returns:
             Polygon: shapely.Polygon object
         """
-        return Polygon(self.asarray, holes=None)
+        return SPolygon(self.asarray, holes=None)
 
     @property
     def shapely_curve(self) -> LinearRing:
-        """Returns the Shapely.LinearRing as a curved representation of the Contour.
-        See https://shapely.readthedocs.io/en/stable/reference/shapely.Polygon.html
+        """Returns the Shapely.LinearRing as a curve representation of the Polygon.
+        See https://shapely.readthedocs.io/en/stable/reference/shapely.LinearRing.html
 
         Returns:
-            Polygon: shapely.LinearRing object
+            LinearRing: shapely.LinearRing object
         """
         return LinearRing(coordinates=self.asarray)
 
     @property
-    def lines(self) -> np.ndarray:
+    def segments(self) -> np.ndarray:
         """Expresses the Contour as a list of segments.
 
         Returns:
             np.ndarray: segments representation of the contour
         """
-        return Contour.points_to_lines(self.points)
+        return Polygon.points_to_segments(self.points)
 
     @property
     def lengths(self) -> np.ndarray:
@@ -304,7 +304,7 @@ class Contour(GeometryEntity, ContourReducer):
         Returns:
             np.ndarray: array of shape (n_points)
         """
-        return np.linalg.norm(np.diff(self.lines, axis=1), axis=2)
+        return np.linalg.norm(np.diff(self.segments, axis=1), axis=2)
 
     @property
     def is_self_intersected(self) -> bool:
@@ -318,7 +318,7 @@ class Contour(GeometryEntity, ContourReducer):
     # ---------------------------------- OTHER CONSTRUCTORS ----------------------------
 
     @classmethod
-    def from_lines(cls, lines: np.ndarray) -> Contour:
+    def from_lines(cls, lines: np.ndarray) -> Polygon:
         """The lines should describe a perfect closed shape contour
 
         Args:
@@ -339,7 +339,7 @@ class Contour(GeometryEntity, ContourReducer):
                 f"Please check at those indices: {bad_idxs}"
             )
         contour_points = lines[:, 0]
-        return Contour(points=contour_points)
+        return Polygon(points=contour_points)
 
     @classmethod
     def from_unordered_lines_approx(
@@ -350,7 +350,7 @@ class Contour(GeometryEntity, ContourReducer):
         start_line_index: int = 0,
         img: Optional[np.ndarray] = None,
         is_debug_enabled: bool = False,
-    ) -> Contour:
+    ) -> Polygon:
         # pylint: disable=too-many-positional-arguments,too-many-arguments
         """Create a Contour object from an unordered list of lines that approximate a
         closed-shape. They approximate in the sense that they do not necessarily
@@ -443,13 +443,13 @@ class Contour(GeometryEntity, ContourReducer):
 
             i += 1
 
-        cnt = Contour.from_lines(np.array(list_build_cnt))
+        cnt = Polygon.from_lines(np.array(list_build_cnt))
         return cnt
 
     # ------------------------------ STATIC METHODS ------------------------------------
 
     @staticmethod
-    def points_to_lines(points: np.ndarray) -> np.ndarray:
+    def points_to_segments(points: np.ndarray) -> np.ndarray:
         """Static method to convert a contour described by points to lines
 
         Args:
@@ -524,7 +524,7 @@ class Contour(GeometryEntity, ContourReducer):
             np.ndarray: a list of score for each point in the contour
         """
         indices = self.indices_shared_close_points(
-            other=Contour(points=points), margin_dist_error=min_distance
+            other=Polygon(points=points), margin_dist_error=min_distance
         )
         score = np.bincount(indices, minlength=len(self))
         return score
@@ -591,7 +591,7 @@ class Contour(GeometryEntity, ContourReducer):
 
     def rearrange_first_point_closest_to_reference_point(
         self, reference_point: np.ndarray = np.zeros(shape=(2,))
-    ) -> Contour:
+    ) -> Polygon:
         """Rearrange the list of points that defines the Contour so that the first
         point in the list of points is the one that is the closest (by distance) to the
         reference point.
@@ -610,7 +610,7 @@ class Contour(GeometryEntity, ContourReducer):
 
     # ------------------------------- Fundamental Methods ------------------------------
 
-    def is_equal(self, contour: Contour, dist_margin_error: float = 5) -> bool:
+    def is_equal(self, contour: Polygon, dist_margin_error: float = 5) -> bool:
         """Check whether two contours objects are equal by considering a margin of
         error based on a distance between points.
 

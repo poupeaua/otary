@@ -4,10 +4,10 @@ Triangle class module
 
 import numpy as np
 
-from src.geometry import Contour
+from src.geometry import Polygon
 
 
-class Triangle(Contour):
+class Triangle(Polygon):
     """Triangle class"""
 
     def __init__(self, points: np.ndarray | list, is_cast_int: bool = False) -> None:
