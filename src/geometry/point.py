@@ -27,7 +27,7 @@ class Point(GeometryEntity):
         return self.asarray
 
     @property
-    def shapely_curve(self) -> SPoint:
+    def shapely_edges(self) -> SPoint:
         """Returns the Shapely.Point representation of the point.
         See https://shapely.readthedocs.io/en/stable/reference/shapely.Point.html
 

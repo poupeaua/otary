@@ -279,7 +279,7 @@ class Polygon(GeometryEntity, PolygonReducer):
         return SPolygon(self.asarray, holes=None)
 
     @property
-    def shapely_curve(self) -> LinearRing:
+    def shapely_edges(self) -> LinearRing:
         """Returns the Shapely.LinearRing as a curve representation of the Polygon.
         See https://shapely.readthedocs.io/en/stable/reference/shapely.LinearRing.html
 
@@ -313,7 +313,7 @@ class Polygon(GeometryEntity, PolygonReducer):
         Returns:
             bool: True if at least two lines intersect, False otherwise
         """
-        return not self.shapely_curve.is_simple
+        return not self.shapely_edges.is_simple
 
     # ---------------------------------- OTHER CONSTRUCTORS ----------------------------
 

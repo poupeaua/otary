@@ -9,8 +9,8 @@ import itertools
 import numpy as np
 from sympy.geometry import Line
 
-from src.geometry.constants import DEFAULT_MARGIN_ANGLE_ERROR
-from src.geometry.linear import LinearEntity
+from src.geometry.utils.constants import DEFAULT_MARGIN_ANGLE_ERROR
+from src.geometry.linear.entity import LinearEntity
 
 
 class Segment(LinearEntity):

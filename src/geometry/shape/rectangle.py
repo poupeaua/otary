@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import Optional
 import numpy as np
 
-from src.geometry.polygon import Polygon
+from src.geometry.shape.polygon import Polygon
 
 
 class Rectangle(Polygon):

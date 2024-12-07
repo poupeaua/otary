@@ -36,7 +36,7 @@ class LinearEntity(GeometryEntity, ABC):
         return self.length
 
     @property
-    def shapely_curve(self) -> LineString:
+    def shapely_edges(self) -> LineString:
         """Returns the Shapely.LineString representation of the segment.
         See https://shapely.readthedocs.io/en/stable/reference/shapely.LineString.html
 
@@ -53,4 +53,4 @@ class LinearEntity(GeometryEntity, ABC):
         Returns:
             LineString: shapely.LineString object
         """
-        return self.shapely_curve
+        return self.shapely_edges

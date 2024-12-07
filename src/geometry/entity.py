@@ -29,7 +29,7 @@ class GeometryEntity(ABC):
 
     @property
     @abstractmethod
-    def shapely_curve(self) -> GeometryCollection:
+    def shapely_edges(self) -> GeometryCollection:
         """Representation of the geometric object in the shapely library
         as a geometrical object defined only as a curve with no area. Particularly
         useful to look for points intersections
@@ -207,7 +207,7 @@ class GeometryEntity(ABC):
         Returns:
             np.ndarray: list of n points of shape (n, 2)
         """
-        it = self.shapely_curve.intersection(other=other.shapely_curve)
+        it = self.shapely_edges.intersection(other=other.shapely_edges)
 
         if isinstance(it, SPoint):  # only one intersection point
             return np.array([[it.x, it.y]])
