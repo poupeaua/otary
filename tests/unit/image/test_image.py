@@ -5,7 +5,7 @@ Unit Tests for the generic image methods
 import pytest
 import numpy as np
 
-from src.geometry import Contour, Segment
+from src.geometry import Polygon, Segment
 from src.image import Image, ContoursRender, SegmentsRender
 
 
@@ -65,7 +65,7 @@ class TestImageScoreMethods:
     def test_score_contains_contour_one(self):
         shape = (5, 5)
         img = Image.from_fillvalue(shape=shape, value=255)
-        cnt = Contour(
+        cnt = Polygon(
             points=[[0, 0], [0, shape[0]], [shape[1], shape[0]], [shape[1], 0]]
         )
         img.draw_contours(
