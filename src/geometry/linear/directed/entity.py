@@ -19,6 +19,24 @@ class DirectedLinearEntity(LinearEntity):
         """Return the cardinal degree of the Directed Linear Entity"""
 
     @property
+    def head(self) -> np.ndarray:
+        """Return the head point at the end-extremity of the arrow directed object.
+
+        Returns:
+            np.ndarray: the head point
+        """
+        return self.asarray[-1]
+
+    @property
+    def tail(self) -> np.ndarray:
+        """Return the tail point at the start-extremity of the arrow directed object.
+
+        Returns:
+            np.ndarray: the tail point
+        """
+        return self.asarray[0]
+
+    @property
     def cv2_space_coords(self) -> np.ndarray:
         """Inverted coordinates in the cv2 space
 
@@ -35,7 +53,7 @@ class DirectedLinearEntity(LinearEntity):
         Returns:
             bool: if x0 > x1 returns True, else False
         """
-        return bool(self.points[0][0] > self.points[-1][0])
+        return bool(self.asarray[0][0] > self.asarray[-1][0])
 
     @property
     def is_y_first_pt_gt_y_last_pt(self) -> bool:
@@ -45,7 +63,7 @@ class DirectedLinearEntity(LinearEntity):
         Returns:
             bool: if y0 > y1 returns True, else False
         """
-        return bool(self.points[0][1] > self.points[-1][1])
+        return bool(self.asarray[0][1] > self.asarray[-1][1])
 
     def cardinal_direction(self, full: bool = False, level: int = 2) -> str:
         """Cardinal direction

@@ -6,7 +6,7 @@ import pytest
 import numpy as np
 
 from src.geometry import Polygon, Segment
-from src.image import Image, ContoursRender, SegmentsRender
+from src.image import Image, PolygonsRender, SegmentsRender
 
 
 class TestImageGlobalMethods:
@@ -68,8 +68,8 @@ class TestImageScoreMethods:
         cnt = Polygon(
             points=[[0, 0], [0, shape[0]], [shape[1], shape[0]], [shape[1], 0]]
         )
-        img.draw_contours(
-            contours=[cnt], render=ContoursRender(default_color=(0, 0, 0))
+        img.draw_polygons(
+            polygons=[cnt], render=PolygonsRender(default_color=(0, 0, 0))
         )
         assert img.score_contains_contour(contour=cnt) == 1
 

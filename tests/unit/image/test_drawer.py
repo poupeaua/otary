@@ -28,7 +28,7 @@ class TestDrawerImage:
     def test_draw_contours(self):
         points = np.array([[0, 0], [1, 1], [2, 3]])
         cnt = Polygon(points=points)
-        Image.from_fillvalue(shape=(5, 5, 3), value=0).draw_contours(contours=[cnt])
+        Image.from_fillvalue(shape=(5, 5, 3), value=0).draw_polygons(polygons=[cnt])
 
     def test_draw_ocrso(self):
         ocrso = OcrSingleOutput(

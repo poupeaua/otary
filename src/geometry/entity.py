@@ -5,7 +5,7 @@ by all type of geometry objects
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Optional, Self
 import copy
 from abc import ABC, abstractmethod
 from shapely import (
@@ -26,6 +26,9 @@ class GeometryEntity(ABC):
     def __init__(self, points, is_cast_int: bool = False) -> None:
         _arr = np.asarray(points) if not is_cast_int else np.asarray(points).astype(int)
         self.points = copy.deepcopy(_arr)
+        self.is_cast_int = is_cast_int
+
+    # --------------------------------- PROPERTIES ------------------------------------
 
     @property
     @abstractmethod
@@ -54,7 +57,7 @@ class GeometryEntity(ABC):
 
     @property
     def asarray(self) -> np.ndarray:
-        """Array representation of the image"""
+        """Array representation of the geometry object"""
         return self.points
 
     @asarray.setter
@@ -94,13 +97,53 @@ class GeometryEntity(ABC):
         """
         return np.mean(self.points, axis=0)
 
-    def copy(self):
+    @property
+    def xmax(self) -> np.ndarray:
+        """Get the maximum X coordinate of the geometry entity
+
+        Returns:
+            np.ndarray: 2D point
+        """
+        return np.max(self.asarray[:, 0])
+
+    @property
+    def xmin(self) -> np.ndarray:
+        """Get the minimum X coordinate of the geometry entity
+
+        Returns:
+            np.ndarray: 2D point
+        """
+        return np.min(self.asarray[:, 0])
+
+    @property
+    def ymax(self) -> np.ndarray:
+        """Get the maximum Y coordinate of the geometry entity
+
+        Returns:
+            np.ndarray: 2D point
+        """
+        return np.max(self.asarray[:, 1])
+
+    @property
+    def ymin(self) -> np.ndarray:
+        """Get the minimum Y coordinate of the geometry entity
+
+        Returns:
+            np.ndarray: 2D point
+        """
+        return np.min(self.asarray[:, 1])
+
+    # ------------------------------- CLASSIC METHODS ---------------------------------
+
+    def copy(self) -> Self:
         """Create a copy of the geometry entity object
 
         Returns:
             GeometryEntity: copy of the geometry entity object
         """
-        return copy.deepcopy(self)
+        return type(self)(
+            points=copy.deepcopy(self.asarray), is_cast_int=self.is_cast_int
+        )
 
     def rotate(
         self, angle: float, degree: bool = False, pivot: Optional[np.ndarray] = None
@@ -222,16 +265,41 @@ class GeometryEntity(ABC):
 
         return np.array([])
 
-    def contains(self, other: GeometryEntity) -> bool:
-        """Whether the geometry contains the other or not
-
-        Args:
-            other (GeometryEntity): a GeometryEntity object
+    def enclosing_axis_aligned_bbox(self) -> np.ndarray:
+        """Compute the smallest area enclosing Axis-Aligned Bounding Box (AABB)
 
         Returns:
-            bool: True if the entity contains the other
+            np.ndarray: four 2D points describing a rectangle
         """
-        return self.shapely_surface.contains(other.shapely_surface)
+        topleft_x, topleft_y, width, height = cv2.boundingRect(array=self.asarray)
+        bbox = np.array(
+            [
+                [topleft_x, topleft_y],
+                [topleft_x + width, topleft_y],
+                [topleft_x + width, topleft_y + height],
+                [topleft_x, topleft_y + height],
+            ]
+        )
+        return bbox
+
+    def enclosing_oriented_bbox(self) -> np.ndarray:
+        """Compute the smallest area enclosing Oriented Bounding Box (OBB)
+
+        Returns:
+            np.ndarray: four 2D points describing a rectangle
+        """
+        rect = cv2.minAreaRect(self.asarray)
+        bbox = cv2.boxPoints(rect)
+        return bbox
+
+    def enclosing_convex_hull(self) -> np.ndarray:
+        """Compute the smallest area enclosing Convex Hull
+
+        Returns:
+            np.ndarray: points that describe a Polygon
+        """
+        convexhull = np.squeeze(cv2.convexHull(self.asarray))
+        return convexhull
 
     def index_farthest_point_from(self, point: np.ndarray) -> int:
         """Get the index of the farthest point from a given point
@@ -257,7 +325,7 @@ class GeometryEntity(ABC):
         distances = np.linalg.norm(self.asarray - point, axis=1)
         return np.argmin(distances).astype(int)
 
-    def indices_shared_close_points(
+    def indices_shared_approx_points(
         self, other: GeometryEntity, margin_dist_error: float = 5
     ) -> np.ndarray:
         """Compute the point indices from this entity that correspond to shared
@@ -282,7 +350,7 @@ class GeometryEntity(ABC):
                 list_index_shared_points.append(i)
         return np.array(list_index_shared_points).astype(int)
 
-    def shared_close_points(
+    def shared_approx_points(
         self, other: GeometryEntity, margin_dist_error: float = 5
     ) -> np.ndarray:
         """Get the shared points between two geometric objects.
@@ -299,7 +367,7 @@ class GeometryEntity(ABC):
             np.ndarray: list of points identified as shared between the two geometric
                 objects
         """
-        indices = self.indices_shared_close_points(
+        indices = self.indices_shared_approx_points(
             other=other, margin_dist_error=margin_dist_error
         )
         return self.asarray[indices]

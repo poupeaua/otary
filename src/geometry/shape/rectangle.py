@@ -29,22 +29,22 @@ class Rectangle(Polygon):
 
     @classmethod
     def from_center(
-        cls, center: np.ndarray, dim: tuple[float, float], angle: float = 0
+        cls, center: np.ndarray, width: float, height: float, angle: float = 0
     ) -> Rectangle:
         """Create a Rectangle object using the center point, width, height and angle.
-        The angle is defined as the
 
         Args:
             center (np.ndarray): center point of the rectangle
-            dim (tuple[float]): dimension of the rectangle (width, height)
-            angle (float, optional): _description_. Defaults to 0.
+            width (float): width of the rectangle
+            height (float): height of the rectangle
+            angle (float, optional): rotation angle for the rectangle. Defaults to 0.
 
         Returns:
             Rectangle: Rectangle object
         """
         # compute the halves lengths
-        half_width = dim[0] / 2
-        half_height = dim[1] / 2
+        half_width = width / 2
+        half_height = height / 2
 
         # get center coordinates
         center_x, center_y = center[0], center[1]
@@ -64,6 +64,24 @@ class Rectangle(Polygon):
 
         return rect
 
+    @classmethod
+    def from_topleft(
+        cls, topleft: np.ndarray, width: float, height: float, angle: float = 0
+    ) -> Rectangle:
+        """Create a Rectangle object using the top left point, width, height and angle.
+
+        Args:
+            topleft (np.ndarray): top left point of the rectangle
+            width (float): width of the rectangle
+            height (float): height of the rectangle
+            angle (float, optional): rotation angle for the rectangle. Defaults to 0.
+
+        Returns:
+            Rectangle: Rectangle object
+        """
+        center = topleft + np.array([width, height]) / 2
+        return cls.from_center(center=center, width=width, height=height)
+
     def join(
         self, rect: Rectangle, margin_dist_error: float = 5
     ) -> Optional[Rectangle]:
@@ -82,7 +100,7 @@ class Rectangle(Polygon):
         Returns:
             Rectangle: the join new Rectangle object
         """
-        shared_points = self.shared_close_points(rect, margin_dist_error)
+        shared_points = self.shared_approx_points(rect, margin_dist_error)
         n_shared_points = len(shared_points)
 
         if n_shared_points in (0, 1):

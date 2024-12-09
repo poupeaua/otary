@@ -2,6 +2,8 @@
 Vectors class they are like segments, but with a given direction
 """
 
+from __future__ import annotations
+
 import numpy as np
 
 from src.geometry import Segment, DirectedLinearEntity
@@ -34,3 +36,16 @@ class Vector(Segment, DirectedLinearEntity):
 
         cardinal_degree = np.mod(360 + angle, 360)  # avoid negative value case
         return cardinal_degree
+
+    def rescale_head(self, scale: float) -> Vector:
+        """Rescale the head part of the vector without moving the first point.
+        This method only updates the second point that composes the vector.
+
+        Args:
+            scale (float): scale factor
+
+        Returns:
+            Vector: scaled vector
+        """
+        self.asarray = (self.asarray - self.tail) * scale + self.tail
+        return self

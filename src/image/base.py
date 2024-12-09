@@ -5,6 +5,7 @@ It only contains very low-level, basic and generic image methods.
 
 from __future__ import annotations
 
+import copy
 from typing import Self, Optional
 from abc import ABC
 
@@ -314,4 +315,4 @@ class BaseImage(ABC):
         Returns:
             Image: image copy
         """
-        return type(self)(image=self.asarray.copy())
+        return type(self)(image=copy.deepcopy(self.asarray))

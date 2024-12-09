@@ -10,7 +10,7 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import src.geometry as geo
-from src.image.utils.render import ContoursRender, SegmentsRender
+from src.image.utils.render import PolygonsRender, SegmentsRender
 from src.image.drawer import DrawerImage
 from src.image.transformer import TransformerImage
 
@@ -118,9 +118,9 @@ class Image(DrawerImage, TransformerImage):
         # create all-white image of same size as original with the geometry entity
         other = (
             Image.from_fillvalue(value=255, shape=self.shape_array)
-            .draw_contours(
-                contours=[contour],
-                render=ContoursRender(thickness=1, default_color=(0, 0, 0)),
+            .draw_polygons(
+                polygons=[contour],
+                render=PolygonsRender(thickness=1, default_color=(0, 0, 0)),
             )
             .as_grayscale()
         )

@@ -63,9 +63,9 @@ class SegmentsRender(GeometryRender):
 
 
 @dataclass
-class ContoursRender(SegmentsRender):
-    """Render for Contour objects. It inherits from SegmentsRender because
-    Contour are drawn as a succession of drawn segments."""
+class PolygonsRender(SegmentsRender):
+    """Render for Polygon objects. It inherits from SegmentsRender because
+    Polygons are drawn as a succession of drawn segments."""
 
 
 @dataclass
