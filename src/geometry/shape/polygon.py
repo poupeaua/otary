@@ -533,7 +533,7 @@ class Polygon(GeometryEntity, PolygonReducer):
         """
         surface = self.shapely_surface
         if dilate_scale > 1:
-            surface = self.copy().dilate(scale=dilate_scale).shapely_surface
+            surface = self.copy().expand(scale=dilate_scale).shapely_surface
         return surface.contains(other.shapely_surface)
 
     def score_contains_points(
@@ -653,7 +653,7 @@ class Polygon(GeometryEntity, PolygonReducer):
             self.asarray[i] = Vector([center, point]).rescale_head(scale).head
         return self
 
-    def dilate(self, scale: float) -> Polygon:
+    def expand(self, scale: float) -> Polygon:
         """Stretch, dilate or expand a polygon
 
         Args:
@@ -669,7 +669,7 @@ class Polygon(GeometryEntity, PolygonReducer):
             )
         return self.__rescale(scale=scale)
 
-    def contract(self, scale: float) -> Polygon:
+    def shrink(self, scale: float) -> Polygon:
         """Contract or shrink a polygon
 
         Args:

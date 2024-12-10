@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from typing import Optional
 import numpy as np
+import pymupdf
 
 from src.geometry.shape.polygon import Polygon
 
@@ -81,6 +82,35 @@ class Rectangle(Polygon):
         """
         center = topleft + np.array([width, height]) / 2
         return cls.from_center(center=center, width=width, height=height)
+
+    @classmethod
+    def from_topleft_bottomright(
+        cls, topleft: np.ndarray, bottomright: np.ndarray
+    ) -> Rectangle:
+        """_summary_
+
+        Args:
+            topleft (np.ndarray): _description_
+            bottomright (np.ndarray): _description_
+
+        Returns:
+            Rectangle: _description_
+        """
+        width = bottomright[0] - topleft[0]
+        height = bottomright[1] - topleft[1]
+        return cls.from_topleft(topleft=topleft, width=width, height=height)
+
+    @property
+    def as_pymupdf_rect(self) -> pymupdf.Rect:
+        """Get the pymupdf representation of the given Rectangle.
+        Beware a pymupdf can only be straight or axis-aligned.
+
+        See: https://pymupdf.readthedocs.io/en/latest/rect.html
+
+        Returns:
+            pymupdf.Rect: pymupdf axis-aligned Rect object
+        """
+        return pymupdf.Rect(x0=self.xmin, y0=self.ymin, x1=self.xmax, y1=self.ymax)
 
     def join(
         self, rect: Rectangle, margin_dist_error: float = 5

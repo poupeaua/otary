@@ -16,7 +16,7 @@ class TestImageGlobalMethods:
         for x in range(2, 4):
             for y in range(2, 4):
                 img0.asarray[x, y] = 0
-        img1 = img0.copy().rotate(angle=180)
+        img1 = img0.copy().rotate(angle=180, is_degree=True)
         assert img0.iou(img1) == 1 / 7
 
     def test_iou_zero(self):
@@ -24,7 +24,7 @@ class TestImageGlobalMethods:
         for x in range(3, 5):
             for y in range(3, 5):
                 img0.asarray[x, y] = 0
-        img1 = img0.copy().rotate(angle=180)
+        img1 = img0.copy().rotate(angle=180, is_degree=True)
         assert img0.iou(img1) == 0
 
     def test_iou_one(self):
@@ -43,7 +43,7 @@ class TestImageScoreMethods:
         for x in range(2, 4):
             for y in range(2, 4):
                 img0.asarray[x, y] = 0
-        img1 = img0.copy().rotate(angle=180)
+        img1 = img0.copy().rotate(angle=180, is_degree=True)
         assert img0.score_contains(img1) == 1 / 4
 
     def test_score_contains_zero(self):
@@ -51,7 +51,7 @@ class TestImageScoreMethods:
         for x in range(3, 5):
             for y in range(3, 5):
                 img0.asarray[x, y] = 0
-        img1 = img0.copy().rotate(angle=180)
+        img1 = img0.copy().rotate(angle=180, is_degree=True)
         assert img0.score_contains(img1) == 0
 
     def test_score_contains_one(self):

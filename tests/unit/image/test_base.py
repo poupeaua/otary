@@ -49,16 +49,12 @@ class TestBaseImageFromFillValue:
 class TestBaseImageFromFileImage:
 
     def test_init_image_class_method_from_jpg(self, jpg_filepath):
-        img = Image.from_fileimage(filepath=jpg_filepath)
+        img = Image.from_file(filepath=jpg_filepath)
         assert len(img.shape_array) == 3
 
     def test_init_image_class_method_from_jpg_grayscale(self, jpg_filepath):
-        img = Image.from_fileimage(filepath=jpg_filepath, as_grayscale=True)
+        img = Image.from_file(filepath=jpg_filepath, as_grayscale=True)
         assert len(img.shape_array) == 2
-
-    def test_init_image_class_method_from_jpg_error_file_format(self, pdf_filepath):
-        with pytest.raises(ValueError):
-            Image.from_fileimage(filepath=pdf_filepath)
 
 
 class TestBaseImageFromPdf:

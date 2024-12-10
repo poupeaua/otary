@@ -228,14 +228,15 @@ class TransformerImage(BaseImage, ABC):
         return self
 
     def rotate(
-        self, angle: float, is_degree: bool = True, reshape: bool = True
+        self, angle: float, is_degree: bool = False, reshape: bool = True
     ) -> Self:
         """Rotate the image by a given angle.
 
         Args:
             angle (float): angle to rotate the image
             is_degree (bool, optional): whether the angle is in degree or not.
-                If not it is considered to be in radians. Defaults to True.
+                If not it is considered to be in radians.
+                Defaults to False which means radians.
             reshape (bool, optional): scipy reshape option. Defaults to True.
 
         Returns:
@@ -377,25 +378,30 @@ class TransformerImage(BaseImage, ABC):
         Returns:
             Self: image cropped
         """
-        self.asarray = self.asarray[y0 : y1 + 1, x0 : x1 + 1]
+        self.asarray = self.asarray[int(y0) : int(y1) + 1, int(x0) : int(x1) + 1]
         return self
 
-    def crop_from_topleft_point(
-        self, left: int, top: int, width: int, height: int
-    ) -> Self:
+    def crop_from_topleft(self, topleft: np.ndarray, width: int, height: int) -> Self:
         """Crop the image from a rectangle defined by its top-left point, its width and
         its height.
 
         Args:
-            left (int): x coordinate of the top-left point
-            top (int): y coordinate of the top-left point
+            topleft (np.ndarray): (x, y) coordinates of the top-left point
             width (int): width of the rectangle to crop
             height (int): height of the rectangle to crop
 
         Returns:
             Self: image cropped
         """
-        return self.crop(x0=left, y0=top, x1=left + width, y1=top + height)
+        return self.crop(
+            x0=topleft[0], y0=topleft[1], x1=topleft[0] + width, y1=topleft[1] + height
+        )
+
+    def crop_from_axis_aligned_bbox(self, bbox: geo.Rectangle) -> Self:
+        topleft = np.asarray([bbox.xmin, bbox.ymin])
+        height = bbox.ymax - bbox.ymin
+        width = bbox.xmax - bbox.xmin
+        return self.crop_from_topleft(topleft=topleft, width=width, height=height)
 
     def crop_around_segment_horizontal(
         self,

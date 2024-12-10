@@ -47,8 +47,35 @@ class BaseImage(ABC):
         return cls(np.full(shape=shape, fill_value=value, dtype=np.uint8))
 
     @classmethod
-    def from_fileimage(cls, filepath: str, as_grayscale: bool = False) -> Self:
-        """Create a Image object from a file image path
+    def from_jpg(
+        cls, filepath: str, as_grayscale: bool = False, resolution: Optional[int] = 3508
+    ) -> Self:
+        """Create a Image object from a JPG or JPEG file path
+
+        Args:
+            filepath (str): path to the JPG image file
+            as_grayscale (bool, optional): turn the image in grayscale.
+                Defaults to False.
+
+        Returns:
+            Self: Image object
+        """
+        arr = np.asarray(cv2.imread(filepath, 1 - int(as_grayscale)))
+        original_height, original_width = arr.shape[:2]
+
+        if resolution is not None:
+            # Calculate the aspect ratio
+            aspect_ratio = original_width / original_height
+            new_width = int(resolution * aspect_ratio)
+            arr = cv2.resize(src=arr, dsize=(new_width, resolution))
+
+        return cls(arr)
+
+    @classmethod
+    def from_png(
+        cls, filepath: str, as_grayscale: bool = False, resolution: Optional[int] = 3508
+    ) -> Self:
+        """Create a Image object from a PNG file image path
 
         Args:
             filepath (str): path to the image file
@@ -58,12 +85,9 @@ class BaseImage(ABC):
         Returns:
             Self: Image object
         """
-        valid_format = ["png", "jpg", "jpeg"]
-        file_format = filepath.split(".")[-1]
-        if file_format not in valid_format:
-            raise ValueError(f"The filepath is not in any valid format {valid_format}")
-        arr = np.asarray(cv2.imread(filepath, 1 - int(as_grayscale)))
-        return cls(arr)
+        return cls.from_jpg(
+            filepath=filepath, as_grayscale=as_grayscale, resolution=resolution
+        )
 
     @classmethod
     def from_pdf(
@@ -103,6 +127,31 @@ class BaseImage(ABC):
             arr = cv2.cvtColor(arr, cv2.COLOR_BGR2GRAY)
 
         return cls(arr)
+
+    @classmethod
+    def from_file(cls, filepath: str, as_grayscale: bool = False) -> Self:
+        """Create a Image object from a file image path
+
+        Args:
+            filepath (str): path to the image file
+            as_grayscale (bool, optional): turn the image in grayscale.
+                Defaults to False.
+
+        Returns:
+            Self: Image object
+        """
+        valid_format = ["png", "jpg", "jpeg", "pdf"]
+
+        file_format = filepath.split(".")[-1]
+
+        if file_format in ["png"]:
+            return cls.from_png(filepath=filepath, as_grayscale=as_grayscale)
+        if file_format in ["jpg", "jpeg"]:
+            return cls.from_jpg(filepath=filepath, as_grayscale=as_grayscale)
+        if file_format in ["pdf"]:
+            return cls.from_pdf(filepath=filepath, as_grayscale=as_grayscale)
+
+        raise ValueError(f"The filepath is not in any valid format {valid_format}")
 
     @property
     def asarray(self) -> np.ndarray:

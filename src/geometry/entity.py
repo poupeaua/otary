@@ -133,17 +133,7 @@ class GeometryEntity(ABC):
         """
         return np.min(self.asarray[:, 1])
 
-    # ------------------------------- CLASSIC METHODS ---------------------------------
-
-    def copy(self) -> Self:
-        """Create a copy of the geometry entity object
-
-        Returns:
-            GeometryEntity: copy of the geometry entity object
-        """
-        return type(self)(
-            points=copy.deepcopy(self.asarray), is_cast_int=self.is_cast_int
-        )
+    # ---------------------------- MODIFICATION METHODS -------------------------------
 
     def rotate(
         self, angle: float, degree: bool = False, pivot: Optional[np.ndarray] = None
@@ -235,6 +225,18 @@ class GeometryEntity(ABC):
         self.points = self.points + vector
         return self
 
+    # ------------------------------- CLASSIC METHODS ---------------------------------
+
+    def copy(self) -> Self:
+        """Create a copy of the geometry entity object
+
+        Returns:
+            GeometryEntity: copy of the geometry entity object
+        """
+        return type(self)(
+            points=copy.deepcopy(self.asarray), is_cast_int=self.is_cast_int
+        )
+
     def intersection(
         self, other: GeometryEntity, only_points: bool = True
     ) -> np.ndarray:
@@ -301,6 +303,40 @@ class GeometryEntity(ABC):
         convexhull = np.squeeze(cv2.convexHull(self.asarray))
         return convexhull
 
+    def distances_to_point(self, point: np.ndarray) -> np.ndarray:
+        """Get the distance from all points in the geometry entity to the point
+
+        Args:
+            point (np.ndarray): 2D point
+
+        Returns:
+            np.ndarray: array of the same len as the number of point in the geometry
+                entity.
+        """
+        return np.linalg.norm(self.asarray - point, axis=1)
+
+    def shortest_dist_to_point(self, point: np.ndarray) -> float:
+        """Compute the shortest distance from the geometry entity to the point
+
+        Args:
+            point (np.ndarray): 2D point
+
+        Returns:
+            float: shortest distance from the geometry entity to the point
+        """
+        return np.min(self.distances_to_point(point=point))
+
+    def longest_dist_to_point(self, point: np.ndarray) -> float:
+        """Compute the longest distance from the geometry entity to the point
+
+        Args:
+            point (np.ndarray): 2D point
+
+        Returns:
+            float: longest distance from the geometry entity to the point
+        """
+        return np.max(self.distances_to_point(point=point))
+
     def index_farthest_point_from(self, point: np.ndarray) -> int:
         """Get the index of the farthest point from a given point
 
@@ -310,8 +346,7 @@ class GeometryEntity(ABC):
         Returns:
             int: the index of the farthest point in the entity from the input point
         """
-        distances = np.linalg.norm(self.asarray - point, axis=1)
-        return np.argmax(distances).astype(int)
+        return np.argmax(self.distances_to_point(point=point)).astype(int)
 
     def index_closest_point_from(self, point: np.ndarray) -> int:
         """Get the index of the closest point from a given point
@@ -322,8 +357,7 @@ class GeometryEntity(ABC):
         Returns:
             int: the index of the closest point in the entity from the input point
         """
-        distances = np.linalg.norm(self.asarray - point, axis=1)
-        return np.argmin(distances).astype(int)
+        return np.argmin(self.distances_to_point(point=point)).astype(int)
 
     def indices_shared_approx_points(
         self, other: GeometryEntity, margin_dist_error: float = 5
