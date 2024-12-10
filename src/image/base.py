@@ -349,7 +349,7 @@ class BaseImage(ABC):
         It is calculated based on the normalized side length.
 
         Args:
-            pct (float, optional): pourcentage of distance error. Defaults to 0.01,
+            pct (float, optional): percentage of distance error. Defaults to 0.01,
                 which means 1% of the normalized side length as the
                 default margin distance error.
 
@@ -357,6 +357,28 @@ class BaseImage(ABC):
             float: margin distance error
         """
         return self.norm_side_length * pct
+
+    def width_pct(self, pct: float = 0.01) -> float:
+        """Width percentage of the image
+
+        Args:
+            pct (float, optional): percentage of width. Defaults to 0.01.
+
+        Returns:
+            float: Width percentage of the image value distance
+        """
+        return self.width * pct
+
+    def height_pct(self, pct: float = 0.01) -> float:
+        """Height percentage of the image
+
+        Args:
+            pct (float, optional): percentage of height. Defaults to 0.01.
+
+        Returns:
+            float: Height percentage of the image value distance
+        """
+        return self.height * pct
 
     def copy(self) -> Self:
         """Copy of the image

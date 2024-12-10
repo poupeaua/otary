@@ -93,9 +93,9 @@ class Image(DrawerImage, TransformerImage):
         other_binaryrev = other.binaryrev()
         return np.sum(self.binaryrev() * other_binaryrev) / np.sum(other_binaryrev)
 
-    def score_contains_contour(
+    def score_contains_polygon(
         self,
-        contour: geo.Polygon,
+        polygon: geo.Polygon,
         dilate_kernel: tuple = (5, 5),
         dilate_iterations: int = 1,
     ) -> float:
@@ -107,7 +107,7 @@ class Image(DrawerImage, TransformerImage):
         contour to be contained within the image in the calculation.
 
         Args:
-            contour (Contour): Contour object
+            polygon (Polygon): Polygon object
             dilate_kernel (tuple, optional): dilate kernel param. Defaults to (5, 5).
             dilate_iterations (int, optional): dilate iterations param. Defaults to 1.
 
@@ -119,7 +119,7 @@ class Image(DrawerImage, TransformerImage):
         other = (
             Image.from_fillvalue(value=255, shape=self.shape_array)
             .draw_polygons(
-                polygons=[contour],
+                polygons=[polygon],
                 render=PolygonsRender(thickness=1, default_color=(0, 0, 0)),
             )
             .as_grayscale()
@@ -246,3 +246,20 @@ class Image(DrawerImage, TransformerImage):
             f"The method {method} should be in the valid methods"
             f"{valid_score_dist_methods}"
         )
+
+    def restrict_rect_in_frame(self, rectangle: geo.Rectangle) -> geo.Rectangle:
+        # rectangle boundaries
+        xmin, xmax = rectangle.xmin, rectangle.xmax
+        ymin, ymax = rectangle.ymin, rectangle.ymax
+
+        # recalculate boundaries based on image shape
+        xmin = max(0, xmin)
+        ymin = max(0, ymin)
+        xmax = min(self.width, xmax)
+        ymax = min(self.height, ymax)
+
+        # recreate a rectangle with new coordinates
+        rect_restricted = geo.Rectangle.from_topleft_bottomright(
+            topleft=[xmin, ymin], bottomright=[xmax, ymax]
+        )
+        return rect_restricted

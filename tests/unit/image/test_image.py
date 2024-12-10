@@ -71,7 +71,7 @@ class TestImageScoreMethods:
         img.draw_polygons(
             polygons=[cnt], render=PolygonsRender(default_color=(0, 0, 0))
         )
-        assert img.score_contains_contour(contour=cnt) == 1
+        assert img.score_contains_polygon(polygon=cnt) == 1
 
     def test_score_contains_segment_one(self):
         shape = (5, 5)
