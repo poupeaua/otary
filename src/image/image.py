@@ -260,6 +260,6 @@ class Image(DrawerImage, TransformerImage):
 
         # recreate a rectangle with new coordinates
         rect_restricted = geo.Rectangle.from_topleft_bottomright(
-            topleft=[xmin, ymin], bottomright=[xmax, ymax]
+            topleft=[xmin, ymin], bottomright=[xmax, ymax], is_cast_int=True
         )
         return rect_restricted
