@@ -30,7 +30,12 @@ class Rectangle(Polygon):
 
     @classmethod
     def from_center(
-        cls, center: np.ndarray, width: float, height: float, angle: float = 0
+        cls,
+        center: np.ndarray,
+        width: float,
+        height: float,
+        angle: float = 0,
+        is_cast_int: bool = False,
     ) -> Rectangle:
         """Create a Rectangle object using the center point, width, height and angle.
 
@@ -60,14 +65,23 @@ class Rectangle(Polygon):
             ]
         )
 
-        rect = Rectangle(points)
-        rect = rect.rotate(angle=angle, pivot=center)
+        rect = Rectangle(points=points, is_cast_int=is_cast_int)
+
+        if angle != 0:
+            rect = rect.rotate(angle=angle, pivot=center)
+            if is_cast_int:
+                rect.asarray = rect.asarray.astype(int)
 
         return rect
 
     @classmethod
     def from_topleft(
-        cls, topleft: np.ndarray, width: float, height: float, angle: float = 0
+        cls,
+        topleft: np.ndarray,
+        width: float,
+        height: float,
+        angle: float = 0,
+        is_cast_int: bool = False,
     ) -> Rectangle:
         """Create a Rectangle object using the top left point, width, height and angle.
 
@@ -81,11 +95,13 @@ class Rectangle(Polygon):
             Rectangle: Rectangle object
         """
         center = topleft + np.array([width, height]) / 2
-        return cls.from_center(center=center, width=width, height=height)
+        return cls.from_center(
+            center=center, width=width, height=height, is_cast_int=is_cast_int
+        )
 
     @classmethod
     def from_topleft_bottomright(
-        cls, topleft: np.ndarray, bottomright: np.ndarray
+        cls, topleft: np.ndarray, bottomright: np.ndarray, is_cast_int: bool = False
     ) -> Rectangle:
         """_summary_
 
@@ -98,7 +114,9 @@ class Rectangle(Polygon):
         """
         width = bottomright[0] - topleft[0]
         height = bottomright[1] - topleft[1]
-        return cls.from_topleft(topleft=topleft, width=width, height=height)
+        return cls.from_topleft(
+            topleft=topleft, width=width, height=height, is_cast_int=is_cast_int
+        )
 
     @property
     def as_pymupdf_rect(self) -> pymupdf.Rect:

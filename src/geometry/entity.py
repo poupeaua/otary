@@ -225,6 +225,42 @@ class GeometryEntity(ABC):
         self.points = self.points + vector
         return self
 
+    def clamp(
+        self,
+        xmin: float = -np.inf,
+        xmax: float = np.inf,
+        ymin: float = -np.inf,
+        ymax: float = np.inf,
+    ) -> GeometryEntity:
+        """_summary_
+
+        Args:
+            xmin (float): _description_
+            xmax (float): _description_
+            ymin (float): _description_
+            ymax (float): _description_
+
+        Returns:
+            GeometryEntity: _description_
+        """
+        self.asarray[:, 0] = np.clip(self.asarray[:, 0], xmin, xmax)  # x values
+        self.asarray[:, 1] = np.clip(self.asarray[:, 1], ymin, ymax)  # y values
+        return self
+
+    def normalize(self, x: float, y: float) -> GeometryEntity:
+        """_summary_
+
+        Args:
+            x (float): _description_
+            y (float): _description_
+
+        Returns:
+            GeometryEntity: _description_
+        """
+        normalizer = np.array([x, y])
+        self.asarray = self.asarray / normalizer
+        return self
+
     # ------------------------------- CLASSIC METHODS ---------------------------------
 
     def copy(self) -> Self:
