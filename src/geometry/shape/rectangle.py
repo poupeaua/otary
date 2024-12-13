@@ -37,6 +37,7 @@ class Rectangle(Polygon):
         angle: float = 0,
         is_cast_int: bool = False,
     ) -> Rectangle:
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
         """Create a Rectangle object using the center point, width, height and angle.
 
         Args:
@@ -83,6 +84,7 @@ class Rectangle(Polygon):
         angle: float = 0,
         is_cast_int: bool = False,
     ) -> Rectangle:
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
         """Create a Rectangle object using the top left point, width, height and angle.
 
         Args:
@@ -96,7 +98,11 @@ class Rectangle(Polygon):
         """
         center = topleft + np.array([width, height]) / 2
         return cls.from_center(
-            center=center, width=width, height=height, is_cast_int=is_cast_int
+            center=center,
+            width=width,
+            height=height,
+            angle=angle,
+            is_cast_int=is_cast_int,
         )
 
     @classmethod

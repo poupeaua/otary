@@ -22,6 +22,19 @@ class Point(GeometryEntity):
     def asarray(self):
         return self.points[0]
 
+    @asarray.setter
+    def asarray(self, value: np.ndarray):
+        """Setter for the asarray property
+
+        Args:
+            value (np.ndarray): value of the asarray to be changed
+        """
+        point = np.asarray(value)
+        if point.shape == (2,):
+            point = point.reshape((1, 2))
+        assert len(point) == 1
+        self.points = value
+
     @property
     def centroid(self):
         return self.asarray

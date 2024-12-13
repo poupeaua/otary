@@ -5,7 +5,7 @@ by all type of geometry objects
 
 from __future__ import annotations
 
-from typing import Optional, Self
+from typing import Optional, Self, TYPE_CHECKING
 import copy
 from abc import ABC, abstractmethod
 from shapely import (
@@ -18,6 +18,9 @@ from shapely import (
 
 import cv2
 import numpy as np
+
+if TYPE_CHECKING:
+    from src.geometry import Polygon, Rectangle  # Import only for type checking
 
 
 class GeometryEntity(ABC):
@@ -98,7 +101,7 @@ class GeometryEntity(ABC):
         return np.mean(self.points, axis=0)
 
     @property
-    def xmax(self) -> np.ndarray:
+    def xmax(self) -> float:
         """Get the maximum X coordinate of the geometry entity
 
         Returns:
@@ -107,7 +110,7 @@ class GeometryEntity(ABC):
         return np.max(self.asarray[:, 0])
 
     @property
-    def xmin(self) -> np.ndarray:
+    def xmin(self) -> float:
         """Get the minimum X coordinate of the geometry entity
 
         Returns:
@@ -116,7 +119,7 @@ class GeometryEntity(ABC):
         return np.min(self.asarray[:, 0])
 
     @property
-    def ymax(self) -> np.ndarray:
+    def ymax(self) -> float:
         """Get the maximum Y coordinate of the geometry entity
 
         Returns:
@@ -125,7 +128,7 @@ class GeometryEntity(ABC):
         return np.max(self.asarray[:, 1])
 
     @property
-    def ymin(self) -> np.ndarray:
+    def ymin(self) -> float:
         """Get the minimum Y coordinate of the geometry entity
 
         Returns:
@@ -137,7 +140,7 @@ class GeometryEntity(ABC):
 
     def rotate(
         self, angle: float, degree: bool = False, pivot: Optional[np.ndarray] = None
-    ):
+    ) -> Self:
         """Rotate the geometry entity object.
         A pivot point can be passed as an argument to rotate the object around the pivot
 
@@ -175,7 +178,7 @@ class GeometryEntity(ABC):
 
     def rotate_around_image_center(
         self, img: np.ndarray, angle: float, degree: bool = False
-    ):
+    ) -> Self:
         """Given an geometric object and an image, rotate the object around
         the image center point.
 
@@ -209,7 +212,7 @@ class GeometryEntity(ABC):
             )
         return vector
 
-    def shift(self, vector: np.ndarray):
+    def shift(self, vector: np.ndarray) -> Self:
         """Shift the geometry entity by the vector direction
 
         Args:
@@ -231,34 +234,35 @@ class GeometryEntity(ABC):
         xmax: float = np.inf,
         ymin: float = -np.inf,
         ymax: float = np.inf,
-    ) -> GeometryEntity:
-        """_summary_
+    ) -> Self:
+        """Clamp the Geometry entity so that the x and y coordinates fit in the
+        min and max values in parameters.
 
         Args:
-            xmin (float): _description_
-            xmax (float): _description_
-            ymin (float): _description_
-            ymax (float): _description_
+            xmin (float): x coordinate minimum
+            xmax (float): x coordinate maximum
+            ymin (float): y coordinate minimum
+            ymax (float): y coordinate maximum
 
         Returns:
-            GeometryEntity: _description_
+            GeometryEntity: clamped GeometryEntity
         """
         self.asarray[:, 0] = np.clip(self.asarray[:, 0], xmin, xmax)  # x values
         self.asarray[:, 1] = np.clip(self.asarray[:, 1], ymin, ymax)  # y values
         return self
 
-    def normalize(self, x: float, y: float) -> GeometryEntity:
-        """_summary_
+    def normalize(self, x: float, y: float) -> Self:
+        """Normalize the geometry entity by dividing the points by a norm on the
+        x and y coordinates.
 
         Args:
-            x (float): _description_
-            y (float): _description_
+            x (float): x coordinate norm
+            y (float): y coordinate norm
 
         Returns:
-            GeometryEntity: _description_
+            GeometryEntity: normalized GeometryEntity
         """
-        normalizer = np.array([x, y])
-        self.asarray = self.asarray / normalizer
+        self.asarray = self.asarray / np.array([x, y])
         return self
 
     # ------------------------------- CLASSIC METHODS ---------------------------------
@@ -303,12 +307,16 @@ class GeometryEntity(ABC):
 
         return np.array([])
 
-    def enclosing_axis_aligned_bbox(self) -> np.ndarray:
+    def enclosing_axis_aligned_bbox(self) -> "Rectangle":
         """Compute the smallest area enclosing Axis-Aligned Bounding Box (AABB)
+        See: https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html
 
         Returns:
-            np.ndarray: four 2D points describing a rectangle
+            Rectangle: Rectangle object
         """
+        # pylint: disable=import-outside-toplevel
+        from src.geometry import Rectangle
+
         topleft_x, topleft_y, width, height = cv2.boundingRect(array=self.asarray)
         bbox = np.array(
             [
@@ -318,26 +326,34 @@ class GeometryEntity(ABC):
                 [topleft_x, topleft_y + height],
             ]
         )
-        return bbox
+        return Rectangle(bbox)
 
-    def enclosing_oriented_bbox(self) -> np.ndarray:
+    def enclosing_oriented_bbox(self) -> "Rectangle":
         """Compute the smallest area enclosing Oriented Bounding Box (OBB)
+        See: https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html
 
         Returns:
-            np.ndarray: four 2D points describing a rectangle
+            Rectangle: Rectangle object
         """
+        # pylint: disable=import-outside-toplevel
+        from src.geometry import Rectangle
+
         rect = cv2.minAreaRect(self.asarray)
         bbox = cv2.boxPoints(rect)
-        return bbox
+        return Rectangle(bbox)
 
-    def enclosing_convex_hull(self) -> np.ndarray:
+    def enclosing_convex_hull(self) -> "Polygon":
         """Compute the smallest area enclosing Convex Hull
+        See: https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html
 
         Returns:
-            np.ndarray: points that describe a Polygon
+            Polygon: Polygon object
         """
+        # pylint: disable=import-outside-toplevel
+        from src.geometry import Polygon
+
         convexhull = np.squeeze(cv2.convexHull(self.asarray))
-        return convexhull
+        return Polygon(convexhull)
 
     def distances_to_point(self, point: np.ndarray) -> np.ndarray:
         """Get the distance from all points in the geometry entity to the point

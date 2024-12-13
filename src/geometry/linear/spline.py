@@ -8,6 +8,12 @@ from src.geometry.linear.entity import LinearEntity
 class LinearSpline(LinearEntity):
     """Curve class"""
 
+    @property
     def curvature(self) -> float:
+        """Get the curvature of the linear spline
+
+        Returns:
+            float: curvature value
+        """
         # TODO
-        return NotImplementedError
+        raise NotImplementedError

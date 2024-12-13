@@ -21,7 +21,7 @@ class LinearEntity(GeometryEntity, ABC):
         Returns:
             float: length of the curve
         """
-        _length = 0
+        _length: float = 0
         for pt1, pt2 in zip(self.asarray[:-1], self.asarray[1:]):
             _length += float(np.linalg.norm(pt1 - pt2))
         return _length
