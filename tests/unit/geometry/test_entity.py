@@ -150,7 +150,7 @@ class TestEntityEnclosing:
             ]
         )
         expected_aabb = Polygon([[10, 20], [81, 20], [81, 81], [10, 81]])
-        assert Polygon(polygon.enclosing_axis_aligned_bbox()).is_equal(expected_aabb)
+        assert polygon.enclosing_axis_aligned_bbox().is_equal(expected_aabb)
 
     def test_enclosing_oriented_bbox(self):
         polygon = Polygon(
@@ -168,9 +168,7 @@ class TestEntityEnclosing:
             ]
         )
         expected_obb = Polygon([[9, 70], [35, 6], [85, 26], [60, 90]])
-        assert Polygon(polygon.enclosing_oriented_bbox().astype(int)).is_equal(
-            expected_obb
-        )
+        assert polygon.enclosing_oriented_bbox().is_equal(expected_obb)
 
     def test_enclosing_convex_hull(self):
         polygon = Polygon(
@@ -188,7 +186,7 @@ class TestEntityEnclosing:
             ]
         )
         expected_aabb = Polygon([[10, 70], [30, 20], [70, 20], [80, 40], [50, 80]])
-        assert Polygon(polygon.enclosing_convex_hull()).is_equal(expected_aabb)
+        assert polygon.enclosing_convex_hull().is_equal(expected_aabb)
 
 
 class TestEntityIntersection:

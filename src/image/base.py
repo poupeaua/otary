@@ -98,6 +98,7 @@ class BaseImage(ABC):
         resolution: Optional[int] = 3508,
         clip_pct: Optional[pymupdf.Rect] = None,
     ) -> Self:
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
         """Create an Image object from a pdf file.
 
         Args:
@@ -249,19 +250,55 @@ class BaseImage(ABC):
     def corners(self) -> np.ndarray:
         """Returns the corners in the following order:
 
-        0. bottom left corner
-        1. bottom right corner
-        2. top right corner
-        3. top left corner
+        0. top left corner
+        1. top right corner
+        2. bottom right corner
+        3. bottom left corner
 
         Returns:
             np.ndarray: array containing the corners
         """
         return np.array(
-            [[0, 0], [self.width, 0], [self.width, self.height], [0, self.height]]
+            [self.top_left, self.top_right, self.bottom_right, self.bottom_left]
         )
 
-    def as_pil(self) -> ImagePIL:
+    @property
+    def bottom_right(self) -> np.ndarray:
+        """Get the bottom right point coordinate of the image
+
+        Returns:
+            np.ndarray: 2D point
+        """
+        return np.array([self.width, self.height], dtype=int)
+
+    @property
+    def bottom_left(self) -> np.ndarray:
+        """Get the bottom right point coordinate of the image
+
+        Returns:
+            np.ndarray: 2D point
+        """
+        return np.array([0, self.height], dtype=int)
+
+    @property
+    def top_right(self) -> np.ndarray:
+        """Get the bottom right point coordinate of the image
+
+        Returns:
+            np.ndarray: 2D point
+        """
+        return np.array([self.width, 0], dtype=int)
+
+    @property
+    def top_left(self) -> np.ndarray:
+        """Get the bottom right point coordinate of the image
+
+        Returns:
+            np.ndarray: 2D point
+        """
+        return np.array([0, 0], dtype=int)
+
+    def as_pil(self) -> ImagePIL.Image:
         """Return the image as PIL Image
 
         Returns:

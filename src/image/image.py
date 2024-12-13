@@ -248,6 +248,16 @@ class Image(DrawerImage, TransformerImage):
         )
 
     def restrict_rect_in_frame(self, rectangle: geo.Rectangle) -> geo.Rectangle:
+        """Create a new rectangle that is contained within the image borders.
+        If the input rectangle is outside the image, the returned rectangle is a
+        image frame-fitted rectangle that preserve the same shape.
+
+        Args:
+            rectangle (geo.Rectangle): input rectangle
+
+        Returns:
+            geo.Rectangle: new rectangle
+        """
         # rectangle boundaries
         xmin, xmax = rectangle.xmin, rectangle.xmax
         ymin, ymax = rectangle.ymin, rectangle.ymax
@@ -260,6 +270,8 @@ class Image(DrawerImage, TransformerImage):
 
         # recreate a rectangle with new coordinates
         rect_restricted = geo.Rectangle.from_topleft_bottomright(
-            topleft=[xmin, ymin], bottomright=[xmax, ymax], is_cast_int=True
+            topleft=np.asarray([xmin, ymin]),
+            bottomright=np.asarray([xmax, ymax]),
+            is_cast_int=True,
         )
         return rect_restricted

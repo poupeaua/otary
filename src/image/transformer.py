@@ -150,6 +150,7 @@ class TransformerImage(BaseImage, ABC):
         Args:
             kernel (tuple, optional): kernel to dilate. Defaults to (5, 5).
             iterations (int, optional): number of dilatation iterations. Defaults to 1.
+            dilate_black_pixels (bool, optional): whether to dilate black pixels or not
 
         Returns:
             Self: image dilated
@@ -186,6 +187,18 @@ class TransformerImage(BaseImage, ABC):
         iterations: int = 1,
         erode_black_pixels: bool = True,
     ) -> Self:
+        """Erode the image by making the black pixels shrink in the image.
+        The anti-dilatation can be parametrize thanks to the kernel and iterations
+        arguments.
+
+        Args:
+            kernel (tuple, optional): kernel to erode. Defaults to (5, 5).
+            iterations (int, optional): number of iterations. Defaults to 1.
+            erode_black_pixels (bool, optional): whether to erode black pixels or not
+
+        Returns:
+            Self: image eroded
+        """
         if erode_black_pixels:
             self.asarray = (
                 1
@@ -398,9 +411,17 @@ class TransformerImage(BaseImage, ABC):
         )
 
     def crop_from_axis_aligned_bbox(self, bbox: geo.Rectangle) -> Self:
+        """Crop the image from a Axis-Aligned Bounding Box (AABB)
+
+        Args:
+            bbox (geo.Rectangle): axis-aligned bounding box
+
+        Returns:
+            Self: cropped image
+        """
         topleft = np.asarray([bbox.xmin, bbox.ymin])
-        height = bbox.ymax - bbox.ymin
-        width = bbox.xmax - bbox.xmin
+        height = int(bbox.ymax - bbox.ymin)
+        width = int(bbox.xmax - bbox.xmin)
         return self.crop_from_topleft(topleft=topleft, width=width, height=height)
 
     def crop_around_segment_horizontal(
