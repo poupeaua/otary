@@ -7,37 +7,18 @@ from __future__ import annotations
 import itertools
 
 import numpy as np
-from shapely import LineString
 from sympy.geometry import Line
 
-from src.geometry.constants import DEFAULT_MARGIN_ANGLE_ERROR
-from src.geometry.entity import GeometryEntity
+from src.geometry.utils.constants import DEFAULT_MARGIN_ANGLE_ERROR
+from src.geometry.linear.entity import LinearEntity
 
 
-class Segment(GeometryEntity):
+class Segment(LinearEntity):
     """Segment Class to manipulate easily segments objects"""
 
-    def __init__(self, points: np.ndarray | list) -> None:
+    def __init__(self, points: np.ndarray | list, is_cast_int: bool = False) -> None:
         assert len(points) == 2
-        super().__init__(points)
-
-    @property
-    def perimeter(self) -> float:
-        """Perimeter of the segment which we define to be its length
-
-        Returns:
-            float: segment perimeter
-        """
-        return self.length
-
-    @property
-    def length(self) -> float:
-        """Length of the segment in Euclidian norm
-
-        Returns:
-            float: segment length
-        """
-        return float(np.linalg.norm(self.asarray[0] - self.asarray[1]))
+        super().__init__(points=points, is_cast_int=is_cast_int)
 
     @property
     def centroid(self) -> np.ndarray:
@@ -70,16 +51,6 @@ class Segment(GeometryEntity):
             float: segment slope value
         """
         return -self.slope
-
-    @property
-    def shapely(self) -> LineString:
-        """Returns the Shapely.LineString representation of the contour.
-        See https://shapely.readthedocs.io/en/stable/reference/shapely.LineString.html
-
-        Returns:
-            LineString: shapely.LineString object
-        """
-        return LineString(coordinates=self.asarray)
 
     @staticmethod
     def assert_list_of_lines(lines: np.ndarray) -> None:
@@ -242,6 +213,9 @@ class Segment(GeometryEntity):
     def intersection_line(self, other: Segment) -> np.ndarray:
         """Compute the intersection point that would exist between two segments if we
         consider them as lines - which means as lines with infinite length.
+
+        Lines would thus define infinite extension in both extremities directions
+        of the input segments objects.
 
         Args:
             other (Segment): other Segment object

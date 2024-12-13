@@ -5,7 +5,7 @@ Init file for image module to facilitate importation
 # ruff: noqa: F401
 from src.image.utils.render import (
     CirclesRender,
-    ContoursRender,
+    PolygonsRender,
     SegmentsRender,
     OcrSingleOutputRender,
 )

@@ -11,30 +11,52 @@ from src.geometry.entity import GeometryEntity
 class Point(GeometryEntity):
     """Point class"""
 
-    def __init__(self, point: np.ndarray) -> None:
+    def __init__(self, point: np.ndarray, is_cast_int: bool = False) -> None:
         point = np.asarray(point)
         if point.shape == (2,):
             point = point.reshape((1, 2))
         assert len(point) == 1
-        super().__init__(points=point)
+        super().__init__(points=point, is_cast_int=is_cast_int)
 
     @property
     def asarray(self):
         return self.points[0]
+
+    @asarray.setter
+    def asarray(self, value: np.ndarray):
+        """Setter for the asarray property
+
+        Args:
+            value (np.ndarray): value of the asarray to be changed
+        """
+        point = np.asarray(value)
+        if point.shape == (2,):
+            point = point.reshape((1, 2))
+        assert len(point) == 1
+        self.points = value
 
     @property
     def centroid(self):
         return self.asarray
 
     @property
-    def shapely(self) -> SPoint:
-        """Returns the Shapely.Point representation of the contour.
+    def shapely_edges(self) -> SPoint:
+        """Returns the Shapely.Point representation of the point.
         See https://shapely.readthedocs.io/en/stable/reference/shapely.Point.html
 
         Returns:
             Point: shapely.Point object
         """
         return SPoint(self.asarray)
+
+    @property
+    def shapely_surface(self) -> SPoint:
+        """Same as shapely curve in this case
+
+        Returns:
+            SPoint: shapely.Point object
+        """
+        return self.shapely_surface
 
     @staticmethod
     def order_idxs_points_by_dist(points: np.ndarray, desc: bool = False) -> np.ndarray:

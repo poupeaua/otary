@@ -5,8 +5,8 @@ Unit Tests for the generic image methods
 import pytest
 import numpy as np
 
-from src.geometry import Contour, Segment
-from src.image import Image, ContoursRender, SegmentsRender
+from src.geometry import Polygon, Segment
+from src.image import Image, PolygonsRender, SegmentsRender
 
 
 class TestImageGlobalMethods:
@@ -16,7 +16,7 @@ class TestImageGlobalMethods:
         for x in range(2, 4):
             for y in range(2, 4):
                 img0.asarray[x, y] = 0
-        img1 = img0.copy().rotate(angle=180)
+        img1 = img0.copy().rotate(angle=180, is_degree=True)
         assert img0.iou(img1) == 1 / 7
 
     def test_iou_zero(self):
@@ -24,7 +24,7 @@ class TestImageGlobalMethods:
         for x in range(3, 5):
             for y in range(3, 5):
                 img0.asarray[x, y] = 0
-        img1 = img0.copy().rotate(angle=180)
+        img1 = img0.copy().rotate(angle=180, is_degree=True)
         assert img0.iou(img1) == 0
 
     def test_iou_one(self):
@@ -43,7 +43,7 @@ class TestImageScoreMethods:
         for x in range(2, 4):
             for y in range(2, 4):
                 img0.asarray[x, y] = 0
-        img1 = img0.copy().rotate(angle=180)
+        img1 = img0.copy().rotate(angle=180, is_degree=True)
         assert img0.score_contains(img1) == 1 / 4
 
     def test_score_contains_zero(self):
@@ -51,7 +51,7 @@ class TestImageScoreMethods:
         for x in range(3, 5):
             for y in range(3, 5):
                 img0.asarray[x, y] = 0
-        img1 = img0.copy().rotate(angle=180)
+        img1 = img0.copy().rotate(angle=180, is_degree=True)
         assert img0.score_contains(img1) == 0
 
     def test_score_contains_one(self):
@@ -65,13 +65,13 @@ class TestImageScoreMethods:
     def test_score_contains_contour_one(self):
         shape = (5, 5)
         img = Image.from_fillvalue(shape=shape, value=255)
-        cnt = Contour(
+        cnt = Polygon(
             points=[[0, 0], [0, shape[0]], [shape[1], shape[0]], [shape[1], 0]]
         )
-        img.draw_contours(
-            contours=[cnt], render=ContoursRender(default_color=(0, 0, 0))
+        img.draw_polygons(
+            polygons=[cnt], render=PolygonsRender(default_color=(0, 0, 0))
         )
-        assert img.score_contains_contour(contour=cnt) == 1
+        assert img.score_contains_polygon(polygon=cnt) == 1
 
     def test_score_contains_segment_one(self):
         shape = (5, 5)

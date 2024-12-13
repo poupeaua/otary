@@ -48,8 +48,8 @@ def cast_geometry_to_array(objects: list | np.ndarray, _type: Any):
     """
     if _type in [geo.Point, geo.Segment, geo.Vector]:
         objects = [s.asarray.astype(np.int64) for s in objects]
-    elif _type == geo.Contour:
-        objects = [s.lines.astype(np.int64) for s in objects]
+    elif _type == geo.Polygon:
+        objects = [s.segments.astype(np.int64) for s in objects]
     else:
         raise RuntimeError(f"The type {_type} is unexpected.")
     return objects

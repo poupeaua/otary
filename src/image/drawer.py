@@ -10,13 +10,13 @@ import cv2
 import numpy as np
 
 import src.geometry as geo
-from src.core.dataclass.ocrsingleoutput import OcrSingleOutput
+from src.cv.ocr.dataclass.ocrsingleoutput import OcrSingleOutput
 from src.image.utils.tools import prep_obj_draw
 from src.image.utils.render import (
     Render,
     CirclesRender,
     SegmentsRender,
-    ContoursRender,
+    PolygonsRender,
     OcrSingleOutputRender,
 )
 from src.image.base import BaseImage
@@ -96,20 +96,21 @@ class DrawerImage(BaseImage, ABC):
         self.asarray = im_array
         return self
 
-    def draw_contours(
-        self, contours: list[geo.Contour], render: ContoursRender = ContoursRender()
+    def draw_polygons(
+        self, polygons: list[geo.Polygon], render: PolygonsRender = PolygonsRender()
     ) -> Self:
-        """Add contours in the image
+        """Draw polygons in the image
 
         Args:
-            contours (list[geo.Contour]): list of Contour objects
+            polygons (list[Polygon]): list of Polygon objects
+            render (PolygonsRender): PolygonRender object
 
         Returns:
-            DrawerImage: image with the added contours
+            Image: image with the added polygons
         """
-        assert isinstance(render, ContoursRender)
-        for cnt in contours:
-            self.draw_segments(segments=cnt.lines, render=render)
+        assert isinstance(render, PolygonsRender)
+        for cnt in polygons:
+            self.draw_segments(segments=cnt.segments, render=render)
         return self
 
     def draw_ocr_outputs(
@@ -125,7 +126,7 @@ class DrawerImage(BaseImage, ABC):
             ocr_outputs (list[OcrSingleOutput]): list of OcrSingleOutput dataclass.
 
         Returns:
-            (Image): a new image with the bounding boxes displayed
+            Image: a new image with the bounding boxes displayed
         """
         assert isinstance(render, OcrSingleOutputRender)
         im_array = self.__pre_draw(n_objects=len(ocr_outputs), render=render)

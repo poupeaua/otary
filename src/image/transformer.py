@@ -150,6 +150,7 @@ class TransformerImage(BaseImage, ABC):
         Args:
             kernel (tuple, optional): kernel to dilate. Defaults to (5, 5).
             iterations (int, optional): number of dilatation iterations. Defaults to 1.
+            dilate_black_pixels (bool, optional): whether to dilate black pixels or not
 
         Returns:
             Self: image dilated
@@ -180,6 +181,50 @@ class TransformerImage(BaseImage, ABC):
             )
         return self
 
+    def erode(
+        self,
+        kernel: tuple = (5, 5),
+        iterations: int = 1,
+        erode_black_pixels: bool = True,
+    ) -> Self:
+        """Erode the image by making the black pixels shrink in the image.
+        The anti-dilatation can be parametrize thanks to the kernel and iterations
+        arguments.
+
+        Args:
+            kernel (tuple, optional): kernel to erode. Defaults to (5, 5).
+            iterations (int, optional): number of iterations. Defaults to 1.
+            erode_black_pixels (bool, optional): whether to erode black pixels or not
+
+        Returns:
+            Self: image eroded
+        """
+        if erode_black_pixels:
+            self.asarray = (
+                1
+                - np.asarray(
+                    cv2.erode(
+                        self.binaryrev(),
+                        kernel=np.ones(kernel, np.uint8),
+                        iterations=iterations,
+                    ),
+                    dtype=np.uint8,
+                )
+            ) * 255
+        else:
+            self.asarray = (
+                np.asarray(
+                    cv2.erode(
+                        self.binary(),
+                        kernel=np.ones(kernel, np.uint8),
+                        iterations=iterations,
+                    ),
+                    dtype=np.uint8,
+                )
+                * 255
+            )
+        return self
+
     def shift(self, shift: np.ndarray, mode: str = "constant") -> Self:
         """Shift the image doing a translation operation
 
@@ -196,14 +241,15 @@ class TransformerImage(BaseImage, ABC):
         return self
 
     def rotate(
-        self, angle: float, is_degree: bool = True, reshape: bool = True
+        self, angle: float, is_degree: bool = False, reshape: bool = True
     ) -> Self:
         """Rotate the image by a given angle.
 
         Args:
             angle (float): angle to rotate the image
             is_degree (bool, optional): whether the angle is in degree or not.
-                If not it is considered to be in radians. Defaults to True.
+                If not it is considered to be in radians.
+                Defaults to False which means radians.
             reshape (bool, optional): scipy reshape option. Defaults to True.
 
         Returns:
@@ -326,8 +372,15 @@ class TransformerImage(BaseImage, ABC):
 
     def crop(self, x0: int, y0: int, x1: int, y1: int) -> Self:
         """Crop the image. A straight rectangle is used for cropping.
+        This function inputs represent the top-left and bottom-right points.
+
         This method does not provide a way to extract a rotated rectangle or a
         different shape from the image.
+
+        Remember that in this library the x coordinates represent the y coordinates of
+        the image array (horizontal axis of the image).
+        The array representation is always rows then columns.
+        In the Image object this is the contrary.
 
         Args:
             x0 (int): x coordinate of the first point
@@ -338,8 +391,38 @@ class TransformerImage(BaseImage, ABC):
         Returns:
             Self: image cropped
         """
-        self.asarray = self.asarray[x0 : x1 + 1, y0 : y1 + 1]
+        self.asarray = self.asarray[int(y0) : int(y1) + 1, int(x0) : int(x1) + 1]
         return self
+
+    def crop_from_topleft(self, topleft: np.ndarray, width: int, height: int) -> Self:
+        """Crop the image from a rectangle defined by its top-left point, its width and
+        its height.
+
+        Args:
+            topleft (np.ndarray): (x, y) coordinates of the top-left point
+            width (int): width of the rectangle to crop
+            height (int): height of the rectangle to crop
+
+        Returns:
+            Self: image cropped
+        """
+        return self.crop(
+            x0=topleft[0], y0=topleft[1], x1=topleft[0] + width, y1=topleft[1] + height
+        )
+
+    def crop_from_axis_aligned_bbox(self, bbox: geo.Rectangle) -> Self:
+        """Crop the image from a Axis-Aligned Bounding Box (AABB)
+
+        Args:
+            bbox (geo.Rectangle): axis-aligned bounding box
+
+        Returns:
+            Self: cropped image
+        """
+        topleft = np.asarray([bbox.xmin, bbox.ymin])
+        height = int(bbox.ymax - bbox.ymin)
+        width = int(bbox.xmax - bbox.xmin)
+        return self.crop_from_topleft(topleft=topleft, width=width, height=height)
 
     def crop_around_segment_horizontal(
         self,

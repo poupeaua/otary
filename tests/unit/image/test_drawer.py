@@ -2,11 +2,10 @@
 Unit Tests for the drawer image methods
 """
 
-import pytest
 import numpy as np
 
-from src.core.dataclass.ocrsingleoutput import OcrSingleOutput
-from src.geometry import Contour, Rectangle
+from src.cv.ocr.dataclass.ocrsingleoutput import OcrSingleOutput
+from src.geometry import Polygon, Rectangle
 from src.image import Image, SegmentsRender
 
 
@@ -28,8 +27,8 @@ class TestDrawerImage:
 
     def test_draw_contours(self):
         points = np.array([[0, 0], [1, 1], [2, 3]])
-        cnt = Contour(points=points)
-        Image.from_fillvalue(shape=(5, 5, 3), value=0).draw_contours(contours=[cnt])
+        cnt = Polygon(points=points)
+        Image.from_fillvalue(shape=(5, 5, 3), value=0).draw_polygons(polygons=[cnt])
 
     def test_draw_ocrso(self):
         ocrso = OcrSingleOutput(

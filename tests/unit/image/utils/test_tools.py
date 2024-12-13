@@ -5,7 +5,7 @@ Unit tests for tools image funtions
 import pytest
 import numpy as np
 
-from src.geometry import Point, Contour
+from src.geometry import Point, Polygon
 from src.image.utils.tools import is_color_tuple, interpolate_color, prep_obj_draw
 
 
@@ -66,12 +66,12 @@ class TestPrepObjDraw:
         assert objects.dtype.type is np.int64
 
     def test_prep_obj_draw_contours(self):
-        cnt = Contour([[0, 0], [1, 3], [5, 0]])
-        objects = prep_obj_draw(objects=[cnt], _type=Contour)
+        cnt = Polygon([[0, 0], [1, 3], [5, 0]])
+        objects = prep_obj_draw(objects=[cnt], _type=Polygon)
         assert objects.dtype.type is np.int64
 
     def test_prep_obj_draw_error_type(self):
-        cnt = Contour([[0, 0], [1, 3], [5, 0]])
+        cnt = Polygon([[0, 0], [1, 3], [5, 0]])
         with pytest.raises(RuntimeError):
             prep_obj_draw(objects=[cnt], _type=Point)
 

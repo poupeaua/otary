@@ -5,7 +5,7 @@ by all type of geometry objects
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Optional, Self, TYPE_CHECKING
 import copy
 from abc import ABC, abstractmethod
 from shapely import (
@@ -19,17 +19,35 @@ from shapely import (
 import cv2
 import numpy as np
 
+if TYPE_CHECKING:
+    from src.geometry import Polygon, Rectangle  # Import only for type checking
+
 
 class GeometryEntity(ABC):
     """GeometryEntity class which is the abstract base class for all geometry classes"""
 
-    def __init__(self, points) -> None:
-        self.points = copy.deepcopy(np.array(points))
+    def __init__(self, points, is_cast_int: bool = False) -> None:
+        _arr = np.asarray(points) if not is_cast_int else np.asarray(points).astype(int)
+        self.points = copy.deepcopy(_arr)
+        self.is_cast_int = is_cast_int
+
+    # --------------------------------- PROPERTIES ------------------------------------
 
     @property
     @abstractmethod
-    def shapely(self) -> GeometryCollection:
-        """Representation of the geometric object in the shapely library"""
+    def shapely_edges(self) -> GeometryCollection:
+        """Representation of the geometric object in the shapely library
+        as a geometrical object defined only as a curve with no area. Particularly
+        useful to look for points intersections
+        """
+
+    @property
+    @abstractmethod
+    def shapely_surface(self) -> GeometryCollection:
+        """Representation of the geometric object in the shapely library
+        as a geometrical object with an area and a border. Particularly useful
+        to check if two geometrical objects are contained within each other or not.
+        """
 
     @property
     def n_points(self) -> int:
@@ -42,12 +60,17 @@ class GeometryEntity(ABC):
 
     @property
     def asarray(self) -> np.ndarray:
-        """Representation of the object as a numpy array
-
-        Returns:
-            np.ndarray: numpy array representation of the object
-        """
+        """Array representation of the geometry object"""
         return self.points
+
+    @asarray.setter
+    def asarray(self, value: np.ndarray):
+        """Setter for the asarray property
+
+        Args:
+            value (np.ndarray): value of the asarray to be changed
+        """
+        self.points = value
 
     @property
     def area(self) -> float:
@@ -77,17 +100,47 @@ class GeometryEntity(ABC):
         """
         return np.mean(self.points, axis=0)
 
-    def copy(self):
-        """Create a copy of the geometry entity object
+    @property
+    def xmax(self) -> float:
+        """Get the maximum X coordinate of the geometry entity
 
         Returns:
-            GeometryEntity: copy of the geometry entity object
+            np.ndarray: 2D point
         """
-        return copy.deepcopy(self)
+        return np.max(self.asarray[:, 0])
+
+    @property
+    def xmin(self) -> float:
+        """Get the minimum X coordinate of the geometry entity
+
+        Returns:
+            np.ndarray: 2D point
+        """
+        return np.min(self.asarray[:, 0])
+
+    @property
+    def ymax(self) -> float:
+        """Get the maximum Y coordinate of the geometry entity
+
+        Returns:
+            np.ndarray: 2D point
+        """
+        return np.max(self.asarray[:, 1])
+
+    @property
+    def ymin(self) -> float:
+        """Get the minimum Y coordinate of the geometry entity
+
+        Returns:
+            np.ndarray: 2D point
+        """
+        return np.min(self.asarray[:, 1])
+
+    # ---------------------------- MODIFICATION METHODS -------------------------------
 
     def rotate(
         self, angle: float, degree: bool = False, pivot: Optional[np.ndarray] = None
-    ):
+    ) -> Self:
         """Rotate the geometry entity object.
         A pivot point can be passed as an argument to rotate the object around the pivot
 
@@ -125,7 +178,7 @@ class GeometryEntity(ABC):
 
     def rotate_around_image_center(
         self, img: np.ndarray, angle: float, degree: bool = False
-    ):
+    ) -> Self:
         """Given an geometric object and an image, rotate the object around
         the image center point.
 
@@ -159,7 +212,7 @@ class GeometryEntity(ABC):
             )
         return vector
 
-    def shift(self, vector: np.ndarray):
+    def shift(self, vector: np.ndarray) -> Self:
         """Shift the geometry entity by the vector direction
 
         Args:
@@ -174,6 +227,55 @@ class GeometryEntity(ABC):
         vector = self.__validate_shift_vector(vector=vector)
         self.points = self.points + vector
         return self
+
+    def clamp(
+        self,
+        xmin: float = -np.inf,
+        xmax: float = np.inf,
+        ymin: float = -np.inf,
+        ymax: float = np.inf,
+    ) -> Self:
+        """Clamp the Geometry entity so that the x and y coordinates fit in the
+        min and max values in parameters.
+
+        Args:
+            xmin (float): x coordinate minimum
+            xmax (float): x coordinate maximum
+            ymin (float): y coordinate minimum
+            ymax (float): y coordinate maximum
+
+        Returns:
+            GeometryEntity: clamped GeometryEntity
+        """
+        self.asarray[:, 0] = np.clip(self.asarray[:, 0], xmin, xmax)  # x values
+        self.asarray[:, 1] = np.clip(self.asarray[:, 1], ymin, ymax)  # y values
+        return self
+
+    def normalize(self, x: float, y: float) -> Self:
+        """Normalize the geometry entity by dividing the points by a norm on the
+        x and y coordinates.
+
+        Args:
+            x (float): x coordinate norm
+            y (float): y coordinate norm
+
+        Returns:
+            GeometryEntity: normalized GeometryEntity
+        """
+        self.asarray = self.asarray / np.array([x, y])
+        return self
+
+    # ------------------------------- CLASSIC METHODS ---------------------------------
+
+    def copy(self) -> Self:
+        """Create a copy of the geometry entity object
+
+        Returns:
+            GeometryEntity: copy of the geometry entity object
+        """
+        return type(self)(
+            points=copy.deepcopy(self.asarray), is_cast_int=self.is_cast_int
+        )
 
     def intersection(
         self, other: GeometryEntity, only_points: bool = True
@@ -190,7 +292,7 @@ class GeometryEntity(ABC):
         Returns:
             np.ndarray: list of n points of shape (n, 2)
         """
-        it = self.shapely.intersection(other=other.shapely)
+        it = self.shapely_edges.intersection(other=other.shapely_edges)
 
         if isinstance(it, SPoint):  # only one intersection point
             return np.array([[it.x, it.y]])
@@ -205,6 +307,88 @@ class GeometryEntity(ABC):
 
         return np.array([])
 
+    def enclosing_axis_aligned_bbox(self) -> "Rectangle":
+        """Compute the smallest area enclosing Axis-Aligned Bounding Box (AABB)
+        See: https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html
+
+        Returns:
+            Rectangle: Rectangle object
+        """
+        # pylint: disable=import-outside-toplevel
+        from src.geometry import Rectangle
+
+        topleft_x, topleft_y, width, height = cv2.boundingRect(array=self.asarray)
+        bbox = np.array(
+            [
+                [topleft_x, topleft_y],
+                [topleft_x + width, topleft_y],
+                [topleft_x + width, topleft_y + height],
+                [topleft_x, topleft_y + height],
+            ]
+        )
+        return Rectangle(bbox)
+
+    def enclosing_oriented_bbox(self) -> "Rectangle":
+        """Compute the smallest area enclosing Oriented Bounding Box (OBB)
+        See: https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html
+
+        Returns:
+            Rectangle: Rectangle object
+        """
+        # pylint: disable=import-outside-toplevel
+        from src.geometry import Rectangle
+
+        rect = cv2.minAreaRect(self.asarray)
+        bbox = cv2.boxPoints(rect)
+        return Rectangle(bbox)
+
+    def enclosing_convex_hull(self) -> "Polygon":
+        """Compute the smallest area enclosing Convex Hull
+        See: https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html
+
+        Returns:
+            Polygon: Polygon object
+        """
+        # pylint: disable=import-outside-toplevel
+        from src.geometry import Polygon
+
+        convexhull = np.squeeze(cv2.convexHull(self.asarray))
+        return Polygon(convexhull)
+
+    def distances_to_point(self, point: np.ndarray) -> np.ndarray:
+        """Get the distance from all points in the geometry entity to the point
+
+        Args:
+            point (np.ndarray): 2D point
+
+        Returns:
+            np.ndarray: array of the same len as the number of point in the geometry
+                entity.
+        """
+        return np.linalg.norm(self.asarray - point, axis=1)
+
+    def shortest_dist_to_point(self, point: np.ndarray) -> float:
+        """Compute the shortest distance from the geometry entity to the point
+
+        Args:
+            point (np.ndarray): 2D point
+
+        Returns:
+            float: shortest distance from the geometry entity to the point
+        """
+        return np.min(self.distances_to_point(point=point))
+
+    def longest_dist_to_point(self, point: np.ndarray) -> float:
+        """Compute the longest distance from the geometry entity to the point
+
+        Args:
+            point (np.ndarray): 2D point
+
+        Returns:
+            float: longest distance from the geometry entity to the point
+        """
+        return np.max(self.distances_to_point(point=point))
+
     def index_farthest_point_from(self, point: np.ndarray) -> int:
         """Get the index of the farthest point from a given point
 
@@ -214,8 +398,7 @@ class GeometryEntity(ABC):
         Returns:
             int: the index of the farthest point in the entity from the input point
         """
-        distances = np.linalg.norm(self.asarray - point, axis=1)
-        return np.argmax(distances).astype(int)
+        return np.argmax(self.distances_to_point(point=point)).astype(int)
 
     def index_closest_point_from(self, point: np.ndarray) -> int:
         """Get the index of the closest point from a given point
@@ -226,10 +409,9 @@ class GeometryEntity(ABC):
         Returns:
             int: the index of the closest point in the entity from the input point
         """
-        distances = np.linalg.norm(self.asarray - point, axis=1)
-        return np.argmin(distances).astype(int)
+        return np.argmin(self.distances_to_point(point=point)).astype(int)
 
-    def indices_shared_close_points(
+    def indices_shared_approx_points(
         self, other: GeometryEntity, margin_dist_error: float = 5
     ) -> np.ndarray:
         """Compute the point indices from this entity that correspond to shared
@@ -254,7 +436,7 @@ class GeometryEntity(ABC):
                 list_index_shared_points.append(i)
         return np.array(list_index_shared_points).astype(int)
 
-    def shared_close_points(
+    def shared_approx_points(
         self, other: GeometryEntity, margin_dist_error: float = 5
     ) -> np.ndarray:
         """Get the shared points between two geometric objects.
@@ -271,7 +453,7 @@ class GeometryEntity(ABC):
             np.ndarray: list of points identified as shared between the two geometric
                 objects
         """
-        indices = self.indices_shared_close_points(
+        indices = self.indices_shared_approx_points(
             other=other, margin_dist_error=margin_dist_error
         )
         return self.asarray[indices]

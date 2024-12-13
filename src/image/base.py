@@ -5,11 +5,14 @@ It only contains very low-level, basic and generic image methods.
 
 from __future__ import annotations
 
+import copy
 from typing import Self, Optional
 from abc import ABC
 
 import cv2
 import numpy as np
+import pymupdf
+from PIL import Image as ImagePIL
 
 from src.image.utils.readfile import read_pdf_to_images
 
@@ -44,8 +47,35 @@ class BaseImage(ABC):
         return cls(np.full(shape=shape, fill_value=value, dtype=np.uint8))
 
     @classmethod
-    def from_fileimage(cls, filepath: str, as_grayscale: bool = False) -> Self:
-        """Create a Image object from a file image path
+    def from_jpg(
+        cls, filepath: str, as_grayscale: bool = False, resolution: Optional[int] = 3508
+    ) -> Self:
+        """Create a Image object from a JPG or JPEG file path
+
+        Args:
+            filepath (str): path to the JPG image file
+            as_grayscale (bool, optional): turn the image in grayscale.
+                Defaults to False.
+
+        Returns:
+            Self: Image object
+        """
+        arr = np.asarray(cv2.imread(filepath, 1 - int(as_grayscale)))
+        original_height, original_width = arr.shape[:2]
+
+        if resolution is not None:
+            # Calculate the aspect ratio
+            aspect_ratio = original_width / original_height
+            new_width = int(resolution * aspect_ratio)
+            arr = cv2.resize(src=arr, dsize=(new_width, resolution))
+
+        return cls(arr)
+
+    @classmethod
+    def from_png(
+        cls, filepath: str, as_grayscale: bool = False, resolution: Optional[int] = 3508
+    ) -> Self:
+        """Create a Image object from a PNG file image path
 
         Args:
             filepath (str): path to the image file
@@ -55,12 +85,9 @@ class BaseImage(ABC):
         Returns:
             Self: Image object
         """
-        valid_format = ["png", "jpg", "jpeg"]
-        file_format = filepath.split(".")[-1]
-        if file_format not in valid_format:
-            raise ValueError(f"The filepath is not in any valid format {valid_format}")
-        arr = np.asarray(cv2.imread(filepath, 1 - int(as_grayscale)))
-        return cls(arr)
+        return cls.from_jpg(
+            filepath=filepath, as_grayscale=as_grayscale, resolution=resolution
+        )
 
     @classmethod
     def from_pdf(
@@ -69,7 +96,9 @@ class BaseImage(ABC):
         as_grayscale: bool = False,
         page_nb: int = 0,
         resolution: Optional[int] = 3508,
+        clip_pct: Optional[pymupdf.Rect] = None,
     ) -> Self:
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
         """Create an Image object from a pdf file.
 
         Args:
@@ -80,24 +109,50 @@ class BaseImage(ABC):
                 page that will be turned into an image. Defaults to 0.
             resolution (Optional[int], optional): resolution of the loaded image.
                 Defaults to 3508.
+            clip_pct (pymmupdf.Rect, optional): optional zone to extract in the image.
+                This is particularly useful to load into memory only a small part of the
+                image without loading everything into memory. This reduces considerably
+                the image loading time especially combined with a high resolution.
 
         Returns:
             Self: Image object
         """
-        images = read_pdf_to_images(filepath_or_stream=filepath, resolution=resolution)
-
-        try:
-            arr = images[page_nb]
-        except IndexError as exc:
-            raise IndexError(
-                f"The page number {page_nb} is not correct as the pdf contains \
-                {len(images)}"
-            ) from exc
+        arr = read_pdf_to_images(
+            filepath_or_stream=filepath,
+            resolution=resolution,
+            page_nb=page_nb,
+            clip_pct=clip_pct,
+        )[0]
 
         if as_grayscale:
             arr = cv2.cvtColor(arr, cv2.COLOR_BGR2GRAY)
 
         return cls(arr)
+
+    @classmethod
+    def from_file(cls, filepath: str, as_grayscale: bool = False) -> Self:
+        """Create a Image object from a file image path
+
+        Args:
+            filepath (str): path to the image file
+            as_grayscale (bool, optional): turn the image in grayscale.
+                Defaults to False.
+
+        Returns:
+            Self: Image object
+        """
+        valid_format = ["png", "jpg", "jpeg", "pdf"]
+
+        file_format = filepath.split(".")[-1]
+
+        if file_format in ["png"]:
+            return cls.from_png(filepath=filepath, as_grayscale=as_grayscale)
+        if file_format in ["jpg", "jpeg"]:
+            return cls.from_jpg(filepath=filepath, as_grayscale=as_grayscale)
+        if file_format in ["pdf"]:
+            return cls.from_pdf(filepath=filepath, as_grayscale=as_grayscale)
+
+        raise ValueError(f"The filepath is not in any valid format {valid_format}")
 
     @property
     def asarray(self) -> np.ndarray:
@@ -123,8 +178,8 @@ class BaseImage(ABC):
         return bool(len(self.asarray.shape) == 2)
 
     @property
-    def shape(self) -> tuple:
-        """Returns the image shape value
+    def shape_array(self) -> tuple:
+        """Returns the array shape value (height, width, channel)
 
         Returns:
             tuple[int]: image shape
@@ -195,17 +250,61 @@ class BaseImage(ABC):
     def corners(self) -> np.ndarray:
         """Returns the corners in the following order:
 
-        0. bottom left corner
-        1. bottom right corner
-        2. top right corner
-        3. top left corner
+        0. top left corner
+        1. top right corner
+        2. bottom right corner
+        3. bottom left corner
 
         Returns:
             np.ndarray: array containing the corners
         """
         return np.array(
-            [[0, 0], [self.width, 0], [self.width, self.height], [0, self.height]]
+            [self.top_left, self.top_right, self.bottom_right, self.bottom_left]
         )
+
+    @property
+    def bottom_right(self) -> np.ndarray:
+        """Get the bottom right point coordinate of the image
+
+        Returns:
+            np.ndarray: 2D point
+        """
+        return np.array([self.width, self.height], dtype=int)
+
+    @property
+    def bottom_left(self) -> np.ndarray:
+        """Get the bottom right point coordinate of the image
+
+        Returns:
+            np.ndarray: 2D point
+        """
+        return np.array([0, self.height], dtype=int)
+
+    @property
+    def top_right(self) -> np.ndarray:
+        """Get the bottom right point coordinate of the image
+
+        Returns:
+            np.ndarray: 2D point
+        """
+        return np.array([self.width, 0], dtype=int)
+
+    @property
+    def top_left(self) -> np.ndarray:
+        """Get the bottom right point coordinate of the image
+
+        Returns:
+            np.ndarray: 2D point
+        """
+        return np.array([0, 0], dtype=int)
+
+    def as_pil(self) -> ImagePIL.Image:
+        """Return the image as PIL Image
+
+        Returns:
+            ImagePIL: PIL Image
+        """
+        return ImagePIL.fromarray(self.asarray)
 
     def as_grayscale(self) -> Self:
         """Generate the image in grayscale of shape (height, width)
@@ -243,7 +342,9 @@ class BaseImage(ABC):
         Returns:
             Self: new image with a single color of the same size as original.
         """
-        self.asarray = np.full(shape=self.shape, fill_value=fill_value, dtype=np.uint8)
+        self.asarray = np.full(
+            shape=self.shape_array, fill_value=fill_value, dtype=np.uint8
+        )
         return self
 
     def as_white(self) -> Self:
@@ -265,11 +366,19 @@ class BaseImage(ABC):
             bool: True if the objects have the same shape, False otherwise
         """
         if consider_channel:
-            shape0 = self.shape
-            shape1 = other.shape
+            shape0 = self.shape_array
+            shape1 = other.shape_array
         else:
-            shape0 = self.shape if len(self.shape) == 2 else self.shape[:-1]
-            shape1 = self.shape if len(self.shape) == 2 else self.shape[:-1]
+            shape0 = (
+                self.shape_array
+                if len(self.shape_array) == 2
+                else self.shape_array[:-1]
+            )
+            shape1 = (
+                self.shape_array
+                if len(self.shape_array) == 2
+                else self.shape_array[:-1]
+            )
         return shape0 == shape1
 
     def dist_pct(self, pct: float = 0.01) -> float:
@@ -277,7 +386,7 @@ class BaseImage(ABC):
         It is calculated based on the normalized side length.
 
         Args:
-            pct (float, optional): pourcentage of distance error. Defaults to 0.01,
+            pct (float, optional): percentage of distance error. Defaults to 0.01,
                 which means 1% of the normalized side length as the
                 default margin distance error.
 
@@ -286,10 +395,32 @@ class BaseImage(ABC):
         """
         return self.norm_side_length * pct
 
+    def width_pct(self, pct: float = 0.01) -> float:
+        """Width percentage of the image
+
+        Args:
+            pct (float, optional): percentage of width. Defaults to 0.01.
+
+        Returns:
+            float: Width percentage of the image value distance
+        """
+        return self.width * pct
+
+    def height_pct(self, pct: float = 0.01) -> float:
+        """Height percentage of the image
+
+        Args:
+            pct (float, optional): percentage of height. Defaults to 0.01.
+
+        Returns:
+            float: Height percentage of the image value distance
+        """
+        return self.height * pct
+
     def copy(self) -> Self:
         """Copy of the image
 
         Returns:
             Image: image copy
         """
-        return type(self)(image=self.asarray.copy())
+        return type(self)(image=copy.deepcopy(self.asarray))
