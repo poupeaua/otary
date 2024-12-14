@@ -2,7 +2,21 @@
 Module to facilitate imports in geometry
 """
 
-# ruff: noqa: F401
+__all__ = [
+    "DEFAULT_MARGIN_ANGLE_ERROR",
+    "GeometryEntity",
+    "LinearEntity",
+    "DirectedLinearEntity",
+    "Point",
+    "Segment",
+    "Vector",
+    "LinearSpline",
+    "VectorizedLinearSpline",
+    "Polygon",
+    "Triangle",
+    "Rectangle",
+]
+
 # pylint: disable=cyclic-import
 from src.geometry.utils.constants import DEFAULT_MARGIN_ANGLE_ERROR
 from src.geometry.entity import GeometryEntity

@@ -2,7 +2,15 @@
 Init file for image module to facilitate importation
 """
 
-# ruff: noqa: F401
+__all__ = [
+    "CirclesRender",
+    "PolygonsRender",
+    "SegmentsRender",
+    "OcrSingleOutputRender",
+    "Image",
+    "interpolate_color",
+]
+
 from src.image.utils.render import (
     CirclesRender,
     PolygonsRender,

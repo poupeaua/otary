@@ -13,9 +13,10 @@ import src.geometry as geo
 from src.image.utils.render import PolygonsRender, SegmentsRender
 from src.image.drawer import DrawerImage
 from src.image.transformer import TransformerImage
+from src.image.reader import ReaderImage
 
 
-class Image(DrawerImage, TransformerImage):
+class Image(ReaderImage, DrawerImage, TransformerImage):
     """Image class"""
 
     def show(
