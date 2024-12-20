@@ -2,7 +2,7 @@
 Curve class useful to describe any kind of curves
 """
 
-from src.geometry.linear.entity import LinearEntity
+from src.geometry.discrete.linear.entity import LinearEntity
 
 
 class LinearSpline(LinearEntity):

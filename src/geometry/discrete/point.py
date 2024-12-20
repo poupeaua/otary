@@ -5,10 +5,10 @@ Point class useful to describe any kind of points
 import numpy as np
 from shapely import Point as SPoint
 
-from src.geometry.entity import GeometryEntity
+from src.geometry.discrete.entity import DiscreteGeometryEntity
 
 
-class Point(GeometryEntity):
+class Point(DiscreteGeometryEntity):
     """Point class"""
 
     def __init__(self, point: np.ndarray, is_cast_int: bool = False) -> None:

@@ -241,7 +241,11 @@ class TransformerImage(BaseImage, ABC):
         return self
 
     def rotate(
-        self, angle: float, is_degree: bool = False, reshape: bool = True
+        self,
+        angle: float,
+        is_degree: bool = False,
+        is_clockwise: bool = True,
+        reshape: bool = True,
     ) -> Self:
         """Rotate the image by a given angle.
 
@@ -250,6 +254,8 @@ class TransformerImage(BaseImage, ABC):
             is_degree (bool, optional): whether the angle is in degree or not.
                 If not it is considered to be in radians.
                 Defaults to False which means radians.
+            is_clockwise (bool, optional): whether the rotation is clockwise or
+                counter-clockwise. Defaults to True.
             reshape (bool, optional): scipy reshape option. Defaults to True.
 
         Returns:
@@ -257,6 +263,9 @@ class TransformerImage(BaseImage, ABC):
         """
         if not is_degree:
             angle = np.rad2deg(angle)
+        if is_clockwise:
+            # by default scipy rotate is counter-clockwise
+            angle = -angle
         self.asarray = scipy.ndimage.rotate(
             input=self.asarray, angle=angle, reshape=reshape
         )

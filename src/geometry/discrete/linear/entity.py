@@ -8,10 +8,10 @@ import numpy as np
 
 from shapely import LineString
 
-from src.geometry.entity import GeometryEntity
+from src.geometry.discrete.entity import DiscreteGeometryEntity
 
 
-class LinearEntity(GeometryEntity, ABC):
+class LinearEntity(DiscreteGeometryEntity, ABC):
     """Define Linear objects"""
 
     @property

@@ -9,7 +9,7 @@ from typing import Optional
 import numpy as np
 import pymupdf
 
-from src.geometry.shape.polygon import Polygon
+from src.geometry import Polygon
 
 
 class Rectangle(Polygon):
