@@ -160,8 +160,6 @@ class GeometryEntity(ABC):
         Returns:
             GeometryEntity: normalized GeometryEntity
         """
-        self.asarray = self.asarray / np.array([x, y])
-        return self
 
     # ------------------------------- CLASSIC METHODS ---------------------------------
 

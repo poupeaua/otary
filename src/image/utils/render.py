@@ -48,10 +48,21 @@ class GeometryRender(Render, ABC):
 
 
 @dataclass
-class CirclesRender(GeometryRender):
+class PointsRender(GeometryRender):
     """Render for Point objects"""
 
-    radius: int = 3
+    radius: int = 1
+
+
+@dataclass
+class EllipseRender(GeometryRender):
+
+    is_draw_center_point_enabled: bool = False
+
+
+@dataclass
+class CirclesRender(EllipseRender):
+    """Render for Circle objects"""
 
 
 @dataclass

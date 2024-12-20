@@ -13,7 +13,7 @@ class TestDrawerImage:
 
     def test_draw_circles(self):
         points = np.array([[0, 0], [1, 1], [2, 3]])
-        Image.from_fillvalue(shape=(5, 5, 3), value=0).draw_circles(points=points)
+        Image.from_fillvalue(shape=(5, 5, 3), value=0).draw_points(points=points)
 
     def test_draw_segments(self):
         segments = np.array([[[0, 0], [1, 1]]])

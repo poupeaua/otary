@@ -5,7 +5,6 @@ ContinuousGeometryEntity module class
 from __future__ import annotations
 
 from typing import Optional, Self
-import copy
 from abc import ABC, abstractmethod
 
 import cv2
@@ -21,10 +20,17 @@ class ContinuousGeometryEntity(GeometryEntity, ABC):
     continuous or smooth geometry objects like circles, ellipse, etc...
     """
 
+    DEFAULT_N_POINTS_POLYGONAL_APPROX = 1000
+
+    def __init__(
+        self, n_points_polygonal_approx: int = DEFAULT_N_POINTS_POLYGONAL_APPROX
+    ):
+        self.n_points_polygonal_approx = n_points_polygonal_approx
+
     # --------------------------------- PROPERTIES ------------------------------------
 
     @abstractmethod
-    def polygonal_approx(self, n_points: int) -> Polygon:
+    def polygonal_approx(self, n_points: int, is_cast_int: bool) -> Polygon:
         """Generate a polygonal approximation of the continuous geometry entity
 
         Args:
@@ -239,43 +245,3 @@ class ContinuousGeometryEntity(GeometryEntity, ABC):
         return self
 
     # ------------------------------- CLASSIC METHODS ---------------------------------
-
-    def copy(self) -> Self:
-        """Create a copy of the geometry entity object
-
-        Returns:
-            GeometryEntity: copy of the geometry entity object
-        """
-        return type(self)(
-            points=copy.deepcopy(self.asarray), is_cast_int=self.is_cast_int
-        )
-
-    def __eq__(self, value: object) -> bool:
-        if not isinstance(value, ContinuousGeometryEntity):
-            return False
-        return np.array_equal(self.asarray, value.asarray)
-
-    def __add__(self, other: np.ndarray | float) -> Self:
-        self.asarray += other
-        return self
-
-    def __sub__(self, other: np.ndarray | float) -> Self:
-        self.asarray -= other
-        return self
-
-    def __mul__(self, other: np.ndarray | float) -> Self:
-        self.asarray *= other
-        return self
-
-    def __truediv__(self, other: np.ndarray | float) -> Self:
-        self.asarray = self.asarray / other
-        return self
-
-    def __len__(self) -> int:
-        return self.n_points
-
-    def __str__(self) -> str:
-        return self.__class__.__name__ + "(" + self.asarray.tolist().__str__() + ")"
-
-    def __repr__(self) -> str:
-        return self.__class__.__name__ + "(" + self.asarray.tolist().__repr__() + ")"

@@ -2,18 +2,27 @@
 Ellipse Geometric Object
 """
 
-from typing import Optional
+from typing import Optional, Self
 
 import math
 import numpy as np
 
+from shapely import Polygon as SPolygon, LinearRing
+
 from src.geometry.continuous.entity import ContinuousGeometryEntity
+from src.geometry import Polygon, Segment
 
 
 class Ellipse(ContinuousGeometryEntity):
     """Ellipse geometrical object"""
 
-    def __init__(self, foci1: np.ndarray, foci2: np.ndarray, semi_major_axis: float):
+    def __init__(
+        self,
+        foci1: np.ndarray,
+        foci2: np.ndarray,
+        semi_major_axis: float,
+        n_points_polygonal_approx: int = ContinuousGeometryEntity.DEFAULT_N_POINTS_POLYGONAL_APPROX,
+    ):
         """Initialize a Ellipse geometrical object
 
         Args:
@@ -21,9 +30,22 @@ class Ellipse(ContinuousGeometryEntity):
             foci2 (np.ndarray): second focal 2D point
             semi_major_axis (float): semi major axis value
         """
+        super().__init__(n_points_polygonal_approx=n_points_polygonal_approx)
         self.foci1 = foci1
         self.foci2 = foci2
         self.semi_major_axis = semi_major_axis  # also called "a" usually
+        self.__assert_ellipse()
+
+    def __assert_ellipse(self) -> None:
+        """Assert the parameters of the ellipse.
+        If the parameters proposed do not make up a ellipse raise an error.
+        """
+        if self.semi_major_axis <= self.linear_eccentricity:
+            raise ValueError(
+                f"The semi major-axis (a={self.semi_major_axis}) can not be smaller "
+                f"than the linear eccentricity (c={self.linear_eccentricity}). "
+                "The ellipse is thus not valid."
+            )
 
     @property
     def centroid(self) -> np.ndarray:
@@ -128,8 +150,76 @@ class Ellipse(ContinuousGeometryEntity):
             (x**2 / self.semi_major_axis**4) + (y**2 / self.semi_minor_axis**4)
         ) ** (-3 / 2)
 
+    @property
+    def shapely_surface(self) -> SPolygon:
+        """Returns the Shapely.Polygon as an surface representation of the Ellipse.
+        See https://shapely.readthedocs.io/en/stable/reference/shapely.Polygon.html
+
+        Returns:
+            Polygon: shapely.Polygon object
+        """
+        return SPolygon(
+            self.polygonal_approx(n_points=self.n_points_polygonal_approx), holes=None
+        )
+
+    @property
+    def shapely_edges(self) -> LinearRing:
+        """Returns the Shapely.LinearRing as a curve representation of the Ellipse.
+        See https://shapely.readthedocs.io/en/stable/reference/shapely.LinearRing.html
+
+        Returns:
+            LinearRing: shapely.LinearRing object
+        """
+        return LinearRing(
+            coordinates=self.polygonal_approx(n_points=self.n_points_polygonal_approx)
+        )
+
+    def polygonal_approx(self, n_points: int, is_cast_int: bool = False) -> Polygon:
+        """Generate apolygonal approximation of the ellipse.
+
+        The way is done is the following:
+        1. suppose the ellipse centered at the origin
+        2. suppose the ellipse semi major axis to be parallel with the x-axis
+        3. compute pairs of (x, y) points that belong to the ellipse using the
+            parametric equation of the ellipse.
+        4. shift all points by the same shift as the center to origin
+        5. rotate using the ellipse center pivot point
+
+        Args:
+            n_points (int): number of points that make up the ellipse
+                polygonal approximation
+            is_cast_int (bool): whether to cast to int the points coordinates or
+                not. Defaults to False
+
+        Returns:
+            Polygon: Polygon representing the ellipse as a succession of n points
+        """
+        points = []
+        for theta in np.linspace(0, 2 * math.pi, n_points):
+            x = self.semi_major_axis * math.cos(theta)
+            y = self.semi_minor_axis * math.sin(theta)
+            points.append([x, y])
+
+        poly = Polygon(points=np.asarray(points), is_cast_int=is_cast_int)
+        poly.shift(vector=self.centroid)
+        angle = Segment(points=[self.foci1, self.foci2]).slope_angle()
+        poly.rotate(angle=angle)
+
+        if is_cast_int:
+            poly.asarray = poly.asarray.astype(int)
+
+        return poly
+
     def point_belongs(self, point: np.ndarray, error: Optional[float] = None) -> bool:
         if error is None:
             error = self.semi_minor_axis * (1 / 100)
 
         # TODO
+
+    def copy(self) -> Self:
+        return type(self)(
+            foci1=self.foci1,
+            foci2=self.foci2,
+            semi_major_axis=self.semi_major_axis,
+            n_points_polygonal_approx=self.n_points_polygonal_approx,
+        )

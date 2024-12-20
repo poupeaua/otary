@@ -3,6 +3,7 @@ Init file for image module to facilitate importation
 """
 
 __all__ = [
+    "PointsRender",
     "CirclesRender",
     "PolygonsRender",
     "SegmentsRender",
@@ -12,6 +13,7 @@ __all__ = [
 ]
 
 from src.image.utils.render import (
+    PointsRender,
     CirclesRender,
     PolygonsRender,
     SegmentsRender,
