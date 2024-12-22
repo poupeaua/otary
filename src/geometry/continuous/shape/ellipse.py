@@ -2,13 +2,14 @@
 Ellipse Geometric Object
 """
 
-from typing import Optional, Self
+from typing import Self, Optional
 
 import math
 import numpy as np
 
 from shapely import Polygon as SPolygon, LinearRing
 
+from src.geometry.utils.tools import validate_shift_vector, rotate_2d_points
 from src.geometry.continuous.entity import ContinuousGeometryEntity
 from src.geometry import Polygon, Segment
 
@@ -29,12 +30,20 @@ class Ellipse(ContinuousGeometryEntity):
             foci1 (np.ndarray): first focal 2D point
             foci2 (np.ndarray): second focal 2D point
             semi_major_axis (float): semi major axis value
+            n_points_polygonal_approx (int, optional): number of points to be used in
+                the polygonal approximation.
+                Defaults to ContinuousGeometryEntity.DEFAULT_N_POINTS_POLYGONAL_APPROX.
         """
         super().__init__(n_points_polygonal_approx=n_points_polygonal_approx)
         self.foci1 = foci1
         self.foci2 = foci2
         self.semi_major_axis = semi_major_axis  # also called "a" usually
         self.__assert_ellipse()
+
+        if type(self) == Ellipse:
+            # to avoid computation in circle class instantiation
+            # since the center attribute is not defined in the Circle class yet
+            self.update_polyapprox()
 
     def __assert_ellipse(self) -> None:
         """Assert the parameters of the ellipse.
@@ -46,6 +55,8 @@ class Ellipse(ContinuousGeometryEntity):
                 f"than the linear eccentricity (c={self.linear_eccentricity}). "
                 "The ellipse is thus not valid."
             )
+
+    # --------------------------------- PROPERTIES ------------------------------------
 
     @property
     def centroid(self) -> np.ndarray:
@@ -75,6 +86,15 @@ class Ellipse(ContinuousGeometryEntity):
         return np.linalg.norm(self.foci2 - self.foci1) / 2
 
     @property
+    def focal_distance(self) -> float:
+        """Distance from any focal point to the center
+
+        Returns:
+            float: focal distance value
+        """
+        return self.linear_eccentricity
+
+    @property
     def eccentricity(self) -> float:
         """Eccentricity value of the ellipse
 
@@ -100,28 +120,12 @@ class Ellipse(ContinuousGeometryEntity):
 
     @property
     def area(self) -> float:
-        return math.pi * self.semi_major_axis * self.semi_minor_axis
-
-    def __perimeter_approx(self, n_terms: int = 5) -> float:
-        """Perimeter approximation of the ellipse using the James Ivory
-        infinite serie.
-
-        See: https://en.wikipedia.org/wiki/Ellipse#Circumference
-
-        Args:
-            n_terms (int, optional): number of n first terms to calculate and
-                add up from the infinite series. Defaults to 5.
+        """Compute the area of the ellipse
 
         Returns:
-            float: circumference approximation of the ellipse
+            float: area value
         """
-        sum = 1  # pre-calculated term n=0 equal 1
-        for n in range(1, n_terms):  # goes from term n=1 to n=(n_terms-1)
-            sum += (((1 / ((2 * n - 1) * (4**n))) * math.comb(2 * n, n)) ** 2) * (
-                self.h**n
-            )
-
-        return math.pi * (self.semi_major_axis + self.semi_minor_axis) * sum
+        return math.pi * self.semi_major_axis * self.semi_minor_axis
 
     @property
     def perimeter(self) -> float:
@@ -132,9 +136,8 @@ class Ellipse(ContinuousGeometryEntity):
         Returns:
             float: perimeter value
         """
-        return self.__perimeter_approx()
+        return self.perimeter_approx()
 
-    @property
     def curvature(self, point: np.ndarray) -> float:
         """Curvature at the point defined as parameter
 
@@ -158,9 +161,7 @@ class Ellipse(ContinuousGeometryEntity):
         Returns:
             Polygon: shapely.Polygon object
         """
-        return SPolygon(
-            self.polygonal_approx(n_points=self.n_points_polygonal_approx), holes=None
-        )
+        return SPolygon(self.polyaprox.asarray, holes=None)
 
     @property
     def shapely_edges(self) -> LinearRing:
@@ -170,9 +171,105 @@ class Ellipse(ContinuousGeometryEntity):
         Returns:
             LinearRing: shapely.LinearRing object
         """
-        return LinearRing(
-            coordinates=self.polygonal_approx(n_points=self.n_points_polygonal_approx)
-        )
+        return LinearRing(coordinates=self.polyaprox.asarray)
+
+    # ---------------------------- MODIFICATION METHODS -------------------------------
+
+    def rotate(
+        self,
+        angle: float,
+        is_degree: bool = False,
+        is_clockwise: bool = True,
+        pivot: Optional[np.ndarray] = None,
+    ) -> Self:
+        """Rotate the ellipse around a pivot point.
+
+        Args:
+            angle (float): angle to rotate the ellipse
+            is_degree (bool, optional): whether the angle is in degrees. Defaults to False.
+            is_clockwise (bool, optional): whether the rotation is clockwise. Defaults to True.
+            pivot (Optional[np.ndarray], optional): pivot point to rotate around. Defaults to None.
+
+        Returns:
+            Self: rotated ellipse object
+        """
+        if is_degree:
+            angle = math.radians(angle)
+        if is_clockwise:
+            angle = -angle
+
+        if pivot is None:
+            pivot = self.centroid
+
+        self.foci1 = rotate_2d_points(self.foci1, angle, pivot)
+        self.foci2 = rotate_2d_points(self.foci2, angle, pivot)
+        self.update_polyapprox()
+        return self
+
+    def shift(self, vector: np.ndarray) -> Self:
+        """Shift the ellipse by a given vector.
+
+        Args:
+            vector (np.ndarray): vector to shift the ellipse
+
+        Returns:
+            Self: shifted ellipse object
+        """
+        validate_shift_vector(vector)
+        self.foci1 += vector
+        self.foci2 += vector
+        self.update_polyapprox()
+        return self
+
+    def normalize(self, x: float, y: float) -> Self:
+        """Normalize the ellipse to a given bounding box.
+
+        Args:
+            x (float): width of the bounding box
+            y (float): height of the bounding box
+
+        Returns:
+            Self: normalized ellipse object
+        """
+        factor = np.array([x, y])
+        self.foci1 = self.foci1 / factor
+        self.foci2 = self.foci2 / factor
+
+        self.update_polyapprox()
+        return self
+
+    # ------------------------------- CLASSIC METHODS ---------------------------------
+
+    def perimeter_approx(self, n_terms: int = 5, is_ramanujan: bool = False) -> float:
+        """Perimeter approximation of the ellipse using the James Ivory
+        infinite serie. In the case of the circle this always converges to the
+        exact value of the circumference no matter the number of terms.
+
+        See: https://en.wikipedia.org/wiki/Ellipse#Circumference
+
+        Args:
+            n_terms (int, optional): number of n first terms to calculate and
+                add up from the infinite series. Defaults to 5.
+            is_ramanujan (bool, optional): whether to use the Ramanujan's best
+                approximation.
+
+        Returns:
+            float: circumference approximation of the ellipse
+        """
+        if is_ramanujan:
+            return (
+                math.pi
+                * (self.semi_major_axis + self.semi_minor_axis)
+                * (1 + (3 * self.h) / (10 + math.sqrt(4 - 3 * self.h)))
+            )
+
+        sum = 1  # pre-calculated term n=0 equal 1
+        for n in range(1, n_terms):  # goes from term n=1 to n=(n_terms-1)
+            sum += (((1 / ((2 * n - 1) * (4**n))) * math.comb(2 * n, n)) ** 2) * (
+                self.h**n
+            )
+
+        return math.pi * (self.semi_major_axis + self.semi_minor_axis) * sum
 
     def polygonal_approx(self, n_points: int, is_cast_int: bool = False) -> Polygon:
         """Generate apolygonal approximation of the ellipse.
@@ -200,7 +297,7 @@ class Ellipse(ContinuousGeometryEntity):
             y = self.semi_minor_axis * math.sin(theta)
             points.append([x, y])
 
-        poly = Polygon(points=np.asarray(points), is_cast_int=is_cast_int)
+        poly = Polygon(points=np.asarray(points), is_cast_int=False)
         poly.shift(vector=self.centroid)
         angle = Segment(points=[self.foci1, self.foci2]).slope_angle()
         poly.rotate(angle=angle)
@@ -210,16 +307,25 @@ class Ellipse(ContinuousGeometryEntity):
 
         return poly
 
-    def point_belongs(self, point: np.ndarray, error: Optional[float] = None) -> bool:
-        if error is None:
-            error = self.semi_minor_axis * (1 / 100)
-
-        # TODO
-
     def copy(self) -> Self:
+        """Copy the current ellipse object
+
+        Returns:
+            Self: copied ellipse object
+        """
         return type(self)(
             foci1=self.foci1,
             foci2=self.foci2,
             semi_major_axis=self.semi_major_axis,
             n_points_polygonal_approx=self.n_points_polygonal_approx,
+        )
+
+    def __str__(self) -> str:
+        return (
+            f"Ellipse(foci1={self.foci1}, foci2={self.foci2}, a={self.semi_major_axis})"
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f"Ellipse(foci1={self.foci1}, foci2={self.foci2}, a={self.semi_major_axis})"
         )

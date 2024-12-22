@@ -107,21 +107,29 @@ class Rectangle(Polygon):
 
     @classmethod
     def from_topleft_bottomright(
-        cls, topleft: np.ndarray, bottomright: np.ndarray, is_cast_int: bool = False
+        cls,
+        topleft: np.ndarray,
+        bottomright: np.ndarray,
+        angle: float = 0,
+        is_cast_int: bool = False,
     ) -> Rectangle:
-        """_summary_
+        """Create a Rectangle object using the top left and bottom right points.
 
         Args:
-            topleft (np.ndarray): _description_
-            bottomright (np.ndarray): _description_
+            topleft (np.ndarray): top left point of the rectangle
+            bottomright (np.ndarray): bottom right point of the rectangle
 
         Returns:
-            Rectangle: _description_
+            Rectangle: new Rectangle object
         """
         width = bottomright[0] - topleft[0]
         height = bottomright[1] - topleft[1]
         return cls.from_topleft(
-            topleft=topleft, width=width, height=height, is_cast_int=is_cast_int
+            topleft=topleft,
+            width=width,
+            height=height,
+            angle=angle,
+            is_cast_int=is_cast_int,
         )
 
     @property

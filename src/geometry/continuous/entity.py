@@ -4,14 +4,13 @@ ContinuousGeometryEntity module class
 
 from __future__ import annotations
 
-from typing import Optional, Self
 from abc import ABC, abstractmethod
 
 import cv2
 import numpy as np
 
 from src.geometry.entity import GeometryEntity
-from src.geometry import Polygon
+from src.geometry import Polygon, Rectangle
 
 
 class ContinuousGeometryEntity(GeometryEntity, ABC):
@@ -25,9 +24,47 @@ class ContinuousGeometryEntity(GeometryEntity, ABC):
     def __init__(
         self, n_points_polygonal_approx: int = DEFAULT_N_POINTS_POLYGONAL_APPROX
     ):
-        self.n_points_polygonal_approx = n_points_polygonal_approx
+        """Initialize a ContinuousGeometryEntity object
+
+        Args:
+            n_points_polygonal_approx (int, optional): n points to be used in
+                the polygonal approximation.
+                Defaults to DEFAULT_N_POINTS_POLYGONAL_APPROX.
+        """
+        self._n_points_polygonal_approx = n_points_polygonal_approx
 
     # --------------------------------- PROPERTIES ------------------------------------
+
+    @property
+    def n_points_polygonal_approx(self) -> int:
+        """Get the number of points for the polygonal approximation.
+
+        Returns:
+            int: The number of points used in the polygonal approximation.
+        """
+        return self._n_points_polygonal_approx
+
+    @n_points_polygonal_approx.setter
+    def n_points_polygonal_approx(self, value):
+        """
+        Set the number of points for the polygonal approximation.
+        This would also update the polygonal approximation of the geometry entity.
+
+        Args:
+            value (int): The number of points to be used in the polygonal approximation.
+        """
+        self._n_points_polygonal_approx = value
+        self.update_polyapprox()
+
+    @property
+    def polyaprox(self) -> Polygon:
+        """Generate a polygonal approximation of the continuous geometry entity
+        No setter is defined for this property as it is a read-only property.
+
+        Returns:
+            Polygon: polygonal approximation of the continuous geometry entity
+        """
+        return self._polyapprox
 
     @abstractmethod
     def polygonal_approx(self, n_points: int, is_cast_int: bool) -> Polygon:
@@ -43,41 +80,13 @@ class ContinuousGeometryEntity(GeometryEntity, ABC):
         """
 
     @property
-    def area(self) -> float:
-        """Compute the area of the geometry entity
-
-        Returns:
-            float: area value
-        """
-        return cv2.contourArea(self.points.astype(int))
-
-    @property
-    def perimeter(self) -> float:
-        """Compute the perimeter of the geometry entity
-
-        Returns:
-            float: perimeter value
-        """
-        return cv2.arcLength(self.points, True)
-
-    @property
-    def centroid(self) -> np.ndarray:
-        """Compute the centroid point which can be seen as the center of gravity of
-        the shape
-
-        Returns:
-            np.ndarray: centroid point
-        """
-        return np.mean(self.points, axis=0)
-
-    @property
     def xmax(self) -> float:
         """Get the maximum X coordinate of the geometry entity
 
         Returns:
             np.ndarray: 2D point
         """
-        # TODO
+        return self.polyaprox.xmax
 
     @property
     def xmin(self) -> float:
@@ -86,7 +95,7 @@ class ContinuousGeometryEntity(GeometryEntity, ABC):
         Returns:
             np.ndarray: 2D point
         """
-        # TODO
+        return self.polyaprox.xmin
 
     @property
     def ymax(self) -> float:
@@ -95,7 +104,7 @@ class ContinuousGeometryEntity(GeometryEntity, ABC):
         Returns:
             np.ndarray: 2D point
         """
-        # TODO
+        return self.polyaprox.ymax
 
     @property
     def ymin(self) -> float:
@@ -104,144 +113,60 @@ class ContinuousGeometryEntity(GeometryEntity, ABC):
         Returns:
             np.ndarray: 2D point
         """
-        # TODO
+        return self.polyaprox.ymin
 
     # ---------------------------- MODIFICATION METHODS -------------------------------
 
-    def rotate(
-        self,
-        angle: float,
-        is_degree: bool = False,
-        is_clockwise: bool = True,
-        pivot: Optional[np.ndarray] = None,
-    ) -> Self:
-        """Rotate the geometry entity object.
-        A pivot point can be passed as an argument to rotate the object around the pivot
-
-        Args:
-            angle (float): rotation angle
-            is_degree (bool, optional): whether the angle is in degree or radian.
-                Defaults to False which means radians.
-            is_clockwise (bool, optional): whether the rotation is clockwise or
-                counter-clockwise. Defaults to True.
-            pivot (np.ndarray, optional): pivot point.
-                Defaults to None which means that by default the centroid point of
-                the shape is taken as the pivot point.
-
-        Returns:
-            GeometryEntity: rotated geometry entity object.
-        """
-        if pivot is None:
-            pivot = self.centroid
-
-        if is_degree:  # transform angle to radian if in degree
-            angle = np.deg2rad(angle)
-
-        if not is_clockwise:
-            angle = -angle
-
-        # Translate the point so that the pivot is at the origin
-        translated_points = self.points - pivot
-
-        # Define the rotation matrix
-        rotation_matrix = np.array(
-            [[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]]
-        )
-
-        # Apply the rotation matrix to translated point
-        rotated_points = np.matmul(rotation_matrix, translated_points.T).T
-
-        # Translate the point back to its original space and return
-        self.points = rotated_points + pivot
-        return self
-
-    def rotate_around_image_center(
-        self, img: np.ndarray, angle: float, degree: bool = False
-    ) -> Self:
-        """Given an geometric object and an image, rotate the object around
-        the image center point.
-
-        Args:
-            img (np.ndarray): image as a shape (x, y) sized array
-            angle (float): rotation angle
-            degree (bool, optional): whether the angle is in degree or radian.
-                Defaults to False which means radians.
-
-        Returns:
-            GeometryEntity: rotated geometry entity object.
-        """
-        img_center_point = np.array([img.shape[1], img.shape[0]]) / 2
-        return self.rotate(angle=angle, pivot=img_center_point, is_degree=degree)
-
-    def __validate_shift_vector(self, vector: np.ndarray) -> np.ndarray:
-        """Validate the shift vector before executing operation
-
-        Args:
-            vector (np.ndarray): shift vector
-
-        Returns:
-            np.ndarray: validated vector
-        """
-        vector = np.asarray(vector)
-        if vector.shape == (2, 2):
-            vector = vector[1] - vector[0]  # set the vector to be defined as one point
-        if vector.shape != (2,):
-            raise ValueError(
-                "The input vector {vector} does not have the expected shape."
-            )
-        return vector
-
-    def shift(self, vector: np.ndarray) -> Self:
-        """Shift the geometry entity by the vector direction
-
-        Args:
-            vector (np.ndarray): vector that describes the shift as a array with
-                two elements. Example: [2, -8] which describes the
-                vector [[0, 0], [2, -8]]. The vector can also be a vector of shape
-                (2, 2) of the form [[2, 6], [1, 3]].
-
-        Returns:
-            GeometryEntity: shifted geometrical object
-        """
-        vector = self.__validate_shift_vector(vector=vector)
-        self.points = self.points + vector
-        return self
-
-    def clamp(
-        self,
-        xmin: float = -np.inf,
-        xmax: float = np.inf,
-        ymin: float = -np.inf,
-        ymax: float = np.inf,
-    ) -> Self:
-        """Clamp the Geometry entity so that the x and y coordinates fit in the
-        min and max values in parameters.
-
-        Args:
-            xmin (float): x coordinate minimum
-            xmax (float): x coordinate maximum
-            ymin (float): y coordinate minimum
-            ymax (float): y coordinate maximum
-
-        Returns:
-            GeometryEntity: clamped GeometryEntity
-        """
-        self.asarray[:, 0] = np.clip(self.asarray[:, 0], xmin, xmax)  # x values
-        self.asarray[:, 1] = np.clip(self.asarray[:, 1], ymin, ymax)  # y values
-        return self
-
-    def normalize(self, x: float, y: float) -> Self:
-        """Normalize the geometry entity by dividing the points by a norm on the
-        x and y coordinates.
-
-        Args:
-            x (float): x coordinate norm
-            y (float): y coordinate norm
-
-        Returns:
-            GeometryEntity: normalized GeometryEntity
-        """
-        self.asarray = self.asarray / np.array([x, y])
-        return self
+    # done in the derived classes
 
     # ------------------------------- CLASSIC METHODS ---------------------------------
+
+    def update_polyapprox(self) -> None:
+        """Update the polygonal approximation of the continuous geometry entity"""
+        self._polyapprox = self.polygonal_approx(
+            n_points=self.n_points_polygonal_approx, is_cast_int=False
+        )
+
+    def enclosing_axis_aligned_bbox(self) -> Rectangle:
+        """Compute the smallest area enclosing Axis-Aligned Bounding Box (AABB)
+        See: https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html
+
+        Returns:
+            Rectangle: Rectangle object
+        """
+        topleft_x, topleft_y, width, height = cv2.boundingRect(
+            array=self.polyaprox.asarray
+        )
+        bbox = np.array(
+            [
+                [topleft_x, topleft_y],
+                [topleft_x + width, topleft_y],
+                [topleft_x + width, topleft_y + height],
+                [topleft_x, topleft_y + height],
+            ]
+        )
+        return Rectangle(bbox)
+
+    def enclosing_oriented_bbox(self) -> Rectangle:
+        """Compute the smallest area enclosing Oriented Bounding Box (OBB)
+        See: https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html
+
+        Returns:
+            Rectangle: Rectangle object
+        """
+        rect = cv2.minAreaRect(self.polyaprox.asarray)
+        bbox = cv2.boxPoints(rect)
+        return Rectangle(bbox)
+
+    def enclosing_convex_hull(self) -> "Polygon":
+        """Compute the smallest area enclosing Convex Hull
+        See: https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html
+
+        Returns:
+            Polygon: Polygon object
+        """
+        # pylint: disable=import-outside-toplevel
+        from src.geometry import Polygon
+
+        convexhull = np.squeeze(cv2.convexHull(self.polyaprox.asarray))
+        return Polygon(convexhull)

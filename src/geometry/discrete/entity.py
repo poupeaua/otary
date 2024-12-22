@@ -4,7 +4,7 @@ DiscreteGeometryEntity module class
 
 from __future__ import annotations
 
-from typing import Optional, Self
+from typing import Optional, Self, TYPE_CHECKING
 import copy
 from abc import ABC, abstractmethod
 from shapely import (
@@ -14,8 +14,11 @@ from shapely import (
 import cv2
 import numpy as np
 
-from src.geometry.utils.tools import validate_shift_vector
+from src.geometry.utils.tools import validate_shift_vector, rotate_2d_points
 from src.geometry.entity import GeometryEntity
+
+if TYPE_CHECKING:
+    from src.geometry import Polygon, Rectangle  # Import only for type checking
 
 
 class DiscreteGeometryEntity(GeometryEntity, ABC):
@@ -159,25 +162,13 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         if pivot is None:
             pivot = self.centroid
 
-        if is_degree:  # transform angle to radian if in degree
-            angle = np.deg2rad(angle)
-
-        if not is_clockwise:
-            angle = -angle
-
-        # Translate the point so that the pivot is at the origin
-        translated_points = self.points - pivot
-
-        # Define the rotation matrix
-        rotation_matrix = np.array(
-            [[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]]
+        self.points = rotate_2d_points(
+            points=self.points,
+            angle=angle,
+            pivot=pivot,
+            is_degree=is_degree,
+            is_clockwise=is_clockwise,
         )
-
-        # Apply the rotation matrix to translated point
-        rotated_points = np.matmul(rotation_matrix, translated_points.T).T
-
-        # Translate the point back to its original space and return
-        self.points = rotated_points + pivot
         return self
 
     def rotate_around_image_center(
@@ -263,6 +254,54 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
             points=copy.deepcopy(self.asarray), is_cast_int=self.is_cast_int
         )
 
+    def enclosing_axis_aligned_bbox(self) -> Rectangle:
+        """Compute the smallest area enclosing Axis-Aligned Bounding Box (AABB)
+        See: https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html
+
+        Returns:
+            Rectangle: Rectangle object
+        """
+        # pylint: disable=import-outside-toplevel
+        from src.geometry import Rectangle
+
+        topleft_x, topleft_y, width, height = cv2.boundingRect(array=self.asarray)
+        bbox = np.array(
+            [
+                [topleft_x, topleft_y],
+                [topleft_x + width, topleft_y],
+                [topleft_x + width, topleft_y + height],
+                [topleft_x, topleft_y + height],
+            ]
+        )
+        return Rectangle(bbox)
+
+    def enclosing_oriented_bbox(self) -> Rectangle:
+        """Compute the smallest area enclosing Oriented Bounding Box (OBB)
+        See: https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html
+
+        Returns:
+            Rectangle: Rectangle object
+        """
+        # pylint: disable=import-outside-toplevel
+        from src.geometry import Rectangle
+
+        rect = cv2.minAreaRect(self.asarray)
+        bbox = cv2.boxPoints(rect)
+        return Rectangle(bbox)
+
+    def enclosing_convex_hull(self) -> Polygon:
+        """Compute the smallest area enclosing Convex Hull
+        See: https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html
+
+        Returns:
+            Polygon: Polygon object
+        """
+        # pylint: disable=import-outside-toplevel
+        from src.geometry import Polygon
+
+        convexhull = np.squeeze(cv2.convexHull(self.asarray))
+        return Polygon(convexhull)
+
     def distances_to_point(self, point: np.ndarray) -> np.ndarray:
         """Get the distance from all points in the geometry entity to the point
 
@@ -320,7 +359,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         return np.argmin(self.distances_to_point(point=point)).astype(int)
 
     def indices_shared_approx_points(
-        self, other: GeometryEntity, margin_dist_error: float = 5
+        self, other: DiscreteGeometryEntity, margin_dist_error: float = 5
     ) -> np.ndarray:
         """Compute the point indices from this entity that correspond to shared
         points with the other geometric entity.
@@ -329,7 +368,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         geometric structure.
 
         Args:
-            other (GeometryEntity): other Geometry entity
+            other (DiscreteGeometryEntity): other Discrete Geometry entity
             margin_dist_error (float, optional): minimum distance to have two points
                 considered as close enough to be shared. Defaults to 5.
 
@@ -345,7 +384,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         return np.array(list_index_shared_points).astype(int)
 
     def shared_approx_points(
-        self, other: GeometryEntity, margin_dist_error: float = 5
+        self, other: DiscreteGeometryEntity, margin_dist_error: float = 5
     ) -> np.ndarray:
         """Get the shared points between two geometric objects.
 
@@ -353,7 +392,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         geometric structure.
 
         Args:
-            other (GeometryEntity): a GeometryEntity object, could be anything
+            other (DiscreteGeometryEntity): a DiscreteGeometryEntity object
             margin_dist_error (float, optional): the threshold to define a point as
                 shared or not. Defaults to 5.
 

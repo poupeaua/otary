@@ -43,8 +43,6 @@ class DrawerImage(BaseImage, ABC):
         Returns:
             Image: new image
         """
-        if not isinstance(render, CirclesRender):
-            raise ValueError("The render must be a CirclesRender")
         im_array = self.__pre_draw(n_objects=len(circles), render=render)
         for circle, color in zip(circles, render.colors):
             cv2.circle(
@@ -81,8 +79,6 @@ class DrawerImage(BaseImage, ABC):
         Returns:
             Image: new image
         """
-        if not isinstance(render, PointsRender):
-            raise ValueError("The render must be a PointsRender")
         _points = prep_obj_draw(objects=points, _type=geo.Point)
         im_array = self.__pre_draw(n_objects=len(_points), render=render)
         for point, color in zip(_points, render.colors):
@@ -112,8 +108,6 @@ class DrawerImage(BaseImage, ABC):
         Returns:
             (DrawerImage): original image changed that contains the segments drawn
         """
-        if not isinstance(render, SegmentsRender):
-            raise ValueError("The render must be a SegmentsRender")
         _segments = prep_obj_draw(objects=segments, _type=geo.Segment)
         im_array = self.__pre_draw(n_objects=len(segments), render=render)
         if render.as_vectors:
@@ -152,8 +146,6 @@ class DrawerImage(BaseImage, ABC):
         Returns:
             Image: image with the added polygons
         """
-        if not isinstance(render, PolygonsRender):
-            raise ValueError("The render must be a PolygonsRender")
         for cnt in polygons:
             self.draw_segments(segments=cnt.segments, render=render)
         return self
@@ -173,8 +165,6 @@ class DrawerImage(BaseImage, ABC):
         Returns:
             Image: a new image with the bounding boxes displayed
         """
-        if not isinstance(render, OcrSingleOutputRender):
-            raise ValueError("The render must be a OcrSingleOutputRender")
         im_array = self.__pre_draw(n_objects=len(ocr_outputs), render=render)
         for ocrso, color in zip(ocr_outputs, render.colors):
             if not isinstance(ocrso, OcrSingleOutput) or ocrso.bbox is None:

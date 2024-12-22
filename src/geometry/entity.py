@@ -15,7 +15,6 @@ from shapely import (
     MultiLineString,
 )
 
-import cv2
 import numpy as np
 
 if TYPE_CHECKING:
@@ -201,84 +200,29 @@ class GeometryEntity(ABC):
 
         return np.array([])
 
-    def enclosing_axis_aligned_bbox(self) -> "Rectangle":
+    @abstractmethod
+    def enclosing_axis_aligned_bbox(self) -> Rectangle:
         """Compute the smallest area enclosing Axis-Aligned Bounding Box (AABB)
         See: https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html
 
         Returns:
             Rectangle: Rectangle object
         """
-        # pylint: disable=import-outside-toplevel
-        from src.geometry import Rectangle
 
-        topleft_x, topleft_y, width, height = cv2.boundingRect(array=self.asarray)
-        bbox = np.array(
-            [
-                [topleft_x, topleft_y],
-                [topleft_x + width, topleft_y],
-                [topleft_x + width, topleft_y + height],
-                [topleft_x, topleft_y + height],
-            ]
-        )
-        return Rectangle(bbox)
-
-    def enclosing_oriented_bbox(self) -> "Rectangle":
+    @abstractmethod
+    def enclosing_oriented_bbox(self) -> Rectangle:
         """Compute the smallest area enclosing Oriented Bounding Box (OBB)
         See: https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html
 
         Returns:
             Rectangle: Rectangle object
         """
-        # pylint: disable=import-outside-toplevel
-        from src.geometry import Rectangle
 
-        rect = cv2.minAreaRect(self.asarray)
-        bbox = cv2.boxPoints(rect)
-        return Rectangle(bbox)
-
-    def enclosing_convex_hull(self) -> "Polygon":
+    @abstractmethod
+    def enclosing_convex_hull(self) -> Polygon:
         """Compute the smallest area enclosing Convex Hull
         See: https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html
 
         Returns:
             Polygon: Polygon object
         """
-        # pylint: disable=import-outside-toplevel
-        from src.geometry import Polygon
-
-        convexhull = np.squeeze(cv2.convexHull(self.asarray))
-        return Polygon(convexhull)
-
-    def distances_to_point(self, point: np.ndarray) -> np.ndarray:
-        """Get the distance from all points in the geometry entity to the point
-
-        Args:
-            point (np.ndarray): 2D point
-
-        Returns:
-            np.ndarray: array of the same len as the number of point in the geometry
-                entity.
-        """
-        return np.linalg.norm(self.asarray - point, axis=1)
-
-    def shortest_dist_to_point(self, point: np.ndarray) -> float:
-        """Compute the shortest distance from the geometry entity to the point
-
-        Args:
-            point (np.ndarray): 2D point
-
-        Returns:
-            float: shortest distance from the geometry entity to the point
-        """
-        return np.min(self.distances_to_point(point=point))
-
-    def longest_dist_to_point(self, point: np.ndarray) -> float:
-        """Compute the longest distance from the geometry entity to the point
-
-        Args:
-            point (np.ndarray): 2D point
-
-        Returns:
-            float: longest distance from the geometry entity to the point
-        """
-        return np.max(self.distances_to_point(point=point))
