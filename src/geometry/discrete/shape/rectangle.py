@@ -9,7 +9,7 @@ from typing import Optional
 import numpy as np
 import pymupdf
 
-from src.geometry import Polygon
+from src.geometry import Polygon, Segment
 
 
 class Rectangle(Polygon):
@@ -143,6 +143,52 @@ class Rectangle(Polygon):
             pymupdf.Rect: pymupdf axis-aligned Rect object
         """
         return pymupdf.Rect(x0=self.xmin, y0=self.ymin, x1=self.xmax, y1=self.ymax)
+
+    @property
+    def longside_length(self) -> float:
+        """Compute the biggest side of the rectangle
+
+        Returns:
+            float: the biggest side length
+        """
+        seg1 = Segment(points=[self.points[0], self.points[1]])
+        seg2 = Segment(points=[self.points[1], self.points[2]])
+        return seg1.length if seg1.length > seg2.length else seg2.length
+
+    @property
+    def shortside_length(self) -> float:
+        """Compute the smallest side of the rectangle
+
+        Returns:
+            float: the smallest side length
+        """
+        seg1 = Segment(points=[self.points[0], self.points[1]])
+        seg2 = Segment(points=[self.points[1], self.points[2]])
+        return seg2.length if seg1.length > seg2.length else seg1.length
+
+    def longside_slope_angle(self, degree: bool = False, is_cv2: bool = False) -> float:
+        """Compute the biggest slope of the rectangle
+
+        Returns:
+            float: the biggest slope
+        """
+        seg1 = Segment(points=[self.points[0], self.points[1]])
+        seg2 = Segment(points=[self.points[1], self.points[2]])
+        seg_bigside = seg1 if seg1.length > seg2.length else seg2
+        return seg_bigside.slope_angle(degree=degree, is_cv2=is_cv2)
+
+    def shortside_slope_angle(
+        self, degree: bool = False, is_cv2: bool = False
+    ) -> float:
+        """Compute the smallest slope of the rectangle
+
+        Returns:
+            float: the smallest slope
+        """
+        seg1 = Segment(points=[self.points[0], self.points[1]])
+        seg2 = Segment(points=[self.points[1], self.points[2]])
+        seg_smallside = seg2 if seg1.length > seg2.length else seg1
+        return seg_smallside.slope_angle(degree=degree, is_cv2=is_cv2)
 
     def join(
         self, rect: Rectangle, margin_dist_error: float = 5
