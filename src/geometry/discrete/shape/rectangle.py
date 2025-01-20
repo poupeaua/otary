@@ -9,7 +9,7 @@ from typing import Optional
 import numpy as np
 import pymupdf
 
-from src.geometry.shape.polygon import Polygon
+from src.geometry import Polygon, Segment
 
 
 class Rectangle(Polygon):
@@ -107,21 +107,29 @@ class Rectangle(Polygon):
 
     @classmethod
     def from_topleft_bottomright(
-        cls, topleft: np.ndarray, bottomright: np.ndarray, is_cast_int: bool = False
+        cls,
+        topleft: np.ndarray,
+        bottomright: np.ndarray,
+        angle: float = 0,
+        is_cast_int: bool = False,
     ) -> Rectangle:
-        """_summary_
+        """Create a Rectangle object using the top left and bottom right points.
 
         Args:
-            topleft (np.ndarray): _description_
-            bottomright (np.ndarray): _description_
+            topleft (np.ndarray): top left point of the rectangle
+            bottomright (np.ndarray): bottom right point of the rectangle
 
         Returns:
-            Rectangle: _description_
+            Rectangle: new Rectangle object
         """
         width = bottomright[0] - topleft[0]
         height = bottomright[1] - topleft[1]
         return cls.from_topleft(
-            topleft=topleft, width=width, height=height, is_cast_int=is_cast_int
+            topleft=topleft,
+            width=width,
+            height=height,
+            angle=angle,
+            is_cast_int=is_cast_int,
         )
 
     @property
@@ -135,6 +143,52 @@ class Rectangle(Polygon):
             pymupdf.Rect: pymupdf axis-aligned Rect object
         """
         return pymupdf.Rect(x0=self.xmin, y0=self.ymin, x1=self.xmax, y1=self.ymax)
+
+    @property
+    def longside_length(self) -> float:
+        """Compute the biggest side of the rectangle
+
+        Returns:
+            float: the biggest side length
+        """
+        seg1 = Segment(points=[self.points[0], self.points[1]])
+        seg2 = Segment(points=[self.points[1], self.points[2]])
+        return seg1.length if seg1.length > seg2.length else seg2.length
+
+    @property
+    def shortside_length(self) -> float:
+        """Compute the smallest side of the rectangle
+
+        Returns:
+            float: the smallest side length
+        """
+        seg1 = Segment(points=[self.points[0], self.points[1]])
+        seg2 = Segment(points=[self.points[1], self.points[2]])
+        return seg2.length if seg1.length > seg2.length else seg1.length
+
+    def longside_slope_angle(self, degree: bool = False, is_cv2: bool = False) -> float:
+        """Compute the biggest slope of the rectangle
+
+        Returns:
+            float: the biggest slope
+        """
+        seg1 = Segment(points=[self.points[0], self.points[1]])
+        seg2 = Segment(points=[self.points[1], self.points[2]])
+        seg_bigside = seg1 if seg1.length > seg2.length else seg2
+        return seg_bigside.slope_angle(degree=degree, is_cv2=is_cv2)
+
+    def shortside_slope_angle(
+        self, degree: bool = False, is_cv2: bool = False
+    ) -> float:
+        """Compute the smallest slope of the rectangle
+
+        Returns:
+            float: the smallest slope
+        """
+        seg1 = Segment(points=[self.points[0], self.points[1]])
+        seg2 = Segment(points=[self.points[1], self.points[2]])
+        seg_smallside = seg2 if seg1.length > seg2.length else seg1
+        return seg_smallside.slope_angle(degree=degree, is_cv2=is_cv2)
 
     def join(
         self, rect: Rectangle, margin_dist_error: float = 5

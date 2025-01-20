@@ -123,7 +123,13 @@ class TransformerImage(BaseImage, ABC):
         self.asarray = np.abs(self.asarray.astype(np.int16) - 255).astype(np.uint8)
         return self
 
-    def blur(self, kernel: tuple = (5, 5), iterations: int = 1) -> Self:
+    def blur(
+        self,
+        kernel: tuple = (5, 5),
+        iterations: int = 1,
+        method: str = "average",
+        sigmax: float = 0,
+    ) -> Self:
         """Blur the images
 
         Args:
@@ -133,8 +139,25 @@ class TransformerImage(BaseImage, ABC):
         Returns:
             Self: the new image blurred
         """
+        blur_valid_methods = ["average", "median", "gaussian", "bilateral"]
+        if method not in blur_valid_methods:
+            raise ValueError(
+                f"The blur method {method} is not a valid method. "
+                f"A valid method must be in {blur_valid_methods}"
+            )
         for _ in range(iterations):
-            self.asarray = cv2.blur(src=self.asarray, ksize=kernel)
+            if method == "average":
+                self.asarray = cv2.blur(src=self.asarray, ksize=kernel)
+            elif method == "median":
+                self.asarray = cv2.medianBlur(src=self.asarray, ksize=kernel[0])
+            elif method == "gaussian":
+                self.asarray = cv2.GaussianBlur(
+                    src=self.asarray, ksize=kernel, sigmaX=sigmax
+                )
+            elif method == "bilateral":
+                self.asarray = cv2.bilateralFilter(
+                    src=self.asarray, d=kernel[0], sigmaColor=75, sigmaSpace=75
+                )
         return self
 
     def dilate(
@@ -241,7 +264,11 @@ class TransformerImage(BaseImage, ABC):
         return self
 
     def rotate(
-        self, angle: float, is_degree: bool = False, reshape: bool = True
+        self,
+        angle: float,
+        is_degree: bool = False,
+        is_clockwise: bool = True,
+        reshape: bool = True,
     ) -> Self:
         """Rotate the image by a given angle.
 
@@ -250,6 +277,8 @@ class TransformerImage(BaseImage, ABC):
             is_degree (bool, optional): whether the angle is in degree or not.
                 If not it is considered to be in radians.
                 Defaults to False which means radians.
+            is_clockwise (bool, optional): whether the rotation is clockwise or
+                counter-clockwise. Defaults to True.
             reshape (bool, optional): scipy reshape option. Defaults to True.
 
         Returns:
@@ -257,6 +286,9 @@ class TransformerImage(BaseImage, ABC):
         """
         if not is_degree:
             angle = np.rad2deg(angle)
+        if is_clockwise:
+            # by default scipy rotate is counter-clockwise
+            angle = -angle
         self.asarray = scipy.ndimage.rotate(
             input=self.asarray, angle=angle, reshape=reshape
         )

@@ -42,8 +42,59 @@ class TestEntityBasics:
     def test_eq_error(self):
         rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
         rect2 = "mystr"
-        with pytest.raises(RuntimeError):
-            rect == rect2
+        assert rect != rect2
+
+    def test_add_float(self):
+        rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
+        rect = rect + 1
+        assert np.array_equal(rect.asarray, np.array([[1, 1], [1, 2], [2, 2], [2, 1]]))
+
+    def test_add_array(self):
+        rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
+        rect = rect + np.array([-1, 1])
+        assert np.array_equal(
+            rect.asarray, np.array([[-1, 1], [-1, 2], [0, 2], [0, 1]])
+        )
+
+    def test_sub_float(self):
+        rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
+        rect = rect - 1
+        assert np.array_equal(
+            rect.asarray, np.array([[-1, -1], [-1, 0], [0, 0], [0, -1]])
+        )
+
+    def test_sub_array(self):
+        rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
+        rect = rect - np.array([1, -1])
+        assert np.array_equal(
+            rect.asarray, np.array([[-1, 1], [-1, 2], [0, 2], [0, 1]])
+        )
+
+    def test_mul_float(self):
+        rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
+        rect = rect * 2
+        assert np.array_equal(rect.asarray, np.array([[0, 0], [0, 2], [2, 2], [2, 0]]))
+
+    def test_mul_array(self):
+        rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
+        rect = rect * np.array([2, -2])
+        assert np.array_equal(
+            rect.asarray, np.array([[0, 0], [0, -2], [2, -2], [2, 0]])
+        )
+
+    def test_div_float(self):
+        rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
+        rect = rect / 2.0
+        assert np.array_equal(
+            rect.asarray, np.array([[0, 0], [0, 1 / 2], [1 / 2, 1 / 2], [1 / 2, 0]])
+        )
+
+    def test_div_array(self):
+        rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]], is_cast_int=False)
+        rect = rect / np.array([2, -2])
+        assert np.array_equal(
+            rect.asarray, np.array([[0, 0], [0, -1 / 2], [1 / 2, -1 / 2], [1 / 2, 0]])
+        )
 
 
 class TestEntityShift:
@@ -76,10 +127,18 @@ class TestEntityRotate:
             np.round([[1.5, 1.5 - np.sqrt(2) / 2], [1.5, 1.5 + np.sqrt(2) / 2]], 5),
         )
 
+    def test_segment_rotate_pi_over_4_counter_clockwise_pivot(self):
+        seg = Segment([[1, 1], [2, 2]])
+        seg.rotate(angle=np.pi / 4, is_clockwise=False, pivot=[1, 1])
+        assert np.array_equal(
+            np.round(seg.asarray, 5),
+            np.round([[1, 1], [1 + np.sqrt(2), 1]], 5),
+        )
+
     def test_segment_rotate_pi_over_4_degree(self):
         seg = Segment([[1, 1], [2, 2]])
         assert np.array_equal(
-            np.round(seg.rotate(angle=45, degree=True).asarray, 5),
+            np.round(seg.rotate(angle=45, is_degree=True).asarray, 5),
             np.round([[1.5, 1.5 - np.sqrt(2) / 2], [1.5, 1.5 + np.sqrt(2) / 2]], 5),
         )
 

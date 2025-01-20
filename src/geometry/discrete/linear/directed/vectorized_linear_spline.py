@@ -4,7 +4,8 @@ Vectorized Curve class useful to describe any kind of vectorized curves
 
 import numpy as np
 
-from src.geometry import LinearSpline, Vector, DirectedLinearEntity
+from src.geometry.discrete.linear.directed.entity import DirectedLinearEntity
+from src.geometry import LinearSpline, Vector
 
 
 class VectorizedLinearSpline(LinearSpline, DirectedLinearEntity):

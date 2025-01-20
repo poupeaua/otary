@@ -14,7 +14,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from shapely import LinearRing, Polygon as SPolygon
 
-from src.geometry import GeometryEntity, Segment, Vector, DEFAULT_MARGIN_ANGLE_ERROR
+from src.geometry.entity import GeometryEntity
+from src.geometry.discrete.entity import DiscreteGeometryEntity
+from src.geometry import Segment, Vector, DEFAULT_MARGIN_ANGLE_ERROR
 
 
 class PolygonReducer(ABC):
@@ -264,7 +266,7 @@ class PolygonReducer(ABC):
         return reduced_points
 
 
-class Polygon(GeometryEntity, PolygonReducer):
+class Polygon(DiscreteGeometryEntity, PolygonReducer):
     """Polygon class which defines a polygon object which means any closed-shape"""
 
     # ---------------------------------- OTHER CONSTRUCTORS ----------------------------

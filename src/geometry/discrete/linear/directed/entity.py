@@ -7,7 +7,7 @@ from abc import abstractmethod
 from metpy.calc import angle_to_direction
 import numpy as np
 
-from src.geometry.linear.entity import LinearEntity
+from src.geometry.discrete.linear.entity import LinearEntity
 
 
 class DirectedLinearEntity(LinearEntity):

@@ -6,7 +6,8 @@ from __future__ import annotations
 
 import numpy as np
 
-from src.geometry import Segment, DirectedLinearEntity
+from src.geometry.discrete.linear.directed.entity import DirectedLinearEntity
+from src.geometry import Segment
 
 
 class Vector(Segment, DirectedLinearEntity):
