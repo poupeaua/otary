@@ -112,13 +112,13 @@ class TestTransformerImageGlobalMethods:
         img.asarray[0, 0] = 255
         arr = np.full(shape=shape, fill_value=0)
         arr[4, 4] = 255
-        assert np.array_equal(img.shift(shift=np.array([4, 4])).asarray, arr)
+        assert np.array_equal(img.shift_exact(shift=np.array([4, 4])).asarray, arr)
 
     def test_rotate_180(self):
         img = Image.from_fillvalue(shape=(5, 5), value=0)
         img.asarray[1, 2] = 1
         img.asarray[1, 4] = 1
-        img.rotate(angle=180, is_degree=True)
+        img.rotate_exact(angle=180, is_degree=True)
         assert img.asarray[3, 0] == 1
         assert img.asarray[1, 4] == 0
         assert img.asarray[3, 2] == 1

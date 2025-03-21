@@ -61,7 +61,7 @@ def rotate_2d_points(
     )
 
     # Apply the rotation matrix to translated point
-    rotated_points = np.matmul(rotation_matrix, translated_points.T).T
+    rotated_points = np.matmul(translated_points, rotation_matrix.T)
 
     # Translate the point back to its original space and return
     final_points = rotated_points + pivot

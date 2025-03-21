@@ -83,3 +83,14 @@ class Point(DiscreteGeometryEntity):
         if not desc:  # change the order if in descending order
             idxs_order_by_dist = idxs_order_by_dist[::-1]
         return idxs_order_by_dist
+
+    def distances_to_point(self, point: np.ndarray) -> np.ndarray:
+        """Compute the distances to a given point
+
+        Args:
+            point (np.ndarray): point to which we want to compute the distances
+
+        Returns:
+            np.ndarray: distance to the given point
+        """
+        return np.linalg.norm(self.points - point, axis=1)

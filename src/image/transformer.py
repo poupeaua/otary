@@ -5,8 +5,8 @@ Image Trasnformation module. it only contains advanced image transformation meth
 from __future__ import annotations
 
 from typing import Self
-
 from abc import ABC
+
 import cv2
 import numpy as np
 import scipy.ndimage
@@ -248,8 +248,9 @@ class TransformerImage(BaseImage, ABC):
             )
         return self
 
-    def shift(self, shift: np.ndarray, mode: str = "constant") -> Self:
+    def shift_exact(self, shift: np.ndarray, mode: str = "constant") -> Self:
         """Shift the image doing a translation operation
+        This method is more accurate than the shift method but slower.
 
         Args:
             shift (np.ndarray): Vector for translation
@@ -263,7 +264,32 @@ class TransformerImage(BaseImage, ABC):
         )
         return self
 
-    def rotate(
+    def shift(self, shift: np.ndarray, border_fill_value: int = 255) -> Self:
+        """Shift the image doing a translation operation
+
+        Args:
+            shift (np.ndarray): Vector for translation
+
+        Returns:
+            Self: image translated
+        """
+        shift_vector = geo.Vector(shift).cv2_space_coords  # (dx, dy)
+        M = np.float32(
+            [[1, 0, shift_vector[0]], [0, 1, shift_vector[1]]]  # shift in x
+        )  # shift in y
+
+        height, width = self.asarray.shape[:2]
+        self.asarray = cv2.warpAffine(
+            self.asarray,
+            M,
+            (width, height),
+            flags=cv2.INTER_LINEAR,
+            borderMode=cv2.BORDER_CONSTANT,
+            borderValue=border_fill_value,
+        )
+        return self
+
+    def rotate_exact(
         self,
         angle: float,
         is_degree: bool = False,
@@ -271,6 +297,7 @@ class TransformerImage(BaseImage, ABC):
         reshape: bool = True,
     ) -> Self:
         """Rotate the image by a given angle.
+        This method is more accurate than the rotate method but slower.
 
         Args:
             angle (float): angle to rotate the image
@@ -294,41 +321,90 @@ class TransformerImage(BaseImage, ABC):
         )
         return self
 
-    def center_image_to_point(
-        self, point: np.ndarray, mode: str = "constant"
-    ) -> tuple[Self, np.ndarray]:
+    def rotate(
+        self,
+        angle: float,
+        is_degree: bool = False,
+        is_clockwise: bool = True,
+        reshape: bool = True,
+        border_fill_value: int = 255,
+    ) -> Self:
+        """Rotate the image by a given angle.
+
+        Args:
+            angle (float): angle to rotate the image
+            is_degree (bool, optional): whether the angle is in degree or not.
+                If not it is considered to be in radians.
+                Defaults to False which means radians.
+            is_clockwise (bool, optional): whether the rotation is clockwise or
+                counter-clockwise. Defaults to True.
+            reshape (bool, optional): scipy reshape option. Defaults to True.
+
+        Returns:
+            (Self): image rotated
+        """
+        if not is_degree:
+            angle = np.rad2deg(angle)
+        if is_clockwise:
+            # by default scipy rotate is counter-clockwise
+            angle = -angle
+
+        (h, w) = self.asarray.shape[:2]
+        center = (w / 2, h / 2)
+
+        # Compute rotation matrix
+        M = cv2.getRotationMatrix2D(center, angle, 1.0)
+
+        if reshape:
+            # Compute new bounding dimensions
+            cos_a = np.abs(M[0, 0])
+            sin_a = np.abs(M[0, 1])
+            new_w = int((h * sin_a) + (w * cos_a))
+            new_h = int((h * cos_a) + (w * sin_a))
+
+            # Adjust the rotation matrix to shift the image center
+            M[0, 2] += (new_w / 2) - center[0]
+            M[1, 2] += (new_h / 2) - center[1]
+            out_w, out_h = new_w, new_h
+        else:
+            out_w, out_h = w, h
+
+        self.asarray = cv2.warpAffine(
+            self.asarray,
+            M,
+            (out_w, out_h),
+            flags=cv2.INTER_LINEAR,
+            borderMode=cv2.BORDER_CONSTANT,
+            borderValue=border_fill_value,
+        )
+
+        return self
+
+    def center_image_to_point(self, point: np.ndarray) -> tuple[Self, np.ndarray]:
         """Shift the image so that the input point ends up in the middle of the
         new image
 
         Args:
             point (np.ndarray): point as (2,) shape numpy array
-            mode (str, optional): scipy shift interpolation mode.
-                Defaults to "constant".
 
         Returns:
             (tuple[Self, np.ndarray]): Self, translation Vector
         """
         shift_vector = self.center - point
-        self.shift(shift=shift_vector, mode=mode)
+        self.shift(shift=shift_vector)
         return self, shift_vector
 
-    def center_image_to_segment(
-        self, segment: np.ndarray, mode: str = "constant"
-    ) -> tuple[Self, np.ndarray]:
+    def center_image_to_segment(self, segment: np.ndarray) -> tuple[Self, np.ndarray]:
         """Shift the image so that the segment middle point ends up in the middle
         of the new image
 
         Args:
-            segment (np.ndarray): segment as numpy array of shape (2, 2).
-            mode (str, optional): scipy mode for the translation.
-                Defaults to "constant".
+            segment (np.ndarray): segment as numpy array of shape (2, 2)
 
         Returns:
             (tuple[Self, np.ndarray]): Self, vector_shift
         """
-        return self.center_image_to_point(
-            point=geo.Segment(segment).centroid, mode=mode
-        )
+        return self.center_image_to_point(point=geo.Segment(segment).centroid)
 
     def resize_fixed(
         self, dim: tuple[int, int], interpolation: int = cv2.INTER_AREA

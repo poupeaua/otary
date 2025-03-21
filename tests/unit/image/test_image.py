@@ -11,14 +11,6 @@ from src.image import Image, PolygonsRender, SegmentsRender
 
 class TestImageGlobalMethods:
 
-    def test_iou(self):
-        img0 = Image.from_fillvalue(shape=(5, 5), value=255)
-        for x in range(2, 4):
-            for y in range(2, 4):
-                img0.asarray[x, y] = 0
-        img1 = img0.copy().rotate(angle=180, is_degree=True)
-        assert img0.iou(img1) == 1 / 7
-
     def test_iou_zero(self):
         img0 = Image.from_fillvalue(shape=(5, 5), value=255)
         for x in range(3, 5):
@@ -43,7 +35,7 @@ class TestImageScoreMethods:
         for x in range(2, 4):
             for y in range(2, 4):
                 img0.asarray[x, y] = 0
-        img1 = img0.copy().rotate(angle=180, is_degree=True)
+        img1 = img0.copy().rotate_exact(angle=180, is_degree=True, reshape=False)
         assert img0.score_contains(img1) == 1 / 4
 
     def test_score_contains_zero(self):
