@@ -21,6 +21,8 @@ from src.image.base import BaseImage
 class TransformerImage(BaseImage, ABC):
     """Transformer images utility class"""
 
+    # pylint: disable=too-many-public-methods
+
     def threshold_simple(self, thresh: int) -> Self:
         """Compute the image thesholded by a single value T.
         All pixels with value v < T are turned black and those with value v > T are
@@ -274,14 +276,14 @@ class TransformerImage(BaseImage, ABC):
             Self: image translated
         """
         shift_vector = geo.Vector(shift).cv2_space_coords  # (dx, dy)
-        M = np.asarray(
+        shift_matrix = np.asarray(
             [[1.0, 0.0, shift_vector[0]], [0.0, 1.0, shift_vector[1]]],
             dtype=np.float32,
         )
 
         self.asarray = cv2.warpAffine(
             src=self.asarray,
-            M=M,
+            M=shift_matrix,
             dsize=(self.width, self.height),
             flags=cv2.INTER_LINEAR,
             borderMode=cv2.BORDER_CONSTANT,
@@ -343,6 +345,7 @@ class TransformerImage(BaseImage, ABC):
         Returns:
             (Self): image rotated
         """
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
         if not is_degree:
             angle = np.rad2deg(angle)
         if is_clockwise:
@@ -353,26 +356,23 @@ class TransformerImage(BaseImage, ABC):
         center = (w / 2, h / 2)
 
         # Compute rotation matrix
-        M = cv2.getRotationMatrix2D(center, angle, 1.0)
+        rotation_matrix = cv2.getRotationMatrix2D(center, angle, 1.0)
 
         if reshape:
             # Compute new bounding dimensions
-            cos_a = np.abs(M[0, 0])
-            sin_a = np.abs(M[0, 1])
-            new_w = int((h * sin_a) + (w * cos_a))
-            new_h = int((h * cos_a) + (w * sin_a))
+            cos_a = np.abs(rotation_matrix[0, 0])
+            sin_a = np.abs(rotation_matrix[0, 1])
+            w = int((h * sin_a) + (w * cos_a))
+            h = int((h * cos_a) + (w * sin_a))
 
             # Adjust the rotation matrix to shift the image center
-            M[0, 2] += (new_w / 2) - center[0]
-            M[1, 2] += (new_h / 2) - center[1]
-            out_w, out_h = new_w, new_h
-        else:
-            out_w, out_h = w, h
+            rotation_matrix[0, 2] += (w / 2) - center[0]
+            rotation_matrix[1, 2] += (h / 2) - center[1]
 
         self.asarray = cv2.warpAffine(
             src=self.asarray,
-            M=M,
-            dsize=(out_w, out_h),
+            M=rotation_matrix,
+            dsize=(w, h),
             flags=cv2.INTER_LINEAR,
             borderMode=cv2.BORDER_CONSTANT,
             borderValue=border_fill_value,

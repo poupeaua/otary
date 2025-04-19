@@ -56,6 +56,7 @@ class PointsRender(GeometryRender):
 
 @dataclass
 class EllipseRender(GeometryRender):
+    """Render for Ellipse objects"""
 
     is_draw_center_point_enabled: bool = False
 

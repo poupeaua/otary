@@ -14,6 +14,9 @@ from src.image.base import BaseImage
 
 
 class ReaderImage(BaseImage, ABC):
+    """ReaderImage class to facilitate the reading of images from different formats
+    such as JPG, PNG, and PDF. It provides methods to load images from file paths.
+    """
 
     @classmethod
     def from_jpg(

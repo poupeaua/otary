@@ -17,6 +17,8 @@ from PIL import Image as ImagePIL
 class BaseImage(ABC):
     """Base Image class"""
 
+    # pylint: disable=too-many-public-methods
+
     def __init__(self, image: np.ndarray | BaseImage) -> None:
         if isinstance(image, BaseImage):
             image = image.asarray
