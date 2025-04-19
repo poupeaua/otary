@@ -83,7 +83,7 @@ class Ellipse(ContinuousGeometryEntity):
         Returns:
             float: linear eccentricity value
         """
-        return np.linalg.norm(self.foci2 - self.foci1) / 2
+        return float(np.linalg.norm(self.foci2 - self.foci1) / 2)
 
     @property
     def focal_distance(self) -> float:

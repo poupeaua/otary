@@ -54,7 +54,7 @@ class Circle(Ellipse):
         return 2 * math.pi * self.radius
 
     @property
-    def centroid(self) -> float:
+    def centroid(self) -> np.ndarray:
         """Center of the circle
 
         Returns:
@@ -105,7 +105,7 @@ class Circle(Ellipse):
         poly = Polygon(points=np.asarray(points), is_cast_int=is_cast_int)
         return poly
 
-    def curvature(self) -> float:
+    def curvature(self, point: Optional[np.ndarray] = None) -> float:
         """Curvature of circle is a constant and does not depend on a position of
         a point
 

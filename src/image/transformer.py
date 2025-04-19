@@ -274,19 +274,19 @@ class TransformerImage(BaseImage, ABC):
             Self: image translated
         """
         shift_vector = geo.Vector(shift).cv2_space_coords  # (dx, dy)
-        M = np.float32(
-            [[1, 0, shift_vector[0]], [0, 1, shift_vector[1]]]  # shift in x
-        )  # shift in y
+        M = np.asarray(
+            [[1.0, 0.0, shift_vector[0]], [0.0, 1.0, shift_vector[1]]],
+            dtype=np.float32,
+        )
 
-        height, width = self.asarray.shape[:2]
         self.asarray = cv2.warpAffine(
-            self.asarray,
-            M,
-            (width, height),
+            src=self.asarray,
+            M=M,
+            dsize=(self.width, self.height),
             flags=cv2.INTER_LINEAR,
             borderMode=cv2.BORDER_CONSTANT,
             borderValue=border_fill_value,
-        )
+        )  # type: ignore[call-overload]
         return self
 
     def rotate_exact(
@@ -349,7 +349,7 @@ class TransformerImage(BaseImage, ABC):
             # by default scipy rotate is counter-clockwise
             angle = -angle
 
-        (h, w) = self.asarray.shape[:2]
+        h, w = self.asarray.shape[:2]
         center = (w / 2, h / 2)
 
         # Compute rotation matrix
@@ -370,13 +370,13 @@ class TransformerImage(BaseImage, ABC):
             out_w, out_h = w, h
 
         self.asarray = cv2.warpAffine(
-            self.asarray,
-            M,
-            (out_w, out_h),
+            src=self.asarray,
+            M=M,
+            dsize=(out_w, out_h),
             flags=cv2.INTER_LINEAR,
             borderMode=cv2.BORDER_CONSTANT,
             borderValue=border_fill_value,
-        )
+        )  # type: ignore[call-overload]
 
         return self
 

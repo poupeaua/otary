@@ -52,7 +52,7 @@ class DrawerImage(BaseImage, ABC):
                 color=color,
                 thickness=render.thickness,
                 lineType=render.line_type,
-            )
+            )  # type: ignore[call-overload]
             if render.is_draw_center_point_enabled:
                 cv2.circle(
                     img=im_array,
@@ -61,7 +61,7 @@ class DrawerImage(BaseImage, ABC):
                     color=color,
                     thickness=render.thickness,
                     lineType=render.line_type,
-                )
+                )  # type: ignore[call-overload]
         self.asarray = im_array
         return self
 
