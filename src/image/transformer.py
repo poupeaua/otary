@@ -16,6 +16,7 @@ from skimage.filters import threshold_sauvola, threshold_otsu
 
 import src.geometry as geo
 from src.image.base import BaseImage
+from src.utils.tools import assert_transform_shift_vector
 
 
 class TransformerImage(BaseImage, ABC):
@@ -261,8 +262,9 @@ class TransformerImage(BaseImage, ABC):
         Returns:
             Self: image translated
         """
+        vector_shift = assert_transform_shift_vector(vector=shift)
         self.asarray = scipy.ndimage.shift(
-            input=self.asarray, shift=geo.Vector(shift).cv2_space_coords, mode=mode
+            input=self.asarray, shift=(vector_shift[1], vector_shift[0]), mode=mode
         )
         return self
 
@@ -275,9 +277,9 @@ class TransformerImage(BaseImage, ABC):
         Returns:
             Self: image translated
         """
-        shift_vector = geo.Vector(shift).cv2_space_coords  # (dx, dy)
+        vector_shift = assert_transform_shift_vector(vector=shift)
         shift_matrix = np.asarray(
-            [[1.0, 0.0, shift_vector[0]], [0.0, 1.0, shift_vector[1]]],
+            [[1.0, 0.0, vector_shift[0]], [0.0, 1.0, vector_shift[1]]],
             dtype=np.float32,
         )
 
@@ -519,7 +521,7 @@ class TransformerImage(BaseImage, ABC):
         )
 
     def crop_from_axis_aligned_bbox(self, bbox: geo.Rectangle) -> Self:
-        """Crop the image from a Axis-Aligned Bounding Box (AABB)
+        """Crop the image from an Axis-Aligned Bounding Box (AABB)
 
         Args:
             bbox (geo.Rectangle): axis-aligned bounding box
@@ -566,15 +568,15 @@ class TransformerImage(BaseImage, ABC):
         assert width_crop_rect > 0 and height_crop_rect > 0
 
         # rotate the image so that the line is horizontal
-        angle = geo_segment.slope_angle(degree=True)
+        angle = geo_segment.slope_angle(is_cv2=True)
         im = im.rotate(angle=angle)
 
         # cropping
         im_crop = im.crop(
-            x0=int(im.center[1] - height_crop_rect / 2),
-            y0=int(im.center[0] - width_crop_rect / 2),
-            x1=int(im.center[1] + height_crop_rect / 2),
-            y1=int(im.center[0] + width_crop_rect / 2),
+            x0=int(im.center[0] - width_crop_rect / 2),
+            y0=int(im.center[1] - height_crop_rect / 2),
+            x1=int(im.center[0] + width_crop_rect / 2),
+            y1=int(im.center[1] + height_crop_rect / 2),
         )
 
         crop_translation_vector = self.center - im_crop.center

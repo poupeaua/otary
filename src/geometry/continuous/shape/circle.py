@@ -9,9 +9,10 @@ import numpy as np
 
 from shapely import Polygon as SPolygon, LinearRing
 
-from src.geometry.utils.tools import validate_shift_vector, rotate_2d_points
+from src.geometry.utils.tools import rotate_2d_points
 from src.geometry.continuous.entity import ContinuousGeometryEntity
 from src.geometry import Ellipse, Polygon
+from src.utils.tools import assert_transform_shift_vector
 
 
 class Circle(Ellipse):
@@ -194,7 +195,7 @@ class Circle(Ellipse):
         Returns:
             Self: shifted circle object
         """
-        vector = validate_shift_vector(vector=vector)
+        vector = assert_transform_shift_vector(vector=vector)
         self.center += vector
         self.update_polyapprox()
         return self

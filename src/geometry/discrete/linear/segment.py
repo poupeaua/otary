@@ -18,6 +18,8 @@ class Segment(LinearEntity):
 
     def __init__(self, points: np.ndarray | list, is_cast_int: bool = False) -> None:
         assert len(points) == 2
+        assert len(points[0]) == 2
+        assert len(points[1]) == 2
         super().__init__(points=points, is_cast_int=is_cast_int)
 
     @property

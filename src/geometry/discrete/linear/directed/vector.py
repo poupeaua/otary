@@ -38,6 +38,11 @@ class Vector(Segment, DirectedLinearEntity):
         cardinal_degree = np.mod(360 + angle, 360)  # avoid negative value case
         return cardinal_degree
 
+    @property
+    def coordinates_shift(self) -> np.ndarray:
+        """Return the vector as a single point (x1-x0, y1-y0)"""
+        return self.origin[1]
+
     def rescale_head(self, scale: float) -> Vector:
         """Rescale the head part of the vector without moving the first point.
         This method only updates the second point that composes the vector.

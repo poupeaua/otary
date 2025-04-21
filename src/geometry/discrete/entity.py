@@ -14,8 +14,9 @@ from shapely import (
 import cv2
 import numpy as np
 
-from src.geometry.utils.tools import validate_shift_vector, rotate_2d_points
+from src.geometry.utils.tools import rotate_2d_points
 from src.geometry.entity import GeometryEntity
+from src.utils.tools import assert_transform_shift_vector
 
 if TYPE_CHECKING:
     from src.geometry import Polygon, Rectangle  # Import only for type checking
@@ -201,7 +202,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         Returns:
             GeometryEntity: shifted geometrical object
         """
-        vector = validate_shift_vector(vector=vector)
+        vector = assert_transform_shift_vector(vector=vector)
         self.points = self.points + vector
         return self
 

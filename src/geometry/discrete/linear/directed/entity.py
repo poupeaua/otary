@@ -37,13 +37,21 @@ class DirectedLinearEntity(LinearEntity):
         return self.asarray[0]
 
     @property
+    def origin(self) -> np.ndarray:
+        """Representation shifted to the origin (0,0)
+        It is the same entity but with the tail point at (0,0) and the other
+        points shifted accordingly.
+        """
+        return self.asarray - self.tail
+
+    @property
     def cv2_space_coords(self) -> np.ndarray:
         """Inverted coordinates in the cv2 space
 
         Returns:
             np.ndarray: with inverted coordinates
         """
-        return np.roll(self.points, 1)
+        return np.roll(self.points, shift=1, axis=1)
 
     @property
     def is_x_first_pt_gt_x_last_pt(self) -> bool:
