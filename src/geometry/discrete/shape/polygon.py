@@ -438,7 +438,8 @@ class Polygon(DiscreteGeometryEntity, PolygonReducer):
         Returns:
             np.ndarray: array of shape (n_points)
         """
-        return np.linalg.norm(np.diff(self.segments, axis=1), axis=2)
+        lengths: np.ndarray = np.linalg.norm(np.diff(self.segments, axis=1), axis=2)
+        return lengths.flatten()
 
     @property
     def is_self_intersected(self) -> bool:
@@ -533,12 +534,13 @@ class Polygon(DiscreteGeometryEntity, PolygonReducer):
         Returns:
             bool: True if the entity contains the other
         """
-        surface = self.shapely_surface
-        if dilate_scale > 1:
+        if dilate_scale != 1:
             surface = self.copy().expand(scale=dilate_scale).shapely_surface
+        else:
+            surface = self.shapely_surface
         return surface.contains(other.shapely_surface)
 
-    def score_contains_points(
+    def score_edges_in_points(
         self, points: np.ndarray, min_distance: float
     ) -> np.ndarray:
         """Returns a score of 0 or 1 for each point in the polygon if it is close
@@ -651,6 +653,7 @@ class Polygon(DiscreteGeometryEntity, PolygonReducer):
             Polygon: scaled polygon
         """
         center = self.centroid
+        self.asarray = self.asarray.astype(float)
         for i, point in enumerate(self.asarray):
             self.asarray[i] = Vector([center, point]).rescale_head(scale).head
         return self

@@ -79,7 +79,7 @@ class BaseImage(ABC):
 
     @property
     def height(self) -> int:
-        """Height of the image. In cv2 it is defined as the first image shape value
+        """Height of the image. In numpy it is defined as the first image shape value
 
         Returns:
             int: image height
@@ -88,7 +88,7 @@ class BaseImage(ABC):
 
     @property
     def width(self) -> int:
-        """Width of the image. In cv2 it is defined as the second image shape value
+        """Width of the image. In numpy it is defined as the second image shape value
 
         Returns:
             int: image width

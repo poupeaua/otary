@@ -6,6 +6,7 @@ import pytest
 import numpy as np
 
 from src.image import Image
+from src.geometry import Rectangle
 
 
 class TestTransformerImageThresholdMethods:
@@ -54,7 +55,7 @@ class TestTransformerImageBinary:
             img.binary(method="not_an_expected_binary_method")
 
 
-class TestTransformerImageGlobalMethods:
+class TestTransformerImageReverseMethods:
 
     def test_rev_grayscale_black(self):
         img = Image.from_fillvalue(shape=(5, 5), value=0)
@@ -88,11 +89,46 @@ class TestTransformerImageGlobalMethods:
         img.rev()
         assert np.all(img.asarray == 155)
 
-    def test_blur(self):
+
+class TestTransformerImageMorphologyMethods:
+
+    def test_blur_basic(self):
         img = Image.from_fillvalue(shape=(5, 5), value=0)
         img.asarray[2, 2] = 255
         img.blur()
         assert img.asarray[2, 1] > 0
+
+    def test_blur_gaussian(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=0)
+        img.asarray[2, 2] = 255
+        img.blur(method="gaussian")
+        assert img.asarray[2, 1] > 0
+
+    def test_blur_median(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=0)
+        img.asarray[1, 1] = 255
+        img.asarray[1, 2] = 255
+        img.asarray[1, 3] = 255
+        img.asarray[2, 1] = 255
+        img.asarray[2, 3] = 255
+        img.blur(method="median", kernel=(3, 3))
+        assert img.asarray[2, 2] > 0
+
+    def test_blur_bilateral(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=0)
+        img.asarray[1, 1] = 255
+        img.asarray[1, 2] = 255
+        img.asarray[1, 3] = 255
+        img.asarray[2, 1] = 255
+        img.asarray[2, 3] = 255
+        img.blur(method="bilateral", kernel=(3, 3))
+        assert img.asarray[2, 2] > 0
+
+    def test_blur_invalid_method(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=0)
+        img.asarray[2, 2] = 255
+        with pytest.raises(ValueError):
+            img.blur(method="not_a_valid_method")
 
     def test_dilate_black(self):
         img = Image.from_fillvalue(shape=(5, 5), value=255)
@@ -106,13 +142,20 @@ class TestTransformerImageGlobalMethods:
         img.dilate(kernel=(3, 3), iterations=2, dilate_black_pixels=False)
         assert np.all(img.asarray == 255)
 
-    def test_shift(self):
-        shape = (5, 5)
-        img = Image.from_fillvalue(shape=shape, value=0)
-        img.asarray[0, 0] = 255
-        arr = np.full(shape=shape, fill_value=0)
-        arr[4, 4] = 255
-        assert np.array_equal(img.shift_exact(shift=np.array([4, 4])).asarray, arr)
+    def test_erode_black(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=255)
+        img.asarray[2, 2] = 0
+        img.erode(kernel=(3, 3), iterations=2)
+        assert np.all(img.asarray == 255)
+
+    def test_erode_white(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=255)
+        img.asarray[2, 2] = 0
+        img.erode(kernel=(3, 3), iterations=2, erode_black_pixels=False)
+        assert np.all(img.asarray == 0)
+
+
+class TestTransformerImageRotateMethods:
 
     def test_rotate_180(self):
         img = Image.from_fillvalue(shape=(5, 5), value=0)
@@ -135,6 +178,47 @@ class TestTransformerImageGlobalMethods:
         arr = img.asarray
         img.rotate(angle=2 * np.pi, is_degree=False)
         assert np.array_equal(arr, img.asarray)
+
+
+class TestTransformerImageShiftMethods:
+
+    def test_shift_xy(self):
+        shape = (5, 5)
+        img = Image.from_fillvalue(shape=shape, value=0)
+        img.asarray[0, 0] = 255
+        arr = np.full(shape=shape, fill_value=0)
+        arr[4, 4] = 255
+        assert np.array_equal(
+            img.shift(shift=np.array([4, 4]), border_fill_value=0).asarray, arr
+        )
+
+    def test_shift_x(self):
+        shape = (5, 5)
+        img = Image.from_fillvalue(shape=shape, value=0)
+        img.asarray[0, 0] = 255
+        arr = np.full(shape=shape, fill_value=0)
+        arr[0, 4] = 255
+        assert np.array_equal(
+            img.shift(shift=np.array([4, 0]), border_fill_value=0).asarray, arr
+        )
+
+    def test_shift_y(self):
+        shape = (5, 5)
+        img = Image.from_fillvalue(shape=shape, value=0)
+        img.asarray[0, 0] = 255
+        arr = np.full(shape=shape, fill_value=0)
+        arr[4, 0] = 255
+        assert np.array_equal(
+            img.shift(shift=np.array([0, 4]), border_fill_value=0).asarray, arr
+        )
+
+    def test_shift_exact(self):
+        shape = (5, 5)
+        img = Image.from_fillvalue(shape=shape, value=0)
+        img.asarray[0, 0] = 255
+        arr = np.full(shape=shape, fill_value=0)
+        arr[4, 4] = 255
+        assert np.array_equal(img.shift_exact(shift=np.array([4, 4])).asarray, arr)
 
     def test_center_image_to_point(self):
         val = 87
@@ -200,6 +284,17 @@ class TestTransformerImageCropMethods:
     def test_crop(self):
         img = Image.from_fillvalue(shape=(5, 5), value=0)
         img.crop(1, 1, 4, 3)
+        assert img.shape_array == (3, 4)
+
+    def test_crop_from_topleft(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=0)
+        img.crop_from_topleft(topleft=[1, 1], width=4, height=3)
+        assert img.shape_array == (3, 4)
+
+    def test_crop_axis_aligned_bbox(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=0)
+        bbox = Rectangle.from_topleft_bottomright(topleft=[1, 1], bottomright=[4, 3])
+        img.crop_from_axis_aligned_bbox(bbox)
         assert img.shape_array == (3, 4)
 
     def test_crop_around_segment_horizontal(self):

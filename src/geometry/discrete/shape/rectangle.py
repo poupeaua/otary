@@ -6,6 +6,7 @@ It will be particularly useful for the AITT project for describing bounding boxe
 from __future__ import annotations
 
 from typing import Optional
+
 import numpy as np
 import pymupdf
 
@@ -131,6 +132,23 @@ class Rectangle(Polygon):
             angle=angle,
             is_cast_int=is_cast_int,
         )
+
+    @property
+    def is_axis_aligned(self) -> bool:
+        """Check if the rectangle is axis-aligned
+
+        Returns:
+            bool: True if the rectangle is axis-aligned, False otherwise
+        """
+        if self.is_self_intersected:
+            return False
+        longside_cond = bool(
+            (round(self.longside_slope_angle(degree=True)) + 90) % 90 == 0
+        )
+        shortside_cond = bool(
+            (round(self.shortside_slope_angle(degree=True)) + 90) % 90 == 0
+        )
+        return longside_cond and shortside_cond
 
     @property
     def as_pymupdf_rect(self) -> pymupdf.Rect:

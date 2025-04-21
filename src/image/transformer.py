@@ -351,7 +351,6 @@ class TransformerImage(BaseImage, ABC):
         if not is_degree:
             angle = np.rad2deg(angle)
         if is_clockwise:
-            # by default scipy rotate is counter-clockwise
             angle = -angle
 
         h, w = self.asarray.shape[:2]
@@ -481,8 +480,8 @@ class TransformerImage(BaseImage, ABC):
         return self.resize_fixed(dim=dim, interpolation=interpolation)
 
     def crop(self, x0: int, y0: int, x1: int, y1: int) -> Self:
-        """Crop the image. A straight rectangle is used for cropping.
-        This function inputs represent the top-left and bottom-right points.
+        """Crop the image. A straight axis-aligned rectangle is used for cropping.
+        This function inputs represents the top-left and bottom-right points.
 
         This method does not provide a way to extract a rotated rectangle or a
         different shape from the image.
@@ -490,7 +489,7 @@ class TransformerImage(BaseImage, ABC):
         Remember that in this library the x coordinates represent the y coordinates of
         the image array (horizontal axis of the image).
         The array representation is always rows then columns.
-        In the Image object this is the contrary.
+        In this library this is the contrary like in opencv.
 
         Args:
             x0 (int): x coordinate of the first point
@@ -517,7 +516,10 @@ class TransformerImage(BaseImage, ABC):
             Self: image cropped
         """
         return self.crop(
-            x0=topleft[0], y0=topleft[1], x1=topleft[0] + width, y1=topleft[1] + height
+            x0=topleft[0],
+            y0=topleft[1],
+            x1=topleft[0] + width - 1,
+            y1=topleft[1] + height - 1,
         )
 
     def crop_from_axis_aligned_bbox(self, bbox: geo.Rectangle) -> Self:
@@ -530,8 +532,8 @@ class TransformerImage(BaseImage, ABC):
             Self: cropped image
         """
         topleft = np.asarray([bbox.xmin, bbox.ymin])
-        height = int(bbox.ymax - bbox.ymin)
-        width = int(bbox.xmax - bbox.xmin)
+        height = int(bbox.ymax - bbox.ymin + 1)
+        width = int(bbox.xmax - bbox.xmin + 1)
         return self.crop_from_topleft(topleft=topleft, width=width, height=height)
 
     def crop_around_segment_horizontal(

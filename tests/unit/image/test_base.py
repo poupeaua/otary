@@ -218,3 +218,27 @@ class TestBaseImageAsMethods:
     def test_as_white(self):
         img = Image.from_fillvalue(shape=(5, 5), value=0).as_white()
         assert np.all(img.asarray == 255)
+
+    def test_as_pil(self):
+        img = Image.from_fillvalue(shape=(5, 5, 3), value=127)
+        pil_img = img.as_pil()
+        assert pil_img.size == (img.width, img.height)
+        assert pil_img.mode == "RGB"
+
+    def test_as_pil_grayscale(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=127)
+        pil_img = img.as_pil()
+        assert pil_img.size == (img.width, img.height)
+        assert pil_img.mode == "L"
+
+    def test_width_pct(self):
+        pct = 0.2
+        width = 50
+        img = Image.from_fillvalue(shape=(25, width), value=0)
+        assert img.width_pct(pct=pct) == width * pct
+
+    def test_height_pct(self):
+        pct = 0.3
+        height = 40
+        img = Image.from_fillvalue(shape=(height, 25), value=0)
+        assert img.height_pct(pct=pct) == height * pct

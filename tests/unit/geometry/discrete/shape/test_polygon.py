@@ -475,3 +475,141 @@ class TestPolygonFromUnorderedLinesApprox:
     def test_cnt_fula_dist_sup_thresh(self, input: list):
         with pytest.raises(RuntimeError):
             Polygon.from_unordered_lines_approx(input, max_dist_thresh=10)
+
+
+class TestPolygonScoreEdgesInPoints:
+
+    def test_score_edges_in_points_all_close(self):
+        cnt = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        points = np.array([[0, 0], [1, 0], [1, 1], [0, 1]])
+        scores = cnt.score_edges_in_points(points=points, min_distance=0.1)
+        assert np.array_equal(scores, [1, 1, 1, 1])
+
+    def test_score_edges_in_points_some_close(self):
+        cnt = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        points = np.array([[0, 0], [1, 0]])
+        scores = cnt.score_edges_in_points(points=points, min_distance=0.1)
+        assert np.array_equal(scores, [1, 1, 0, 0])
+
+    def test_score_edges_in_points_none_close(self):
+        cnt = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        points = np.array([[2, 2], [3, 3]])
+        scores = cnt.score_edges_in_points(points=points, min_distance=0.1)
+        assert np.array_equal(scores, [0, 0, 0, 0])
+
+    def test_score_edges_in_points_with_margin(self):
+        cnt = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        points = np.array([[0.05, 0.05], [1.05, 0.05]])
+        scores = cnt.score_edges_in_points(points=points, min_distance=0.1)
+        assert np.array_equal(scores, [1, 1, 0, 0])
+
+    def test_score_edges_in_points_duplicate_points(self):
+        cnt = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        points = np.array([[0, 0], [0, 0], [1, 0]])
+        scores = cnt.score_edges_in_points(points=points, min_distance=0.1)
+        assert np.array_equal(scores, [1, 1, 0, 0])
+
+
+class TestPolygonContains:
+    def test_contains_true(self):
+        polygon = Polygon([[0, 0], [4, 0], [4, 4], [0, 4]])
+        other = Polygon([[1, 1], [3, 1], [3, 3], [1, 3]])
+        assert polygon.contains(other)
+
+    def test_contains_false(self):
+        polygon = Polygon([[0, 0], [4, 0], [4, 4], [0, 4]])
+        other = Polygon([[3, 3], [5, 3], [5, 5], [3, 5]])
+        assert not polygon.contains(other)
+
+    def test_contains_with_dilate_scale_true(self):
+        polygon = Polygon([[0, 0], [4, 0], [4, 4], [0, 4]])
+        other = Polygon([[3.5, 3.5], [4.5, 3.5], [4.5, 4.5], [3.5, 4.5]])
+        assert polygon.contains(other, dilate_scale=1.5)
+
+    def test_contains_with_dilate_scale_true2(self):
+        polygon = Polygon([[0, 0], [4, 0], [4, 4], [0, 4]])
+        other = Polygon([[5, 5], [6, 5], [6, 6], [5, 6]])
+        assert polygon.contains(other, dilate_scale=2)
+
+    def test_contains_with_dilate_scale_false(self):
+        polygon = Polygon([[0, 0], [4, 0], [4, 4], [0, 4]])
+        other = Polygon([[5, 5], [6, 5], [6, 6], [5, 6]])
+        assert not polygon.contains(other, dilate_scale=1.9)
+
+    def test_contains_invalid_dilate_scale(self):
+        polygon = Polygon([[0, 0], [4, 0], [4, 4], [0, 4]])
+        other = Polygon([[1, 1], [3, 1], [3, 3], [1, 3]])
+        with pytest.raises(ValueError):
+            polygon.contains(other, dilate_scale=0.5)
+
+
+class TestPolygonExpand:
+    def test_expand_valid_scale(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        expanded_polygon = polygon.expand(scale=2)
+        expected_points = [[-0.5, -0.5], [1.5, -0.5], [1.5, 1.5], [-0.5, 1.5]]
+        assert np.allclose(expanded_polygon.asarray, expected_points)
+
+    def test_expand_invalid_scale_less_than_one(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        with pytest.raises(ValueError):
+            polygon.expand(scale=0.5)
+
+    def test_expand_no_change_scale_one(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        expanded_polygon = polygon.expand(scale=1)
+        assert np.array_equal(expanded_polygon.asarray, polygon.asarray)
+
+
+class TestPolygonShrink:
+    def test_shrink_valid_scale(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        shrunk_polygon = polygon.shrink(scale=2)
+        expected_points = [[0.5, 0.5], [1.5, 0.5], [1.5, 1.5], [0.5, 1.5]]
+        assert np.allclose(shrunk_polygon.asarray, expected_points)
+
+    def test_shrink_invalid_scale_less_than_one(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        with pytest.raises(ValueError):
+            polygon.shrink(scale=0.5)
+
+    def test_shrink_no_change_scale_one(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        shrunk_polygon = polygon.shrink(scale=1)
+        assert np.array_equal(shrunk_polygon.asarray, polygon.asarray)
+
+
+class TestPolygonLengths:
+    def test_lengths_square(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        expected_lengths = [1, 1, 1, 1]
+        assert np.allclose(polygon.lengths, expected_lengths)
+
+    def test_lengths_rectangle(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 1], [0, 1]])
+        expected_lengths = [2, 1, 2, 1]
+        assert np.allclose(polygon.lengths, expected_lengths)
+
+    def test_lengths_triangle(self):
+        polygon = Polygon([[0, 0], [3, 0], [1.5, 2]])
+        expected_lengths = [
+            3,  # base
+            np.sqrt(2.25 + 4),  # left side
+            np.sqrt(2.25 + 4),  # right side
+        ]
+        assert np.allclose(polygon.lengths, expected_lengths)
+
+    def test_lengths_irregular_polygon(self):
+        polygon = Polygon([[0, 0], [2, 0], [3, 1], [1, 2]])
+        expected_lengths = [
+            2,  # bottom
+            np.sqrt(1 + 1),  # right diagonal
+            np.sqrt(4 + 1),  # top diagonal
+            np.sqrt(1 + 4),  # left diagonal
+        ]
+        assert np.allclose(polygon.lengths, expected_lengths)
+
+    def test_lengths_single_segment(self):
+        polygon = Polygon([[0, 0], [1, 0]])
+        expected_lengths = [1]
+        assert np.allclose(polygon.lengths, expected_lengths)
