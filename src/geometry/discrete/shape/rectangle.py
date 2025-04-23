@@ -142,11 +142,13 @@ class Rectangle(Polygon):
         """
         if self.is_self_intersected:
             return False
+
+        precision = 3
         longside_cond = bool(
-            (round(self.longside_slope_angle(degree=True)) + 90) % 90 == 0
+            (round(self.longside_slope_angle(degree=True), precision) + 90) % 90 == 0
         )
         shortside_cond = bool(
-            (round(self.shortside_slope_angle(degree=True)) + 90) % 90 == 0
+            (round(self.shortside_slope_angle(degree=True), precision) + 90) % 90 == 0
         )
         return longside_cond and shortside_cond
 
@@ -160,6 +162,11 @@ class Rectangle(Polygon):
         Returns:
             pymupdf.Rect: pymupdf axis-aligned Rect object
         """
+        if not self.is_axis_aligned:
+            raise RuntimeError(
+                "The rectangle is not axis-aligned, thus it cannot be converted to a "
+                "pymupdf Rect object."
+            )
         return pymupdf.Rect(x0=self.xmin, y0=self.ymin, x1=self.xmax, y1=self.ymax)
 
     @property
@@ -239,6 +246,7 @@ class Rectangle(Polygon):
                 ),
                 axis=0,
             )
+            # TODO check if the new rectangle is valid and not self intersected
             return Rectangle(points=new_rect_points)
         # if 3 or more points in common it is the same rectangle
         return self

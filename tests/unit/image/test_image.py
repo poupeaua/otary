@@ -5,7 +5,7 @@ Unit Tests for the generic image methods
 import pytest
 import numpy as np
 
-from src.geometry import Polygon, Segment
+from src.geometry import Polygon, Segment, Rectangle
 from src.image import Image, PolygonsRender, SegmentsRender
 
 
@@ -111,3 +111,58 @@ class TestImageScoreMethods:
             point=point, method="gaussian"
         )
         assert round(score) == 0
+
+
+class TestImageRestrictRectInFrame:
+
+    def test_restrict_rect_in_frame_within_bounds(self):
+        img = Image.from_fillvalue(shape=(10, 10), value=255)
+        rect = Rectangle.from_topleft_bottomright(
+            topleft=np.asarray([2, 2]),
+            bottomright=np.asarray([8, 8]),
+            is_cast_int=True,
+        )
+        restricted_rect = img.restrict_rect_in_frame(rect)
+        assert restricted_rect.xmin == 2
+        assert restricted_rect.ymin == 2
+        assert restricted_rect.xmax == 8
+        assert restricted_rect.ymax == 8
+
+    def test_restrict_rect_in_frame_outside_bounds(self):
+        img = Image.from_fillvalue(shape=(10, 10), value=255)
+        rect = Rectangle.from_topleft_bottomright(
+            topleft=np.asarray([-5, -5]),
+            bottomright=np.asarray([15, 15]),
+            is_cast_int=True,
+        )
+        restricted_rect = img.restrict_rect_in_frame(rect)
+        assert restricted_rect.xmin == 0
+        assert restricted_rect.ymin == 0
+        assert restricted_rect.xmax == 10
+        assert restricted_rect.ymax == 10
+
+    def test_restrict_rect_in_frame_partial_outside_bounds(self):
+        img = Image.from_fillvalue(shape=(10, 10), value=255)
+        rect = Rectangle.from_topleft_bottomright(
+            topleft=np.asarray([5, 5]),
+            bottomright=np.asarray([15, 15]),
+            is_cast_int=True,
+        )
+        restricted_rect = img.restrict_rect_in_frame(rect)
+        assert restricted_rect.xmin == 5
+        assert restricted_rect.ymin == 5
+        assert restricted_rect.xmax == 10
+        assert restricted_rect.ymax == 10
+
+    def test_restrict_rect_in_frame_exact_bounds(self):
+        img = Image.from_fillvalue(shape=(10, 10), value=255)
+        rect = Rectangle.from_topleft_bottomright(
+            topleft=np.asarray([0, 0]),
+            bottomright=np.asarray([10, 10]),
+            is_cast_int=True,
+        )
+        restricted_rect = img.restrict_rect_in_frame(rect)
+        assert restricted_rect.xmin == 0
+        assert restricted_rect.ymin == 0
+        assert restricted_rect.xmax == 10
+        assert restricted_rect.ymax == 10
