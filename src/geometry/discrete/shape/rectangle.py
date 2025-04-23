@@ -226,7 +226,7 @@ class Rectangle(Polygon):
         Returns:
             Rectangle: the join new Rectangle object
         """
-        shared_points = self.shared_approx_points(rect, margin_dist_error)
+        shared_points = self.shared_approx_vertices(rect, margin_dist_error)
         n_shared_points = len(shared_points)
 
         if n_shared_points in (0, 1):
@@ -234,8 +234,8 @@ class Rectangle(Polygon):
         if n_shared_points == 2:
             new_rect_points = np.concatenate(
                 (
-                    self.points_far_from(shared_points, margin_dist_error),
-                    rect.points_far_from(shared_points, margin_dist_error),
+                    self.vertices_far_from(shared_points, margin_dist_error),
+                    rect.vertices_far_from(shared_points, margin_dist_error),
                 ),
                 axis=0,
             )

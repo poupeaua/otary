@@ -84,7 +84,7 @@ class Point(DiscreteGeometryEntity):
             idxs_order_by_dist = idxs_order_by_dist[::-1]
         return idxs_order_by_dist
 
-    def distances_to_point(self, point: np.ndarray) -> np.ndarray:
+    def distances_vertices_to_point(self, point: np.ndarray) -> np.ndarray:
         """Compute the distances to a given point
 
         Args:

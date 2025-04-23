@@ -317,3 +317,199 @@ class TestEntityContains:
         rect2.asarray = rect2.asarray * 2
         rect1.asarray = rect1.asarray * 2 - 1
         assert not rect2.contains(rect1)
+
+
+class TestEntityClamp:
+    def test_clamp_within_bounds(self):
+        rect = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        rect.clamp(xmin=0, xmax=2, ymin=0, ymax=2)
+        assert np.array_equal(rect.asarray, np.array([[0, 0], [0, 2], [2, 2], [2, 0]]))
+
+    def test_clamp_exceeding_bounds(self):
+        rect = Rectangle([[-1, -1], [0, 3], [3, 3], [3, -1]])
+        rect.clamp(xmin=0, xmax=2, ymin=0, ymax=2)
+        assert np.array_equal(rect.asarray, np.array([[0, 0], [0, 2], [2, 2], [2, 0]]))
+
+    def test_clamp_negative_bounds(self):
+        rect = Rectangle([[-3, -3], [-1, -1], [1, 1], [3, 3]])
+        rect.clamp(xmin=-2, xmax=2, ymin=-2, ymax=2)
+        assert np.array_equal(
+            rect.asarray, np.array([[-2, -2], [-1, -1], [1, 1], [2, 2]])
+        )
+
+    def test_clamp_no_clipping(self):
+        rect = Rectangle([[0, 0], [1, 1], [2, 2], [3, 3]])
+        rect.clamp(xmin=-10, xmax=10, ymin=-10, ymax=10)
+        assert np.array_equal(rect.asarray, np.array([[0, 0], [1, 1], [2, 2], [3, 3]]))
+
+    def test_clamp_single_axis_clipping(self):
+        rect = Rectangle([[0, 0], [1, 1], [2, 2], [3, 3]])
+        rect.clamp(xmin=1, xmax=2)
+        assert np.array_equal(rect.asarray, np.array([[1, 0], [1, 1], [2, 2], [2, 3]]))
+
+
+class TestEntityNormalize:
+    def test_normalize_positive_values(self):
+        rect = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        rect.normalize(x=2, y=2)
+        assert np.array_equal(rect.asarray, np.array([[0, 0], [0, 1], [1, 1], [1, 0]]))
+
+    def test_normalize_negative_values(self):
+        rect = Rectangle([[0, 0], [0, -2], [-2, -2], [-2, 0]])
+        rect.normalize(x=-2, y=-2)
+        assert np.array_equal(rect.asarray, np.array([[0, 0], [0, 1], [1, 1], [1, 0]]))
+
+    def test_normalize_mixed_values(self):
+        rect = Rectangle([[0, 0], [0, 4], [2, 4], [2, 0]])
+        rect.normalize(x=2, y=4)
+        assert np.array_equal(rect.asarray, np.array([[0, 0], [0, 1], [1, 1], [1, 0]]))
+
+    def test_normalize_with_zeros(self):
+        rect = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        with pytest.raises(ValueError):
+            rect.normalize(x=0, y=2)
+
+    def test_normalize_identity(self):
+        rect = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        rect.normalize(x=1, y=1)
+        assert np.array_equal(rect.asarray, np.array([[0, 0], [0, 2], [2, 2], [2, 0]]))
+
+
+class TestEntityDistVerticesToPoint:
+
+    def test_shortest_dist_to_point_inside(self):
+        rect = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        point = np.array([1, 1])
+        assert rect.shortest_dist_vertices_to_point(point) == np.sqrt(2)
+
+    def test_shortest_dist_to_point_on_vertex(self):
+        rect = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        point = np.array([0, 0])
+        assert rect.shortest_dist_vertices_to_point(point) == 0.0
+
+    def test_shortest_dist_to_point_outside(self):
+        rect = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        point = np.array([3, 3])
+        assert rect.shortest_dist_vertices_to_point(point) == np.sqrt(2)
+
+    def test_shortest_dist_to_point_negative_coordinates(self):
+        rect = Rectangle([[-2, -2], [-2, 0], [0, 0], [0, -2]])
+        point = np.array([-1, -1])
+        assert rect.shortest_dist_vertices_to_point(point) == np.sqrt(2)
+
+    def test_shortest_dist_to_point_far_away(self):
+        rect = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        point = np.array([10, 10])
+        assert rect.shortest_dist_vertices_to_point(point) == np.sqrt(2 * 8**2)
+
+    def test_longest_dist_to_point_inside(self):
+        rect = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        point = np.array([1, 1])
+        assert rect.longest_dist_vertices_to_point(point) == np.sqrt(2)
+
+    def test_longest_dist_to_point_on_vertex(self):
+        rect = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        point = np.array([0, 0])
+        assert rect.longest_dist_vertices_to_point(point) == 2 * np.sqrt(2)
+
+    def test_longest_dist_to_point_outside(self):
+        rect = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        point = np.array([3, 3])
+        assert rect.longest_dist_vertices_to_point(point) == np.sqrt(2 * 3**2)
+
+    def test_longest_dist_to_point_negative_coordinates(self):
+        rect = Rectangle([[-2, -2], [-2, 0], [0, 0], [0, -2]])
+        point = np.array([-1, -1])
+        assert rect.longest_dist_vertices_to_point(point) == np.sqrt(2)
+
+    def test_longest_dist_to_point_far_away(self):
+        rect = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        point = np.array([10, 10])
+        assert rect.longest_dist_vertices_to_point(point) == np.sqrt(2 * 10**2)
+
+
+class TestEntitySharedApproxVertices:
+    def test_shared_vertices_with_overlap(self):
+        entity1 = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        entity2 = Rectangle([[1, 1], [1, 3], [3, 3], [3, 1]])
+        shared_vertices = entity1.shared_approx_vertices(entity2, margin_dist_error=1.5)
+        expected_vertices = np.array([[0, 0], [0, 2], [2, 2], [2, 0]])
+        assert np.array_equal(shared_vertices, expected_vertices)
+
+    def test_shared_vertices_no_overlap(self):
+        entity1 = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        entity2 = Rectangle([[3, 3], [3, 5], [5, 5], [5, 3]])
+        shared_vertices = entity1.shared_approx_vertices(entity2, margin_dist_error=1.5)
+        expected_vertices = np.array([[2, 2]])
+        assert np.array_equal(shared_vertices, expected_vertices)
+
+    def test_shared_vertices_no_overlap_no_shared(self):
+        entity1 = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        entity2 = Rectangle([[3, 3], [3, 5], [5, 5], [5, 3]])
+        shared_vertices = entity1.shared_approx_vertices(entity2, margin_dist_error=1.4)
+        assert shared_vertices.size == 0
+
+    def test_shared_vertices_exact_match(self):
+        entity1 = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        entity2 = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        shared_vertices = entity1.shared_approx_vertices(
+            entity2, margin_dist_error=0.001
+        )
+        expected_vertices = np.array([[0, 0], [0, 2], [2, 2], [2, 0]])
+        assert np.array_equal(shared_vertices, expected_vertices)
+
+    def test_shared_vertices_partial_overlap(self):
+        entity1 = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        entity2 = Rectangle([[2, 2], [2, 4], [4, 4], [4, 2]])
+        shared_vertices = entity1.shared_approx_vertices(entity2, margin_dist_error=0.5)
+        expected_vertices = np.array([[2, 2]])
+        assert np.array_equal(shared_vertices, expected_vertices)
+
+    def test_shared_vertices_with_large_margin(self):
+        entity1 = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        entity2 = Rectangle([[3, 3], [3, 5], [5, 5], [5, 3]])
+        shared_vertices = entity1.shared_approx_vertices(entity2, margin_dist_error=5)
+        expected_vertices = np.array([[0, 0], [0, 2], [2, 2], [2, 0]])
+        assert np.array_equal(shared_vertices, expected_vertices)
+
+
+class TestEntityVerticesFarFrom:
+
+    def test_vertices_far_from_all_far(self):
+        rect = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        points = np.array([[10, 10]])
+        far_vertices = rect.vertices_far_from(points=points, min_distance=5)
+        assert np.array_equal(far_vertices, rect.asarray)
+
+    def test_vertices_far_from_all_close(self):
+        rect = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        points = np.array([[1, 1]])
+        far_vertices = rect.vertices_far_from(points=points, min_distance=2)
+        assert far_vertices.size == 0
+
+    def test_vertices_far_from_some_far(self):
+        rect = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        points = np.array([[0, 0], [2, 2]])
+        far_vertices = rect.vertices_far_from(points=points, min_distance=1)
+        expected_vertices = np.array([[0, 2], [2, 0]])
+        assert np.array_equal(far_vertices, expected_vertices)
+
+    def test_vertices_far_from_multiple_points(self):
+        rect = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        points = np.array([[0, 0], [1, 1], [2, 2]])
+        far_vertices = rect.vertices_far_from(points=points, min_distance=1)
+        expected_vertices = np.array([[0, 2], [2, 0]])
+        assert np.array_equal(far_vertices, expected_vertices)
+
+    def test_vertices_far_from_large_min_distance(self):
+        rect = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        points = np.array([[1, 1]])
+        far_vertices = rect.vertices_far_from(points=points, min_distance=10)
+        assert far_vertices.size == 0
+
+    def test_vertices_far_from_zero_min_distance(self):
+        rect = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        points = np.array([[0, 0]])
+        far_vertices = rect.vertices_far_from(points=points, min_distance=0)
+        expected_vertices = np.array([[0, 0], [0, 2], [2, 2], [2, 0]])
+        assert np.array_equal(far_vertices, expected_vertices)

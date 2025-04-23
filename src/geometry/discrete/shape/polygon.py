@@ -491,7 +491,7 @@ class Polygon(DiscreteGeometryEntity, PolygonReducer):
 
         # compute diagonal 1 = taking reference index as 1st point in list - index 0
         refpoint = self.asarray[0]
-        idx_max_dist = self.index_farthest_point_from(point=refpoint)
+        idx_max_dist = self.index_farthest_vertice_from(point=refpoint)
         farther_point = self.asarray[idx_max_dist]
         diag1 = Segment(points=[refpoint, farther_point])
 
@@ -554,7 +554,7 @@ class Polygon(DiscreteGeometryEntity, PolygonReducer):
         Returns:
             np.ndarray: a list of score for each point in the contour
         """
-        indices = self.indices_shared_approx_points(
+        indices = self.indices_shared_approx_vertices(
             other=Polygon(points=points), margin_dist_error=min_distance
         )
         score = np.bincount(indices, minlength=len(self))
@@ -636,7 +636,7 @@ class Polygon(DiscreteGeometryEntity, PolygonReducer):
             Polygon: Polygon which is the exact same one but with a rearranged list
                 of points.
         """
-        idx_min_dist = self.index_closest_point_from(point=reference_point)
+        idx_min_dist = self.index_closest_vertice_from(point=reference_point)
         return self.rearrange_first_point_at_index(index=idx_min_dist)
 
     def __rescale(self, scale: float) -> Polygon:

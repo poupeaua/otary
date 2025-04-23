@@ -240,6 +240,8 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         Returns:
             GeometryEntity: normalized GeometryEntity
         """
+        if x == 0 or y == 0:
+            raise ValueError("x or y cannot be 0")
         self.asarray = self.asarray / np.array([x, y])
         return self
 
@@ -303,53 +305,53 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         convexhull = np.squeeze(cv2.convexHull(self.asarray))
         return Polygon(convexhull)
 
-    def distances_to_point(self, point: np.ndarray) -> np.ndarray:
-        """Get the distance from all points in the geometry entity to the point
+    def distances_vertices_to_point(self, point: np.ndarray) -> np.ndarray:
+        """Get the distance from all vertices in the geometry entity to the input point
 
         Args:
             point (np.ndarray): 2D point
 
         Returns:
-            np.ndarray: array of the same len as the number of point in the geometry
+            np.ndarray: array of the same len as the number of vertices in the geometry
                 entity.
         """
         return np.linalg.norm(self.asarray - point, axis=1)
 
-    def shortest_dist_to_point(self, point: np.ndarray) -> float:
-        """Compute the shortest distance from the geometry entity to the point
+    def shortest_dist_vertices_to_point(self, point: np.ndarray) -> float:
+        """Compute the shortest distance from the geometry entity vertices to the point
 
         Args:
             point (np.ndarray): 2D point
 
         Returns:
-            float: shortest distance from the geometry entity to the point
+            float: shortest distance from the geometry entity vertices to the point
         """
-        return np.min(self.distances_to_point(point=point))
+        return np.min(self.distances_vertices_to_point(point=point))
 
-    def longest_dist_to_point(self, point: np.ndarray) -> float:
-        """Compute the longest distance from the geometry entity to the point
+    def longest_dist_vertices_to_point(self, point: np.ndarray) -> float:
+        """Compute the longest distance from the geometry entity vertices to the point
 
         Args:
             point (np.ndarray): 2D point
 
         Returns:
-            float: longest distance from the geometry entity to the point
+            float: longest distance from the geometry entity vertices to the point
         """
-        return np.max(self.distances_to_point(point=point))
+        return np.max(self.distances_vertices_to_point(point=point))
 
-    def index_farthest_point_from(self, point: np.ndarray) -> int:
-        """Get the index of the farthest point from a given point
+    def index_farthest_vertice_from(self, point: np.ndarray) -> int:
+        """Get the index of the farthest vertice from a given point
 
         Args:
             point (np.ndarray): 2D point
 
         Returns:
-            int: the index of the farthest point in the entity from the input point
+            int: the index of the farthest vertice in the entity from the input point
         """
-        return np.argmax(self.distances_to_point(point=point)).astype(int)
+        return np.argmax(self.distances_vertices_to_point(point=point)).astype(int)
 
-    def index_closest_point_from(self, point: np.ndarray) -> int:
-        """Get the index of the closest point from a given point
+    def index_closest_vertice_from(self, point: np.ndarray) -> int:
+        """Get the index of the closest vertice from a given point
 
         Args:
             point (np.ndarray): 2D point
@@ -357,20 +359,20 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         Returns:
             int: the index of the closest point in the entity from the input point
         """
-        return np.argmin(self.distances_to_point(point=point)).astype(int)
+        return np.argmin(self.distances_vertices_to_point(point=point)).astype(int)
 
-    def indices_shared_approx_points(
+    def indices_shared_approx_vertices(
         self, other: DiscreteGeometryEntity, margin_dist_error: float = 5
     ) -> np.ndarray:
-        """Compute the point indices from this entity that correspond to shared
-        points with the other geometric entity.
+        """Compute the vertices indices from this entity that correspond to shared
+        vertices with the other geometric entity.
 
-        A point is considered shared if it is close enough to another point in the other
-        geometric structure.
+        A vertice is considered shared if it is close enough to another vertice
+        in the other geometric structure.
 
         Args:
             other (DiscreteGeometryEntity): other Discrete Geometry entity
-            margin_dist_error (float, optional): minimum distance to have two points
+            margin_dist_error (float, optional): minimum distance to have two vertices
                 considered as close enough to be shared. Defaults to 5.
 
         Returns:
@@ -384,42 +386,42 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
                 list_index_shared_points.append(i)
         return np.array(list_index_shared_points).astype(int)
 
-    def shared_approx_points(
+    def shared_approx_vertices(
         self, other: DiscreteGeometryEntity, margin_dist_error: float = 5
     ) -> np.ndarray:
-        """Get the shared points between two geometric objects.
+        """Get the shared vertices between two geometric objects.
 
-        A point is considered shared if it is close enough to another point in the other
-        geometric structure.
+        A vertice is considered shared if it is close enough to another vertice
+        in the other geometric structure.
 
         Args:
             other (DiscreteGeometryEntity): a DiscreteGeometryEntity object
-            margin_dist_error (float, optional): the threshold to define a point as
+            margin_dist_error (float, optional): the threshold to define a vertice as
                 shared or not. Defaults to 5.
 
         Returns:
-            np.ndarray: list of points identified as shared between the two geometric
+            np.ndarray: list of vertices identified as shared between the two geometric
                 objects
         """
-        indices = self.indices_shared_approx_points(
+        indices = self.indices_shared_approx_vertices(
             other=other, margin_dist_error=margin_dist_error
         )
         return self.asarray[indices]
 
-    def points_far_from(
+    def vertices_far_from(
         self, points: np.ndarray, min_distance: float = 5
     ) -> np.ndarray:
-        """Get points far from the points in parameters that belongs to the geometric
-        structure.
+        """Get vertices that belongs to the geometric structure far from the points in
+        parameters.
 
         Args:
-            points (np.ndarray): points that should be remove of the geometric structure
+            points (np.ndarray): input list of points
             min_distance (float, optional): the threshold to define a point as
-                far enough or not. Defaults to 5.
+                far enough or not from a vertice. Defaults to 5.
 
         Returns:
-            np.ndarray: points that belongs to the geometric structure and that
-                do not belong / are far from to
+            np.ndarray: vertices that belongs to the geometric structure and that
+                are far from the input points.
         """
         list_far_points = []
         for pt in self.asarray:
