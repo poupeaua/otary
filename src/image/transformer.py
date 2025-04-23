@@ -4,7 +4,7 @@ Image Trasnformation module. it only contains advanced image transformation meth
 
 from __future__ import annotations
 
-from typing import Self
+from typing import Self, Sequence
 from abc import ABC
 
 import cv2
@@ -252,7 +252,7 @@ class TransformerImage(BaseImage, ABC):
         return self
 
     def shift(
-        self, shift: np.ndarray, border_fill_value: int | tuple[int, int, int] = 0
+        self, shift: np.ndarray, border_fill_value: Sequence[float] = (0.0,)
     ) -> Self:
         """Shift the image doing a translation operation
 
@@ -261,7 +261,7 @@ class TransformerImage(BaseImage, ABC):
             border_fill_value (int | tuple[int, int, int], optional): value to fill the
                 border of the image after the rotation in case reshape is True.
                 Can be a tuple of 3 integers for RGB image or a single integer for
-                grayscale image. Defaults to 0.
+                grayscale image. Defaults to (0.0,) which is black.
 
         Returns:
             Self: image translated
@@ -288,7 +288,7 @@ class TransformerImage(BaseImage, ABC):
         is_degree: bool = False,
         is_clockwise: bool = True,
         reshape: bool = True,
-        border_fill_value: int = 0,
+        border_fill_value: float = 0.0,
     ) -> Self:
         """Rotate the image by a given angle.
         This method is more accurate than the rotate method but way slower
@@ -302,20 +302,15 @@ class TransformerImage(BaseImage, ABC):
             is_clockwise (bool, optional): whether the rotation is clockwise or
                 counter-clockwise. Defaults to True.
             reshape (bool, optional): scipy reshape option. Defaults to True.
-            border_fill_value (int, optional): value to fill the border of the image
+            border_fill_value (float, optional): value to fill the border of the image
                 after the rotation in case reshape is True. Can only be a single
                 integer. Does not support tuple of 3 integers for RGB image.
-                Defaults to 0.
+                Defaults to 0.0 which is black.
 
         Returns:
             (Self): image rotated
         """
-        if not isinstance(border_fill_value, int):
-            raise ValueError(
-                f"The border_fill_value {border_fill_value} is not a valid value. "
-                "It must be a single integer."
-            )
-
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
         if not is_degree:
             angle = np.rad2deg(angle)
         if is_clockwise:
@@ -332,7 +327,7 @@ class TransformerImage(BaseImage, ABC):
         is_degree: bool = False,
         is_clockwise: bool = True,
         reshape: bool = True,
-        border_fill_value: int | tuple[int, int, int] = 0,
+        border_fill_value: Sequence[float] = (0.0,),
         fast: bool = True,
     ) -> Self:
         """Rotate the image by a given angle.
@@ -352,16 +347,22 @@ class TransformerImage(BaseImage, ABC):
                 If True, the complete image is preserved hence the width and height
                 of the rotated image are different than in the original image.
                 Defaults to True.
-            border_fill_value (int | tuple[int, int, int], optional): value to fill the
-                border of the image after the rotation in case reshape is True.
+            border_fill_value (Sequence[float], optional): value to
+                fill the border of the image after the rotation in case reshape is True.
                 Can be a tuple of 3 integers for RGB image or a single integer for
-                grayscale image. Defaults to 0.
+                grayscale image. Defaults to (0.0,) which is black.
 
         Returns:
             (Self): image rotated
         """
         # pylint: disable=too-many-arguments, too-many-positional-arguments
         if not fast:  # using scipy rotate which is slower than cv2
+            border_fill_value = border_fill_value[0]
+            if not isinstance(border_fill_value, float):
+                raise ValueError(
+                    f"The border_fill_value {border_fill_value} is not a valid value. "
+                    "It must be a single integer when fast mode is off"
+                )
             return self.__rotate_exact(
                 angle=angle,
                 is_degree=is_degree,

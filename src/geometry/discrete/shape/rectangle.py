@@ -5,7 +5,7 @@ It will be particularly useful for the AITT project for describing bounding boxe
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Optional, Self
 
 import numpy as np
 import pymupdf
@@ -45,7 +45,8 @@ class Rectangle(Polygon):
             center (np.ndarray): center point of the rectangle
             width (float): width of the rectangle
             height (float): height of the rectangle
-            angle (float, optional): rotation angle for the rectangle. Defaults to 0.
+            angle (float, optional): radian rotation angle for the rectangle.
+                Defaults to 0.
 
         Returns:
             Rectangle: Rectangle object
@@ -72,7 +73,7 @@ class Rectangle(Polygon):
         if angle != 0:
             rect = rect.rotate(angle=angle, pivot=center)
             if is_cast_int:
-                rect.asarray = rect.asarray.astype(int)
+                rect.asarray = np.round(rect.asarray).astype(int)
 
         return rect
 
@@ -215,20 +216,38 @@ class Rectangle(Polygon):
         seg_smallside = seg2 if seg1.length > seg2.length else seg1
         return seg_smallside.slope_angle(degree=degree, is_cv2=is_cv2)
 
+    def desintersect(self) -> Self:
+        """Desintersect the rectangle if it is self-intersected.
+        If the rectangle is not self-intersected, returns the same rectangle.
+
+        Returns:
+            Rectangle: the desintersected Rectangle object
+        """
+        if not self.is_self_intersected:
+            return self
+
+        # Sort points based on angle from centroid
+        def angle_from_center(pt):
+            return np.arctan2(pt[1] - self.centroid[1], pt[0] - self.centroid[0])
+
+        sorted_vertices = sorted(self.asarray, key=angle_from_center)
+        self.asarray = np.array(sorted_vertices)
+        return self
+
     def join(
-        self, rect: Rectangle, margin_dist_error: float = 5
+        self, rect: Rectangle, margin_dist_error: float = 1e-5
     ) -> Optional[Rectangle]:
         """Join two rectangles into a single one.
         If they share no point in common or only a single point returns None.
         If they share two points, returns a new Rectangle that is the concatenation
-        of the two rectangles.
+        of the two rectangles and that is not self-intersected.
         If they share 3 or more points they represent the same rectangle, thus
         returns this object.
 
         Args:
             rect (Rectangle): the other Rectangle object
             margin_dist_error (float, optional): the threshold to consider whether the
-                rectangle share a common point. Defaults to 5.
+                rectangle share a common point. Defaults to 1e-5.
 
         Returns:
             Rectangle: the join new Rectangle object
@@ -246,7 +265,6 @@ class Rectangle(Polygon):
                 ),
                 axis=0,
             )
-            # TODO check if the new rectangle is valid and not self intersected
-            return Rectangle(points=new_rect_points)
+            return Rectangle(points=new_rect_points).desintersect()
         # if 3 or more points in common it is the same rectangle
         return self
