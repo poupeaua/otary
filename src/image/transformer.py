@@ -251,28 +251,17 @@ class TransformerImage(BaseImage, ABC):
             )
         return self
 
-    def shift_exact(self, shift: np.ndarray, mode: str = "constant") -> Self:
-        """Shift the image doing a translation operation
-        This method is more accurate than the shift method but slower.
-
-        Args:
-            shift (np.ndarray): Vector for translation
-            mode (str, optional): Defaults to "contants"
-
-        Returns:
-            Self: image translated
-        """
-        vector_shift = assert_transform_shift_vector(vector=shift)
-        self.asarray = scipy.ndimage.shift(
-            input=self.asarray, shift=(vector_shift[1], vector_shift[0]), mode=mode
-        )
-        return self
-
-    def shift(self, shift: np.ndarray, border_fill_value: int = 255) -> Self:
+    def shift(
+        self, shift: np.ndarray, border_fill_value: int | tuple[int, int, int] = 0
+    ) -> Self:
         """Shift the image doing a translation operation
 
         Args:
             shift (np.ndarray): Vector for translation
+            border_fill_value (int | tuple[int, int, int], optional): value to fill the
+                border of the image after the rotation in case reshape is True.
+                Can be a tuple of 3 integers for RGB image or a single integer for
+                grayscale image. Defaults to 0.
 
         Returns:
             Self: image translated
@@ -293,15 +282,17 @@ class TransformerImage(BaseImage, ABC):
         )  # type: ignore[call-overload]
         return self
 
-    def rotate_exact(
+    def __rotate_exact(
         self,
         angle: float,
         is_degree: bool = False,
         is_clockwise: bool = True,
         reshape: bool = True,
+        border_fill_value: int = 0,
     ) -> Self:
         """Rotate the image by a given angle.
-        This method is more accurate than the rotate method but slower.
+        This method is more accurate than the rotate method but way slower
+        (about 10 times slower).
 
         Args:
             angle (float): angle to rotate the image
@@ -311,17 +302,27 @@ class TransformerImage(BaseImage, ABC):
             is_clockwise (bool, optional): whether the rotation is clockwise or
                 counter-clockwise. Defaults to True.
             reshape (bool, optional): scipy reshape option. Defaults to True.
+            border_fill_value (int, optional): value to fill the border of the image
+                after the rotation in case reshape is True. Can only be a single
+                integer. Does not support tuple of 3 integers for RGB image.
+                Defaults to 0.
 
         Returns:
             (Self): image rotated
         """
+        if not isinstance(border_fill_value, int):
+            raise ValueError(
+                f"The border_fill_value {border_fill_value} is not a valid value. "
+                "It must be a single integer."
+            )
+
         if not is_degree:
             angle = np.rad2deg(angle)
         if is_clockwise:
             # by default scipy rotate is counter-clockwise
             angle = -angle
         self.asarray = scipy.ndimage.rotate(
-            input=self.asarray, angle=angle, reshape=reshape
+            input=self.asarray, angle=angle, reshape=reshape, cval=border_fill_value
         )
         return self
 
@@ -331,9 +332,14 @@ class TransformerImage(BaseImage, ABC):
         is_degree: bool = False,
         is_clockwise: bool = True,
         reshape: bool = True,
-        border_fill_value: int = 255,
+        border_fill_value: int | tuple[int, int, int] = 0,
+        fast: bool = True,
     ) -> Self:
         """Rotate the image by a given angle.
+
+        For the rotation with reshape, meaning preserveing the whole image,
+        we used the code from the imutils library:
+        https://github.com/PyImageSearch/imutils/blob/master/imutils/convenience.py#L41
 
         Args:
             angle (float): angle to rotate the image
@@ -342,12 +348,28 @@ class TransformerImage(BaseImage, ABC):
                 Defaults to False which means radians.
             is_clockwise (bool, optional): whether the rotation is clockwise or
                 counter-clockwise. Defaults to True.
-            reshape (bool, optional): scipy reshape option. Defaults to True.
+            reshape (bool, optional): whether to preserve the original image or not.
+                If True, the complete image is preserved hence the width and height
+                of the rotated image are different than in the original image.
+                Defaults to True.
+            border_fill_value (int | tuple[int, int, int], optional): value to fill the
+                border of the image after the rotation in case reshape is True.
+                Can be a tuple of 3 integers for RGB image or a single integer for
+                grayscale image. Defaults to 0.
 
         Returns:
             (Self): image rotated
         """
         # pylint: disable=too-many-arguments, too-many-positional-arguments
+        if not fast:  # using scipy rotate which is slower than cv2
+            return self.__rotate_exact(
+                angle=angle,
+                is_degree=is_degree,
+                is_clockwise=is_clockwise,
+                reshape=reshape,
+                border_fill_value=border_fill_value,
+            )
+
         if not is_degree:
             angle = np.rad2deg(angle)
         if is_clockwise:
@@ -357,22 +379,23 @@ class TransformerImage(BaseImage, ABC):
         center = (w / 2, h / 2)
 
         # Compute rotation matrix
-        rotation_matrix = cv2.getRotationMatrix2D(center, angle, 1.0)
+        rotmat = cv2.getRotationMatrix2D(center, angle, 1.0)
 
         if reshape:
             # Compute new bounding dimensions
-            cos_a = np.abs(rotation_matrix[0, 0])
-            sin_a = np.abs(rotation_matrix[0, 1])
-            w = int((h * sin_a) + (w * cos_a))
-            h = int((h * cos_a) + (w * sin_a))
+            cos_a = np.abs(rotmat[0, 0])
+            sin_a = np.abs(rotmat[0, 1])
+            new_w = int((h * sin_a) + (w * cos_a))
+            new_h = int((h * cos_a) + (w * sin_a))
+            w, h = new_w, new_h
 
             # Adjust the rotation matrix to shift the image center
-            rotation_matrix[0, 2] += (w / 2) - center[0]
-            rotation_matrix[1, 2] += (h / 2) - center[1]
+            rotmat[0, 2] += (w / 2) - center[0]
+            rotmat[1, 2] += (h / 2) - center[1]
 
         self.asarray = cv2.warpAffine(
             src=self.asarray,
-            M=rotation_matrix,
+            M=rotmat,
             dsize=(w, h),
             flags=cv2.INTER_LINEAR,
             borderMode=cv2.BORDER_CONSTANT,
@@ -413,8 +436,8 @@ class TransformerImage(BaseImage, ABC):
         """Resize the image using a fixed dimension well defined.
         This function can result in a distorted image.
 
-        The dim argument expects a tuple like (128, 56, 3) where the first value is the
-        height and the second value the width (height, width, channel) or (H, W, C).
+        The dim argument expects a tuple like (128, 56) where the first value is the
+        height and the second value the width (height, width) or (H, W).
 
         If the dim argument has a negative value in height or width, then
         a proportional ratio is applied based on the one of the two dimension given.
