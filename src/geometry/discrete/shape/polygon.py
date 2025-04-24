@@ -652,6 +652,9 @@ class Polygon(DiscreteGeometryEntity, PolygonReducer):
         Returns:
             Polygon: scaled polygon
         """
+        if scale == 1.0:  # no rescaling
+            return self
+
         center = self.centroid
         self.asarray = self.asarray.astype(float)
         for i, point in enumerate(self.asarray):

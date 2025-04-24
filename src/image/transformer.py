@@ -356,19 +356,20 @@ class TransformerImage(BaseImage, ABC):
             (Self): image rotated
         """
         # pylint: disable=too-many-arguments, too-many-positional-arguments
+        # pylint: disable=too-many-locals
         if not fast:  # using scipy rotate which is slower than cv2
-            border_fill_value = border_fill_value[0]
-            if not isinstance(border_fill_value, float):
+            border_fill_value_scalar = border_fill_value[0]
+            if not isinstance(border_fill_value_scalar, float):
                 raise ValueError(
-                    f"The border_fill_value {border_fill_value} is not a valid value. "
-                    "It must be a single integer when fast mode is off"
+                    f"The border_fill_value {border_fill_value_scalar} is not a valid "
+                    "value. It must be a single integer when fast mode is off"
                 )
             return self.__rotate_exact(
                 angle=angle,
                 is_degree=is_degree,
                 is_clockwise=is_clockwise,
                 reshape=reshape,
-                border_fill_value=border_fill_value,
+                border_fill_value=border_fill_value_scalar,
             )
 
         if not is_degree:
