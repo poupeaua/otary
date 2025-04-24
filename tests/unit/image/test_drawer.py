@@ -5,13 +5,13 @@ Unit Tests for the drawer image methods
 import numpy as np
 
 from src.cv.ocr.dataclass.ocrsingleoutput import OcrSingleOutput
-from src.geometry import Polygon, Rectangle
-from src.image import Image, SegmentsRender
+from src.geometry import Polygon, Rectangle, Circle
+from src.image import Image, SegmentsRender, CirclesRender
 
 
 class TestDrawerImage:
 
-    def test_draw_circles(self):
+    def test_draw_points(self):
         points = np.array([[0, 0], [1, 1], [2, 3]])
         Image.from_fillvalue(shape=(5, 5, 3), value=0).draw_points(points=points)
 
@@ -48,4 +48,23 @@ class TestDrawerImage:
         )
         Image.from_fillvalue(shape=(5, 5, 3), value=0).draw_ocr_outputs(
             ocr_outputs=[ocrso]
+        )
+
+    def test_draw_circles(self):
+
+        circles = [
+            Circle(center=np.array([2, 2]), radius=1),
+            Circle(center=np.array([4, 4]), radius=2),
+        ]
+        Image.from_fillvalue(shape=(10, 10, 3), value=0).draw_circles(circles=circles)
+
+    def test_draw_circles_with_render(self):
+
+        circles = [
+            Circle(center=np.array([3, 3]), radius=2),
+            Circle(center=np.array([6, 6]), radius=3),
+        ]
+        render = CirclesRender(thickness=2, is_draw_center_point_enabled=True)
+        Image.from_fillvalue(shape=(15, 15, 3), value=0).draw_circles(
+            circles=circles, render=render
         )
