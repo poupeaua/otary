@@ -5,8 +5,8 @@ Unit Tests for the drawer image methods
 import numpy as np
 
 from src.cv.ocr.dataclass.ocrsingleoutput import OcrSingleOutput
-from src.geometry import Polygon, Rectangle, Circle
-from src.image import Image, SegmentsRender, CirclesRender
+from src.geometry import Polygon, Rectangle, Circle, LinearSpline
+from src.image import Image, SegmentsRender, CirclesRender, LinearSplinesRender
 
 
 class TestDrawerImage:
@@ -67,4 +67,21 @@ class TestDrawerImage:
         render = CirclesRender(thickness=2, is_draw_center_point_enabled=True)
         Image.from_fillvalue(shape=(15, 15, 3), value=0).draw_circles(
             circles=circles, render=render
+        )
+
+    def test_draw_splines(self):
+        splines = [
+            LinearSpline(points=np.array([[0, 0], [1, 1], [2, 2]])),
+            LinearSpline(points=np.array([[3, 3], [4, 4], [5, 5]])),
+        ]
+        Image.from_fillvalue(shape=(10, 10, 3), value=0).draw_splines(splines=splines)
+
+    def test_draw_splines_with_render(self):
+        splines = [
+            LinearSpline(points=np.array([[0, 0], [1, 1], [2, 2]])),
+            LinearSpline(points=np.array([[3, 3], [4, 4], [5, 5]])),
+        ]
+        render = LinearSplinesRender(thickness=2, is_arrowheaded=True)
+        Image.from_fillvalue(shape=(10, 10, 3), value=0).draw_splines(
+            splines=splines, render=render
         )

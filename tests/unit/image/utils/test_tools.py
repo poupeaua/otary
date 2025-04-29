@@ -63,12 +63,14 @@ class TestPrepObjDraw:
     def test_prep_obj_draw_points(self):
         pt = Point([96.78, 10.67])
         objects = prep_obj_draw(objects=[pt], _type=Point)
-        assert objects.dtype.type is np.int64
+        for element in objects:
+            assert element.dtype.type is np.int32
 
     def test_prep_obj_draw_polygons(self):
         cnt = Polygon([[0, 0], [1, 3], [5, 0]])
         objects = prep_obj_draw(objects=[cnt], _type=Polygon)
-        assert objects.dtype.type is np.int64
+        for element in objects:
+            assert element.dtype.type is np.int32
 
     def test_prep_obj_draw_error_type(self):
         cnt = Polygon([[0, 0], [1, 3], [5, 0]])

@@ -150,43 +150,39 @@ class DrawerImage(BaseImage, ABC):
         Returns:
             Self: image with the added splines drawn.
         """
-        for spline in splines:
+        _splines = prep_obj_draw(objects=splines, _type=geo.LinearSpline)
+        im_array = self.__pre_draw(n_objects=len(_splines), render=render)
+        for spline, color in zip(_splines, render.colors):
 
             if render.is_arrowheaded:
-                self.draw_segments(
-                    segments=spline.edges[:-1],
-                    render=SegmentsRender(
-                        as_vectors=False,
-                        thickness=render.thickness,
-                        line_type=render.line_type,
-                        colors=render.colors,
-                        default_color=render.default_color,
-                    ),
+                cv2.polylines(
+                    img=im_array,
+                    pts=[spline[:-1]],
+                    isClosed=False,
+                    color=color,
+                    thickness=render.thickness,
+                    lineType=render.line_type,
                 )
 
                 # Draw the last edge as a vector
-                self.draw_segments(
-                    segments=[spline.edges[-1]],
-                    render=SegmentsRender(
-                        as_vectors=True,
-                        thickness=render.thickness,
-                        line_type=render.line_type,
-                        tip_length=render.head_tip_length,
-                        colors=render.colors,
-                        default_color=render.default_color,
-                    ),
+                segment = spline[-2:]
+                cv2.arrowedLine(
+                    img=im_array,
+                    pt1=segment[0],
+                    pt2=segment[1],
+                    color=color,
+                    thickness=render.thickness,
+                    tipLength=render.head_tip_length / geo.Segment(segment).length,
                 )
 
             else:
-                self.draw_segments(
-                    segments=spline.edges,
-                    render=SegmentsRender(
-                        as_vectors=False,
-                        thickness=render.thickness,
-                        line_type=render.line_type,
-                        colors=render.colors,
-                        default_color=render.default_color,
-                    ),
+                cv2.polylines(
+                    img=im_array,
+                    pts=[spline],
+                    isClosed=False,
+                    color=color,
+                    thickness=render.thickness,
+                    lineType=render.line_type,
                 )
         return self
 
@@ -202,8 +198,18 @@ class DrawerImage(BaseImage, ABC):
         Returns:
             Image: image with the added polygons
         """
-        for cnt in polygons:
-            self.draw_segments(segments=cnt.edges, render=render)
+        _polygons = prep_obj_draw(objects=polygons, _type=geo.Polygon)
+        im_array = self.__pre_draw(n_objects=len(_polygons), render=render)
+        for polygon, color in zip(_polygons, render.colors):
+            cv2.polylines(
+                img=im_array,
+                pts=[polygon],
+                isClosed=True,
+                color=color,
+                thickness=render.thickness,
+                lineType=render.line_type,
+            )
+        self.asarray = im_array
         return self
 
     def draw_ocr_outputs(

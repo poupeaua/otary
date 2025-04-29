@@ -39,7 +39,7 @@ def is_list_elements_type(_list: list | np.ndarray, _type: Any) -> bool:
     return bool(np.all([isinstance(_list[i], _type) for i in range(len(_list))]))
 
 
-def cast_geometry_to_array(objects: list | np.ndarray, _type: Any):
+def cast_geometry_to_array(objects: list | np.ndarray, _type: Any) -> list:
     """Convert a list of geometric objects to array for drawing
 
     Warning: the limit of int range is int16 which means that the maximum value
@@ -50,16 +50,14 @@ def cast_geometry_to_array(objects: list | np.ndarray, _type: Any):
         objects (list): list of geometric objects
         _type (Any): type to transform into array
     """
-    if _type in [geo.Point, geo.Segment, geo.Vector]:
-        objects = [np.round(s.asarray).astype(np.int16) for s in objects]
-    elif _type == geo.Polygon:
-        objects = [np.round(s.edges).astype(np.int16) for s in objects]
+    if _type in [geo.Point, geo.Segment, geo.Vector, geo.Polygon, geo.LinearSpline]:
+        objects = [np.round(s.asarray).astype(np.int32) for s in objects]
     else:
         raise RuntimeError(f"The type {_type} is unexpected.")
     return objects
 
 
-def prep_obj_draw(objects: list | np.ndarray, _type: Any) -> np.ndarray:
+def prep_obj_draw(objects: list | np.ndarray, _type: Any) -> list:
     """Preparation function for the objects to be drawn
 
     Args:
@@ -71,10 +69,18 @@ def prep_obj_draw(objects: list | np.ndarray, _type: Any) -> np.ndarray:
     """
     if is_list_elements_type(_list=objects, _type=_type):
         objects = cast_geometry_to_array(objects=objects, _type=_type)
-    try:
-        objects = np.asanyarray(objects).astype(np.int64)
-    except Exception as e:
-        raise RuntimeError("Could not prepare the objects to draw") from e
+    elif _type in [geo.Point, geo.Segment, geo.Vector]:
+        try:
+            # useful to let the drawing function to accept numpy array
+            objects = np.asanyarray(objects).astype(np.int32)
+        except Exception as e:
+            raise RuntimeError(
+                "Could not transform the input into a drawing format"
+            ) from e
+    else:
+        raise RuntimeError(
+            f"Unexpected type for the objects to be drawn. Expected {_type}."
+        )
     return objects
 
 
