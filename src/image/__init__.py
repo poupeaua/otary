@@ -7,6 +7,7 @@ __all__ = [
     "CirclesRender",
     "PolygonsRender",
     "SegmentsRender",
+    "LinearSplinesRender",
     "OcrSingleOutputRender",
     "Image",
     "interpolate_color",
@@ -17,6 +18,7 @@ from src.image.utils.render import (
     CirclesRender,
     PolygonsRender,
     SegmentsRender,
+    LinearSplinesRender,
     OcrSingleOutputRender,
 )
 from src.image.image import Image

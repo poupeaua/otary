@@ -58,6 +58,15 @@ class Point(DiscreteGeometryEntity):
         """
         return self.shapely_surface
 
+    @property
+    def edges(self) -> None:
+        """Get the edges of the point which returns None since a point has no edges
+
+        Returns:
+            None: None
+        """
+        return None
+
     @staticmethod
     def order_idxs_points_by_dist(points: np.ndarray, desc: bool = False) -> np.ndarray:
         """Beware the method expects points to be collinear.

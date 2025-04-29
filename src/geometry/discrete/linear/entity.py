@@ -54,3 +54,14 @@ class LinearEntity(DiscreteGeometryEntity, ABC):
             LineString: shapely.LineString object
         """
         return self.shapely_edges
+
+    @property
+    def edges(self) -> list:
+        """Get the edges of the linear spline
+
+        Returns:
+            list: edges of the linear spline
+        """
+        return np.stack([self.points, np.roll(self.points, shift=-1, axis=0)], axis=1)[
+            :-1, :, :
+        ]

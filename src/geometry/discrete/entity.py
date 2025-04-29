@@ -53,6 +53,15 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         """
 
     @property
+    @abstractmethod
+    def edges(self) -> np.ndarray:
+        """Get the edges of the geometry entity
+
+        Returns:
+            np.ndarray: edges of the geometry entity
+        """
+
+    @property
     def n_points(self) -> int:
         """Returns the number of points this geometric object is made of
 

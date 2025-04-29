@@ -175,22 +175,13 @@ class Polygon(DiscreteGeometryEntity):
         return LinearRing(coordinates=self.asarray)
 
     @property
-    def segments(self) -> np.ndarray:
-        """Describes the Polygon as a list of segments.
-
-        Returns:
-            np.ndarray: segments representation of the polygon
-        """
-        return Polygon.points_to_segments(self.points)
-
-    @property
     def lengths(self) -> np.ndarray:
         """Returns the length of all the segments that make up the Polygon
 
         Returns:
             np.ndarray: array of shape (n_points)
         """
-        lengths: np.ndarray = np.linalg.norm(np.diff(self.segments, axis=1), axis=2)
+        lengths: np.ndarray = np.linalg.norm(np.diff(self.edges, axis=1), axis=2)
         return lengths.flatten()
 
     @property
@@ -211,11 +202,9 @@ class Polygon(DiscreteGeometryEntity):
         """
         return cv2.isContourConvex(contour=self.asarray)
 
-    # ------------------------------ STATIC METHODS ------------------------------------
-
-    @staticmethod
-    def points_to_segments(points: np.ndarray) -> np.ndarray:
-        """Static method to convert a polygon described by points to lines
+    @property
+    def edges(self) -> np.ndarray:
+        """Get the lines that compose the geometry entity.
 
         Args:
             points (np.ndarray): array of points of shape (n, 2)
@@ -223,7 +212,7 @@ class Polygon(DiscreteGeometryEntity):
         Returns:
             np.ndarray: array of lines of shape (n, 2, 2)
         """
-        return np.stack([points, np.roll(points, shift=-1, axis=0)], axis=1)
+        return np.stack([self.points, np.roll(self.points, shift=-1, axis=0)], axis=1)
 
     # ------------------------------- CLASSIC METHODS ----------------------------------
 

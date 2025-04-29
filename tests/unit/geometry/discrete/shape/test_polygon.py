@@ -119,7 +119,7 @@ class TestPolygonClassMethods:
     def test_construct_from_lines(self):
         lines = np.array([[[0, 0], [2, 2]], [[2, 2], [5, 5]], [[5, 5], [0, 0]]])
         cnt = Polygon.from_lines(lines=lines)
-        assert np.array_equal(cnt.segments, lines)
+        assert np.array_equal(cnt.edges, lines)
 
     def test_construct_from_lines_fails(self):
         lines = [[[0, 0], [2, 2]], [[2, 3], [5, 5]], [[5, 5], [0, 0]]]
@@ -230,7 +230,7 @@ class TestPolygonFromUnorderedLinesApprox:
     )
     def test_cnt_fula_general(self, input: list, output: list):
         cnt = Polygon.from_unordered_lines_approx(input)
-        assert np.all([o in output for o in cnt.segments.tolist()])
+        assert np.all([o in output for o in cnt.edges.tolist()])
 
     @pytest.mark.parametrize(
         "input",

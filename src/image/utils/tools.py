@@ -42,14 +42,18 @@ def is_list_elements_type(_list: list | np.ndarray, _type: Any) -> bool:
 def cast_geometry_to_array(objects: list | np.ndarray, _type: Any):
     """Convert a list of geometric objects to array for drawing
 
+    Warning: the limit of int range is int16 which means that the maximum value
+    is 32767. If the value is higher, it will be casted to int16 and the value
+    will be lost. We should not expect any X or Y coordinate to be higher than 32767.
+
     Args:
         objects (list): list of geometric objects
         _type (Any): type to transform into array
     """
     if _type in [geo.Point, geo.Segment, geo.Vector]:
-        objects = [s.asarray.astype(np.int64) for s in objects]
+        objects = [np.round(s.asarray).astype(np.int16) for s in objects]
     elif _type == geo.Polygon:
-        objects = [s.segments.astype(np.int64) for s in objects]
+        objects = [np.round(s.edges).astype(np.int16) for s in objects]
     else:
         raise RuntimeError(f"The type {_type} is unexpected.")
     return objects

@@ -75,6 +75,14 @@ class SegmentsRender(GeometryRender):
 
 
 @dataclass
+class LinearSplinesRender(GeometryRender):
+    """Render for Linear Splines objects"""
+
+    is_arrowheaded: bool = False
+    head_tip_length: int = 20
+
+
+@dataclass
 class PolygonsRender(SegmentsRender):
     """Render for Polygon objects. It inherits from SegmentsRender because
     Polygons are drawn as a succession of drawn segments."""

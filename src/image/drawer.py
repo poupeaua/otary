@@ -17,6 +17,7 @@ from src.image.utils.render import (
     PointsRender,
     CirclesRender,
     SegmentsRender,
+    LinearSplinesRender,
     PolygonsRender,
     OcrSingleOutputRender,
 )
@@ -134,6 +135,61 @@ class DrawerImage(BaseImage, ABC):
         self.asarray = im_array
         return self
 
+    def draw_splines(
+        self,
+        splines: list[geo.LinearSpline],
+        render: LinearSplinesRender = LinearSplinesRender(),
+    ) -> Self:
+        """Draw linear splines in the image.
+
+        Args:
+            splines (list[geo.LinearSpline]): linear splines to draw.
+            render (LinearSplinesRender, optional): linear splines render.
+                Defaults to LinearSplinesRender().
+
+        Returns:
+            Self: image with the added splines drawn.
+        """
+        for spline in splines:
+
+            if render.is_arrowheaded:
+                self.draw_segments(
+                    segments=spline.edges[:-1],
+                    render=SegmentsRender(
+                        as_vectors=False,
+                        thickness=render.thickness,
+                        line_type=render.line_type,
+                        colors=render.colors,
+                        default_color=render.default_color,
+                    ),
+                )
+
+                # Draw the last edge as a vector
+                self.draw_segments(
+                    segments=[spline.edges[-1]],
+                    render=SegmentsRender(
+                        as_vectors=True,
+                        thickness=render.thickness,
+                        line_type=render.line_type,
+                        tip_length=render.head_tip_length,
+                        colors=render.colors,
+                        default_color=render.default_color,
+                    ),
+                )
+
+            else:
+                self.draw_segments(
+                    segments=spline.edges,
+                    render=SegmentsRender(
+                        as_vectors=False,
+                        thickness=render.thickness,
+                        line_type=render.line_type,
+                        colors=render.colors,
+                        default_color=render.default_color,
+                    ),
+                )
+        return self
+
     def draw_polygons(
         self, polygons: list[geo.Polygon], render: PolygonsRender = PolygonsRender()
     ) -> Self:
@@ -147,7 +203,7 @@ class DrawerImage(BaseImage, ABC):
             Image: image with the added polygons
         """
         for cnt in polygons:
-            self.draw_segments(segments=cnt.segments, render=render)
+            self.draw_segments(segments=cnt.edges, render=render)
         return self
 
     def draw_ocr_outputs(
@@ -168,6 +224,10 @@ class DrawerImage(BaseImage, ABC):
         im_array = self.__pre_draw(n_objects=len(ocr_outputs), render=render)
         for ocrso, color in zip(ocr_outputs, render.colors):
             if not isinstance(ocrso, OcrSingleOutput) or ocrso.bbox is None:
+                # warnings.warn(
+                #     f"Object {ocrso} is not an OcrSingleOutput or has no bbox. "
+                #     "Skipping it."
+                # )
                 continue
             cnt = [ocrso.bbox.asarray.reshape((-1, 1, 2)).astype(np.int32)]
             im_array = cv2.drawContours(

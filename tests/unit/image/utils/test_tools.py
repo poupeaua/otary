@@ -65,7 +65,7 @@ class TestPrepObjDraw:
         objects = prep_obj_draw(objects=[pt], _type=Point)
         assert objects.dtype.type is np.int64
 
-    def test_prep_obj_draw_contours(self):
+    def test_prep_obj_draw_polygons(self):
         cnt = Polygon([[0, 0], [1, 3], [5, 0]])
         objects = prep_obj_draw(objects=[cnt], _type=Polygon)
         assert objects.dtype.type is np.int64
