@@ -100,10 +100,10 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
         dilate_kernel: tuple = (5, 5),
         dilate_iterations: int = 1,
     ) -> float:
-        """Check how much the contour is contained in the original image.
+        """Check how much the contour is contained in the original image
 
         Beware: this method is different from the score_contains method because in
-        this case we emphasize the base image by dilating its content.
+        this case you can emphasize the base image by dilating its content.
         Everything that is a 1 in the rmask will be dilated to give more chance for the
         contour to be contained within the image in the calculation.
 
@@ -156,6 +156,48 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
 
         score_segments = np.zeros(shape=len(segments))
         for i, segment in enumerate(segments):
+            # create all-white image of same size as original with the geometry entity
+            other = (
+                Image.from_fillvalue(value=255, shape=self.shape_array)
+                .draw_segments(
+                    segments=[segment],
+                    render=SegmentsRender(thickness=1, default_color=(0, 0, 0)),
+                )
+                .as_grayscale()
+            )
+
+            score_segments[i] = im.score_contains(other=other)
+        return score_segments
+
+    def score_contains_segments_v2(
+        self,
+        segments: np.ndarray | list[geo.Segment],
+        dilate_kernel: tuple = (5, 5),
+        dilate_iterations: int = 1,
+    ) -> np.ndarray:
+        """Compute the contain score for each individual segment.
+        This method is better than :func:`~Image.score_contains_contour()` in the sense
+        that it provides the score for each single segments. This way it is better to
+        identify which segments are good and bad.
+
+        Args:
+            segments (np.ndarray | list[geo.Segment]): a list of segments
+            dilate_kernel (tuple, optional): dilate kernel param. Defaults to (5, 5).
+            dilate_iterations (int, optional): dilate iterations param. Defaults to 1.
+
+        Returns:
+            np.ndarray: list of score for each individual segment in the same order
+                as the list of segments
+        """
+        score_segments = []
+        for i, segment in enumerate(segments):
+            # crop the image to the segment
+            im = self.copy().crop(
+                x0=segment.xmin, y0=segment.ymin, x1=segment.xmax, y1=segment.ymax
+            )
+
+            im.show()
+
             # create all-white image of same size as original with the geometry entity
             other = (
                 Image.from_fillvalue(value=255, shape=self.shape_array)
