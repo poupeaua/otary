@@ -181,6 +181,9 @@ class TransformerImage(BaseImage, ABC):
         Returns:
             Self: image dilated
         """
+        if iterations == 0:
+            return self
+
         if dilate_black_pixels:
             self.asarray = (
                 1
@@ -225,6 +228,9 @@ class TransformerImage(BaseImage, ABC):
         Returns:
             Self: image eroded
         """
+        if iterations == 0:
+            return self
+
         if erode_black_pixels:
             self.asarray = (
                 1
@@ -504,16 +510,15 @@ class TransformerImage(BaseImage, ABC):
         dim = (height, width)
         return self.resize_fixed(dim=dim, interpolation=interpolation)
 
-    def crop_with_padding(self, x0: int, y0: int, x1: int, y1: int) -> Self:
+    def __crop_with_padding(self, x0: int, y0: int, x1: int, y1: int) -> np.ndarray:
         x0, y0, x1, y1 = int(x0), int(y0), int(x1), int(y1)
-        h, w = self.asarray.shape[:2]
 
         # Output size
         crop_width = x1 - x0
         crop_height = y1 - y0
 
         # Initialize output with black (zeros), same dtype and channel count
-        channels = 1 if self.asarray.ndim == 2 else self.asarray.shape[2]
+        channels = 1 if self.is_gray else self.asarray.shape[2]
         output_shape = (
             (crop_height, crop_width)
             if channels == 1
@@ -524,8 +529,8 @@ class TransformerImage(BaseImage, ABC):
         # Compute the intersection of crop with image bounds
         ix0 = max(x0, 0)
         iy0 = max(y0, 0)
-        ix1 = min(x1, w)
-        iy1 = min(y1, h)
+        ix1 = min(x1, self.width)
+        iy1 = min(y1, self.height)
 
         # Compute corresponding position in output
         ox0 = ix0 - x0
@@ -535,11 +540,9 @@ class TransformerImage(BaseImage, ABC):
 
         # Copy the valid region
         result[oy0:oy1, ox0:ox1] = self.asarray[iy0:iy1, ix0:ix1]
+        return result
 
-        self.asarray = result
-        return self
-
-    def crop(self, x0: int, y0: int, x1: int, y1: int) -> Self:
+    def __crop_with_clipping(self, x0: int, y0: int, x1: int, y1: int) -> np.ndarray:
         """Crop the image. A straight axis-aligned rectangle is used for cropping.
         This function inputs represents the top-left and bottom-right points.
 
@@ -560,6 +563,8 @@ class TransformerImage(BaseImage, ABC):
         Returns:
             Self: image cropped
         """
+        x0, y0, x1, y1 = int(x0), int(y0), int(x1), int(y1)
+
         if x0 >= self.width or y0 >= self.height or x1 <= 0 or y1 <= 0:
             raise ValueError(
                 f"The coordinates ({x0}, {y0}, {x1}, {y1}) are out of the image "
@@ -574,7 +579,31 @@ class TransformerImage(BaseImage, ABC):
         x1 = clip(x1, 0, self.width - 1)
         y1 = clip(y1, 0, self.height - 1)
 
-        self.asarray = self.asarray[int(y0) : int(y1) + 1, int(x0) : int(x1) + 1]
+        result = self.asarray[int(y0) : int(y1) + 1, int(x0) : int(x1) + 1]
+        return result
+
+    def crop(
+        self,
+        x0: int,
+        y0: int,
+        x1: int,
+        y1: int,
+        clip: bool = True,
+        pad: bool = False,
+        copy: bool = False,
+    ) -> Self:
+        if (clip and pad) or (not clip and not pad):
+            raise ValueError(f"When cropping clip and pad cannot be both {clip}")
+
+        if clip:
+            array_crop = self.__crop_with_clipping(x0=x0, y0=y0, x1=x1, y1=y1)
+        if pad:
+            array_crop = self.__crop_with_padding(x0=x0, y0=y0, x1=x1, y1=y1)
+
+        if copy:
+            return type(self)(image=array_crop)
+
+        self.asarray = array_crop
         return self
 
     def crop_from_topleft(self, topleft: np.ndarray, width: int, height: int) -> Self:
@@ -614,7 +643,7 @@ class TransformerImage(BaseImage, ABC):
         self,
         segment: np.ndarray,
         dim_crop_rect: tuple[int, int] = (-1, 100),
-        default_extra_width: int = 75,
+        added_width: int = 75,
     ) -> tuple[Self, np.ndarray, float, np.ndarray]:
         """Crop around a specific segment in the image. This is done in three
         specific steps:
@@ -628,11 +657,16 @@ class TransformerImage(BaseImage, ABC):
                 Defaults to heigth of 100 and width of -1 which means
                 that the width is automatically computed based on the length of
                 the segment.
-            default_extra_width (int, optional): additional width for cropping.
+            added_width (int, optional): additional width for cropping.
+                Half of the added_width is added to each side of the segment.
                 Defaults to 75.
 
         Returns:
-            tuple[Self, np.ndarray, float]: _description_
+            tuple[Self, np.ndarray, float, np.ndarray]: returns in the following order:
+                1) the cropped image
+                2) the translation vector used to center the image
+                3) the angle of rotation applied to the image
+                4) the translation vector used to crop the image
         """
         width_crop_rect, height_crop_rect = dim_crop_rect
         im = self.copy()
@@ -643,7 +677,8 @@ class TransformerImage(BaseImage, ABC):
 
         if width_crop_rect == -1:
             # default the width for crop to be a bit more than line length
-            width_crop_rect = int(geo_segment.length + default_extra_width)
+            width_crop_rect = int(geo_segment.length)
+        width_crop_rect += added_width
         assert width_crop_rect > 0 and height_crop_rect > 0
 
         # rotate the image so that the line is horizontal
@@ -665,13 +700,19 @@ class TransformerImage(BaseImage, ABC):
         self,
         segment: np.ndarray,
         dim_crop_rect: tuple[int, int] = (-1, 100),
-        default_extra_width: int = 75,
+        added_width: int = 75,
     ) -> Self:
-        """Crop around a specific segment in the image. This is done in three
-        specific steps:
-        1) shift image so that the middle of the segment is in the middle of the image
-        2) rotate image by the angle of segment so that the segment becomes horizontal
-        3) crop the image
+        """Crop around a specific segment in the image.
+        This method is generally faster especially for large images.
+
+        Here is a comparison of the total time taken for cropping with the two methods
+        with a loop over 1000 iterations:
+
+        | Image dimension | Crop v1 | Crop faster |
+        |-----------------|---------|-------------|
+        | 1224 x 946      | 2.0s    | 0.25s       |
+        | 2448 x 1892     | 4.51s   | 0.25s       |
+        | 4896 x 3784     | 23.2s   | 0.25s       |
 
         Args:
             segment (np.ndarray): segment as numpy array of shape (2, 2).
@@ -679,40 +720,48 @@ class TransformerImage(BaseImage, ABC):
                 Defaults to heigth of 100 and width of -1 which means
                 that the width is automatically computed based on the length of
                 the segment.
-            default_extra_width (int, optional): additional width for cropping.
+            added_width (int, optional): additional width for cropping.
+                Half of the added_width is added to each side of the segment.
                 Defaults to 75.
 
         Returns:
-            Self
+            Self: cropped image around the segment
         """
         width_crop_rect, height_crop_rect = dim_crop_rect
         geo_segment = geo.Segment(segment)
         angle = geo_segment.slope_angle(is_cv2=True)
 
-        x_extra = abs(default_extra_width * np.cos(angle))
-        y_extra = abs(default_extra_width * np.sin(angle))
+        if width_crop_rect == -1:
+            # default the width for crop to be a bit more than line length
+            width_crop_rect = int(geo_segment.length)
+        width_crop_rect += added_width
+        assert width_crop_rect > 0 and height_crop_rect > 0
 
-        im = self.copy().crop_with_padding(
+        x_extra = abs(added_width / 2 * np.cos(angle))
+        y_extra = abs(added_width / 2 * np.sin(angle))
+
+        im = self.crop(
             x0=geo_segment.xmin - x_extra,
             y0=geo_segment.ymin - y_extra,
             x1=geo_segment.xmax + x_extra,
             y1=geo_segment.ymax + y_extra,
+            pad=True,
+            clip=False,
+            copy=True,  # copy the image after cropping for very fast performance
         )
 
-        if width_crop_rect == -1:
-            # default the width for crop to be a bit more than line length
-            width_crop_rect = int(geo_segment.length + default_extra_width)
-        assert width_crop_rect > 0 and height_crop_rect > 0
-
         # rotate the image so that the line is horizontal
-        im = im.rotate(angle=angle)
+        im.rotate(angle=angle)
 
-        # # cropping
-        im = im.crop(
-            x0=0,
+        # cropping
+        im.crop(
+            x0=int(im.center[0] - width_crop_rect / 2),
             y0=int(im.center[1] - height_crop_rect / 2),
-            x1=int(im.width + width_crop_rect / 2),
+            x1=int(im.center[0] + width_crop_rect / 2),
             y1=int(im.center[1] + height_crop_rect / 2),
+            clip=True,
+            pad=False,
+            copy=False,
         )
 
         return im

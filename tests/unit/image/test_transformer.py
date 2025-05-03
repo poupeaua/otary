@@ -388,6 +388,6 @@ class TestTransformerImageCropMethods:
     def test_crop_around_segment_horizontal(self):
         img = Image.from_fillvalue(shape=(5, 5), value=0)
         img, _, _, _ = img.crop_around_segment_horizontal(
-            segment=[[1, 2], [3, 2]], dim_crop_rect=(-1, 2), default_extra_width=0
+            segment=[[1, 2], [3, 2]], dim_crop_rect=(-1, 2), added_width=0
         )
         assert img.shape_array == (3, 3)

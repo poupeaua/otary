@@ -5,7 +5,6 @@ It only contains very low-level, basic and generic image methods.
 
 from __future__ import annotations
 
-import copy
 from typing import Self
 from abc import ABC
 
@@ -309,9 +308,15 @@ class BaseImage(ABC):
         return self.height * pct
 
     def copy(self) -> Self:
-        """Copy of the image
+        """Copy of the image.
+
+        For NumPy arrays containing basic data types (e.g., int, float, bool),
+        using copy.deepcopy() is generally unnecessary.
+        The numpy.copy() method achieves the same result more efficiently.
+        numpy.copy() creates a new array in memory with a separate copy of the data,
+        ensuring that modifications to the copy do not affect the original array.
 
         Returns:
             Image: image copy
         """
-        return type(self)(image=copy.deepcopy(self.asarray))
+        return type(self)(image=self.asarray.copy())
