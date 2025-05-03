@@ -12,7 +12,7 @@ import numpy as np
 import scipy.ndimage
 
 # pylint: disable=no-name-in-module
-from skimage.filters import threshold_sauvola, threshold_otsu
+from skimage.filters import threshold_sauvola
 
 import src.geometry as geo
 from src.image.base import BaseImage
@@ -26,7 +26,7 @@ class TransformerImage(BaseImage, ABC):
 
     def threshold_simple(self, thresh: int) -> Self:
         """Compute the image thesholded by a single value T.
-        All pixels with value v < T are turned black and those with value v > T are
+        All pixels with value v <= T are turned black and those with value v > T are
         turned white.
 
         Args:
@@ -39,9 +39,10 @@ class TransformerImage(BaseImage, ABC):
         self.asarray = np.array((self.asarray > thresh) * 255, dtype=np.uint8)
         return self
 
-    def threshold_otsu(self) -> Self:
-        """Apply Ostu thresholding.
-        A blur is applied before for better thresholding results.
+    def threshold_adaptative(self) -> Self:
+        """Apply adaptive thresholding.
+
+        A median blur is applied before for better thresholding results.
         See https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html.
 
         As the input image must be a grayscale before applying any thresholding
@@ -51,8 +52,30 @@ class TransformerImage(BaseImage, ABC):
             Self: image thresholded where its values are now pure 0 or 255
         """
         self.as_grayscale()
-        im_arr = self.asarray
-        self.asarray = np.array((im_arr > threshold_otsu(im_arr)) * 255, dtype=np.uint8)
+        binary = cv2.adaptiveThreshold(
+            self.asarray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
+        )
+        self.asarray = binary
+        return self
+
+    def threshold_otsu(self) -> Self:
+        """Apply Ostu thresholding.
+
+        A gaussian blur is applied before for better thresholding results.
+        See https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html.
+
+        As the input image must be a grayscale before applying any thresholding
+        methods we convert the image to grayscale.
+
+        Returns:
+            Self: image thresholded where its values are now pure 0 or 255
+        """
+        self.as_grayscale()
+        self.blur(method="gaussian", kernel=(3, 3), sigmax=0)
+        _, binary = cv2.threshold(
+            self.asarray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
+        )
+        self.asarray = binary
         return self
 
     def threshold_sauvola(self, window_size: int = 15, k: float = 0.2) -> Self:
@@ -87,15 +110,22 @@ class TransformerImage(BaseImage, ABC):
         We can also talk about the mask of the image to refer to the binary
         representation of it.
 
+        The sauvola is generally the best binarization method however it is
+        way slower than the others methods. The adaptative or otsu method are the best
+        method in terms of speed and quality.
+
         Args:
             method (str, optional): the binarization method to apply.
-                Defaults to "sauvola".
+                Must be in ["adaptative", "otsu", "sauvola"].
+                Defaults to "adaptative".
 
         Returns:
             np.ndarray: array where its inner values are 0 or 1
         """
-        valid_binarization_methods = ["otsu", "sauvola"]
+        valid_binarization_methods = ["adaptative", "otsu", "sauvola"]
 
+        if method == "adaptative":
+            return self.threshold_adaptative().asarray_norm
         if method == "otsu":
             return self.threshold_otsu().asarray_norm
         if method == "sauvola":
@@ -110,7 +140,7 @@ class TransformerImage(BaseImage, ABC):
 
         Args:
             method (str, optional): the binarization method to apply.
-                Defaults to "sauvola".
+                Defaults to "adaptative".
 
         Returns:
             np.ndarray: array where its inner values are 0 or 1
@@ -138,6 +168,9 @@ class TransformerImage(BaseImage, ABC):
         Args:
             kernel (tuple, optional): blur kernel size. Defaults to (5, 5).
             iterations (int, optional): number of iterations. Defaults to 1.
+            method (str, optional): blur method.
+                Must be in ["average", "median", "gaussian", "bilateral"].
+                Defaults to "average".
 
         Returns:
             Self: the new image blurred
@@ -439,19 +472,21 @@ class TransformerImage(BaseImage, ABC):
         return self.center_image_to_point(point=geo.Segment(segment).centroid)
 
     def resize_fixed(
-        self, dim: tuple[int, int], interpolation: int = cv2.INTER_AREA
+        self,
+        dim: tuple[int, int],
+        interpolation: int = cv2.INTER_AREA,
+        copy: bool = False,
     ) -> Self:
         """Resize the image using a fixed dimension well defined.
-        This function can result in a distorted image.
-
-        The dim argument expects a tuple like (128, 56) where the first value is the
-        height and the second value the width (height, width) or (H, W).
+        This function can result in a distorted image if the ratio between
+        width and height is different in the original and the new image.
 
         If the dim argument has a negative value in height or width, then
         a proportional ratio is applied based on the one of the two dimension given.
 
         Args:
-            dim (tuple[int, int]): a tuple with two integer, width, height.
+            dim (tuple[int, int]): a tuple with two integers in the following order
+                (width, height).
             interpolation (int, optional): resize interpolation.
                 Defaults to cv2.INTER_AREA.
 
@@ -464,20 +499,22 @@ class TransformerImage(BaseImage, ABC):
         _dim = list(dim)
 
         # compute width or height if needed
-        if _dim[0] <= 0:
-            _dim[0] = int(self.height * (_dim[1] / self.width))
-        if dim[1] <= 0:
-            _dim[1] = int(self.width * (_dim[0] / self.height))
+        if _dim[1] <= 0:
+            _dim[1] = int(self.height * (_dim[0] / self.width))
+        if dim[0] <= 0:
+            _dim[0] = int(self.width * (_dim[1] / self.height))
 
-        # cv2 resize func expects dsize arg in reversed order (width, height) or (W, H)
-        _dim.reverse()
+        result = cv2.resize(src=self.asarray, dsize=_dim, interpolation=interpolation)
 
-        self.asarray = cv2.resize(
-            src=self.asarray, dsize=_dim, interpolation=interpolation
-        )
+        if copy:
+            return type(self)(image=result)
+
+        self.asarray = result
         return self
 
-    def resize(self, factor: float, interpolation: int = cv2.INTER_AREA) -> Self:
+    def resize(
+        self, factor: float, interpolation: int = cv2.INTER_AREA, copy: bool = False
+    ) -> Self:
         """Resize the image to a new size using a scaling factor value that
         will be applied to all dimensions (width and height).
 
@@ -493,6 +530,9 @@ class TransformerImage(BaseImage, ABC):
         Returns:
             (Self): resized image
         """
+        if factor == 1:
+            return self
+
         if factor < 0:
             raise ValueError(
                 f"The resize factor value {factor} must be stricly positive"
@@ -502,13 +542,10 @@ class TransformerImage(BaseImage, ABC):
         if factor > max_scale_pct:
             raise ValueError(f"The resize factor value {factor} is probably too big")
 
-        if factor == 1:
-            return self
-
         width = int(self.width * factor)
         height = int(self.height * factor)
-        dim = (height, width)
-        return self.resize_fixed(dim=dim, interpolation=interpolation)
+        dim = (width, height)
+        return self.resize_fixed(dim=dim, interpolation=interpolation, copy=copy)
 
     def __crop_with_padding(self, x0: int, y0: int, x1: int, y1: int) -> np.ndarray:
         x0, y0, x1, y1 = int(x0), int(y0), int(x1), int(y1)

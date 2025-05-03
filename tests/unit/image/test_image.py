@@ -55,13 +55,18 @@ class TestImageScoreMethods:
         assert img0.score_contains(img1) == 1
 
     def test_score_contains_contour_one(self):
-        shape = (5, 5)
+        shape = (50, 50)
         img = Image.from_fillvalue(shape=shape, value=255)
         cnt = Polygon(
-            points=[[0, 0], [0, shape[0]], [shape[1], shape[0]], [shape[1], 0]]
+            points=[
+                [0, 0],
+                [0, shape[0] - 1],
+                [shape[1] - 1, shape[0] - 1],
+                [shape[1] - 1, 0],
+            ]
         )
         img.draw_polygons(
-            polygons=[cnt], render=PolygonsRender(default_color=(0, 0, 0))
+            polygons=[cnt], render=PolygonsRender(default_color=(0, 0, 0), thickness=1)
         )
         assert img.score_contains_polygon(polygon=cnt) == 1
 

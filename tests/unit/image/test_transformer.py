@@ -21,9 +21,9 @@ class TestTransformerImageThresholdMethods:
         assert np.all(img.asarray == 0)
 
     def test_threshold_otsu(self):
-        img = Image.from_fillvalue(shape=(5, 5), value=45)
+        img = Image.from_fillvalue(shape=(5, 5), value=200)
         img.threshold_otsu()
-        assert np.all(img.asarray == 0)
+        assert np.all(img.asarray == 255)
 
     def test_threshold_sauvola(self):
         img = Image.from_fillvalue(shape=(5, 5), value=127)
@@ -329,19 +329,19 @@ class TestTransformerImageResizeMethods:
         img = Image.from_fillvalue(shape=(5, 5), value=0)
         new_shape = (10, 15)
         img.resize_fixed(dim=new_shape)
-        assert img.shape_array == new_shape
+        assert img.shape_array == (new_shape[1], new_shape[0])
 
     def test_resize_fixed_height_neg(self):
         img = Image.from_fillvalue(shape=(5, 7), value=0)
         new_shape = (10, -1)
         img.resize_fixed(dim=new_shape)
-        assert img.shape_array == (10, 14)
+        assert img.shape_array == (7, new_shape[0])
 
     def test_resize_fixed_width_neg(self):
         img = Image.from_fillvalue(shape=(10, 20), value=0)
-        new_shape = (-1, 10)
+        new_shape = (-1, 20)
         img.resize_fixed(dim=new_shape)
-        assert img.shape_array == (5, 10)
+        assert img.shape_array == (new_shape[1], 40)
 
     def test_resize_fixed_error(self):
         img = Image.from_fillvalue(shape=(5, 5), value=0)

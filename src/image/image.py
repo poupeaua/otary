@@ -80,25 +80,31 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
         mask1 = other.binaryrev()
         return np.sum(mask0 * mask1) / np.count_nonzero(mask0 + mask1)
 
-    def score_contains(self, other: Image) -> float:
+    def score_contains(
+        self, other: Image, binarization_method: str = "sauvola"
+    ) -> float:
         """How much the other image is contained in the original image
 
         Args:
             other (Image): other Image object
+            method (str, optional): binarization method. Defaults to "adaptative".
 
         Returns:
             float: a score from 0 to 1. The greater the score the greater the other
                 image is contained within the original image
         """
         assert self.is_equal_shape(other)
-        other_binaryrev = other.binaryrev()
-        return np.sum(self.binaryrev() * other_binaryrev) / np.sum(other_binaryrev)
+        other_binaryrev = other.binaryrev(method=binarization_method)
+        return np.sum(
+            self.binaryrev(method=binarization_method) * other_binaryrev
+        ) / np.sum(other_binaryrev)
 
     def score_contains_polygon(
         self,
         polygon: geo.Polygon,
         dilate_kernel: tuple = (5, 5),
         dilate_iterations: int = 1,
+        binarization_method: str = "sauvola",
     ) -> float:
         """Check how much the contour is contained in the original image
 
@@ -129,13 +135,14 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
         # dilate the original image
         im = self.copy().dilate(kernel=dilate_kernel, iterations=dilate_iterations)
 
-        return im.score_contains(other=other)
+        return im.score_contains(other=other, binarization_method=binarization_method)
 
     def score_contains_segments(
         self,
         segments: np.ndarray | list[geo.Segment],
         dilate_kernel: tuple = (5, 5),
         dilate_iterations: int = 1,
+        binarization_method: str = "sauvola",
     ) -> np.ndarray:
         """Compute the contain score for each individual segment.
         This method is better than :func:`~Image.score_contains_contour()` in the sense
@@ -166,14 +173,18 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
                 .as_grayscale()
             )
 
-            score_segments[i] = im.score_contains(other=other)
+            score_segments[i] = im.score_contains(
+                other=other, binarization_method=binarization_method
+            )
         return score_segments
 
-    def score_contains_segments_v2(
+    def score_contains_segments_faster(
         self,
         segments: np.ndarray | list[geo.Segment],
         dilate_kernel: tuple = (5, 5),
         dilate_iterations: int = 1,
+        binarization_method: str = "sauvola",
+        resize_factor: float = 1.0,
     ) -> np.ndarray:
         """Compute the contain score for each individual segment.
         This method is better than :func:`~Image.score_contains_contour()` in the sense
@@ -184,31 +195,61 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
             segments (np.ndarray | list[geo.Segment]): a list of segments
             dilate_kernel (tuple, optional): dilate kernel param. Defaults to (5, 5).
             dilate_iterations (int, optional): dilate iterations param. Defaults to 1.
+            binarization_method (str, optional): binarization method. Here
+                we can afford the sauvola method since we crop the image first
+                and the binarization occurs on a small image.
+                Defaults to "sauvola".
+            resize_factor (float, optional): resize factor that can be adjusted to
+                provide extra speed. A lower value will be faster but less accurate.
+                Typically 0.5 works well but less have a negative impact on accuracy.
+                Defaults to 1.0 which implies no resize.
 
         Returns:
             np.ndarray: list of score for each individual segment in the same order
                 as the list of segments
         """
+        # TODO handle case where the segment is almost or pure horizontal or vertical
+
+        added_width = 10
+        height_crop = 30
+        mid_height_crop = int(height_crop / 2)
         score_segments = []
         for i, segment in enumerate(segments):
-            # crop the image to the segment
-            im = self.copy().crop(
-                x0=segment.xmin, y0=segment.ymin, x1=segment.xmax, y1=segment.ymax
+
+            im = self.crop_around_segment_horizontal_faster(
+                segment=segment.asarray,
+                dim_crop_rect=(-1, height_crop),
+                added_width=added_width,
             )
 
-            im.show()
+            im.dilate(kernel=dilate_kernel, iterations=dilate_iterations)
 
-            # create all-white image of same size as original with the geometry entity
+            im.resize(factor=resize_factor)
+
+            segment_crop = geo.Segment(
+                np.array(
+                    [
+                        [added_width, mid_height_crop],
+                        [segment.length + added_width, mid_height_crop],
+                    ]
+                )
+                * resize_factor
+            )
+
             other = (
-                Image.from_fillvalue(value=255, shape=self.shape_array)
+                im.copy()
+                .as_white()
                 .draw_segments(
-                    segments=[segment],
+                    segments=[segment_crop],
                     render=SegmentsRender(thickness=1, default_color=(0, 0, 0)),
                 )
                 .as_grayscale()
             )
 
-            score_segments[i] = im.score_contains(other=other)
+            cur_score = im.score_contains(
+                other=other, binarization_method=binarization_method
+            )
+            score_segments.append(cur_score)
         return score_segments
 
     def score_distance_from_center(
