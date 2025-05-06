@@ -369,15 +369,20 @@ class TestTransformerImageResizeMethods:
 
 class TestTransformerImageCropMethods:
 
-    def test_crop(self):
+    def test_crop_clipping(self):
         img = Image.from_fillvalue(shape=(5, 5), value=0)
-        img.crop(1, 1, 4, 3)
-        assert img.shape_array == (3, 4)
+        x0, y0, x1, y1 = 1, 1, 4, 3
+        img.crop(x0=x0, y0=y0, x1=x1, y1=y1, clip=True)
+        width_expected = x1 - x0
+        height_expected = y1 - y0
+        assert img.shape_array == (height_expected, width_expected)
 
     def test_crop_from_topleft(self):
         img = Image.from_fillvalue(shape=(5, 5), value=0)
-        img.crop_from_topleft(topleft=[1, 1], width=4, height=3)
-        assert img.shape_array == (3, 4)
+        width = 4
+        height = 3
+        img.crop_from_topleft(topleft=[1, 1], width=width, height=height)
+        assert img.shape_array == (height, width)
 
     def test_crop_axis_aligned_bbox(self):
         img = Image.from_fillvalue(shape=(5, 5), value=0)
@@ -388,6 +393,20 @@ class TestTransformerImageCropMethods:
     def test_crop_around_segment_horizontal(self):
         img = Image.from_fillvalue(shape=(5, 5), value=0)
         img, _, _, _ = img.crop_around_segment_horizontal(
-            segment=[[1, 2], [3, 2]], dim_crop_rect=(-1, 2), added_width=0
+            segment=[[1, 2], [3, 2]], dim_crop_rect=(-1, 3), added_width=0
         )
-        assert img.shape_array == (3, 3)
+        assert img.shape_array == (3, 2)
+
+    def test_crop_around_segment_horizontal_with_segment_horizontal(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=0)
+        img = img.crop_around_segment_horizontal_faster(
+            segment=[[1, 1], [3, 1]], dim_crop_rect=(-1, 3), added_width=0
+        )
+        assert img.shape_array == (3, 2)
+
+    def test_crop_around_segment_horizontal_with_segment_vertical(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=0)
+        img = img.crop_around_segment_horizontal_faster(
+            segment=[[1, 1], [1, 3]], dim_crop_rect=(-1, 3), added_width=0
+        )
+        assert img.shape_array == (3, 2)

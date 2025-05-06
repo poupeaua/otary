@@ -548,6 +548,7 @@ class TransformerImage(BaseImage, ABC):
         return self.resize_fixed(dim=dim, interpolation=interpolation, copy=copy)
 
     def __crop_with_padding(self, x0: int, y0: int, x1: int, y1: int) -> np.ndarray:
+        # pylint: disable=too-many-locals
         x0, y0, x1, y1 = int(x0), int(y0), int(x1), int(y1)
 
         # Output size
@@ -611,12 +612,12 @@ class TransformerImage(BaseImage, ABC):
         def clip(value: int, min_value: int, max_value: int) -> int:
             return max(min_value, min(value, max_value))
 
-        x0 = clip(x0, 0, self.width - 1)
-        y0 = clip(y0, 0, self.height - 1)
-        x1 = clip(x1, 0, self.width - 1)
-        y1 = clip(y1, 0, self.height - 1)
+        x0 = clip(x0, 0, self.width)
+        y0 = clip(y0, 0, self.height)
+        x1 = clip(x1, 0, self.width)
+        y1 = clip(y1, 0, self.height)
 
-        result = self.asarray[int(y0) : int(y1) + 1, int(x0) : int(x1) + 1]
+        result = self.asarray[int(y0) : int(y1), int(x0) : int(x1)]
         return result
 
     def crop(
@@ -629,12 +630,36 @@ class TransformerImage(BaseImage, ABC):
         pad: bool = False,
         copy: bool = False,
     ) -> Self:
+        """Crop an image using the top-left and bottom-right points.
+
+        This function inputs represents the top-left and bottom-right points.
+        This method does not provide a way to extract a rotated rectangle or a
+        different shape from the image.
+
+        Remember that in this library the x coordinates represent the y coordinates of
+        the image array (horizontal axis of the image).
+        The array representation is always rows then columns.
+        In this library this is the contrary like in opencv.
+
+        Args:
+            x0 (int): top-left x coordinate
+            y0 (int): top-left y coordinate
+            x1 (int): bottom-right x coordinate
+            y1 (int): bottom-right y coordinate
+            clip (bool, optional): whether to clip or not. Defaults to True.
+            pad (bool, optional): whether to pad or not. Defaults to False.
+            copy (bool, optional): whether to copy or not. Defaults to False.
+
+        Returns:
+            Self: cropped image
+        """
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
         if (clip and pad) or (not clip and not pad):
             raise ValueError(f"When cropping clip and pad cannot be both {clip}")
 
-        if clip:
+        if clip and not pad:
             array_crop = self.__crop_with_clipping(x0=x0, y0=y0, x1=x1, y1=y1)
-        if pad:
+        else:  # pad and not clip:
             array_crop = self.__crop_with_padding(x0=x0, y0=y0, x1=x1, y1=y1)
 
         if copy:
@@ -658,12 +683,49 @@ class TransformerImage(BaseImage, ABC):
         return self.crop(
             x0=topleft[0],
             y0=topleft[1],
-            x1=topleft[0] + width - 1,
-            y1=topleft[1] + height - 1,
+            x1=topleft[0] + width,
+            y1=topleft[1] + height,
+        )
+
+    def crop_from_center(self, center: np.ndarray, width: int, height: int) -> Self:
+        """Crop the image from a rectangle defined by its center point, its width and
+        its height.
+
+        Args:
+            center (np.ndarray): (x, y) coordinates of the center point
+            width (int): width of the rectangle to crop
+            height (int): height of the rectangle to crop
+
+        Returns:
+            Self: image cropped
+        """
+        return self.crop_from_topleft(
+            topleft=center - np.array([width / 2, height / 2]),
+            width=width,
+            height=height,
+        )
+
+    def crop_polygon(self, polygon: geo.Polygon, copy: bool = False) -> Self:
+        """Crop the image from a polygon
+
+        Args:
+            polygon (geo.Polygon): polygon
+
+        Returns:
+            Self: image cropped
+        """
+        return self.crop(
+            x0=int(polygon.xmin),
+            y0=int(polygon.ymin),
+            x1=int(polygon.xmax),
+            y1=int(polygon.ymax),
+            copy=copy,
         )
 
     def crop_from_axis_aligned_bbox(self, bbox: geo.Rectangle) -> Self:
-        """Crop the image from an Axis-Aligned Bounding Box (AABB)
+        """Crop the image from an Axis-Aligned Bounding Box (AABB).
+        Inclusive crops which means that the cropped image will have
+        width and height equal to the width and height of the AABB.
 
         Args:
             bbox (geo.Rectangle): axis-aligned bounding box
@@ -671,6 +733,7 @@ class TransformerImage(BaseImage, ABC):
         Returns:
             Self: cropped image
         """
+        assert bbox.is_axis_aligned
         topleft = np.asarray([bbox.xmin, bbox.ymin])
         height = int(bbox.ymax - bbox.ymin + 1)
         width = int(bbox.xmax - bbox.xmin + 1)
@@ -723,11 +786,10 @@ class TransformerImage(BaseImage, ABC):
         im = im.rotate(angle=angle)
 
         # cropping
-        im_crop = im.crop(
-            x0=int(im.center[0] - width_crop_rect / 2),
-            y0=int(im.center[1] - height_crop_rect / 2),
-            x1=int(im.center[0] + width_crop_rect / 2),
-            y1=int(im.center[1] + height_crop_rect / 2),
+        im_crop = im.crop_from_center(
+            center=im.center,
+            width=width_crop_rect,
+            height=height_crop_rect,
         )
 
         crop_translation_vector = self.center - im_crop.center
@@ -777,6 +839,14 @@ class TransformerImage(BaseImage, ABC):
         x_extra = abs(added_width / 2 * np.cos(angle))
         y_extra = abs(added_width / 2 * np.sin(angle))
 
+        # add extra width for crop in case segment is ~vertical
+        if abs(geo_segment.xmax - geo_segment.xmin) + 2 * x_extra < width_crop_rect:
+            x_extra += int(width_crop_rect / 2) + 1
+
+        # add extra width for crop in case segment is ~horizontal
+        if abs(geo_segment.ymax - geo_segment.ymin) + 2 * y_extra < height_crop_rect:
+            y_extra += int(height_crop_rect / 2) + 1
+
         im = self.crop(
             x0=geo_segment.xmin - x_extra,
             y0=geo_segment.ymin - y_extra,
@@ -790,15 +860,11 @@ class TransformerImage(BaseImage, ABC):
         # rotate the image so that the line is horizontal
         im.rotate(angle=angle)
 
-        # cropping
-        im.crop(
-            x0=int(im.center[0] - width_crop_rect / 2),
-            y0=int(im.center[1] - height_crop_rect / 2),
-            x1=int(im.center[0] + width_crop_rect / 2),
-            y1=int(im.center[1] + height_crop_rect / 2),
-            clip=True,
-            pad=False,
-            copy=False,
+        # cropping around segment center
+        im.crop_from_center(
+            center=im.center,
+            width=width_crop_rect,
+            height=height_crop_rect,
         )
 
         return im

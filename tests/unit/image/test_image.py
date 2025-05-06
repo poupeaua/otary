@@ -54,7 +54,7 @@ class TestImageScoreMethods:
         img1 = img0.copy()
         assert img0.score_contains(img1) == 1
 
-    def test_score_contains_contour_one(self):
+    def test_score_contains_polygons_one(self):
         shape = (50, 50)
         img = Image.from_fillvalue(shape=shape, value=255)
         cnt = Polygon(
@@ -68,7 +68,7 @@ class TestImageScoreMethods:
         img.draw_polygons(
             polygons=[cnt], render=PolygonsRender(default_color=(0, 0, 0), thickness=1)
         )
-        assert img.score_contains_polygon(polygon=cnt) == 1
+        assert img.score_contains_polygons(polygons=[cnt]) == 1
 
     def test_score_contains_segment_one(self):
         shape = (5, 5)

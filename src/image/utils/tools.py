@@ -57,7 +57,7 @@ def cast_geometry_to_array(objects: list | np.ndarray, _type: Any) -> list:
     return objects
 
 
-def prep_obj_draw(objects: list | np.ndarray, _type: Any) -> list:
+def prep_obj_draw(objects: list | np.ndarray, _type: Any) -> list | np.ndarray:
     """Preparation function for the objects to be drawn
 
     Args:

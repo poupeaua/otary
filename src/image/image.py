@@ -87,109 +87,94 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
 
         Args:
             other (Image): other Image object
-            method (str, optional): binarization method. Defaults to "adaptative".
+            method (str, optional): binarization method. Defaults to "sauvola".
 
         Returns:
             float: a score from 0 to 1. The greater the score the greater the other
                 image is contained within the original image
         """
-        assert self.is_equal_shape(other)
+        assert self.is_equal_shape(other, consider_channel=False)
         other_binaryrev = other.binaryrev(method=binarization_method)
         return np.sum(
             self.binaryrev(method=binarization_method) * other_binaryrev
         ) / np.sum(other_binaryrev)
 
-    def score_contains_polygon(
+    def score_contains_polygons(
         self,
-        polygon: geo.Polygon,
+        polygons: list[geo.Polygon],
         dilate_kernel: tuple = (5, 5),
         dilate_iterations: int = 1,
         binarization_method: str = "sauvola",
-    ) -> float:
-        """Check how much the contour is contained in the original image
+        resize_factor: float = 1.0,
+    ) -> np.ndarray:
+        """Check how much polygons are contained in the image
 
         Beware: this method is different from the score_contains method because in
         this case you can emphasize the base image by dilating its content.
+
         Everything that is a 1 in the rmask will be dilated to give more chance for the
-        contour to be contained within the image in the calculation.
+        contour to be contained within the image in the calculation. This way you
+        can control the sensitivity of the score.
 
         Args:
             polygon (Polygon): Polygon object
             dilate_kernel (tuple, optional): dilate kernel param. Defaults to (5, 5).
             dilate_iterations (int, optional): dilate iterations param. Defaults to 1.
+            binarization_method (str, optional): binarization method. Here
+                we can afford the sauvola method since we crop the image first
+                and the binarization occurs on a small image.
+                Defaults to "sauvola".
+            resize_factor (float, optional): resize factor that can be adjusted to
+                provide extra speed. A lower value will be faster but less accurate.
+                Typically 0.5 works well but less can have a negative impact on accuracy
+                Defaults to 1.0 which implies no resize.
 
         Returns:
             float: a score from 0 to 1. The greater the score the greater the contour
                  is contained within the original image
         """
-        # create all-white image of same size as original with the geometry entity
-        other = (
-            Image.from_fillvalue(value=255, shape=self.shape_array)
-            .draw_polygons(
-                polygons=[polygon],
-                render=PolygonsRender(thickness=1, default_color=(0, 0, 0)),
-            )
-            .as_grayscale()
-        )
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
+        scores = []
+        for polygon in polygons:
 
-        # dilate the original image
-        im = self.copy().dilate(kernel=dilate_kernel, iterations=dilate_iterations)
+            im = self.crop_polygon(polygon=polygon, copy=True)
 
-        return im.score_contains(other=other, binarization_method=binarization_method)
+            im.dilate(kernel=dilate_kernel, iterations=dilate_iterations)
 
-    def score_contains_segments(
-        self,
-        segments: np.ndarray | list[geo.Segment],
-        dilate_kernel: tuple = (5, 5),
-        dilate_iterations: int = 1,
-        binarization_method: str = "sauvola",
-    ) -> np.ndarray:
-        """Compute the contain score for each individual segment.
-        This method is better than :func:`~Image.score_contains_contour()` in the sense
-        that it provides the score for each single segments. This way it is better to
-        identify which segments are good and bad.
+            im.resize(factor=resize_factor)
 
-        Args:
-            segments (np.ndarray | list[geo.Segment]): a list of segments
-            dilate_kernel (tuple, optional): dilate kernel param. Defaults to (5, 5).
-            dilate_iterations (int, optional): dilate iterations param. Defaults to 1.
-
-        Returns:
-            np.ndarray: list of score for each individual segment in the same order
-                as the list of segments
-        """
-        # dilate the original image
-        im = self.copy().dilate(kernel=dilate_kernel, iterations=dilate_iterations)
-
-        score_segments = np.zeros(shape=len(segments))
-        for i, segment in enumerate(segments):
             # create all-white image of same size as original with the geometry entity
             other = (
-                Image.from_fillvalue(value=255, shape=self.shape_array)
-                .draw_segments(
-                    segments=[segment],
-                    render=SegmentsRender(thickness=1, default_color=(0, 0, 0)),
+                im.copy()
+                .as_white()
+                .draw_polygons(
+                    polygons=[polygon],
+                    render=PolygonsRender(thickness=1, default_color=(0, 0, 0)),
                 )
                 .as_grayscale()
             )
 
-            score_segments[i] = im.score_contains(
+            cur_score = im.score_contains(
                 other=other, binarization_method=binarization_method
             )
-        return score_segments
 
-    def score_contains_segments_faster(
+            scores.append(cur_score)
+
+        return np.asarray(scores)
+
+    def score_contains_segments(
         self,
-        segments: np.ndarray | list[geo.Segment],
+        segments: list[geo.Segment],
         dilate_kernel: tuple = (5, 5),
         dilate_iterations: int = 1,
         binarization_method: str = "sauvola",
         resize_factor: float = 1.0,
     ) -> np.ndarray:
         """Compute the contain score for each individual segment.
-        This method is better than :func:`~Image.score_contains_contour()` in the sense
-        that it provides the score for each single segments. This way it is better to
-        identify which segments are good and bad.
+        This method can be better than :func:`~Image.score_contains_polygons()` in some
+        cases.
+        It provides a score for each single segments. This way it is better to
+        identify which segments specifically are contained in the image or not.
 
         Args:
             segments (np.ndarray | list[geo.Segment]): a list of segments
@@ -201,20 +186,20 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
                 Defaults to "sauvola".
             resize_factor (float, optional): resize factor that can be adjusted to
                 provide extra speed. A lower value will be faster but less accurate.
-                Typically 0.5 works well but less have a negative impact on accuracy.
+                Typically 0.5 works well but less can have a negative impact on accuracy
                 Defaults to 1.0 which implies no resize.
 
         Returns:
             np.ndarray: list of score for each individual segment in the same order
                 as the list of segments
         """
-        # TODO handle case where the segment is almost or pure horizontal or vertical
-
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
         added_width = 10
         height_crop = 30
         mid_height_crop = int(height_crop / 2)
         score_segments = []
-        for i, segment in enumerate(segments):
+
+        for segment in segments:
 
             im = self.crop_around_segment_horizontal_faster(
                 segment=segment.asarray,
@@ -246,11 +231,13 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
                 .as_grayscale()
             )
 
-            cur_score = im.score_contains(
+            score = im.score_contains(
                 other=other, binarization_method=binarization_method
             )
-            score_segments.append(cur_score)
-        return score_segments
+
+            score_segments.append(score)
+
+        return np.asarray(score_segments)
 
     def score_distance_from_center(
         self, point: np.ndarray, method: str = "linear"

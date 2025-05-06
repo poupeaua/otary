@@ -10,6 +10,7 @@ from abc import ABC
 
 import cv2
 import numpy as np
+from numpy.typing import NDArray
 from PIL import Image as ImagePIL
 
 
@@ -104,7 +105,7 @@ class BaseImage(ABC):
         return self.width * self.height
 
     @property
-    def center(self) -> np.ndarray:
+    def center(self) -> NDArray[np.int16]:
         """Center point of the image.
 
         Please note that it is returned as type int because the center needs to
@@ -113,7 +114,7 @@ class BaseImage(ABC):
         Returns:
             np.ndarray: center point of the image
         """
-        return (np.array([self.width, self.height]) / 2).astype(int)
+        return (np.array([self.width, self.height]) / 2).astype(np.int16)
 
     @property
     def norm_side_length(self) -> int:
