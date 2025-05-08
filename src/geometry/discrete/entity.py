@@ -460,6 +460,10 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
             return False
         return np.array_equal(self.asarray, value.asarray)
 
+    def __neg__(self) -> Self:
+        self.asarray = -self.asarray
+        return self
+
     def __add__(self, other: np.ndarray | float | int) -> Self:
         self.asarray += other
         return self

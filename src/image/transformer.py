@@ -4,7 +4,6 @@ Image Trasnformation module. it only contains advanced image transformation meth
 
 from __future__ import annotations
 
-import math
 from typing import Self, Sequence
 from abc import ABC
 
@@ -805,53 +804,63 @@ class TransformerImage(BaseImage, ABC):
     def crop_next_to_rectangle(
         self,
         rect: geo.Rectangle,
-        rect_topleft_point_index: int,
-        shift: np.ndarray,
-        width: int,
-        height: int,
+        rect_topleft_vertice_index: int,
+        crop_dim: tuple[int, int] = (-1, -1),
+        crop_shift: tuple[int, int] = (0, 0),
     ) -> Self:
-        # TODO restructure code
-        # ruff: noqa: F841
-        rect = geo.Rectangle(
-            points=np.array([[0, 0], [0, 100], [500, 100], [500, 0]]) + 300 + [0, 300]
-        ).rotate(angle=math.pi / 4)
-        rect_topleft_point_index = 0
-        rect_topleft_point = rect[rect_topleft_point_index]
-        rect_topright_point = rect.vertice_from_topleft(
-            topleft_index=rect_topleft_point_index, vertice="topright"
+        """Crop image in the referential of the rectangle.
+
+        Args:
+            rect (geo.Rectangle): rectangle for reference to crop.
+            rect_topleft_vertice_index (int): top-left vertice index of the rectangle
+            crop_dim (tuple[int, int], optional): (width, height) crop dimension. Defaults to (-1, -1).
+            crop_shift (tuple[int, int], optional): The crop_shift argument is applied
+                from the rectangle center based on the axis referential of the
+                rectangle. This means that the shift in the X direction
+                is based on the normalized vector (bottom-left, top-left)
+                The shift in the Y direction is based on the normalized vector
+                (top-left, top-right). Defaults to (0, 0) meaning no shift.
+
+        Returns:
+            Self: new image cropped
+        """
+        # get the useful vertices from the top-left vertice
+        rect_topleft_vertice = rect[rect_topleft_vertice_index]
+        rect_topright_vertice = rect.vertice_from_topleft(
+            topleft_index=rect_topleft_vertice_index, vertice="topright"
         )
-        rect_bottomleft_point = rect.vertice_from_topleft(
-            topleft_index=rect_topleft_point_index, vertice="bottomleft"
+        rect_bottomleft_vertice = rect.vertice_from_topleft(
+            topleft_index=rect_topleft_vertice_index, vertice="bottomleft"
         )
 
-        shift_down = geo.Vector.from_single_point(
-            (rect_bottomleft_point - rect_topleft_point) / 2
-        )
-        shift_left = geo.Vector.from_single_point(
-            (rect_topright_point - rect_topleft_point) / 2
-        )
+        # shift down and up vector calculated based on the top-left vertice
+        rect_shift_up = geo.Vector([rect_bottomleft_vertice, rect_topleft_vertice])
+        rect_shift_left = geo.Vector([rect_topleft_vertice, rect_topright_vertice])
 
-        middle1 = rect_topleft_point + shift_down.coordinates_shift
-        middle2 = rect_topright_point + shift_down.coordinates_shift
-        segment = geo.Segment([middle1, middle2])
+        # crop dimension
+        rect_heigth = rect.heigth_from_topleft(topleft_index=rect_topleft_vertice_index)
+        crop_width = rect_heigth if crop_dim[0] == -1 else crop_dim[0]
+        crop_height = rect_heigth if crop_dim[1] == -1 else crop_dim[1]
+        crop_width, crop_height = int(crop_width), int(crop_height)
+        assert crop_width > 0 and crop_height > 0
 
-        width = rect.width_from_topleft(topleft_index=rect_topleft_point_index)
-        heigth = rect.heigth_from_topleft(topleft_index=rect_topleft_point_index)
+        # compute the crop center
+        crop_center = rect.centroid
+        crop_center += crop_shift[0] * rect_shift_left.normalized  # shift left
+        crop_center += crop_shift[1] * rect_shift_up.normalized  # shift up
 
-        crop_width = heigth
-        crop_height = heigth
-        crop_shift_rect_center_x = -width / 2 - crop_width / 2
-        crop_shift_rect_center_y = 0.0
-        crop_center = (
-            rect.centroid
-            + crop_shift_rect_center_y * shift_down.normalized
-            + crop_shift_rect_center_x * shift_left.normalized
-        )
+        # get the crop segment
         crop_segment = geo.Segment(
             [
-                crop_center - crop_width / 2 * shift_left.normalized,
-                crop_center + crop_width / 2 * shift_left.normalized,
+                crop_center - crop_width / 2 * rect_shift_left.normalized,
+                crop_center + crop_width / 2 * rect_shift_left.normalized,
             ]
+        )
+
+        return self.crop_around_segment_horizontal_faster(
+            segment=crop_segment.asarray,
+            dim_crop_rect=(crop_width, crop_height),
+            added_width=0,
         )
 
     def crop_around_segment_horizontal(

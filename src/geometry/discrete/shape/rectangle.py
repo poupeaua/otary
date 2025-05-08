@@ -326,13 +326,17 @@ class Rectangle(Polygon):
         return getattr(self, f"_{vertice}_vertice_from_topleft")(topleft_index)
 
     def width_from_topleft(self, topleft_index: int) -> float:
-        return np.linalg.norm(
-            self.asarray[topleft_index]
-            - self.vertice_from_topleft(topleft_index, "topright")
+        return float(
+            np.linalg.norm(
+                self.asarray[topleft_index]
+                - self.vertice_from_topleft(topleft_index, "topright")
+            )
         )
 
     def heigth_from_topleft(self, topleft_index: int) -> float:
-        return np.linalg.norm(
-            self.asarray[topleft_index]
-            - self.vertice_from_topleft(topleft_index, "bottomleft")
+        return float(
+            np.linalg.norm(
+                self.asarray[topleft_index]
+                - self.vertice_from_topleft(topleft_index, "bottomleft")
+            )
         )

@@ -14,8 +14,16 @@ class Vector(Segment, DirectedLinearEntity):
     """Vector class to manipulate vector which can be seen as Segment with direction"""
 
     @classmethod
-    def from_single_point(cls, cld: np.ndarray) -> Vector:
-        return cls(points=[[0, 0], cld])
+    def from_single_point(cls, point: np.ndarray) -> Vector:
+        """Get vector that goes from [0, 0] to point
+
+        Args:
+            point (np.ndarray): point of shape 2
+
+        Returns:
+            Vector: new vector object
+        """
+        return cls(points=[[0, 0], point])
 
     @property
     def cardinal_degree(self) -> float:
@@ -44,12 +52,21 @@ class Vector(Segment, DirectedLinearEntity):
 
     @property
     def coordinates_shift(self) -> np.ndarray:
-        """Return the vector as a single point (x1-x0, y1-y0)"""
+        """Return the vector as a single point (x1-x0, y1-y0)
+
+        Returns:
+            np.ndarray: coordinates shift
+        """
         return self.origin[1]
 
     @property
     def normalized(self) -> np.ndarray:
-        return self.coordinates_shift / np.linalg.norm(self.asarray)
+        """Nornalized vector
+
+        Returns:
+            np.ndarray: normalized vector
+        """
+        return self.coordinates_shift / np.linalg.norm(self.coordinates_shift)
 
     def rescale_head(self, scale: float) -> Vector:
         """Rescale the head part of the vector without moving the first point.
