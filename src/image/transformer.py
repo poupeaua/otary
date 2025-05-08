@@ -4,6 +4,7 @@ Image Trasnformation module. it only contains advanced image transformation meth
 
 from __future__ import annotations
 
+import math
 from typing import Self, Sequence
 from abc import ABC
 
@@ -809,7 +810,49 @@ class TransformerImage(BaseImage, ABC):
         width: int,
         height: int,
     ) -> Self:
-        pass
+        # TODO restructure code
+        # ruff: noqa: F841
+        rect = geo.Rectangle(
+            points=np.array([[0, 0], [0, 100], [500, 100], [500, 0]]) + 300 + [0, 300]
+        ).rotate(angle=math.pi / 4)
+        rect_topleft_point_index = 0
+        rect_topleft_point = rect[rect_topleft_point_index]
+        rect_topright_point = rect.vertice_from_topleft(
+            topleft_index=rect_topleft_point_index, vertice="topright"
+        )
+        rect_bottomleft_point = rect.vertice_from_topleft(
+            topleft_index=rect_topleft_point_index, vertice="bottomleft"
+        )
+
+        shift_down = geo.Vector.from_single_point(
+            (rect_bottomleft_point - rect_topleft_point) / 2
+        )
+        shift_left = geo.Vector.from_single_point(
+            (rect_topright_point - rect_topleft_point) / 2
+        )
+
+        middle1 = rect_topleft_point + shift_down.coordinates_shift
+        middle2 = rect_topright_point + shift_down.coordinates_shift
+        segment = geo.Segment([middle1, middle2])
+
+        width = rect.width_from_topleft(topleft_index=rect_topleft_point_index)
+        heigth = rect.heigth_from_topleft(topleft_index=rect_topleft_point_index)
+
+        crop_width = heigth
+        crop_height = heigth
+        crop_shift_rect_center_x = -width / 2 - crop_width / 2
+        crop_shift_rect_center_y = 0.0
+        crop_center = (
+            rect.centroid
+            + crop_shift_rect_center_y * shift_down.normalized
+            + crop_shift_rect_center_x * shift_left.normalized
+        )
+        crop_segment = geo.Segment(
+            [
+                crop_center - crop_width / 2 * shift_left.normalized,
+                crop_center + crop_width / 2 * shift_left.normalized,
+            ]
+        )
 
     def crop_around_segment_horizontal(
         self,
@@ -912,11 +955,17 @@ class TransformerImage(BaseImage, ABC):
         y_extra = abs(added_width / 2 * np.sin(angle))
 
         # add extra width for crop in case segment is ~vertical
-        if abs(geo_segment.xmax - geo_segment.xmin) + 2 * x_extra < width_crop_rect:
+        if (
+            True
+            or abs(geo_segment.xmax - geo_segment.xmin) + 2 * x_extra < width_crop_rect
+        ):
             x_extra += int(width_crop_rect / 2) + 1
 
         # add extra width for crop in case segment is ~horizontal
-        if abs(geo_segment.ymax - geo_segment.ymin) + 2 * y_extra < height_crop_rect:
+        if (
+            True
+            or abs(geo_segment.ymax - geo_segment.ymin) + 2 * y_extra < height_crop_rect
+        ):
             y_extra += int(height_crop_rect / 2) + 1
 
         im = self.crop(

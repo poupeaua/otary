@@ -13,6 +13,10 @@ from src.geometry import Segment
 class Vector(Segment, DirectedLinearEntity):
     """Vector class to manipulate vector which can be seen as Segment with direction"""
 
+    @classmethod
+    def from_single_point(cls, cld: np.ndarray) -> Vector:
+        return cls(points=[[0, 0], cld])
+
     @property
     def cardinal_degree(self) -> float:
         """Returns the cardinal degree of the vector in the cv2 space.
@@ -42,6 +46,10 @@ class Vector(Segment, DirectedLinearEntity):
     def coordinates_shift(self) -> np.ndarray:
         """Return the vector as a single point (x1-x0, y1-y0)"""
         return self.origin[1]
+
+    @property
+    def normalized(self) -> np.ndarray:
+        return self.coordinates_shift / np.linalg.norm(self.asarray)
 
     def rescale_head(self, scale: float) -> Vector:
         """Rescale the head part of the vector without moving the first point.

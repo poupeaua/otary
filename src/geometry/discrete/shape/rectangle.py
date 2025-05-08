@@ -269,7 +269,7 @@ class Rectangle(Polygon):
         # if 3 or more points in common it is the same rectangle
         return self
 
-    def __topright_vertice_from_topleft(self, topleft_index: int) -> np.ndarray:
+    def _topright_vertice_from_topleft(self, topleft_index: int) -> np.ndarray:
         """Get the top-right vertice from the topleft vertice
 
         Args:
@@ -279,11 +279,11 @@ class Rectangle(Polygon):
             np.ndarray: topright vertice
         """
         if self.is_clockwise(is_cv2=True):
-            return self.asarray[topleft_index + 1]
+            return self.asarray[(topleft_index + 1) % len(self)]
         else:
             return self.asarray[topleft_index - 1]
 
-    def __bottomleft_vertice_from_topleft(self, topleft_index: int) -> np.ndarray:
+    def _bottomleft_vertice_from_topleft(self, topleft_index: int) -> np.ndarray:
         """Get the bottom-left vertice from the topleft vertice
 
         Args:
@@ -295,9 +295,9 @@ class Rectangle(Polygon):
         if self.is_clockwise(is_cv2=True):
             return self.asarray[topleft_index - 1]
         else:
-            return self.asarray[topleft_index + 1]
+            return self.asarray[(topleft_index + 1) % len(self)]
 
-    def __bottomright_vertice_from_topleft(self, topleft_index: int) -> np.ndarray:
+    def _bottomright_vertice_from_topleft(self, topleft_index: int) -> np.ndarray:
         """Get the bottom-right vertice from the topleft vertice
 
         Args:
@@ -306,7 +306,7 @@ class Rectangle(Polygon):
         Returns:
             np.ndarray: topright vertice
         """
-        return self.asarray[topleft_index + 2]
+        return self.asarray[(topleft_index + 2) % len(self)]
 
     def vertice_from_topleft(
         self, topleft_index: int, vertice: str = "topright"
@@ -323,4 +323,16 @@ class Rectangle(Polygon):
                 "'topright', 'bottomleft', 'bottomright'"
                 f"but got {vertice}"
             )
-        return getattr(self, f"__{vertice}_vertice_from_topleft")(topleft_index)
+        return getattr(self, f"_{vertice}_vertice_from_topleft")(topleft_index)
+
+    def width_from_topleft(self, topleft_index: int) -> float:
+        return np.linalg.norm(
+            self.asarray[topleft_index]
+            - self.vertice_from_topleft(topleft_index, "topright")
+        )
+
+    def heigth_from_topleft(self, topleft_index: int) -> float:
+        return np.linalg.norm(
+            self.asarray[topleft_index]
+            - self.vertice_from_topleft(topleft_index, "bottomleft")
+        )
