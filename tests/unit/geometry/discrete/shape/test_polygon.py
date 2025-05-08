@@ -262,31 +262,31 @@ class TestPolygonScoreEdgesInPoints:
     def test_score_edges_in_points_all_close(self):
         cnt = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
         points = np.array([[0, 0], [1, 0], [1, 1], [0, 1]])
-        scores = cnt.score_edges_in_points(points=points, min_distance=0.1)
+        scores = cnt.score_vertices_in_points(points=points, min_distance=0.1)
         assert np.array_equal(scores, [1, 1, 1, 1])
 
     def test_score_edges_in_points_some_close(self):
         cnt = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
         points = np.array([[0, 0], [1, 0]])
-        scores = cnt.score_edges_in_points(points=points, min_distance=0.1)
+        scores = cnt.score_vertices_in_points(points=points, min_distance=0.1)
         assert np.array_equal(scores, [1, 1, 0, 0])
 
     def test_score_edges_in_points_none_close(self):
         cnt = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
         points = np.array([[2, 2], [3, 3]])
-        scores = cnt.score_edges_in_points(points=points, min_distance=0.1)
+        scores = cnt.score_vertices_in_points(points=points, min_distance=0.1)
         assert np.array_equal(scores, [0, 0, 0, 0])
 
     def test_score_edges_in_points_with_margin(self):
         cnt = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
         points = np.array([[0.05, 0.05], [1.05, 0.05]])
-        scores = cnt.score_edges_in_points(points=points, min_distance=0.1)
+        scores = cnt.score_vertices_in_points(points=points, min_distance=0.1)
         assert np.array_equal(scores, [1, 1, 0, 0])
 
     def test_score_edges_in_points_duplicate_points(self):
         cnt = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
         points = np.array([[0, 0], [0, 0], [1, 0]])
-        scores = cnt.score_edges_in_points(points=points, min_distance=0.1)
+        scores = cnt.score_vertices_in_points(points=points, min_distance=0.1)
         assert np.array_equal(scores, [1, 1, 0, 0])
 
 
@@ -393,3 +393,158 @@ class TestPolygonLengths:
         polygon = Polygon([[0, 0], [1, 0]])
         expected_lengths = [1]
         assert np.allclose(polygon.lengths, expected_lengths)
+
+
+class TestPolygonIsClockwise:
+    def test_is_clockwise_false(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        assert polygon.is_clockwise() is False
+
+    def test_is_clockwise_true(self):
+        polygon = Polygon([[0, 0], [0, 1], [1, 1], [1, 0]])
+        assert polygon.is_clockwise() is True
+
+    def test_is_clockwise_true_cv2(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        assert polygon.is_clockwise(is_cv2=True) is True
+
+    def test_is_clockwise_false_cv2(self):
+        polygon = Polygon([[0, 0], [0, 1], [1, 1], [1, 0]])
+        assert polygon.is_clockwise(is_cv2=True) is False
+
+    def test_is_clockwise_triangle_false(self):
+        polygon = Polygon([[0, 0], [1, 0], [0.5, 1]])
+        assert polygon.is_clockwise() is False
+
+    def test_is_clockwise_triangle_true(self):
+        polygon = Polygon([[0, 0], [0.5, 1], [1, 0]])
+        assert polygon.is_clockwise() is True
+
+
+class TestPolygonAsLinearSpline:
+    def test_as_linear_spline_default_index(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        spline = polygon.as_linear_spline()
+        expected_points = [[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]
+        assert np.array_equal(spline.points, expected_points)
+
+    def test_as_linear_spline_positive_index(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        spline = polygon.as_linear_spline(index=2)
+        expected_points = [[1, 1], [0, 1], [0, 0], [1, 0], [1, 1]]
+        assert np.array_equal(spline.points, expected_points)
+
+    def test_as_linear_spline_negative_index(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        spline = polygon.as_linear_spline(index=-2)
+        expected_points = [[1, 1], [0, 1], [0, 0], [1, 0], [1, 1]]
+        assert np.array_equal(spline.points, expected_points)
+
+    def test_as_linear_spline_index_out_of_bounds(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        spline = polygon.as_linear_spline(index=5)
+        expected_points = [[1, 0], [1, 1], [0, 1], [0, 0], [1, 0]]
+        assert np.array_equal(spline.points, expected_points)
+
+
+class TestPolygonVerticesBetween:
+    def test_vertices_between_positive_indices(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        result = polygon.vertices_between(1, 3)
+        expected = np.array([[1, 0], [1, 1], [0, 1]])
+        assert np.array_equal(result, expected)
+
+    def test_vertices_between_negative_indices(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        result = polygon.vertices_between(-3, -1)
+        expected = np.array([[1, 0], [1, 1], [0, 1]])
+        assert np.array_equal(result, expected)
+
+    def test_vertices_between_wraparound_indices(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        result = polygon.vertices_between(3, 1)
+        expected = np.array([[0, 1], [0, 0], [1, 0]])
+        assert np.array_equal(result, expected)
+
+    def test_vertices_between_same_start_end_index(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        result = polygon.vertices_between(2, 2)
+        expected = np.array([[1, 1], [0, 1], [0, 0], [1, 0], [1, 1]])
+        assert np.array_equal(result, expected)
+
+    def test_vertices_between_full_cycle(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        result = polygon.vertices_between(0, 3)
+        expected = np.array([[0, 0], [1, 0], [1, 1], [0, 1]])
+        assert np.array_equal(result, expected)
+
+
+class TestPolygonInterpolatedPointAlongPolygon:
+    def test_interpolated_point_start(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        result = polygon.interpolated_point_along_polygon(0, 2, 0)
+        expected = np.array([0, 0])
+        assert np.array_equal(result, expected)
+
+    def test_interpolated_point_end(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        result = polygon.interpolated_point_along_polygon(0, 2, 1)
+        expected = np.array([1, 1])
+        assert np.array_equal(result, expected)
+
+    def test_interpolated_point_middle(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        result = polygon.interpolated_point_along_polygon(0, 2, 0.5)
+        expected = np.array([2, 0])
+        assert np.array_equal(result, expected)
+
+    def test_interpolated_point_negative_indices(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        result = polygon.interpolated_point_along_polygon(-4, -2, 0.5)
+        expected = np.array([1, 0])
+        assert np.array_equal(result, expected)
+
+    def test_interpolated_point_wraparound(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        result = polygon.interpolated_point_along_polygon(3, 1, 0.5)
+        expected = np.array([0, 0])
+        assert np.array_equal(result, expected)
+
+    def test_interpolated_point_invalid_pct_dist(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        with pytest.raises(ValueError):
+            polygon.interpolated_point_along_polygon(0, 2, -0.1)
+
+    def test_interpolated_point_start_end_same(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        result = polygon.interpolated_point_along_polygon(1, 1, 0.5)
+        expected = np.array([0, 1])
+        assert np.array_equal(result, expected)
+
+    def test_interpolated_point_hard_case1(self):
+        polygon = Polygon(
+            points=np.array([[0, 0], [100, 100], [200, 100], [300, 200], [300, 0]])
+        )
+        result = polygon.interpolated_point_along_polygon(0, 3, 0.5)
+        expected = np.array([150, 100])
+        assert np.array_equal(result, expected)
+
+    def test_interpolated_point_hard_case2(self):
+        polygon = Polygon(
+            points=np.array([[0, 0], [100, 100], [200, 100], [300, 200], [300, 0]])
+        )
+        result = polygon.interpolated_point_along_polygon(
+            start_index=-2, end_index=0, pct_dist=0.4
+        )
+        expected = np.array([300, 0])
+        assert np.array_equal(result, expected)
+
+    def test_interpolated_point_hard_case3(self):
+        polygon = Polygon(
+            points=np.array([[0, 0], [100, 100], [200, 100], [300, 200], [300, 0]])
+        )
+        result = polygon.interpolated_point_along_polygon(
+            start_index=1, end_index=-4, pct_dist=0.5
+        )
+        expected = np.array([300, 0])
+        assert np.array_equal(result, expected)

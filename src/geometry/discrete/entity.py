@@ -18,8 +18,8 @@ from src.geometry.utils.tools import rotate_2d_points
 from src.geometry.entity import GeometryEntity
 from src.utils.tools import assert_transform_shift_vector
 
-if TYPE_CHECKING:
-    from src.geometry import Polygon, Rectangle  # Import only for type checking
+if TYPE_CHECKING:  # Import only for type checking
+    from src.geometry import Polygon, Rectangle, Segment
 
 
 class DiscreteGeometryEntity(GeometryEntity, ABC):
@@ -62,6 +62,15 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         """
 
     @property
+    def segments(self) -> list[Segment]:
+        """Get the segments of the geometry entity
+
+        Returns:
+            np.ndarray: segments of the geometry entity
+        """
+        return [Segment(e) for e in self.edges]
+
+    @property
     def n_points(self) -> int:
         """Returns the number of points this geometric object is made of
 
@@ -83,24 +92,6 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
             value (np.ndarray): value of the asarray to be changed
         """
         self.points = value
-
-    @property
-    def area(self) -> float:
-        """Compute the area of the geometry entity
-
-        Returns:
-            float: area value
-        """
-        return cv2.contourArea(self.points.astype(int))
-
-    @property
-    def perimeter(self) -> float:
-        """Compute the perimeter of the geometry entity
-
-        Returns:
-            float: perimeter value
-        """
-        return cv2.arcLength(self.points, True)
 
     @property
     def centroid(self) -> np.ndarray:
@@ -147,6 +138,26 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
             np.ndarray: 2D point
         """
         return np.min(self.asarray[:, 1])
+
+    @property
+    def lengths(self) -> np.ndarray:
+        """Returns the length of all the segments that make up the Polygon
+
+        Returns:
+            np.ndarray: array of shape (n_points)
+        """
+        lengths: np.ndarray = np.linalg.norm(np.diff(self.edges, axis=1), axis=2)
+        return lengths.flatten()
+
+    @property
+    def crop_coordinates(self) -> np.ndarray:
+        """Compute the coordinates of the geometry entity in the context of
+        itself being in a crop image that make it fit pefectly
+
+        Returns:
+            Self: _description_
+        """
+        return self.asarray - np.array([self.xmin, self.ymin])
 
     # ---------------------------- MODIFICATION METHODS -------------------------------
 
@@ -266,9 +277,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         Returns:
             GeometryEntity: copy of the geometry entity object
         """
-        return type(self)(
-            points=copy.deepcopy(self.asarray), is_cast_int=self.is_cast_int
-        )
+        return type(self)(points=self.asarray.copy(), is_cast_int=self.is_cast_int)
 
     def enclosing_axis_aligned_bbox(self) -> Rectangle:
         """Compute the smallest area enclosing Axis-Aligned Bounding Box (AABB)
@@ -447,26 +456,34 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
     def __eq__(self, value: object) -> bool:
         if not isinstance(value, DiscreteGeometryEntity):
             return False
+        if not type(self) == type(value):
+            return False
         return np.array_equal(self.asarray, value.asarray)
 
-    def __add__(self, other: np.ndarray | float) -> Self:
+    def __add__(self, other: np.ndarray | float | int) -> Self:
         self.asarray += other
         return self
 
-    def __sub__(self, other: np.ndarray | float) -> Self:
+    def __sub__(self, other: np.ndarray | float | int) -> Self:
         self.asarray -= other
         return self
 
-    def __mul__(self, other: np.ndarray | float) -> Self:
-        self.asarray *= other
+    def __mul__(self, other: np.ndarray | float | int) -> Self:
+        try:
+            self.asarray *= other
+        except Exception:
+            self.asarray = self.asarray.astype(float) * other
         return self
 
-    def __truediv__(self, other: np.ndarray | float) -> Self:
+    def __truediv__(self, other: np.ndarray | float | int) -> Self:
         self.asarray = self.asarray / other
         return self
 
     def __len__(self) -> int:
         return self.n_points
+
+    def __getitem__(self, index: int) -> np.ndarray:
+        return self.points[index]
 
     def __str__(self) -> str:
         return self.__class__.__name__ + "(" + self.asarray.tolist().__str__() + ")"

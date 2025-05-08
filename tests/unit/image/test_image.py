@@ -5,8 +5,8 @@ Unit Tests for the generic image methods
 import pytest
 import numpy as np
 
-from src.geometry import Polygon, Segment, Rectangle
-from src.image import Image, PolygonsRender, SegmentsRender
+from src.geometry import Polygon, Segment, Rectangle, LinearSpline
+from src.image import Image, PolygonsRender, SegmentsRender, LinearSplinesRender
 
 
 class TestImageGlobalMethods:
@@ -54,22 +54,6 @@ class TestImageScoreMethods:
         img1 = img0.copy()
         assert img0.score_contains(img1) == 1
 
-    def test_score_contains_polygons_one(self):
-        shape = (50, 50)
-        img = Image.from_fillvalue(shape=shape, value=255)
-        cnt = Polygon(
-            points=[
-                [0, 0],
-                [0, shape[0] - 1],
-                [shape[1] - 1, shape[0] - 1],
-                [shape[1] - 1, 0],
-            ]
-        )
-        img.draw_polygons(
-            polygons=[cnt], render=PolygonsRender(default_color=(0, 0, 0), thickness=1)
-        )
-        assert img.score_contains_polygons(polygons=[cnt]) == 1
-
     def test_score_contains_segment_one(self):
         shape = (5, 5)
         img = Image.from_fillvalue(shape=shape, value=255)
@@ -77,7 +61,7 @@ class TestImageScoreMethods:
         img.draw_segments(
             segments=[segment], render=SegmentsRender(default_color=(0, 0, 0))
         )
-        assert img.score_contains_segments(segments=[segment]) == 1
+        assert img.score_contains_segments(segments=[segment])[0] == 1.0
 
     def test_score_distance_from_center_error_method(self):
         with pytest.raises(ValueError):
@@ -116,6 +100,264 @@ class TestImageScoreMethods:
             point=point, method="gaussian"
         )
         assert round(score) == 0
+
+
+class TestImageScoreContainsLinearSplines:
+
+    def test_score_contains_linear_splines_one(self):
+        shape = (500, 500)
+        img = Image.from_fillvalue(shape=shape, value=255)
+        splines = [
+            LinearSpline(
+                points=[
+                    [10, 10],
+                    [10, shape[0] - 10],
+                    [shape[1] - 10, shape[0] - 10],
+                    [shape[1] - 10, 10],
+                ]
+            )
+        ]
+        img.draw_splines(
+            splines=splines, render=LinearSplinesRender(default_color=(0, 0, 0))
+        )
+        scores = img.score_contains_linear_splines(splines=splines)
+        assert scores[0] == 1.0
+
+    def test_score_contains_linear_splines_zero(self):
+        shape = (50, 50)
+        img = Image.from_fillvalue(shape=shape, value=255)
+        other_spline = LinearSpline(
+            points=[
+                [30, 30],
+                [60, 70],
+                [70, 70],
+                [70, 60],
+            ]
+        )
+        scores = img.score_contains_linear_splines(splines=[other_spline])
+        assert scores[0] == 0.0
+
+    def test_score_contains_linear_splines_partial_v1(self):
+        shape = (50, 50)
+        img = Image.from_fillvalue(shape=shape, value=255)
+        spline = LinearSpline(
+            points=[
+                [10, 10],
+                [10, 30],
+                [30, 30],
+                [30, 10],
+            ]
+        )
+        img.draw_splines(
+            splines=[spline],
+            render=LinearSplinesRender(default_color=(0, 0, 0), thickness=1),
+        )
+        partial_spline = LinearSpline(
+            points=[
+                [10, 10],
+                [10, 25],
+                [25, 25],
+                [25, 15],
+            ]
+        )
+        scores = img.score_contains_linear_splines(splines=[partial_spline])
+        assert 0 < scores[0] < 1.0
+
+    @pytest.mark.parametrize(
+        "partial_spline, expected_score",
+        [
+            (
+                LinearSpline(
+                    points=[[100, 100], [100, 200], [200, 200], [200, 100], [300, 100]]
+                ),
+                0.25,
+            ),
+            (
+                LinearSpline(points=[[100, 100], [100, 200], [200, 200], [200, 100]]),
+                0.33,
+            ),
+            (LinearSpline(points=[[100, 100], [100, 200], [200, 200]]), 0.5),
+        ],
+    )
+    def test_score_contains_linear_splines_partial_quarter(
+        self, partial_spline, expected_score
+    ):
+        shape = (500, 500)
+        img = Image.from_fillvalue(shape=shape, value=255)
+        spline = LinearSpline(
+            points=[
+                [100, 100],
+                [100, 300],
+                [300, 300],
+                [300, 150],
+            ]
+        )
+        img.draw_splines(
+            splines=[spline],
+            render=LinearSplinesRender(default_color=(0, 0, 0), thickness=5),
+        )
+        scores = img.score_contains_linear_splines(
+            splines=[partial_spline], dilate_iterations=0
+        )
+        assert abs(scores[0] - expected_score) < 0.1
+
+    def test_score_contains_linear_splines_multiple(self):
+        shape = (500, 500)
+        img = Image.from_fillvalue(shape=shape, value=255)
+        splines = [
+            LinearSpline(
+                points=[
+                    [10, 10],
+                    [10, shape[0] - 10],
+                    [shape[1] - 10, shape[0] - 10],
+                    [shape[1] - 10, 10],
+                ]
+            ),
+            LinearSpline(
+                points=[
+                    [100, 100],
+                    [100, 300],
+                    [300, 300],
+                    [300, 100],
+                ]
+            ),
+        ]
+        img.draw_splines(
+            splines=splines, render=LinearSplinesRender(default_color=(0, 0, 0))
+        )
+        scores = img.score_contains_linear_splines(splines=splines)
+        assert scores[0] == 1.0
+        assert scores[1] == 1.0
+
+
+class TestImageScoreContainsPolygons:
+
+    def test_score_contains_polygons_one(self):
+        shape = (50, 50)
+        img = Image.from_fillvalue(shape=shape, value=255)
+        polygon = Polygon(
+            points=[
+                [10, 10],
+                [10, shape[0] - 10],
+                [shape[1] - 10, shape[0] - 10],
+                [shape[1] - 10, 10],
+            ]
+        )
+        img.draw_polygons(
+            polygons=[polygon],
+            render=PolygonsRender(default_color=(0, 0, 0), thickness=1),
+        )
+        scores = img.score_contains_polygons(polygons=[polygon])
+        assert scores[0] == 1.0
+
+    def test_score_contains_polygons_zero(self):
+        shape = (50, 50)
+        img = Image.from_fillvalue(shape=shape, value=255)
+        polygon = Polygon(
+            points=[
+                [30, 30],
+                [60, 70],
+                [70, 70],
+                [70, 60],
+            ]
+        )
+        scores = img.score_contains_polygons(polygons=[polygon])
+        assert scores[0] == 0.0
+
+    @pytest.mark.parametrize(
+        "partial_polygon, expected_score",
+        [
+            (
+                Polygon(
+                    points=[[100, 100], [100, 200], [200, 200], [200, 100], [300, 100]]
+                ),
+                0.25,
+            ),
+            (
+                Polygon(points=[[100, 100], [100, 200], [200, 200], [200, 100]]),
+                0.33,
+            ),
+            (Polygon(points=[[100, 100], [100, 200], [200, 200]]), 0.5),
+        ],
+    )
+    def test_score_contains_linear_polygons_partial_quarter(
+        self, partial_polygon, expected_score
+    ):
+        shape = (500, 500)
+        img = Image.from_fillvalue(shape=shape, value=255)
+        polygon = Polygon(
+            points=[
+                [100, 100],
+                [100, 300],
+                [300, 300],
+                [300, 150],
+            ]
+        )
+        img.draw_polygons(
+            polygons=[polygon],
+            render=PolygonsRender(default_color=(0, 0, 0), thickness=5),
+        )
+        scores = img.score_contains_linear_splines(
+            splines=[partial_polygon], dilate_iterations=0
+        )
+        assert abs(scores[0] - expected_score) < 0.1
+
+    def test_score_contains_polygons_multiple(self):
+        shape = (100, 100)
+        img = Image.from_fillvalue(shape=shape, value=255)
+        polygons = [
+            Polygon(
+                points=[
+                    [10, 10],
+                    [10, 50],
+                    [50, 50],
+                    [50, 10],
+                ]
+            ),
+            Polygon(
+                points=[
+                    [60, 60],
+                    [60, 90],
+                    [90, 90],
+                    [90, 60],
+                ]
+            ),
+        ]
+        img.draw_polygons(
+            polygons=polygons,
+            render=PolygonsRender(default_color=(0, 0, 0), thickness=1),
+        )
+        scores = img.score_contains_polygons(polygons=polygons)
+        assert scores[0] == 1.0
+        assert scores[1] == 1.0
+
+    def test_score_contains_polygons_with_dilation(self):
+        shape = (50, 50)
+        img = Image.from_fillvalue(shape=shape, value=255)
+        polygon = Polygon(
+            points=[
+                [10, 10],
+                [10, 30],
+                [30, 30],
+                [30, 10],
+            ]
+        )
+        img.draw_polygons(
+            polygons=[polygon],
+            render=PolygonsRender(default_color=(0, 0, 0), thickness=1),
+        )
+        smaller_polygon = Polygon(
+            points=[
+                [12, 12],
+                [12, 28],
+                [28, 28],
+                [28, 12],
+            ]
+        )
+        scores = img.score_contains_polygons(
+            polygons=[smaller_polygon], dilate_kernel=(3, 3), dilate_iterations=3
+        )
+        assert scores[0] == 1.0
 
 
 class TestImageRestrictRectInFrame:

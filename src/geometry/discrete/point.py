@@ -59,6 +59,24 @@ class Point(DiscreteGeometryEntity):
         return self.shapely_surface
 
     @property
+    def area(self) -> float:
+        """Compute the area of the geometry entity
+
+        Returns:
+            float: area value
+        """
+        return 0
+
+    @property
+    def perimeter(self) -> float:
+        """Compute the perimeter of the geometry entity
+
+        Returns:
+            float: perimeter value
+        """
+        return 0
+
+    @property
     def edges(self) -> np.ndarray:
         """Get the edges of the point which returns None since a point has no edges
 

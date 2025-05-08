@@ -16,15 +16,12 @@ class LinearEntity(DiscreteGeometryEntity, ABC):
 
     @property
     def length(self) -> float:
-        """Compute the length of the linear object
+        """Compute the length of the linear object.
 
         Returns:
             float: length of the curve
         """
-        _length: float = 0
-        for pt1, pt2 in zip(self.asarray[:-1], self.asarray[1:]):
-            _length += float(np.linalg.norm(pt1 - pt2))
-        return _length
+        return np.sum(self.lengths)
 
     @property
     def perimeter(self) -> float:
@@ -34,6 +31,15 @@ class LinearEntity(DiscreteGeometryEntity, ABC):
             float: segment perimeter
         """
         return self.length
+
+    @property
+    def area(self) -> float:
+        """Area of the segment which we define to be its length
+
+        Returns:
+            float: segment area
+        """
+        return 0
 
     @property
     def shapely_edges(self) -> LineString:

@@ -10,7 +10,7 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import src.geometry as geo
-from src.image.utils.render import PolygonsRender, SegmentsRender
+from src.image.utils.render import PolygonsRender, SegmentsRender, LinearSplinesRender
 from src.image.drawer import DrawerImage
 from src.image.transformer import TransformerImage
 from src.image.reader import ReaderImage
@@ -83,7 +83,7 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
     def score_contains(
         self, other: Image, binarization_method: str = "sauvola"
     ) -> float:
-        """How much the other image is contained in the original image
+        """How much the other image is contained in the original image.
 
         Args:
             other (Image): other Image object
@@ -103,11 +103,11 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
         self,
         polygons: list[geo.Polygon],
         dilate_kernel: tuple = (5, 5),
-        dilate_iterations: int = 1,
+        dilate_iterations: int = 0,
         binarization_method: str = "sauvola",
         resize_factor: float = 1.0,
-    ) -> np.ndarray:
-        """Check how much polygons are contained in the image
+    ) -> list[float]:
+        """Compute the contains score in [0, 1] for each individual polygon.
 
         Beware: this method is different from the score_contains method because in
         this case you can emphasize the base image by dilating its content.
@@ -119,7 +119,7 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
         Args:
             polygon (Polygon): Polygon object
             dilate_kernel (tuple, optional): dilate kernel param. Defaults to (5, 5).
-            dilate_iterations (int, optional): dilate iterations param. Defaults to 1.
+            dilate_iterations (int, optional): dilate iterations param. Defaults to 0.
             binarization_method (str, optional): binarization method. Here
                 we can afford the sauvola method since we crop the image first
                 and the binarization occurs on a small image.
@@ -134,21 +134,34 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
                  is contained within the original image
         """
         # pylint: disable=too-many-arguments, too-many-positional-arguments
-        scores = []
+        extra_border_size = 10
+        scores: list[float] = []
         for polygon in polygons:
 
-            im = self.crop_polygon(polygon=polygon, copy=True)
+            im = self.crop_polygon(
+                polygon=polygon,
+                copy=True,
+                pad=True,
+                clip=False,
+                extra_border_size=extra_border_size,
+                pad_value=255,
+            )
 
             im.dilate(kernel=dilate_kernel, iterations=dilate_iterations)
 
             im.resize(factor=resize_factor)
+
+            # re-compute the polygon in the crop referential
+            polygon_crop = geo.Polygon(
+                (polygon.crop_coordinates + extra_border_size) * resize_factor
+            )
 
             # create all-white image of same size as original with the geometry entity
             other = (
                 im.copy()
                 .as_white()
                 .draw_polygons(
-                    polygons=[polygon],
+                    polygons=[polygon_crop],
                     render=PolygonsRender(thickness=1, default_color=(0, 0, 0)),
                 )
                 .as_grayscale()
@@ -160,17 +173,17 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
 
             scores.append(cur_score)
 
-        return np.asarray(scores)
+        return scores
 
     def score_contains_segments(
         self,
         segments: list[geo.Segment],
         dilate_kernel: tuple = (5, 5),
-        dilate_iterations: int = 1,
+        dilate_iterations: int = 0,
         binarization_method: str = "sauvola",
         resize_factor: float = 1.0,
-    ) -> np.ndarray:
-        """Compute the contain score for each individual segment.
+    ) -> list[float]:
+        """Compute the contains score in [0, 1] for each individual segment.
         This method can be better than :func:`~Image.score_contains_polygons()` in some
         cases.
         It provides a score for each single segments. This way it is better to
@@ -179,7 +192,7 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
         Args:
             segments (np.ndarray | list[geo.Segment]): a list of segments
             dilate_kernel (tuple, optional): dilate kernel param. Defaults to (5, 5).
-            dilate_iterations (int, optional): dilate iterations param. Defaults to 1.
+            dilate_iterations (int, optional): dilate iterations param. Defaults to 0.
             binarization_method (str, optional): binarization method. Here
                 we can afford the sauvola method since we crop the image first
                 and the binarization occurs on a small image.
@@ -197,7 +210,7 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
         added_width = 10
         height_crop = 30
         mid_height_crop = int(height_crop / 2)
-        score_segments = []
+        score_segments: list[float] = []
 
         for segment in segments:
 
@@ -211,6 +224,7 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
 
             im.resize(factor=resize_factor)
 
+            # re-compute the segment in the crop referential
             segment_crop = geo.Segment(
                 np.array(
                     [
@@ -221,6 +235,7 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
                 * resize_factor
             )
 
+            # create all-white image of same size as original with the segment drawn
             other = (
                 im.copy()
                 .as_white()
@@ -237,7 +252,71 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
 
             score_segments.append(score)
 
-        return np.asarray(score_segments)
+        return score_segments
+
+    def score_contains_linear_splines(
+        self,
+        splines: list[geo.LinearSpline],
+        dilate_kernel: tuple = (5, 5),
+        dilate_iterations: int = 0,
+        binarization_method: str = "sauvola",
+        resize_factor: float = 1.0,
+    ) -> list[float]:
+        """Compute the contains score in [0, 1]for each individual LinearSpline.
+        It provides a score for each single linear spline.
+
+        Args:
+            segments (np.ndarray | list[geo.Segment]): a list of segments
+            dilate_kernel (tuple, optional): dilate kernel param. Defaults to (5, 5).
+            dilate_iterations (int, optional): dilate iterations param. Defaults to 0.
+            binarization_method (str, optional): binarization method. Here
+                we can afford the sauvola method since we crop the image first
+                and the binarization occurs on a small image.
+                Defaults to "sauvola".
+            resize_factor (float, optional): resize factor that can be adjusted to
+                provide extra speed. A lower value will be faster but less accurate.
+                Typically 0.5 works well but less can have a negative impact on accuracy
+                Defaults to 1.0 which implies no resize.
+        """
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
+        extra_border_size = 10
+        scores: list[float] = []
+        for spline in splines:
+            im = self.crop_linear_spline(
+                spline=spline,
+                copy=True,
+                pad=True,
+                clip=False,
+                extra_border_size=extra_border_size,
+                pad_value=255,
+            )
+
+            im.dilate(kernel=dilate_kernel, iterations=dilate_iterations)
+
+            im.resize(factor=resize_factor)
+
+            spline_crop = geo.LinearSpline(
+                (spline.crop_coordinates + extra_border_size) * resize_factor
+            )
+
+            # create all-white image of same size as original with the geometry entity
+            other = (
+                im.copy()
+                .as_white()
+                .draw_splines(
+                    splines=[spline_crop],
+                    render=LinearSplinesRender(thickness=1, default_color=(0, 0, 0)),
+                )
+                .as_grayscale()
+            )
+
+            cur_score = im.score_contains(
+                other=other, binarization_method=binarization_method
+            )
+
+            scores.append(cur_score)
+
+        return scores
 
     def score_distance_from_center(
         self, point: np.ndarray, method: str = "linear"
@@ -272,7 +351,7 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
             y: float,
             x0: float = 0.0,
             y0: float = 0.0,
-            amplitude: float = 1,
+            amplitude: float = 1.0,
             sigmax: float = 1.0,
             sigmay: float = 1.0,
         ) -> float:
@@ -286,8 +365,8 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
             y: float,
             x0: float = 0.0,
             y0: float = 0.0,
-            amplitude: float = 1,
-            radius: float = 1,
+            amplitude: float = 1.0,
+            radius: float = 1.0,
         ) -> float:
             # pylint: disable=too-many-positional-arguments,too-many-arguments
             r = np.sqrt((x - x0) ** 2 + (y - y0) ** 2)

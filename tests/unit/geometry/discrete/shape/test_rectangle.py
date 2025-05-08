@@ -30,6 +30,7 @@ class TestRectangleCreation:
             is_cast_int=True,
         )
         expected_points = [[0, 1], [1, 2], [2, 1], [1, 0]]
+        print(rect.asarray)
         assert np.array_equal(rect.asarray, expected_points)
 
     def test_create_rectangle_from_topleft(self):

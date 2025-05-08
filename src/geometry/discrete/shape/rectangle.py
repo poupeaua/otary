@@ -35,7 +35,7 @@ class Rectangle(Polygon):
         center: np.ndarray,
         width: float,
         height: float,
-        angle: float = 0,
+        angle: float = 0.0,
         is_cast_int: bool = False,
     ) -> Rectangle:
         # pylint: disable=too-many-arguments, too-many-positional-arguments

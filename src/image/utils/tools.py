@@ -69,10 +69,26 @@ def prep_obj_draw(objects: list | np.ndarray, _type: Any) -> list | np.ndarray:
     """
     if is_list_elements_type(_list=objects, _type=_type):
         objects = cast_geometry_to_array(objects=objects, _type=_type)
-    elif _type in [geo.Point, geo.Segment, geo.Vector]:
+    elif _type in [geo.Point]:
         try:
             # useful to let the drawing function to accept numpy array
             objects = np.asanyarray(objects).astype(np.int32)
+            if len(objects.shape) != 2 or objects.shape[1] != 2:
+                raise RuntimeError
+        except Exception as e:
+            raise RuntimeError(
+                "Could not transform the input into a drawing format"
+            ) from e
+    elif _type in [geo.Segment, geo.Vector]:
+        try:
+            # useful to let the drawing function to accept numpy array
+            objects = np.asanyarray(objects).astype(np.int32)
+            if (
+                len(objects.shape) != 3
+                or objects.shape[1] != 2
+                or objects.shape[2] != 2
+            ):
+                raise RuntimeError
         except Exception as e:
             raise RuntimeError(
                 "Could not transform the input into a drawing format"

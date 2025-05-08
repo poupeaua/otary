@@ -547,8 +547,11 @@ class TransformerImage(BaseImage, ABC):
         dim = (width, height)
         return self.resize_fixed(dim=dim, interpolation=interpolation, copy=copy)
 
-    def __crop_with_padding(self, x0: int, y0: int, x1: int, y1: int) -> np.ndarray:
+    def __crop_with_padding(
+        self, x0: int, y0: int, x1: int, y1: int, pad_value: int = 0
+    ) -> np.ndarray:
         # pylint: disable=too-many-locals
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
         x0, y0, x1, y1 = int(x0), int(y0), int(x1), int(y1)
 
         # Output size
@@ -562,7 +565,7 @@ class TransformerImage(BaseImage, ABC):
             if channels == 1
             else (crop_height, crop_width, channels)
         )
-        result = np.zeros(output_shape, dtype=np.uint8)
+        result = np.full(shape=output_shape, fill_value=pad_value, dtype=np.uint8)
 
         # Compute the intersection of crop with image bounds
         ix0 = max(x0, 0)
@@ -629,6 +632,8 @@ class TransformerImage(BaseImage, ABC):
         clip: bool = True,
         pad: bool = False,
         copy: bool = False,
+        extra_border_size: int = 0,
+        pad_value: int = 0,
     ) -> Self:
         """Crop an image using the top-left and bottom-right points.
 
@@ -649,18 +654,32 @@ class TransformerImage(BaseImage, ABC):
             clip (bool, optional): whether to clip or not. Defaults to True.
             pad (bool, optional): whether to pad or not. Defaults to False.
             copy (bool, optional): whether to copy or not. Defaults to False.
+            extra_border_size (int, optional): extra border size to add to the crop
+                in the x and y directions. Defaults to 0 which means no extra border.
+            pad_value (int, optional): pad fill value. Defaults to 0.
 
         Returns:
             Self: cropped image
         """
         # pylint: disable=too-many-arguments, too-many-positional-arguments
         if (clip and pad) or (not clip and not pad):
-            raise ValueError(f"When cropping clip and pad cannot be both {clip}")
+            raise ValueError(f"Parameters clip and pad cannot be both {clip}")
 
         if clip and not pad:
-            array_crop = self.__crop_with_clipping(x0=x0, y0=y0, x1=x1, y1=y1)
+            array_crop = self.__crop_with_clipping(
+                x0=x0 - extra_border_size,
+                y0=y0 - extra_border_size,
+                x1=x1 + extra_border_size,
+                y1=y1 + extra_border_size,
+            )
         else:  # pad and not clip:
-            array_crop = self.__crop_with_padding(x0=x0, y0=y0, x1=x1, y1=y1)
+            array_crop = self.__crop_with_padding(
+                x0=x0 - extra_border_size,
+                y0=y0 - extra_border_size,
+                x1=x1 + extra_border_size,
+                y1=y1 + extra_border_size,
+                pad_value=pad_value,
+            )
 
         if copy:
             return type(self)(image=array_crop)
@@ -705,7 +724,15 @@ class TransformerImage(BaseImage, ABC):
             height=height,
         )
 
-    def crop_polygon(self, polygon: geo.Polygon, copy: bool = False) -> Self:
+    def crop_polygon(
+        self,
+        polygon: geo.Polygon,
+        copy: bool = False,
+        clip: bool = True,
+        pad: bool = False,
+        extra_border_size: int = 0,
+        pad_value: int = 0,
+    ) -> Self:
         """Crop the image from a polygon
 
         Args:
@@ -714,12 +741,47 @@ class TransformerImage(BaseImage, ABC):
         Returns:
             Self: image cropped
         """
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
         return self.crop(
             x0=int(polygon.xmin),
             y0=int(polygon.ymin),
             x1=int(polygon.xmax),
             y1=int(polygon.ymax),
             copy=copy,
+            clip=clip,
+            pad=pad,
+            extra_border_size=extra_border_size,
+            pad_value=pad_value,
+        )
+
+    def crop_linear_spline(
+        self,
+        spline: geo.LinearSpline,
+        copy: bool = False,
+        clip: bool = True,
+        pad: bool = False,
+        extra_border_size: int = 0,
+        pad_value: int = 0,
+    ) -> Self:
+        """Crop the image from a linear spline
+
+        Args:
+            spline (geo.LinearSpline): linear spline
+
+        Returns:
+            Self: image cropped
+        """
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
+        return self.crop(
+            x0=int(spline.xmin),
+            y0=int(spline.ymin),
+            x1=int(spline.xmax),
+            y1=int(spline.ymax),
+            copy=copy,
+            clip=clip,
+            pad=pad,
+            extra_border_size=extra_border_size,
+            pad_value=pad_value,
         )
 
     def crop_from_axis_aligned_bbox(self, bbox: geo.Rectangle) -> Self:

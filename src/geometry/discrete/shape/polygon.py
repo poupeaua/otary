@@ -15,7 +15,7 @@ from shapely import LinearRing, Polygon as SPolygon
 
 from src.geometry.entity import GeometryEntity
 from src.geometry.discrete.entity import DiscreteGeometryEntity
-from src.geometry import Segment, Vector
+from src.geometry import Segment, Vector, LinearSpline
 
 
 class Polygon(DiscreteGeometryEntity):
@@ -175,14 +175,22 @@ class Polygon(DiscreteGeometryEntity):
         return LinearRing(coordinates=self.asarray)
 
     @property
-    def lengths(self) -> np.ndarray:
-        """Returns the length of all the segments that make up the Polygon
+    def area(self) -> float:
+        """Compute the area of the geometry entity
 
         Returns:
-            np.ndarray: array of shape (n_points)
+            float: area value
         """
-        lengths: np.ndarray = np.linalg.norm(np.diff(self.edges, axis=1), axis=2)
-        return lengths.flatten()
+        return cv2.contourArea(self.points.astype(int))
+
+    @property
+    def perimeter(self) -> float:
+        """Compute the perimeter of the geometry entity
+
+        Returns:
+            float: perimeter value
+        """
+        return cv2.arcLength(self.points, True)
 
     @property
     def is_self_intersected(self) -> bool:
@@ -263,6 +271,51 @@ class Polygon(DiscreteGeometryEntity):
 
         return True
 
+    def is_clockwise(self, is_cv2: bool = False) -> bool:
+        """Determine if a polygon points go clockwise using the Shoelace formula.
+
+        True if polygon vertices order is clockwise in the "y-axis points up"
+        referential.
+
+        Args:
+            is_cv2 (bool, optional): If is_cv2 is True, then the image referential is
+                such that y axis points down.
+
+        Returns:
+            bool: True if clockwise, False if counter-clockwise
+        """
+        s = 0.0
+        for i in range(len(self)):
+            x1, y1 = self.asarray[i]
+            x2, y2 = self.asarray[(i + 1) % len(self)]
+            s += (x2 - x1) * (y2 + y1)
+
+        is_clockwise = bool(s > 0)  # Clockwise if positive (OpenCV's convention)
+
+        if is_cv2:  # in referential where y axis points down
+            return not is_clockwise
+
+        return is_clockwise
+
+    def as_linear_spline(self, index: int = 0) -> LinearSpline:
+        """Get the polygon as a LinearSpline object.
+        This simply means a LinearSpline object with the same points as the Polygon
+        but with an extra point: the one at the index.
+
+        Returns:
+            LinearSpline: linear spline from polygon
+        """
+        if index < 0:
+            index += len(self)
+
+        index = index % len(self)
+
+        return LinearSpline(
+            points=np.concat(
+                [self.asarray[index : len(self)], self.asarray[0 : index + 1]], axis=0
+            )
+        )
+
     def contains(self, other: GeometryEntity, dilate_scale: float = 1) -> bool:
         """Whether the geometry contains the other or not
 
@@ -281,7 +334,7 @@ class Polygon(DiscreteGeometryEntity):
             surface = self.shapely_surface
         return surface.contains(other.shapely_surface)
 
-    def score_edges_in_points(
+    def score_vertices_in_points(
         self, points: np.ndarray, min_distance: float
     ) -> np.ndarray:
         """Returns a score of 0 or 1 for each point in the polygon if it is close
@@ -300,6 +353,96 @@ class Polygon(DiscreteGeometryEntity):
         )
         score = np.bincount(indices, minlength=len(self))
         return score
+
+    def vertices_between(self, start_index: int, end_index: int) -> np.ndarray:
+        """Get the vertices between two indices.
+
+        Returns always the vertices between start_index and end_index using the
+        natural order of the vertices in the contour.
+
+        By convention, if start_index == end_index, then it returns the whole contour
+        plus the vertice at start_index.
+
+        Args:
+            start_index (int): index of the first vertex
+            end_index (int): index of the last vertex
+
+        Returns:
+            np.ndarray: array of vertices
+        """
+        if start_index < 0:
+            start_index += len(self)
+        if end_index < 0:
+            end_index += len(self)
+
+        start_index = start_index % len(self)
+        end_index = end_index % len(self)
+
+        if start_index > end_index:
+            vertices = np.concat(
+                [
+                    self.asarray[start_index : len(self)],
+                    self.asarray[0 : end_index + 1],
+                ],
+                axis=0,
+            )
+        elif start_index == end_index:
+            vertices = self.as_linear_spline(index=start_index).asarray
+        else:
+            vertices = self.asarray[start_index : end_index + 1]
+
+        return vertices
+
+    def interpolated_point_along_polygon(
+        self, start_index: int, end_index: int, pct_dist: float
+    ) -> np.ndarray:
+        """Return a point along the contour path from start_idx to end_idx (inclusive),
+        at a relative distance pct_dist ∈ [0, 1] along that path.
+
+        Parameters:
+            start_idx (int): Index of the start point in the contour
+            end_idx (int): Index of the end point in the contour
+            pct_dist (float): Value in [0, 1], 0 returns start, 1 returns end.
+                Any value in [0, 1] returns a point between start and end that is
+                pct_dist along the path.
+
+        Returns:
+            np.ndarray: Interpolated point [x, y]
+        """
+        if not (0 <= pct_dist <= 1):
+            raise ValueError("pct_dist must be in [0, 1]")
+
+        if start_index < 0:
+            start_index += len(self)
+        if end_index < 0:
+            end_index += len(self)
+
+        start_index = start_index % len(self)
+        end_index = end_index % len(self)
+
+        path = LinearSpline(
+            points=self.vertices_between(start_index=start_index, end_index=end_index)
+        )
+
+        if path.length == 0 or pct_dist == 0:
+            return path[0]
+        if pct_dist == 1:
+            return path[-1]
+
+        # Walk along the path to find the point at pct_dist * total_dist
+        target_dist = pct_dist * path.length
+        accumulated = 0
+        for i in range(len(path.edges)):
+            cur_edge_length = path.lengths[i]
+            if accumulated + cur_edge_length >= target_dist:
+                remain = target_dist - accumulated
+                direction = path[i + 1] - path[i]
+                unit_dir = direction / cur_edge_length
+                return path[i] + remain * unit_dir
+            accumulated += cur_edge_length
+
+        # Fallback
+        return path[-1]
 
     # ---------------------------- MODIFICATION METHODS -------------------------------
 
