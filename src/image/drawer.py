@@ -46,7 +46,7 @@ class DrawerImage(BaseImage, ABC):
         """
         im_array = self.__pre_draw(n_objects=len(circles), render=render)
         for circle, color in zip(circles, render.colors):
-            cv2.circle(
+            cv2.circle(  # type: ignore[call-overload]
                 img=im_array,
                 center=np.round(circle.center).astype(int),
                 radius=int(circle.radius),
@@ -55,7 +55,7 @@ class DrawerImage(BaseImage, ABC):
                 lineType=render.line_type,
             )
             if render.is_draw_center_point_enabled:
-                cv2.circle(
+                cv2.circle(  # type: ignore[call-overload]
                     img=im_array,
                     center=np.round(circle.center).astype(int),
                     radius=1,

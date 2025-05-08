@@ -268,3 +268,59 @@ class Rectangle(Polygon):
             return Rectangle(points=new_rect_points).desintersect()
         # if 3 or more points in common it is the same rectangle
         return self
+
+    def __topright_vertice_from_topleft(self, topleft_index: int) -> np.ndarray:
+        """Get the top-right vertice from the topleft vertice
+
+        Args:
+            topleft_index (int): index of the topleft vertice
+
+        Returns:
+            np.ndarray: topright vertice
+        """
+        if self.is_clockwise(is_cv2=True):
+            return self.asarray[topleft_index + 1]
+        else:
+            return self.asarray[topleft_index - 1]
+
+    def __bottomleft_vertice_from_topleft(self, topleft_index: int) -> np.ndarray:
+        """Get the bottom-left vertice from the topleft vertice
+
+        Args:
+            topleft_index (int): index of the topleft vertice
+
+        Returns:
+            np.ndarray: topright vertice
+        """
+        if self.is_clockwise(is_cv2=True):
+            return self.asarray[topleft_index - 1]
+        else:
+            return self.asarray[topleft_index + 1]
+
+    def __bottomright_vertice_from_topleft(self, topleft_index: int) -> np.ndarray:
+        """Get the bottom-right vertice from the topleft vertice
+
+        Args:
+            topleft_index (int): index of the topleft vertice
+
+        Returns:
+            np.ndarray: topright vertice
+        """
+        return self.asarray[topleft_index + 2]
+
+    def vertice_from_topleft(
+        self, topleft_index: int, vertice: str = "topright"
+    ) -> np.ndarray:
+        """Get vertice from the topleft vertice. You can use this method to
+        obtain the topright, bottomleft, bottomright vertice from the topleft vertice.
+
+        Returns:
+            np.ndarray: topright vertice
+        """
+        if vertice not in ("topright", "bottomleft", "bottomright"):
+            raise ValueError(
+                "Parameter vertice must be one of"
+                "'topright', 'bottomleft', 'bottomright'"
+                f"but got {vertice}"
+            )
+        return getattr(self, f"__{vertice}_vertice_from_topleft")(topleft_index)

@@ -801,6 +801,16 @@ class TransformerImage(BaseImage, ABC):
         width = int(bbox.xmax - bbox.xmin + 1)
         return self.crop_from_topleft(topleft=topleft, width=width, height=height)
 
+    def crop_next_to_rectangle(
+        self,
+        rect: geo.Rectangle,
+        rect_topleft_point_index: int,
+        shift: np.ndarray,
+        width: int,
+        height: int,
+    ) -> Self:
+        pass
+
     def crop_around_segment_horizontal(
         self,
         segment: np.ndarray,
