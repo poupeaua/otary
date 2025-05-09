@@ -10,7 +10,7 @@ import cv2
 import numpy as np
 
 import src.geometry as geo
-from src.cv.ocr.dataclass.ocrsingleoutput import OcrSingleOutput
+from src.cv.ocr.output.ocr_single_output import OcrSingleOutput
 from src.image.utils.tools import prep_obj_draw
 from src.image.utils.render import (
     Render,

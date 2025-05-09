@@ -4,7 +4,7 @@ Image Trasnformation module. it only contains advanced image transformation meth
 
 from __future__ import annotations
 
-from typing import Self, Sequence, Literal
+from typing import Self, Sequence, Literal, get_args
 from abc import ABC
 
 import cv2
@@ -120,12 +120,12 @@ class TransformerImage(BaseImage, ABC):
         Args:
             method (str, optional): the binarization method to apply.
                 Must be in ["adaptative", "otsu", "sauvola"].
-                Defaults to "adaptative".
+                Defaults to "sauvola".
 
         Returns:
             np.ndarray: array where its inner values are 0 or 1
         """
-        if method not in BinarizationMethods:
+        if method not in list(get_args(BinarizationMethods)):
             raise ValueError(
                 f"Invalid binarization method {method}. "
                 f"Must be in {BinarizationMethods}"
@@ -174,7 +174,7 @@ class TransformerImage(BaseImage, ABC):
         Returns:
             Self: the new image blurred
         """
-        if method not in BlurMethods:
+        if method not in list(get_args(BlurMethods)):
             raise ValueError(f"Invalid blur method {method}. Must be in {BlurMethods}")
         for _ in range(iterations):
             if method == "average":

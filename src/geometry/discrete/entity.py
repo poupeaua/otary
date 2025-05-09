@@ -68,6 +68,9 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         Returns:
             np.ndarray: segments of the geometry entity
         """
+        # pylint: disable=import-outside-toplevel
+        from src.geometry import Segment  # delayed import to avoid circular import
+
         return [Segment(e) for e in self.edges]
 
     @property
@@ -287,7 +290,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
             Rectangle: Rectangle object
         """
         # pylint: disable=import-outside-toplevel
-        from src.geometry import Rectangle
+        from src.geometry import Rectangle  # delayed import to avoid circular import
 
         topleft_x, topleft_y, width, height = cv2.boundingRect(array=self.asarray)
         bbox = np.array(
@@ -308,7 +311,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
             Rectangle: Rectangle object
         """
         # pylint: disable=import-outside-toplevel
-        from src.geometry import Rectangle
+        from src.geometry import Rectangle  # delayed import to avoid circular import
 
         rect = cv2.minAreaRect(self.asarray)
         bbox = cv2.boxPoints(rect)
@@ -322,7 +325,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
             Polygon: Polygon object
         """
         # pylint: disable=import-outside-toplevel
-        from src.geometry import Polygon
+        from src.geometry import Polygon  # delayed import to avoid circular import
 
         convexhull = np.squeeze(cv2.convexHull(self.asarray))
         return Polygon(convexhull)
