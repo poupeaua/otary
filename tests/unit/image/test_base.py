@@ -134,15 +134,15 @@ class TestBaseImageGlobalMethods:
 
     def test_asarray_norm_white(self):
         img = Image.from_fillvalue(shape=(5, 5), value=255)
-        assert np.all(img.asarray_norm == 1)
+        assert np.all(img.asarray_binary == 1)
 
     def test_asarray_norm_grey(self):
         img = Image.from_fillvalue(shape=(5, 5), value=127)
-        assert np.all(np.round(img.asarray_norm, 3) == 0.498)
+        assert np.all(np.round(img.asarray_binary, 3) == 0.498)
 
     def test_asarray_norm_black(self):
         img = Image.from_fillvalue(shape=(5, 5), value=0)
-        assert np.all(img.asarray_norm == 0)
+        assert np.all(img.asarray_binary == 0)
 
     def test_dist_pct(self):
         pct = 0.4

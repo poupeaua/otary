@@ -4,7 +4,7 @@ Image Trasnformation module. it only contains advanced image transformation meth
 
 from __future__ import annotations
 
-from typing import Self, Sequence
+from typing import Self, Sequence, Literal
 from abc import ABC
 
 import cv2
@@ -17,6 +17,9 @@ from skimage.filters import threshold_sauvola
 import src.geometry as geo
 from src.image.base import BaseImage
 from src.utils.tools import assert_transform_shift_vector
+
+BinarizationMethods = Literal["sauvola", "adaptative", "otsu"]
+BlurMethods = Literal["average", "median", "gaussian", "bilateral"]
 
 
 class TransformerImage(BaseImage, ABC):
@@ -104,7 +107,7 @@ class TransformerImage(BaseImage, ABC):
         )
         return self
 
-    def binary(self, method: str = "sauvola") -> np.ndarray:
+    def binary(self, method: BinarizationMethods = "sauvola") -> np.ndarray:
         """Binary representation of the image with values that can be only 0 or 1.
         The value 0 is now 0 and value of 255 are now 1. Black is 0 and white is 1.
         We can also talk about the mask of the image to refer to the binary
@@ -122,18 +125,14 @@ class TransformerImage(BaseImage, ABC):
         Returns:
             np.ndarray: array where its inner values are 0 or 1
         """
-        valid_binarization_methods = ["adaptative", "otsu", "sauvola"]
+        if method not in BinarizationMethods:
+            raise ValueError(
+                f"Invalid binarization method {method}. "
+                f"Must be in {BinarizationMethods}"
+            )
+        return type(self)(getattr(self, f"threshold_{method}")()).asarray_binary
 
-        if method == "adaptative":
-            return self.threshold_adaptative().asarray_norm
-        if method == "otsu":
-            return self.threshold_otsu().asarray_norm
-        if method == "sauvola":
-            return self.threshold_sauvola().asarray_norm
-
-        raise ValueError(f"The method {method} is not in {valid_binarization_methods}")
-
-    def binaryrev(self, method: str = "sauvola") -> np.ndarray:
+    def binaryrev(self, method: BinarizationMethods = "sauvola") -> np.ndarray:
         """Reversed binary representation of the image.
         The value 0 is now 1 and value of 255 are now 0. Black is 1 and white is 0.
         This is why it is called the "binary rev" or "binary reversed".
@@ -160,7 +159,7 @@ class TransformerImage(BaseImage, ABC):
         self,
         kernel: tuple = (5, 5),
         iterations: int = 1,
-        method: str = "average",
+        method: BlurMethods = "average",
         sigmax: float = 0,
     ) -> Self:
         """Blur the images
@@ -175,12 +174,8 @@ class TransformerImage(BaseImage, ABC):
         Returns:
             Self: the new image blurred
         """
-        blur_valid_methods = ["average", "median", "gaussian", "bilateral"]
-        if method not in blur_valid_methods:
-            raise ValueError(
-                f"The blur method {method} is not a valid method. "
-                f"A valid method must be in {blur_valid_methods}"
-            )
+        if method not in BlurMethods:
+            raise ValueError(f"Invalid blur method {method}. Must be in {BlurMethods}")
         for _ in range(iterations):
             if method == "average":
                 self.asarray = cv2.blur(src=self.asarray, ksize=kernel)
@@ -813,12 +808,13 @@ class TransformerImage(BaseImage, ABC):
         Args:
             rect (geo.Rectangle): rectangle for reference to crop.
             rect_topleft_vertice_index (int): top-left vertice index of the rectangle
-            crop_dim (tuple[int, int], optional): (width, height) crop dimension. Defaults to (-1, -1).
+            crop_dim (tuple[int, int], optional): (width, height) crop dimension.
+                Defaults to (-1, -1).
             crop_shift (tuple[int, int], optional): The crop_shift argument is applied
                 from the rectangle center based on the axis referential of the
-                rectangle. This means that the shift in the X direction
+                rectangle. This means that the shift in the Y direction
                 is based on the normalized vector (bottom-left, top-left)
-                The shift in the Y direction is based on the normalized vector
+                The shift in the X direction is based on the normalized vector
                 (top-left, top-right). Defaults to (0, 0) meaning no shift.
 
         Returns:
@@ -964,18 +960,8 @@ class TransformerImage(BaseImage, ABC):
         y_extra = abs(added_width / 2 * np.sin(angle))
 
         # add extra width for crop in case segment is ~vertical
-        if (
-            True
-            or abs(geo_segment.xmax - geo_segment.xmin) + 2 * x_extra < width_crop_rect
-        ):
-            x_extra += int(width_crop_rect / 2) + 1
-
-        # add extra width for crop in case segment is ~horizontal
-        if (
-            True
-            or abs(geo_segment.ymax - geo_segment.ymin) + 2 * y_extra < height_crop_rect
-        ):
-            y_extra += int(height_crop_rect / 2) + 1
+        x_extra += int(width_crop_rect / 2) + 1
+        y_extra += int(height_crop_rect / 2) + 1
 
         im = self.crop(
             x0=geo_segment.xmin - x_extra,

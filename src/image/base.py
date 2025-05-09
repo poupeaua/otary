@@ -128,7 +128,7 @@ class BaseImage(ABC):
         return int(np.sqrt(self.area))
 
     @property
-    def asarray_norm(self) -> np.ndarray:
+    def asarray_binary(self) -> np.ndarray:
         """Returns the representation of the image as a array with value not in
         [0, 255] but in [0, 1].
 
@@ -139,7 +139,7 @@ class BaseImage(ABC):
 
     @property
     def corners(self) -> np.ndarray:
-        """Returns the corners in the following order:
+        """Returns the corners in clockwise order:
 
         0. top left corner
         1. top right corner

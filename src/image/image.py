@@ -4,7 +4,7 @@ Image module for image processing
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Optional, Literal
 
 import numpy as np
 import cv2
@@ -12,8 +12,10 @@ import matplotlib.pyplot as plt
 import src.geometry as geo
 from src.image.utils.render import PolygonsRender, SegmentsRender, LinearSplinesRender
 from src.image.drawer import DrawerImage
-from src.image.transformer import TransformerImage
+from src.image.transformer import TransformerImage, BinarizationMethods
 from src.image.reader import ReaderImage
+
+ScoreDistanceFromCenterMethods = Literal["linear", "gaussian"]
 
 
 class Image(ReaderImage, DrawerImage, TransformerImage):
@@ -81,7 +83,7 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
         return np.sum(mask0 * mask1) / np.count_nonzero(mask0 + mask1)
 
     def score_contains(
-        self, other: Image, binarization_method: str = "sauvola"
+        self, other: Image, binarization_method: BinarizationMethods = "sauvola"
     ) -> float:
         """How much the other image is contained in the original image.
 
@@ -104,7 +106,7 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
         polygons: list[geo.Polygon],
         dilate_kernel: tuple = (5, 5),
         dilate_iterations: int = 0,
-        binarization_method: str = "sauvola",
+        binarization_method: BinarizationMethods = "sauvola",
         resize_factor: float = 1.0,
     ) -> list[float]:
         """Compute the contains score in [0, 1] for each individual polygon.
@@ -180,7 +182,7 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
         segments: list[geo.Segment],
         dilate_kernel: tuple = (5, 5),
         dilate_iterations: int = 0,
-        binarization_method: str = "sauvola",
+        binarization_method: BinarizationMethods = "sauvola",
         resize_factor: float = 1.0,
     ) -> list[float]:
         """Compute the contains score in [0, 1] for each individual segment.
@@ -259,7 +261,7 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
         splines: list[geo.LinearSpline],
         dilate_kernel: tuple = (5, 5),
         dilate_iterations: int = 0,
-        binarization_method: str = "sauvola",
+        binarization_method: BinarizationMethods = "sauvola",
         resize_factor: float = 1.0,
     ) -> list[float]:
         """Compute the contains score in [0, 1]for each individual LinearSpline.
@@ -319,7 +321,7 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
         return scores
 
     def score_distance_from_center(
-        self, point: np.ndarray, method: str = "linear"
+        self, point: np.ndarray, method: ScoreDistanceFromCenterMethods = "linear"
     ) -> float:
         """Compute a score to evaluate how far a point is from the
         image center point.
@@ -344,7 +346,6 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
         Returns:
             float: a score from 0 to 1.
         """
-        valid_score_dist_methods = ["linear", "gaussian"]
 
         def gaussian_2d(
             x: float,
@@ -392,10 +393,7 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
                 sigmay=self.dist_pct(0.1),
             )
 
-        raise ValueError(
-            f"The method {method} should be in the valid methods"
-            f"{valid_score_dist_methods}"
-        )
+        raise ValueError(f"Unknown method {method}")
 
     def restrict_rect_in_frame(self, rectangle: geo.Rectangle) -> geo.Rectangle:
         """Create a new rectangle that is contained within the image borders.
