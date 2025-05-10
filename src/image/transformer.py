@@ -822,10 +822,10 @@ class TransformerImage(BaseImage, ABC):
         """
         # get the useful vertices from the top-left vertice
         rect_topleft_vertice = rect[rect_topleft_vertice_index]
-        rect_topright_vertice = rect.vertice_from_topleft(
+        rect_topright_vertice = rect.get_vertice_from_topleft(
             topleft_index=rect_topleft_vertice_index, vertice="topright"
         )
-        rect_bottomleft_vertice = rect.vertice_from_topleft(
+        rect_bottomleft_vertice = rect.get_vertice_from_topleft(
             topleft_index=rect_topleft_vertice_index, vertice="bottomleft"
         )
 
@@ -834,7 +834,9 @@ class TransformerImage(BaseImage, ABC):
         rect_shift_left = geo.Vector([rect_topleft_vertice, rect_topright_vertice])
 
         # crop dimension
-        rect_heigth = rect.heigth_from_topleft(topleft_index=rect_topleft_vertice_index)
+        rect_heigth = rect.get_heigth_from_topleft(
+            topleft_index=rect_topleft_vertice_index
+        )
         crop_width = rect_heigth if crop_dim[0] == -1 else crop_dim[0]
         crop_height = rect_heigth if crop_dim[1] == -1 else crop_dim[1]
         crop_width, crop_height = int(crop_width), int(crop_height)

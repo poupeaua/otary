@@ -137,67 +137,69 @@ class TestPolygonAddPoint:
         cnt = Polygon([[0, 0], [1, 1], [1, 0]])
         pt = [0, 1]
         assert np.array_equal(
-            cnt.add_point(point=pt, index=1).asarray, [[0, 0], [0, 1], [1, 1], [1, 0]]
+            cnt.add_vertice(point=pt, index=1).asarray, [[0, 0], [0, 1], [1, 1], [1, 0]]
         )
 
     def test_add_point_last(self):
         cnt = Polygon([[0, 0], [1, 1], [1, 0]])
         pt = [0, 1]
         assert np.array_equal(
-            cnt.add_point(point=pt, index=-1).asarray, [[0, 0], [1, 1], [1, 0], [0, 1]]
+            cnt.add_vertice(point=pt, index=-1).asarray,
+            [[0, 0], [1, 1], [1, 0], [0, 1]],
         )
 
     def test_add_point_first_neg(self):
         cnt = Polygon([[0, 0], [1, 1], [1, 0]])
         pt = [0, 1]
         assert np.array_equal(
-            cnt.add_point(point=pt, index=-4).asarray, [[0, 1], [0, 0], [1, 1], [1, 0]]
+            cnt.add_vertice(point=pt, index=-4).asarray,
+            [[0, 1], [0, 0], [1, 1], [1, 0]],
         )
 
     def test_add_point_first(self):
         cnt = Polygon([[0, 0], [1, 1], [1, 0]])
         pt = [0, 1]
         assert np.array_equal(
-            cnt.add_point(point=pt, index=0).asarray, [[0, 1], [0, 0], [1, 1], [1, 0]]
+            cnt.add_vertice(point=pt, index=0).asarray, [[0, 1], [0, 0], [1, 1], [1, 0]]
         )
 
     def test_add_point_index_too_big(self):
         cnt = Polygon([[0, 0], [1, 1], [1, 0]])
         pt = [0, 1]
         with pytest.raises(ValueError):
-            cnt.add_point(point=pt, index=4)
+            cnt.add_vertice(point=pt, index=4)
 
     def test_add_point_index_too_small(self):
         cnt = Polygon([[0, 0], [1, 1], [1, 0]])
         pt = [0, 1]
         with pytest.raises(ValueError):
-            cnt.add_point(point=pt, index=-5)
+            cnt.add_vertice(point=pt, index=-5)
 
 
 class TestPolygonRearrange:
     def test_rearrange_first_point_at_index_pos(self):
         cnt = Polygon([[0, 0], [1, 1], [1, 0]])
         assert np.array_equal(
-            cnt.rearrange_with_first_point_at_index(index=1).asarray,
+            cnt.rearrange_first_vertice_at_index(index=1).asarray,
             [[1, 1], [1, 0], [0, 0]],
         )
 
     def test_rearrange_first_point_at_index_neg(self):
         cnt = Polygon([[0, 0], [1, 1], [1, 0]])
         assert np.array_equal(
-            cnt.rearrange_with_first_point_at_index(index=-2).asarray,
+            cnt.rearrange_first_vertice_at_index(index=-2).asarray,
             [[1, 1], [1, 0], [0, 0]],
         )
 
     def test_rearrange_first_point_at_index_too_big(self):
         cnt = Polygon([[0, 0], [1, 1], [1, 0]])
         with pytest.raises(ValueError):
-            cnt.rearrange_with_first_point_at_index(index=3)
+            cnt.rearrange_first_vertice_at_index(index=3)
 
     def test_rearrange_first_point_at_index_too_small(self):
         cnt = Polygon([[0, 0], [1, 1], [1, 0]])
         with pytest.raises(ValueError):
-            cnt.rearrange_with_first_point_at_index(index=-4)
+            cnt.rearrange_first_vertice_at_index(index=-4)
 
 
 class TestPolygonFromUnorderedLinesApprox:
@@ -450,31 +452,31 @@ class TestPolygonAsLinearSpline:
 class TestPolygonVerticesBetween:
     def test_vertices_between_positive_indices(self):
         polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
-        result = polygon.vertices_between(1, 3)
+        result = polygon.find_vertices_between(1, 3)
         expected = np.array([[1, 0], [1, 1], [0, 1]])
         assert np.array_equal(result, expected)
 
     def test_vertices_between_negative_indices(self):
         polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
-        result = polygon.vertices_between(-3, -1)
+        result = polygon.find_vertices_between(-3, -1)
         expected = np.array([[1, 0], [1, 1], [0, 1]])
         assert np.array_equal(result, expected)
 
     def test_vertices_between_wraparound_indices(self):
         polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
-        result = polygon.vertices_between(3, 1)
+        result = polygon.find_vertices_between(3, 1)
         expected = np.array([[0, 1], [0, 0], [1, 0]])
         assert np.array_equal(result, expected)
 
     def test_vertices_between_same_start_end_index(self):
         polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
-        result = polygon.vertices_between(2, 2)
+        result = polygon.find_vertices_between(2, 2)
         expected = np.array([[1, 1], [0, 1], [0, 0], [1, 0], [1, 1]])
         assert np.array_equal(result, expected)
 
     def test_vertices_between_full_cycle(self):
         polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
-        result = polygon.vertices_between(0, 3)
+        result = polygon.find_vertices_between(0, 3)
         expected = np.array([[0, 0], [1, 0], [1, 1], [0, 1]])
         assert np.array_equal(result, expected)
 
@@ -482,42 +484,42 @@ class TestPolygonVerticesBetween:
 class TestPolygonInterpolatedPointAlongPolygon:
     def test_interpolated_point_start(self):
         polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
-        result = polygon.interpolated_point_along_polygon(0, 2, 0)
+        result = polygon.find_interpolated_point(0, 2, 0)
         expected = np.array([0, 0])
         assert np.array_equal(result, expected)
 
     def test_interpolated_point_end(self):
         polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
-        result = polygon.interpolated_point_along_polygon(0, 2, 1)
+        result = polygon.find_interpolated_point(0, 2, 1)
         expected = np.array([1, 1])
         assert np.array_equal(result, expected)
 
     def test_interpolated_point_middle(self):
         polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
-        result = polygon.interpolated_point_along_polygon(0, 2, 0.5)
+        result = polygon.find_interpolated_point(0, 2, 0.5)
         expected = np.array([2, 0])
         assert np.array_equal(result, expected)
 
     def test_interpolated_point_negative_indices(self):
         polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
-        result = polygon.interpolated_point_along_polygon(-4, -2, 0.5)
+        result = polygon.find_interpolated_point(-4, -2, 0.5)
         expected = np.array([1, 0])
         assert np.array_equal(result, expected)
 
     def test_interpolated_point_wraparound(self):
         polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
-        result = polygon.interpolated_point_along_polygon(3, 1, 0.5)
+        result = polygon.find_interpolated_point(3, 1, 0.5)
         expected = np.array([0, 0])
         assert np.array_equal(result, expected)
 
     def test_interpolated_point_invalid_pct_dist(self):
         polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
         with pytest.raises(ValueError):
-            polygon.interpolated_point_along_polygon(0, 2, -0.1)
+            polygon.find_interpolated_point(0, 2, -0.1)
 
     def test_interpolated_point_start_end_same(self):
         polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
-        result = polygon.interpolated_point_along_polygon(1, 1, 0.5)
+        result = polygon.find_interpolated_point(1, 1, 0.5)
         expected = np.array([0, 1])
         assert np.array_equal(result, expected)
 
@@ -525,7 +527,7 @@ class TestPolygonInterpolatedPointAlongPolygon:
         polygon = Polygon(
             points=np.array([[0, 0], [100, 100], [200, 100], [300, 200], [300, 0]])
         )
-        result = polygon.interpolated_point_along_polygon(0, 3, 0.5)
+        result = polygon.find_interpolated_point(0, 3, 0.5)
         expected = np.array([150, 100])
         assert np.array_equal(result, expected)
 
@@ -533,7 +535,7 @@ class TestPolygonInterpolatedPointAlongPolygon:
         polygon = Polygon(
             points=np.array([[0, 0], [100, 100], [200, 100], [300, 200], [300, 0]])
         )
-        result = polygon.interpolated_point_along_polygon(
+        result = polygon.find_interpolated_point(
             start_index=-2, end_index=0, pct_dist=0.4
         )
         expected = np.array([300, 0])
@@ -543,8 +545,40 @@ class TestPolygonInterpolatedPointAlongPolygon:
         polygon = Polygon(
             points=np.array([[0, 0], [100, 100], [200, 100], [300, 200], [300, 0]])
         )
-        result = polygon.interpolated_point_along_polygon(
+        result = polygon.find_interpolated_point(
             start_index=1, end_index=-4, pct_dist=0.5
         )
         expected = np.array([300, 0])
         assert np.array_equal(result, expected)
+
+
+class TestPolygonReorderClockwise:
+    def test_reorder_clockwise_already_clockwise(self):
+        polygon = Polygon([[0, 0], [0, 1], [1, 1], [1, 0]])
+        reordered_polygon = polygon.reorder_clockwise()
+        expected_points = [[0, 0], [0, 1], [1, 1], [1, 0]]
+        assert np.array_equal(reordered_polygon.asarray, expected_points)
+
+    def test_reorder_clockwise_not_clockwise(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        reordered_polygon = polygon.reorder_clockwise()
+        expected_points = [[0, 0], [0, 1], [1, 1], [1, 0]]
+        assert np.array_equal(reordered_polygon.asarray, expected_points)
+
+    def test_reorder_clockwise_already_clockwise_y_axis_down(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        reordered_polygon = polygon.reorder_clockwise(is_y_axis_down=True)
+        expected_points = [[0, 0], [1, 0], [1, 1], [0, 1]]
+        assert np.array_equal(reordered_polygon.asarray, expected_points)
+
+    def test_reorder_clockwise_not_clockwise_y_axis_down(self):
+        polygon = Polygon([[0, 0], [0, 1], [1, 1], [1, 0]])
+        reordered_polygon = polygon.reorder_clockwise(is_y_axis_down=True)
+        expected_points = [[0, 0], [1, 0], [1, 1], [0, 1]]
+        assert np.array_equal(reordered_polygon.asarray, expected_points)
+
+    def test_reorder_clockwise_triangle(self):
+        polygon = Polygon([[0, 0], [1, 0], [0.5, 1]])
+        reordered_polygon = polygon.reorder_clockwise()
+        expected_points = [[0, 0], [0.5, 1], [1, 0]]
+        assert np.array_equal(reordered_polygon.asarray, expected_points)

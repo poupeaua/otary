@@ -235,3 +235,12 @@ class TestRectangleJoin:
         expected_points = [[0.0, 0.0], [4.05, 0.0], [4.05, 2.0], [0.0, 2.0]]
         assert result is not None
         assert np.allclose(result.asarray, expected_points)
+
+
+class TestRectangleGetVerticeFromTopleft:
+
+    def test_invalid_vertice_parameter(self):
+        rect = Rectangle.from_topleft(topleft=[0, 0], width=4, height=2)
+        topleft_index = 0
+        with pytest.raises(ValueError, match="Parameter vertice must be one of"):
+            rect.get_vertice_from_topleft(topleft_index, "invalid_vertice")

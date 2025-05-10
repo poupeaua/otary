@@ -254,7 +254,7 @@ class Rectangle(Polygon):
         Returns:
             Rectangle: the join new Rectangle object
         """
-        shared_points = self.shared_approx_vertices(rect, margin_dist_error)
+        shared_points = self.find_shared_approx_vertices(rect, margin_dist_error)
         n_shared_points = len(shared_points)
 
         if n_shared_points in (0, 1):
@@ -262,8 +262,8 @@ class Rectangle(Polygon):
         if n_shared_points == 2:
             new_rect_points = np.concatenate(
                 (
-                    self.vertices_far_from(shared_points, margin_dist_error),
-                    rect.vertices_far_from(shared_points, margin_dist_error),
+                    self.find_vertices_far_from(shared_points, margin_dist_error),
+                    rect.find_vertices_far_from(shared_points, margin_dist_error),
                 ),
                 axis=0,
             )
@@ -271,7 +271,7 @@ class Rectangle(Polygon):
         # if 3 or more points in common it is the same rectangle
         return self
 
-    def _topright_vertice_from_topleft(self, topleft_index: int) -> np.ndarray:
+    def __topright_vertice_from_topleft(self, topleft_index: int) -> np.ndarray:
         """Get the top-right vertice from the topleft vertice
 
         Args:
@@ -285,7 +285,7 @@ class Rectangle(Polygon):
         else:
             return self.asarray[topleft_index - 1]
 
-    def _bottomleft_vertice_from_topleft(self, topleft_index: int) -> np.ndarray:
+    def __bottomleft_vertice_from_topleft(self, topleft_index: int) -> np.ndarray:
         """Get the bottom-left vertice from the topleft vertice
 
         Args:
@@ -299,7 +299,7 @@ class Rectangle(Polygon):
         else:
             return self.asarray[(topleft_index + 1) % len(self)]
 
-    def _bottomright_vertice_from_topleft(self, topleft_index: int) -> np.ndarray:
+    def __bottomright_vertice_from_topleft(self, topleft_index: int) -> np.ndarray:
         """Get the bottom-right vertice from the topleft vertice
 
         Args:
@@ -310,7 +310,7 @@ class Rectangle(Polygon):
         """
         return self.asarray[(topleft_index + 2) % len(self)]
 
-    def vertice_from_topleft(
+    def get_vertice_from_topleft(
         self, topleft_index: int, vertice: str = "topright"
     ) -> np.ndarray:
         """Get vertice from the topleft vertice. You can use this method to
@@ -325,20 +325,20 @@ class Rectangle(Polygon):
                 "'topright', 'bottomleft', 'bottomright'"
                 f"but got {vertice}"
             )
-        return getattr(self, f"_{vertice}_vertice_from_topleft")(topleft_index)
+        return getattr(self, f"__{vertice}_vertice_from_topleft")(topleft_index)
 
-    def width_from_topleft(self, topleft_index: int) -> float:
+    def get_width_from_topleft(self, topleft_index: int) -> float:
         return float(
             np.linalg.norm(
                 self.asarray[topleft_index]
-                - self.vertice_from_topleft(topleft_index, "topright")
+                - self.get_vertice_from_topleft(topleft_index, "topright")
             )
         )
 
-    def heigth_from_topleft(self, topleft_index: int) -> float:
+    def get_heigth_from_topleft(self, topleft_index: int) -> float:
         return float(
             np.linalg.norm(
                 self.asarray[topleft_index]
-                - self.vertice_from_topleft(topleft_index, "bottomleft")
+                - self.get_vertice_from_topleft(topleft_index, "bottomleft")
             )
         )

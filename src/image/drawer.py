@@ -154,7 +154,7 @@ class DrawerImage(BaseImage, ABC):
         im_array = self.__pre_draw(n_objects=len(_splines), render=render)
         for spline, color in zip(_splines, render.colors):
 
-            if render.is_arrowheaded:
+            if render.as_vectors:
                 cv2.polylines(
                     img=im_array,
                     pts=[spline[:-1]],
@@ -172,7 +172,7 @@ class DrawerImage(BaseImage, ABC):
                     pt2=segment[1],
                     color=color,
                     thickness=render.thickness,
-                    tipLength=render.head_tip_length / geo.Segment(segment).length,
+                    tipLength=render.tip_length / geo.Segment(segment).length,
                 )
 
             else:

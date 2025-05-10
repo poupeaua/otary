@@ -71,3 +71,23 @@ class LinearEntity(DiscreteGeometryEntity, ABC):
         return np.stack([self.points, np.roll(self.points, shift=-1, axis=0)], axis=1)[
             :-1, :, :
         ]
+
+    def __str__(self) -> str:
+        return (
+            self.__class__.__name__
+            + "(start="
+            + self.asarray[0].tolist().__str__()
+            + ", end="
+            + self.asarray[-1].tolist().__str__()
+            + ")"
+        )
+
+    def __repr__(self) -> str:
+        return (
+            self.__class__.__name__
+            + "(start="
+            + self.asarray[0].tolist().__str__()
+            + ", end="
+            + self.asarray[-1].tolist().__str__()
+            + ")"
+        )

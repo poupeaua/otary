@@ -240,7 +240,7 @@ class Polygon(DiscreteGeometryEntity):
 
         # compute diagonal 1 = taking reference index as 1st point in list - index 0
         refpoint = self.asarray[0]
-        idx_max_dist = self.index_farthest_vertice_from(point=refpoint)
+        idx_max_dist = self.find_vertice_ix_farthest_from(point=refpoint)
         farther_point = self.asarray[idx_max_dist]
         diag1 = Segment(points=[refpoint, farther_point])
 
@@ -350,13 +350,13 @@ class Polygon(DiscreteGeometryEntity):
         Returns:
             np.ndarray: a list of score for each point in the contour
         """
-        indices = self.indices_shared_approx_vertices(
+        indices = self.find_shared_approx_vertices_ix(
             other=Polygon(points=points), margin_dist_error=min_distance
         )
         score = np.bincount(indices, minlength=len(self))
         return score
 
-    def vertices_between(self, start_index: int, end_index: int) -> np.ndarray:
+    def find_vertices_between(self, start_index: int, end_index: int) -> np.ndarray:
         """Get the vertices between two indices.
 
         Returns always the vertices between start_index and end_index using the
@@ -395,11 +395,14 @@ class Polygon(DiscreteGeometryEntity):
 
         return vertices
 
-    def interpolated_point_along_polygon(
+    def find_interpolated_point(
         self, start_index: int, end_index: int, pct_dist: float
     ) -> np.ndarray:
         """Return a point along the contour path from start_idx to end_idx (inclusive),
         at a relative distance pct_dist ∈ [0, 1] along that path.
+
+        By convention, if start_index == end_index, then use the whole contour
+        start at this index position.
 
         Parameters:
             start_idx (int): Index of the start point in the contour
@@ -423,7 +426,9 @@ class Polygon(DiscreteGeometryEntity):
         end_index = end_index % len(self)
 
         path = LinearSpline(
-            points=self.vertices_between(start_index=start_index, end_index=end_index)
+            points=self.find_vertices_between(
+                start_index=start_index, end_index=end_index
+            )
         )
 
         if path.length == 0 or pct_dist == 0:
@@ -448,7 +453,7 @@ class Polygon(DiscreteGeometryEntity):
 
     # ---------------------------- MODIFICATION METHODS -------------------------------
 
-    def add_point(self, point: np.ndarray, index: int) -> Self:
+    def add_vertice(self, point: np.ndarray, index: int) -> Self:
         """Add a point at a given index in the Polygon object
 
         Args:
@@ -477,7 +482,7 @@ class Polygon(DiscreteGeometryEntity):
         )
         return self
 
-    def rearrange_with_first_point_at_index(self, index: int) -> Self:
+    def rearrange_first_vertice_at_index(self, index: int) -> Self:
         """Rearrange the list of points that defines the Polygon so that the first
         point in the list of points is the one at index given by the argument of this
         function.
@@ -506,8 +511,8 @@ class Polygon(DiscreteGeometryEntity):
         self.points = np.concatenate([self.points[index:], self.points[:index]])
         return self
 
-    def rearrange_with_first_point_closest_to_reference_point(
-        self, reference_point: np.ndarray = np.zeros(shape=(2,))
+    def rearrange_first_vertice_closest_to_point(
+        self, point: np.ndarray = np.zeros(shape=(2,))
     ) -> Polygon:
         """Rearrange the list of vertices that defines the Polygon so that the first
         point in the list of vertices is the one that is the closest by distance to
@@ -522,8 +527,8 @@ class Polygon(DiscreteGeometryEntity):
             Polygon: Polygon which is the exact same one but with a rearranged list
                 of points.
         """
-        idx_min_dist = self.index_closest_vertice_from(point=reference_point)
-        return self.rearrange_with_first_point_at_index(index=idx_min_dist)
+        idx_min_dist = self.find_vertice_ix_closest_from(point=point)
+        return self.rearrange_first_vertice_at_index(index=idx_min_dist)
 
     def reorder_clockwise(self, is_y_axis_down: bool = False) -> Polygon:
         """Reorder the vertices of the polygon in clockwise order where the first point
@@ -613,7 +618,7 @@ class Polygon(DiscreteGeometryEntity):
             return False
 
         # check if each points composing the polygons are close to each other
-        new_cnt = polygon.copy().rearrange_with_first_point_closest_to_reference_point(
+        new_cnt = polygon.copy().rearrange_first_vertice_closest_to_point(
             self.points[0]
         )
         points_diff = new_cnt.points - self.points

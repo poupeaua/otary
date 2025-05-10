@@ -81,7 +81,7 @@ class TestDrawerImage:
             LinearSpline(points=np.array([[0, 0], [1, 1], [2, 2]])),
             LinearSpline(points=np.array([[3, 3], [4, 4], [5, 5]])),
         ]
-        render = LinearSplinesRender(thickness=2, is_arrowheaded=True)
+        render = LinearSplinesRender(thickness=2, as_vectors=True)
         Image.from_fillvalue(shape=(10, 10, 3), value=0).draw_splines(
             splines=splines, render=render
         )

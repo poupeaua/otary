@@ -75,11 +75,8 @@ class SegmentsRender(GeometryRender):
 
 
 @dataclass
-class LinearSplinesRender(GeometryRender):
+class LinearSplinesRender(SegmentsRender):
     """Render for Linear Splines objects"""
-
-    is_arrowheaded: bool = False
-    head_tip_length: int = 20
 
 
 @dataclass

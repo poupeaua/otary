@@ -18,7 +18,7 @@ from shapely import (
 import numpy as np
 
 if TYPE_CHECKING:
-    from src.geometry import Polygon, Rectangle  # Import only for type checking
+    from src.geometry import Polygon, Rectangle  # pragma: no cover
 
 
 class GeometryEntity(ABC):

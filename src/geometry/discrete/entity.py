@@ -18,8 +18,8 @@ from src.geometry.utils.tools import rotate_2d_points
 from src.geometry.entity import GeometryEntity
 from src.utils.tools import assert_transform_shift_vector
 
-if TYPE_CHECKING:  # Import only for type checking
-    from src.geometry import Polygon, Rectangle, Segment
+if TYPE_CHECKING:
+    from src.geometry import Polygon, Rectangle, Segment  # pragma: no cover
 
 
 class DiscreteGeometryEntity(GeometryEntity, ABC):
@@ -366,7 +366,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         """
         return np.max(self.distances_vertices_to_point(point=point))
 
-    def index_farthest_vertice_from(self, point: np.ndarray) -> int:
+    def find_vertice_ix_farthest_from(self, point: np.ndarray) -> int:
         """Get the index of the farthest vertice from a given point
 
         Args:
@@ -377,7 +377,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         """
         return np.argmax(self.distances_vertices_to_point(point=point)).astype(int)
 
-    def index_closest_vertice_from(self, point: np.ndarray) -> int:
+    def find_vertice_ix_closest_from(self, point: np.ndarray) -> int:
         """Get the index of the closest vertice from a given point
 
         Args:
@@ -388,7 +388,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         """
         return np.argmin(self.distances_vertices_to_point(point=point)).astype(int)
 
-    def indices_shared_approx_vertices(
+    def find_shared_approx_vertices_ix(
         self, other: DiscreteGeometryEntity, margin_dist_error: float = 5
     ) -> np.ndarray:
         """Compute the vertices indices from this entity that correspond to shared
@@ -413,7 +413,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
                 list_index_shared_points.append(i)
         return np.array(list_index_shared_points).astype(int)
 
-    def shared_approx_vertices(
+    def find_shared_approx_vertices(
         self, other: DiscreteGeometryEntity, margin_dist_error: float = 5
     ) -> np.ndarray:
         """Get the shared vertices between two geometric objects.
@@ -430,12 +430,12 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
             np.ndarray: list of vertices identified as shared between the two geometric
                 objects
         """
-        indices = self.indices_shared_approx_vertices(
+        indices = self.find_shared_approx_vertices_ix(
             other=other, margin_dist_error=margin_dist_error
         )
         return self.asarray[indices]
 
-    def vertices_far_from(
+    def find_vertices_far_from(
         self, points: np.ndarray, min_distance: float = 5
     ) -> np.ndarray:
         """Get vertices that belongs to the geometric structure far from the points in
