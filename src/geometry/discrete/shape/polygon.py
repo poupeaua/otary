@@ -271,28 +271,30 @@ class Polygon(DiscreteGeometryEntity):
 
         return True
 
-    def is_clockwise(self, is_cv2: bool = False) -> bool:
+    def is_clockwise(self, is_y_axis_down: bool = False) -> bool:
         """Determine if a polygon points go clockwise using the Shoelace formula.
 
         True if polygon vertices order is clockwise in the "y-axis points up"
         referential.
 
         Args:
-            is_cv2 (bool, optional): If is_cv2 is True, then the image referential is
-                such that y axis points down.
+            is_y_axis_down (bool, optional): If is_y_axis_down is True, then the image
+                referential is used where y axis points down.
 
         Returns:
             bool: True if clockwise, False if counter-clockwise
         """
-        s = 0.0
-        for i in range(len(self)):
-            x1, y1 = self.asarray[i]
-            x2, y2 = self.asarray[(i + 1) % len(self)]
-            s += (x2 - x1) * (y2 + y1)
+        x = self.asarray[:, 0]
+        y = self.asarray[:, 1]
+
+        x_next = np.roll(x, -1)
+        y_next = np.roll(y, -1)
+
+        s = np.sum((x_next - x) * (y_next + y))
 
         is_clockwise = bool(s > 0)  # Clockwise if positive (OpenCV's convention)
 
-        if is_cv2:  # in referential where y axis points down
+        if is_y_axis_down:  # in referential where y axis points down
             return not is_clockwise
 
         return is_clockwise
@@ -475,7 +477,7 @@ class Polygon(DiscreteGeometryEntity):
         )
         return self
 
-    def rearrange_first_point_at_index(self, index: int) -> Self:
+    def rearrange_with_first_point_at_index(self, index: int) -> Self:
         """Rearrange the list of points that defines the Polygon so that the first
         point in the list of points is the one at index given by the argument of this
         function.
@@ -504,12 +506,12 @@ class Polygon(DiscreteGeometryEntity):
         self.points = np.concatenate([self.points[index:], self.points[:index]])
         return self
 
-    def rearrange_first_point_closest_to_reference_point(
+    def rearrange_with_first_point_closest_to_reference_point(
         self, reference_point: np.ndarray = np.zeros(shape=(2,))
     ) -> Polygon:
-        """Rearrange the list of points that defines the Polygon so that the first
-        point in the list of points is the one that is the closest (by distance) to the
-        reference point.
+        """Rearrange the list of vertices that defines the Polygon so that the first
+        point in the list of vertices is the one that is the closest by distance to
+        the reference point.
 
         Args:
             reference_point (np.ndarray): point that is taken as a reference in the
@@ -521,7 +523,22 @@ class Polygon(DiscreteGeometryEntity):
                 of points.
         """
         idx_min_dist = self.index_closest_vertice_from(point=reference_point)
-        return self.rearrange_first_point_at_index(index=idx_min_dist)
+        return self.rearrange_with_first_point_at_index(index=idx_min_dist)
+
+    def reorder_clockwise(self, is_y_axis_down: bool = False) -> Polygon:
+        """Reorder the vertices of the polygon in clockwise order where the first point
+        stays the same.
+
+        Args:
+            is_y_axis_down (bool, optional): True if cv2 is used. Defaults to False.
+
+        Returns:
+            Polygon: reordered polygon
+        """
+        if self.is_clockwise(is_y_axis_down=is_y_axis_down):
+            return self
+        self.asarray = np.roll(self.asarray[::-1], shift=1, axis=0)
+        return self
 
     def __rescale(self, scale: float) -> Polygon:
         """Create a new polygon that is scaled up or down.
@@ -596,7 +613,7 @@ class Polygon(DiscreteGeometryEntity):
             return False
 
         # check if each points composing the polygons are close to each other
-        new_cnt = polygon.copy().rearrange_first_point_closest_to_reference_point(
+        new_cnt = polygon.copy().rearrange_with_first_point_closest_to_reference_point(
             self.points[0]
         )
         points_diff = new_cnt.points - self.points

@@ -902,7 +902,7 @@ class TransformerImage(BaseImage, ABC):
         assert width_crop_rect > 0 and height_crop_rect > 0
 
         # rotate the image so that the line is horizontal
-        angle = geo_segment.slope_angle(is_cv2=True)
+        angle = geo_segment.slope_angle(is_y_axis_down=True)
         im = im.rotate(angle=angle)
 
         # cropping
@@ -948,7 +948,7 @@ class TransformerImage(BaseImage, ABC):
         """
         width_crop_rect, height_crop_rect = dim_crop_rect
         geo_segment = geo.Segment(segment)
-        angle = geo_segment.slope_angle(is_cv2=True)
+        angle = geo_segment.slope_angle(is_y_axis_down=True)
 
         if width_crop_rect == -1:
             # default the width for crop to be a bit more than line length

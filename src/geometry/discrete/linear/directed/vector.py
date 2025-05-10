@@ -34,7 +34,7 @@ class Vector(Segment, DirectedLinearEntity):
         Returns:
             float: cardinal degree
         """
-        angle = self.slope_angle(degree=True, is_cv2=True)
+        angle = self.slope_angle(degree=True, is_y_axis_down=True)
 
         # if angle is negative
         is_neg_sign_angle = bool(np.sign(angle) - 1)

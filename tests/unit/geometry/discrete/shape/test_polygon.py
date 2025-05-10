@@ -178,26 +178,26 @@ class TestPolygonRearrange:
     def test_rearrange_first_point_at_index_pos(self):
         cnt = Polygon([[0, 0], [1, 1], [1, 0]])
         assert np.array_equal(
-            cnt.rearrange_first_point_at_index(index=1).asarray,
+            cnt.rearrange_with_first_point_at_index(index=1).asarray,
             [[1, 1], [1, 0], [0, 0]],
         )
 
     def test_rearrange_first_point_at_index_neg(self):
         cnt = Polygon([[0, 0], [1, 1], [1, 0]])
         assert np.array_equal(
-            cnt.rearrange_first_point_at_index(index=-2).asarray,
+            cnt.rearrange_with_first_point_at_index(index=-2).asarray,
             [[1, 1], [1, 0], [0, 0]],
         )
 
     def test_rearrange_first_point_at_index_too_big(self):
         cnt = Polygon([[0, 0], [1, 1], [1, 0]])
         with pytest.raises(ValueError):
-            cnt.rearrange_first_point_at_index(index=3)
+            cnt.rearrange_with_first_point_at_index(index=3)
 
     def test_rearrange_first_point_at_index_too_small(self):
         cnt = Polygon([[0, 0], [1, 1], [1, 0]])
         with pytest.raises(ValueError):
-            cnt.rearrange_first_point_at_index(index=-4)
+            cnt.rearrange_with_first_point_at_index(index=-4)
 
 
 class TestPolygonFromUnorderedLinesApprox:
@@ -406,11 +406,11 @@ class TestPolygonIsClockwise:
 
     def test_is_clockwise_true_cv2(self):
         polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
-        assert polygon.is_clockwise(is_cv2=True) is True
+        assert polygon.is_clockwise(is_y_axis_down=True) is True
 
     def test_is_clockwise_false_cv2(self):
         polygon = Polygon([[0, 0], [0, 1], [1, 1], [1, 0]])
-        assert polygon.is_clockwise(is_cv2=True) is False
+        assert polygon.is_clockwise(is_y_axis_down=True) is False
 
     def test_is_clockwise_triangle_false(self):
         polygon = Polygon([[0, 0], [1, 0], [0.5, 1]])

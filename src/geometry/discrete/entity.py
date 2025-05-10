@@ -292,7 +292,9 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         # pylint: disable=import-outside-toplevel
         from src.geometry import Rectangle  # delayed import to avoid circular import
 
-        topleft_x, topleft_y, width, height = cv2.boundingRect(array=self.asarray)
+        topleft_x, topleft_y, width, height = cv2.boundingRect(
+            array=self.asarray.astype(np.float32)
+        )
         bbox = np.array(
             [
                 [topleft_x, topleft_y],

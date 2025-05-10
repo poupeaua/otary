@@ -100,12 +100,14 @@ def prep_obj_draw(objects: list | np.ndarray, _type: Any) -> list | np.ndarray:
     return objects
 
 
-def interpolate_color(alpha: float) -> tuple:
+def interpolate_color(alpha: float, is_bgr: bool = False) -> tuple:
     """Interpolates between red, yellow, and green based on the parameter alpha.
 
     Args:
         alpha (float): Parameter ranging from 0 to 1.
             0 corresponds to red, 0.5 to yellow, and 1 to green.
+        is_bgr (bool, optional): Whether to return a BGR color or RGB color.
+            Defaults to False.
 
     Returns:
         tuple: RGB color as a tuple (R, G, B) where each value is in the range [0, 255].
@@ -131,4 +133,6 @@ def interpolate_color(alpha: float) -> tuple:
         g = int((1 - t) * yellow[1] + t * green[1])
         b = int((1 - t) * yellow[2] + t * green[2])
 
+    if is_bgr:
+        return (b, g, r)
     return (r, g, b)

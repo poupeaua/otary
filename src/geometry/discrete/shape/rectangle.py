@@ -192,7 +192,9 @@ class Rectangle(Polygon):
         seg2 = Segment(points=[self.points[1], self.points[2]])
         return seg2.length if seg1.length > seg2.length else seg1.length
 
-    def longside_slope_angle(self, degree: bool = False, is_cv2: bool = False) -> float:
+    def longside_slope_angle(
+        self, degree: bool = False, is_y_axis_down: bool = False
+    ) -> float:
         """Compute the biggest slope of the rectangle
 
         Returns:
@@ -201,10 +203,10 @@ class Rectangle(Polygon):
         seg1 = Segment(points=[self.points[0], self.points[1]])
         seg2 = Segment(points=[self.points[1], self.points[2]])
         seg_bigside = seg1 if seg1.length > seg2.length else seg2
-        return seg_bigside.slope_angle(degree=degree, is_cv2=is_cv2)
+        return seg_bigside.slope_angle(degree=degree, is_y_axis_down=is_y_axis_down)
 
     def shortside_slope_angle(
-        self, degree: bool = False, is_cv2: bool = False
+        self, degree: bool = False, is_y_axis_down: bool = False
     ) -> float:
         """Compute the smallest slope of the rectangle
 
@@ -214,7 +216,7 @@ class Rectangle(Polygon):
         seg1 = Segment(points=[self.points[0], self.points[1]])
         seg2 = Segment(points=[self.points[1], self.points[2]])
         seg_smallside = seg2 if seg1.length > seg2.length else seg1
-        return seg_smallside.slope_angle(degree=degree, is_cv2=is_cv2)
+        return seg_smallside.slope_angle(degree=degree, is_y_axis_down=is_y_axis_down)
 
     def desintersect(self) -> Self:
         """Desintersect the rectangle if it is self-intersected.
@@ -278,7 +280,7 @@ class Rectangle(Polygon):
         Returns:
             np.ndarray: topright vertice
         """
-        if self.is_clockwise(is_cv2=True):
+        if self.is_clockwise(is_y_axis_down=True):
             return self.asarray[(topleft_index + 1) % len(self)]
         else:
             return self.asarray[topleft_index - 1]
@@ -292,7 +294,7 @@ class Rectangle(Polygon):
         Returns:
             np.ndarray: topright vertice
         """
-        if self.is_clockwise(is_cv2=True):
+        if self.is_clockwise(is_y_axis_down=True):
             return self.asarray[topleft_index - 1]
         else:
             return self.asarray[(topleft_index + 1) % len(self)]

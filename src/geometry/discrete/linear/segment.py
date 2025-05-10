@@ -67,7 +67,7 @@ class Segment(LinearEntity):
                 f"Input shape {lines.shape[1:]}, expected shape (2, 2)."
             )
 
-    def slope_angle(self, degree: bool = False, is_cv2: bool = False) -> float:
+    def slope_angle(self, degree: bool = False, is_y_axis_down: bool = False) -> float:
         """Calculate the slope angle of a single line in the cartesian space
 
         Args:
@@ -76,7 +76,7 @@ class Segment(LinearEntity):
         Returns:
             float: slope angle in ]-pi/2, pi/2[
         """
-        angle = np.arctan(self.slope_cv2) if is_cv2 else np.arctan(self.slope)
+        angle = np.arctan(self.slope_cv2) if is_y_axis_down else np.arctan(self.slope)
         if degree:
             angle = np.rad2deg(angle)
         return angle
