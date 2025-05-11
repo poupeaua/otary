@@ -682,7 +682,17 @@ class TransformerImage(BaseImage, ABC):
         self.asarray = array_crop
         return self
 
-    def crop_from_topleft(self, topleft: np.ndarray, width: int, height: int) -> Self:
+    def crop_from_topleft(
+        self,
+        topleft: np.ndarray,
+        width: int,
+        height: int,
+        clip: bool = True,
+        pad: bool = False,
+        copy: bool = False,
+        extra_border_size: int = 0,
+        pad_value: int = 0,
+    ) -> Self:
         """Crop the image from a rectangle defined by its top-left point, its width and
         its height.
 
@@ -690,6 +700,12 @@ class TransformerImage(BaseImage, ABC):
             topleft (np.ndarray): (x, y) coordinates of the top-left point
             width (int): width of the rectangle to crop
             height (int): height of the rectangle to crop
+            clip (bool, optional): whether to clip or not. Defaults to True.
+            pad (bool, optional): whether to pad or not. Defaults to False.
+            copy (bool, optional): whether to copy or not. Defaults to False.
+            extra_border_size (int, optional): extra border size to add to the crop
+                in the x and y directions. Defaults to 0 which means no extra border.
+            pad_value (int, optional): pad fill value. Defaults to 0.
 
         Returns:
             Self: image cropped
@@ -699,9 +715,24 @@ class TransformerImage(BaseImage, ABC):
             y0=topleft[1],
             x1=topleft[0] + width,
             y1=topleft[1] + height,
+            clip=clip,
+            pad=pad,
+            copy=copy,
+            extra_border_size=extra_border_size,
+            pad_value=pad_value,
         )
 
-    def crop_from_center(self, center: np.ndarray, width: int, height: int) -> Self:
+    def crop_from_center(
+        self,
+        center: np.ndarray,
+        width: int,
+        height: int,
+        clip: bool = True,
+        pad: bool = False,
+        copy: bool = False,
+        extra_border_size: int = 0,
+        pad_value: int = 0,
+    ) -> Self:
         """Crop the image from a rectangle defined by its center point, its width and
         its height.
 
@@ -709,6 +740,12 @@ class TransformerImage(BaseImage, ABC):
             center (np.ndarray): (x, y) coordinates of the center point
             width (int): width of the rectangle to crop
             height (int): height of the rectangle to crop
+            clip (bool, optional): whether to clip or not. Defaults to True.
+            pad (bool, optional): whether to pad or not. Defaults to False.
+            copy (bool, optional): whether to copy or not. Defaults to False.
+            extra_border_size (int, optional): extra border size to add to the crop
+                in the x and y directions. Defaults to 0 which means no extra border.
+            pad_value (int, optional): pad fill value. Defaults to 0.
 
         Returns:
             Self: image cropped
@@ -717,6 +754,11 @@ class TransformerImage(BaseImage, ABC):
             topleft=center - np.array([width / 2, height / 2]),
             width=width,
             height=height,
+            clip=clip,
+            pad=pad,
+            copy=copy,
+            extra_border_size=extra_border_size,
+            pad_value=pad_value,
         )
 
     def crop_polygon(
@@ -779,13 +821,27 @@ class TransformerImage(BaseImage, ABC):
             pad_value=pad_value,
         )
 
-    def crop_from_axis_aligned_bbox(self, bbox: geo.Rectangle) -> Self:
+    def crop_from_axis_aligned_bbox(
+        self,
+        bbox: geo.Rectangle,
+        clip: bool = True,
+        pad: bool = False,
+        copy: bool = False,
+        extra_border_size: int = 0,
+        pad_value: int = 0,
+    ) -> Self:
         """Crop the image from an Axis-Aligned Bounding Box (AABB).
         Inclusive crops which means that the cropped image will have
         width and height equal to the width and height of the AABB.
 
         Args:
             bbox (geo.Rectangle): axis-aligned bounding box
+            clip (bool, optional): whether to clip or not. Defaults to True.
+            pad (bool, optional): whether to pad or not. Defaults to False.
+            copy (bool, optional): whether to copy or not. Defaults to False.
+            extra_border_size (int, optional): extra border size to add to the crop
+                in the x and y directions. Defaults to 0 which means no extra border.
+            pad_value (int, optional): pad fill value. Defaults to 0.
 
         Returns:
             Self: cropped image
@@ -794,7 +850,16 @@ class TransformerImage(BaseImage, ABC):
         topleft = np.asarray([bbox.xmin, bbox.ymin])
         height = int(bbox.ymax - bbox.ymin + 1)
         width = int(bbox.xmax - bbox.xmin + 1)
-        return self.crop_from_topleft(topleft=topleft, width=width, height=height)
+        return self.crop_from_topleft(
+            topleft=topleft,
+            width=width,
+            height=height,
+            clip=clip,
+            pad=pad,
+            copy=copy,
+            extra_border_size=extra_border_size,
+            pad_value=pad_value,
+        )
 
     def crop_next_to_rectangle(
         self,
