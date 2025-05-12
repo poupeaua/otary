@@ -10,7 +10,7 @@ from typing import Optional, Self
 import numpy as np
 import pymupdf
 
-from src.geometry import Polygon, Segment
+from src.geometry import Polygon, Segment, Vector
 
 
 class Rectangle(Polygon):
@@ -271,7 +271,7 @@ class Rectangle(Polygon):
         # if 3 or more points in common it is the same rectangle
         return self
 
-    def __topright_vertice_from_topleft(self, topleft_index: int) -> np.ndarray:
+    def _topright_vertice_from_topleft(self, topleft_index: int) -> np.ndarray:
         """Get the top-right vertice from the topleft vertice
 
         Args:
@@ -285,7 +285,7 @@ class Rectangle(Polygon):
         else:
             return self.asarray[topleft_index - 1]
 
-    def __bottomleft_vertice_from_topleft(self, topleft_index: int) -> np.ndarray:
+    def _bottomleft_vertice_from_topleft(self, topleft_index: int) -> np.ndarray:
         """Get the bottom-left vertice from the topleft vertice
 
         Args:
@@ -299,7 +299,7 @@ class Rectangle(Polygon):
         else:
             return self.asarray[(topleft_index + 1) % len(self)]
 
-    def __bottomright_vertice_from_topleft(self, topleft_index: int) -> np.ndarray:
+    def _bottomright_vertice_from_topleft(self, topleft_index: int) -> np.ndarray:
         """Get the bottom-right vertice from the topleft vertice
 
         Args:
@@ -325,7 +325,7 @@ class Rectangle(Polygon):
                 "'topright', 'bottomleft', 'bottomright'"
                 f"but got {vertice}"
             )
-        return getattr(self, f"__{vertice}_vertice_from_topleft")(topleft_index)
+        return getattr(self, f"_{vertice}_vertice_from_topleft")(topleft_index)
 
     def get_width_from_topleft(self, topleft_index: int) -> float:
         return float(
@@ -342,3 +342,15 @@ class Rectangle(Polygon):
                 - self.get_vertice_from_topleft(topleft_index, "bottomleft")
             )
         )
+
+    def get_vector_up_from_topleft(self, topleft_index: int) -> Vector:
+        bottomleft_vertice = self.get_vertice_from_topleft(
+            topleft_index=topleft_index, vertice="bottomleft"
+        )
+        return Vector([bottomleft_vertice, self[topleft_index]])
+
+    def get_vector_left_from_topleft(self, topleft_index: int) -> Vector:
+        rect_topright_vertice = self.get_vertice_from_topleft(
+            topleft_index=topleft_index, vertice="topright"
+        )
+        return Vector([self[topleft_index], rect_topright_vertice])

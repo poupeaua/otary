@@ -710,6 +710,7 @@ class TransformerImage(BaseImage, ABC):
         Returns:
             Self: image cropped
         """
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
         return self.crop(
             x0=topleft[0],
             y0=topleft[1],
@@ -750,6 +751,7 @@ class TransformerImage(BaseImage, ABC):
         Returns:
             Self: image cropped
         """
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
         return self.crop_from_topleft(
             topleft=center - np.array([width / 2, height / 2]),
             width=width,
@@ -846,6 +848,7 @@ class TransformerImage(BaseImage, ABC):
         Returns:
             Self: cropped image
         """
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
         assert bbox.is_axis_aligned
         topleft = np.asarray([bbox.xmin, bbox.ymin])
         height = int(bbox.ymax - bbox.ymin + 1)
@@ -864,7 +867,7 @@ class TransformerImage(BaseImage, ABC):
     def crop_next_to_rectangle(
         self,
         rect: geo.Rectangle,
-        rect_topleft_vertice_index: int,
+        rect_topleft_ix: int,
         crop_dim: tuple[int, int] = (-1, -1),
         crop_shift: tuple[int, int] = (0, 0),
     ) -> Self:
@@ -872,7 +875,7 @@ class TransformerImage(BaseImage, ABC):
 
         Args:
             rect (geo.Rectangle): rectangle for reference to crop.
-            rect_topleft_vertice_index (int): top-left vertice index of the rectangle
+            rect_topleft_ix (int): top-left vertice index of the rectangle
             crop_dim (tuple[int, int], optional): (width, height) crop dimension.
                 Defaults to (-1, -1).
             crop_shift (tuple[int, int], optional): The crop_shift argument is applied
@@ -885,23 +888,14 @@ class TransformerImage(BaseImage, ABC):
         Returns:
             Self: new image cropped
         """
-        # get the useful vertices from the top-left vertice
-        rect_topleft_vertice = rect[rect_topleft_vertice_index]
-        rect_topright_vertice = rect.get_vertice_from_topleft(
-            topleft_index=rect_topleft_vertice_index, vertice="topright"
-        )
-        rect_bottomleft_vertice = rect.get_vertice_from_topleft(
-            topleft_index=rect_topleft_vertice_index, vertice="bottomleft"
-        )
-
         # shift down and up vector calculated based on the top-left vertice
-        rect_shift_up = geo.Vector([rect_bottomleft_vertice, rect_topleft_vertice])
-        rect_shift_left = geo.Vector([rect_topleft_vertice, rect_topright_vertice])
+        rect_shift_up = rect.get_vector_up_from_topleft(topleft_index=rect_topleft_ix)
+        rect_shift_left = rect.get_vector_left_from_topleft(
+            topleft_index=rect_topleft_ix
+        )
 
         # crop dimension
-        rect_heigth = rect.get_heigth_from_topleft(
-            topleft_index=rect_topleft_vertice_index
-        )
+        rect_heigth = rect.get_heigth_from_topleft(topleft_index=rect_topleft_ix)
         crop_width = rect_heigth if crop_dim[0] == -1 else crop_dim[0]
         crop_height = rect_heigth if crop_dim[1] == -1 else crop_dim[1]
         crop_width, crop_height = int(crop_width), int(crop_height)
