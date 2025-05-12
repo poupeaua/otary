@@ -11,14 +11,14 @@ import cv2
 import numpy as np
 import scipy.ndimage
 
-# pylint: disable=no-name-in-module
-from skimage.filters import threshold_sauvola
-
 import src.geometry as geo
 from src.image.base import BaseImage
 from src.utils.tools import assert_transform_shift_vector
+from src.image.utils.thresholding import threshold_niblack_like
 
-BinarizationMethods = Literal["sauvola", "adaptative", "otsu"]
+BinarizationMethods = Literal[
+    "sauvola", "niblack", "nick", "wolf", "adaptative", "otsu"
+]
 BlurMethods = Literal["average", "median", "gaussian", "bilateral"]
 
 
@@ -75,36 +75,57 @@ class TransformerImage(BaseImage, ABC):
         """
         self.as_grayscale()
         self.blur(method="gaussian", kernel=(3, 3), sigmax=0)
-        _, binary = cv2.threshold(
+        _, img_thresholded = cv2.threshold(
             self.asarray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
         )
-        self.asarray = binary
+        self.asarray = img_thresholded
         return self
 
-    def threshold_sauvola(self, window_size: int = 15, k: float = 0.2) -> Self:
+    def threshold_sauvola(
+        self, window_size: int = 15, k: float = 0.2, r: float = 128.0
+    ) -> Self:
         """Apply Sauvola thresholding.
-        See https://scikit-image.org/docs/stable/auto_examples/segmentation/\
-            plot_niblack_sauvola.html.
+        See https://scikit-image.org/docs/stable/auto_examples/segmentation/plot_niblack_sauvola.html.
 
         As the input image must be a grayscale before applying any thresholding
         methods we convert the image to grayscale.
 
         Args:
-            window_size (int, optional): the sauvola window size to apply on the
+            window_size (int, optional): sauvola window size to apply on the
                 image. Defaults to 15.
-            k (float, optional): the sauvola k factor to apply to regulate the impact
+            k (float, optional): sauvola k factor to apply to regulate the impact
+                of the std. Defaults to 0.2.
+            r (float, optional): sauvola r value. Defaults to 128.
+
+        Returns:
+            Self: image thresholded where its values are now pure 0 or 255
+        """
+        self.as_grayscale()
+        self.asarray = threshold_niblack_like(
+            img=self.asarray, method="sauvola", window_size=window_size, k=k, r=r
+        )[1]
+        return self
+
+    def threshold_niblack(self, window_size: int = 15, k: float = 0.2) -> Self:
+        """Apply Niblack thresholding.
+        See https://scikit-image.org/docs/stable/auto_examples/segmentation/plot_niblack_sauvola.html.
+
+        As the input image must be a grayscale before applying any thresholding
+        methods we convert the image to grayscale.
+
+        Args:
+            window_size (int, optional): apply on the
+                image. Defaults to 15.
+            k (float, optional): factor to apply to regulate the impact
                 of the std. Defaults to 0.2.
 
         Returns:
             Self: image thresholded where its values are now pure 0 or 255
         """
         self.as_grayscale()
-        im_arr = self.asarray
-        self.asarray = np.array(
-            (im_arr > threshold_sauvola(image=im_arr, window_size=window_size, k=k))
-            * 255,
-            dtype=np.uint8,
-        )
+        self.asarray = threshold_niblack_like(
+            img=self.asarray, method="niblack", window_size=window_size, k=k
+        )[1]
         return self
 
     def binary(self, method: BinarizationMethods = "sauvola") -> np.ndarray:
@@ -119,7 +140,7 @@ class TransformerImage(BaseImage, ABC):
 
         Args:
             method (str, optional): the binarization method to apply.
-                Must be in ["adaptative", "otsu", "sauvola"].
+                Must be in ["adaptative", "otsu", "sauvola", "niblack", "nick", "wolf"].
                 Defaults to "sauvola".
 
         Returns:
@@ -895,7 +916,7 @@ class TransformerImage(BaseImage, ABC):
         )
 
         # crop dimension
-        rect_heigth = rect.get_heigth_from_topleft(topleft_index=rect_topleft_ix)
+        rect_heigth = rect.get_height_from_topleft(topleft_index=rect_topleft_ix)
         crop_width = rect_heigth if crop_dim[0] == -1 else crop_dim[0]
         crop_height = rect_heigth if crop_dim[1] == -1 else crop_dim[1]
         crop_width, crop_height = int(crop_width), int(crop_height)

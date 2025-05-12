@@ -4,6 +4,7 @@ It contains all the utility common functions used by the Image class
 """
 
 from typing import Any
+
 import numpy as np
 
 import src.geometry as geo

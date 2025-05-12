@@ -328,6 +328,14 @@ class Rectangle(Polygon):
         return getattr(self, f"_{vertice}_vertice_from_topleft")(topleft_index)
 
     def get_width_from_topleft(self, topleft_index: int) -> float:
+        """Get the width from the topleft vertice
+
+        Args:
+            topleft_index (int): top-left vertice index
+
+        Returns:
+            float: width value
+        """
         return float(
             np.linalg.norm(
                 self.asarray[topleft_index]
@@ -335,7 +343,15 @@ class Rectangle(Polygon):
             )
         )
 
-    def get_heigth_from_topleft(self, topleft_index: int) -> float:
+    def get_height_from_topleft(self, topleft_index: int) -> float:
+        """Get the heigth from the topleft vertice
+
+        Args:
+            topleft_index (int): top-left vertice index
+
+        Returns:
+            float: height value
+        """
         return float(
             np.linalg.norm(
                 self.asarray[topleft_index]
@@ -344,12 +360,28 @@ class Rectangle(Polygon):
         )
 
     def get_vector_up_from_topleft(self, topleft_index: int) -> Vector:
+        """Get the vector that goes from the bottomleft vertice to the topleft vertice
+
+        Args:
+            topleft_index (int): top-left vertice index
+
+        Returns:
+            Vector: Vector object descripting the vector
+        """
         bottomleft_vertice = self.get_vertice_from_topleft(
             topleft_index=topleft_index, vertice="bottomleft"
         )
         return Vector([bottomleft_vertice, self[topleft_index]])
 
     def get_vector_left_from_topleft(self, topleft_index: int) -> Vector:
+        """Get the vector that goes from the topleft vertice to the topright vertice
+
+        Args:
+            topleft_index (int): top-left vertice index
+
+        Returns:
+            Vector: Vector object descripting the vector
+        """
         rect_topright_vertice = self.get_vertice_from_topleft(
             topleft_index=topleft_index, vertice="topright"
         )

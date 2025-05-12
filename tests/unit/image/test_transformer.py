@@ -142,17 +142,73 @@ class TestTransformerImageMorphologyMethods:
         img.dilate(kernel=(3, 3), iterations=2, dilate_black_pixels=False)
         assert np.all(img.asarray == 255)
 
+    def test_dilate_iterations_zero(self):
+        arr = np.array(
+            [
+                [255, 127, 0, 255, 224],
+                [0, 127, 255, 255, 0],
+                [255, 230, 127, 0, 255],
+                [0, 0, 0, 127, 179],
+                [0, 127, 0, 255, 198],
+            ]
+        )
+        img = Image(arr)
+        img.dilate(iterations=0)
+        assert np.all(img.asarray == arr)
+
     def test_erode_black(self):
         img = Image.from_fillvalue(shape=(5, 5), value=255)
         img.asarray[2, 2] = 0
         img.erode(kernel=(3, 3), iterations=2)
         assert np.all(img.asarray == 255)
 
+    def test_dilate_hard_case(self):
+        arr = np.array(
+            [
+                [255, 127, 0, 255, 224],
+                [0, 127, 255, 255, 0],
+                [255, 230, 127, 0, 255],
+                [0, 0, 0, 127, 179],
+                [0, 127, 0, 255, 198],
+            ]
+        )
+        img = Image(arr)
+        img.dilate(iterations=3)
+        assert np.all(img.asarray == 0)
+
     def test_erode_white(self):
         img = Image.from_fillvalue(shape=(5, 5), value=255)
         img.asarray[2, 2] = 0
         img.erode(kernel=(3, 3), iterations=2, erode_black_pixels=False)
         assert np.all(img.asarray == 0)
+
+    def test_erode_iterations_zero(self):
+        arr = np.array(
+            [
+                [255, 127, 0, 255, 224],
+                [0, 127, 255, 255, 0],
+                [255, 230, 127, 0, 255],
+                [0, 0, 0, 127, 179],
+                [0, 127, 0, 255, 198],
+            ]
+        )
+        img = Image(arr)
+        img.erode(iterations=0)
+        assert np.all(img.asarray == arr)
+
+    def test_erode_hard_case(self):
+        arr = np.array(
+            [
+                [255, 127, 0, 255, 224],
+                [0, 127, 255, 255, 0],
+                [255, 230, 127, 0, 255],
+                [0, 0, 0, 127, 179],
+                [0, 127, 0, 255, 198],
+            ]
+        )
+        img = Image(arr)
+        img.erode(iterations=3)
+        assert np.all(img.asarray == 255)
 
 
 class TestTransformerImageRotateMethods:
@@ -410,3 +466,62 @@ class TestTransformerImageCropMethods:
             segment=[[1, 1], [1, 3]], dim_crop_rect=(-1, 3), added_width=0
         )
         assert img.shape_array == (3, 2)
+
+
+class TestTransformerImageThresholdAdaptative:
+
+    def test_threshold_adaptative_basic(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=127)
+        img.threshold_adaptative()
+        assert np.all((img.asarray == 0) | (img.asarray == 255))
+
+    def test_threshold_adaptative_uniform_image(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=200)
+        img.threshold_adaptative()
+        assert np.all(img.asarray == 255)
+
+    def test_threshold_adaptative_low_values(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=55)
+        img.asarray[2, 2] = 200
+        img.threshold_adaptative()
+        assert img.asarray[2, 2] == 255
+        assert img.asarray[0, 0] == 0
+        assert img.asarray[4, 4] == 0
+
+    def test_threshold_adaptative_mixed_values(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=127)
+        img.asarray[0, 0] = 200
+        img.asarray[4, 4] = 50
+        img.threshold_adaptative()
+        assert img.asarray[0, 0] == 255
+        assert img.asarray[4, 4] == 0
+
+
+class TestTransformerImageThresholdNiblack:
+
+    def test_threshold_niblack_basic(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=127)
+        img.threshold_niblack()
+        assert np.all((img.asarray == 0) | (img.asarray == 255))
+
+    def test_threshold_niblack_low_values(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=55)
+        img.asarray[2, 2] = 200
+        img.threshold_niblack()
+        assert img.asarray[2, 2] == 255
+        assert img.asarray[0, 0] == 0
+        assert img.asarray[4, 4] == 0
+
+    def test_threshold_niblack_mixed_values(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=127)
+        img.asarray[0, 0] = 200
+        img.asarray[4, 4] = 50
+        img.threshold_niblack()
+        assert img.asarray[0, 0] == 255
+        assert img.asarray[4, 4] == 0
+
+    @pytest.mark.parametrize("window_size, k", [(15, 0.2), (25, 0.5), (5, 0.1)])
+    def test_threshold_niblack_parametrized(self, window_size, k):
+        img = Image.from_fillvalue(shape=(5, 5), value=127)
+        img.threshold_niblack(window_size=window_size, k=k)
+        assert np.all((img.asarray == 0) | (img.asarray == 255))
