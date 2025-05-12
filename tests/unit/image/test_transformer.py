@@ -525,3 +525,48 @@ class TestTransformerImageThresholdNiblack:
         img = Image.from_fillvalue(shape=(5, 5), value=127)
         img.threshold_niblack(window_size=window_size, k=k)
         assert np.all((img.asarray == 0) | (img.asarray == 255))
+
+
+class TestTransformerImageCropNextToRectangle:
+
+    def test_crop_next_to_rectangle_default_params(self):
+        img = Image.from_fillvalue(shape=(10, 10), value=0)
+        rect = Rectangle.from_topleft_bottomright(topleft=[3, 3], bottomright=[5, 5])
+        cropped_img = img.crop_next_to_rectangle(rect=rect, rect_topleft_ix=0)
+        assert cropped_img.shape_array == (2, 2)
+
+    def test_crop_next_to_rectangle_custom_crop_dim(self):
+        img = Image.from_fillvalue(shape=(10, 10), value=0)
+        rect = Rectangle.from_topleft_bottomright(topleft=[3, 3], bottomright=[5, 5])
+        cropped_img = img.crop_next_to_rectangle(
+            rect=rect, rect_topleft_ix=0, crop_dim=(3, 3)
+        )
+        assert cropped_img.shape_array == (3, 3)
+
+    def test_crop_next_to_rectangle_with_crop_shift(self):
+        img = Image.from_fillvalue(shape=(10, 10), value=0)
+        img.asarray[4, 7] = 7
+        img.asarray[4, 6] = 6
+        img.asarray[4, 5] = 5
+        img.asarray[4, 4] = 4
+        img.asarray[4, 3] = 3
+        rect = Rectangle.from_topleft_bottomright(topleft=[3, 3], bottomright=[5, 5])
+        cropped_img = img.crop_next_to_rectangle(
+            rect=rect, rect_topleft_ix=0, crop_shift=(3, -1), crop_dim=(3, 3)
+        )
+        assert cropped_img.asarray[1, 1] == 5
+        assert cropped_img.asarray[2, 2] == 0
+
+    def test_crop_next_to_rectangle_invalid_crop_dim(self):
+        img = Image.from_fillvalue(shape=(10, 10), value=0)
+        rect = Rectangle.from_topleft_bottomright(topleft=[3, 3], bottomright=[5, 5])
+        with pytest.raises(AssertionError):
+            img.crop_next_to_rectangle(rect=rect, rect_topleft_ix=0, crop_dim=(-1, -5))
+
+    def test_crop_next_to_rectangle_large_crop_dim(self):
+        img = Image.from_fillvalue(shape=(10, 10), value=0)
+        rect = Rectangle.from_topleft_bottomright(topleft=[3, 3], bottomright=[5, 5])
+        cropped_img = img.crop_next_to_rectangle(
+            rect=rect, rect_topleft_ix=0, crop_dim=(10, 10)
+        )
+        assert cropped_img.shape_array == (10, 10)
