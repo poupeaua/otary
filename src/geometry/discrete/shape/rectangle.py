@@ -41,6 +41,12 @@ class Rectangle(Polygon):
         # pylint: disable=too-many-arguments, too-many-positional-arguments
         """Create a Rectangle object using the center point, width, height and angle.
 
+        Convention to create the rectangle is:
+            index 0: top left point
+            index 1: top right point
+            index 2: bottom right point
+            index 3: bottom left point
+
         Args:
             center (np.ndarray): center point of the rectangle
             width (float): width of the rectangle
@@ -61,61 +67,36 @@ class Rectangle(Polygon):
         # get the rectangle coordinates
         points = np.array(
             [
-                [center_x - half_width, center_y + half_height],
-                [center_x + half_width, center_y + half_height],
-                [center_x + half_width, center_y - half_height],
                 [center_x - half_width, center_y - half_height],
+                [center_x + half_width, center_y - half_height],
+                [center_x + half_width, center_y + half_height],
+                [center_x - half_width, center_y + half_height],
             ]
         )
 
         rect = Rectangle(points=points, is_cast_int=is_cast_int)
 
         if angle != 0:
-            rect = rect.rotate(angle=angle, pivot=center)
+            rect = rect.rotate(angle=angle)
             if is_cast_int:
                 rect.asarray = np.round(rect.asarray).astype(int)
 
         return rect
 
     @classmethod
-    def from_topleft(
-        cls,
-        topleft: np.ndarray,
-        width: float,
-        height: float,
-        angle: float = 0,
-        is_cast_int: bool = False,
-    ) -> Rectangle:
-        # pylint: disable=too-many-arguments, too-many-positional-arguments
-        """Create a Rectangle object using the top left point, width, height and angle.
-
-        Args:
-            topleft (np.ndarray): top left point of the rectangle
-            width (float): width of the rectangle
-            height (float): height of the rectangle
-            angle (float, optional): rotation angle for the rectangle. Defaults to 0.
-
-        Returns:
-            Rectangle: Rectangle object
-        """
-        center = topleft + np.array([width, height]) / 2
-        return cls.from_center(
-            center=center,
-            width=width,
-            height=height,
-            angle=angle,
-            is_cast_int=is_cast_int,
-        )
-
-    @classmethod
     def from_topleft_bottomright(
         cls,
         topleft: np.ndarray,
         bottomright: np.ndarray,
-        angle: float = 0,
         is_cast_int: bool = False,
     ) -> Rectangle:
         """Create a Rectangle object using the top left and bottom right points.
+
+        Convention to create the rectangle is:
+            index 0: top left point
+            index 1: top right point
+            index 2: bottom right point
+            index 3: bottom left point
 
         Args:
             topleft (np.ndarray): top left point of the rectangle
@@ -124,13 +105,43 @@ class Rectangle(Polygon):
         Returns:
             Rectangle: new Rectangle object
         """
-        width = bottomright[0] - topleft[0]
-        height = bottomright[1] - topleft[1]
-        return cls.from_topleft(
+        topright_vertice = np.array([bottomright[0], topleft[1]])
+        bottomleft_vertice = np.array([topleft[0], bottomright[1]])
+        return cls(
+            np.asarray([topleft, topright_vertice, bottomright, bottomleft_vertice]),
+            is_cast_int=is_cast_int,
+        )
+
+    @classmethod
+    def from_topleft(
+        cls,
+        topleft: np.ndarray,
+        width: float,
+        height: float,
+        is_cast_int: bool = False,
+    ) -> Rectangle:
+        """Create a Rectangle object using the top left point, width, height and angle.
+
+        Convention to create the rectangle is:
+            index 0: top left point
+            index 1: top right point
+            index 2: bottom right point
+            index 3: bottom left point
+
+        Args:
+            topleft (np.ndarray): top left point of the rectangle
+            width (float): width of the rectangle
+            height (float): height of the rectangle
+            is_cast_int (bool, optional): whether to cast int or not. Defaults to False.
+
+        Returns:
+            Rectangle: Rectangle object
+        """
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
+        bottomright_vertice = np.array([topleft[0] + width, topleft[1] + height])
+        return cls.from_topleft_bottomright(
             topleft=topleft,
-            width=width,
-            height=height,
-            angle=angle,
+            bottomright=bottomright_vertice,
             is_cast_int=is_cast_int,
         )
 
