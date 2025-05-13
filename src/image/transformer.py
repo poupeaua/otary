@@ -85,7 +85,8 @@ class TransformerImage(BaseImage, ABC):
         self, window_size: int = 15, k: float = 0.2, r: float = 128.0
     ) -> Self:
         """Apply Sauvola thresholding.
-        See https://scikit-image.org/docs/stable/auto_examples/segmentation/plot_niblack_sauvola.html.
+        See https://scikit-image.org/docs/stable/auto_examples/segmentation/\
+                plot_niblack_sauvola.html.
 
         As the input image must be a grayscale before applying any thresholding
         methods we convert the image to grayscale.
@@ -108,7 +109,8 @@ class TransformerImage(BaseImage, ABC):
 
     def threshold_niblack(self, window_size: int = 15, k: float = 0.2) -> Self:
         """Apply Niblack thresholding.
-        See https://scikit-image.org/docs/stable/auto_examples/segmentation/plot_niblack_sauvola.html.
+        See https://scikit-image.org/docs/stable/auto_examples/segmentation/\
+                plot_niblack_sauvola.html
 
         As the input image must be a grayscale before applying any thresholding
         methods we convert the image to grayscale.

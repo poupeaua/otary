@@ -19,15 +19,18 @@ def threshold_niblack_like(
     It includes the version of the Sauvola thresholding that generally
     gives the best results.
 
-    See https://scikit-image.org/docs/0.24.x/auto_examples/segmentation/plot_niblack_sauvola.html
+    See https://scikit-image.org/docs/0.24.x/auto_examples/segmentation/\
+        plot_niblack_sauvola.html
     for more information about those thresholding methods.
-    Function inspired by https://github.com/opencv/opencv_contrib/blob/4.x/modules/ximgproc/src/niblack_thresholding.cpp.
+    Function inspired by https://github.com/opencv/opencv_contrib/blob/4.x/modules/\
+        ximgproc/src/niblack_thresholding.cpp.
 
     Originally, the sauvola thresholding was invented for text recognition.
 
     Args:
         img (np.ndarray): image inputs
-        method (str, optional): method to apply, must be in ["niblack", "sauvola", "nick", "wolf"]. Defaults to "sauvola".
+        method (str, optional): method to apply.
+            Must be in ["niblack", "sauvola", "nick", "wolf"]. Defaults to "sauvola".
         window_size (int, optional): window size. Defaults to 25.
         k (float, optional): k factor. Defaults to 0.5.
         r (float, optional): r value used only in sauvola. Defaults to 128.0.
@@ -35,6 +38,7 @@ def threshold_niblack_like(
     Returns:
         tuple[NDArray, NDArray[np.uint8]]: thresh and thresholded image
     """
+    # pylint: disable=too-many-locals
     # the window size must be odd and cannot be bigger than the image size
     window_size = min(window_size, img.shape[0], img.shape[1])
     if window_size % 2 == 0:
@@ -72,8 +76,8 @@ def threshold_niblack_like(
         thresh = mean + k * std
     elif method == "wolf":
         max_std = max(std, 1e-5)  # Avoid division by zero
-        min_I = np.min(img)
-        thresh = mean + k * (std / max_std) * (mean - min_I)
+        min_i = np.min(img)
+        thresh = mean + k * (std / max_std) * (mean - min_i)
     elif method == "nick":
         thresh = mean + k * np.sqrt(var + mean**2)
     else:
