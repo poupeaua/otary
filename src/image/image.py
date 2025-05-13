@@ -10,6 +10,7 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import src.geometry as geo
+from src.geometry.discrete.linear.entity import LinearEntity
 from src.image.utils.render import PolygonsRender, SegmentsRender, LinearSplinesRender
 from src.image.drawer import DrawerImage
 from src.image.transformer import TransformerImage, BinarizationMethods
@@ -318,6 +319,57 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
 
             scores.append(cur_score)
 
+        return scores
+
+    def score_contains_linear_entities(
+        self,
+        entities: list[LinearEntity],
+        dilate_kernel: tuple = (5, 5),
+        dilate_iterations: int = 0,
+        binarization_method: BinarizationMethods = "sauvola",
+        resize_factor: float = 1.0,
+    ) -> list[float]:
+        """Compute the contains score in [0, 1] for each individual linear entity
+        (either LinearSpline or Segment).
+
+        Args:
+            entities (list[geo.LinearEntity]): a list of linear entities
+                (splines or segments)
+            dilate_kernel (tuple, optional): dilate kernel param. Defaults to (5, 5).
+            dilate_iterations (int, optional): dilate iterations param. Defaults to 0.
+            binarization_method (BinarizationMethods, optional): binarization method.
+                Defaults to "sauvola".
+            resize_factor (float, optional): resize factor for speed/accuracy tradeoff.
+                Defaults to 1.0.
+
+        Returns:
+            list[float]: list of scores for each individual entity
+        """
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
+        scores = []
+        for entity in entities:
+            if isinstance(entity, geo.LinearSpline):
+                score = self.score_contains_linear_splines(
+                    splines=[entity],
+                    dilate_kernel=dilate_kernel,
+                    dilate_iterations=dilate_iterations,
+                    binarization_method=binarization_method,
+                    resize_factor=resize_factor,
+                )[0]
+            elif isinstance(entity, geo.Segment):
+                score = self.score_contains_segments(
+                    segments=[entity],
+                    dilate_kernel=dilate_kernel,
+                    dilate_iterations=dilate_iterations,
+                    binarization_method=binarization_method,
+                    resize_factor=resize_factor,
+                )[0]
+            else:
+                raise TypeError(
+                    f"Unsupported entity type: {type(entity)}. "
+                    "Expected LinearSpline or Segment."
+                )
+            scores.append(score)
         return scores
 
     def score_distance_from_center(
