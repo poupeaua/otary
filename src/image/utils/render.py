@@ -84,6 +84,8 @@ class PolygonsRender(SegmentsRender):
     """Render for Polygon objects. It inherits from SegmentsRender because
     Polygons are drawn as a succession of drawn segments."""
 
+    is_filled: bool = False
+
 
 @dataclass
 class OcrSingleOutputRender(Render):

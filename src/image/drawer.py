@@ -201,14 +201,22 @@ class DrawerImage(BaseImage, ABC):
         _polygons = prep_obj_draw(objects=polygons, _type=geo.Polygon)
         im_array = self.__pre_draw(n_objects=len(_polygons), render=render)
         for polygon, color in zip(_polygons, render.colors):
-            cv2.polylines(
-                img=im_array,
-                pts=[polygon],
-                isClosed=True,
-                color=color,
-                thickness=render.thickness,
-                lineType=render.line_type,
-            )
+            if render.is_filled:
+                cv2.fillPoly(
+                    img=im_array,
+                    pts=[polygon],
+                    color=color,
+                    lineType=render.line_type,
+                )
+            else:
+                cv2.polylines(
+                    img=im_array,
+                    pts=[polygon],
+                    isClosed=True,
+                    color=color,
+                    thickness=render.thickness,
+                    lineType=render.line_type,
+                )
         self.asarray = im_array
         return self
 
