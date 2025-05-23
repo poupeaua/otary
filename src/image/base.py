@@ -247,6 +247,15 @@ class BaseImage(ABC):
         self.as_filled(fill_value=255)
         return self
 
+    def as_black(self) -> Self:
+        """Returns an entirely black image with the same dimension as the original.
+
+        Returns:
+            Self: new black image
+        """
+        self.as_filled(fill_value=0)
+        return self
+
     def is_equal_shape(self, other: BaseImage, consider_channel: bool = True) -> bool:
         """Check whether two images have the same shape
 
@@ -285,6 +294,17 @@ class BaseImage(ABC):
             float: margin distance error
         """
         return self.norm_side_length * pct
+
+    def area_pct(self, pct: float = 0.01) -> float:
+        """Area percentage of the image
+
+        Args:
+            pct (float, optional): percentage of area. Defaults to 0.01.
+
+        Returns:
+            float: Area percentage of the image value distance
+        """
+        return self.area * pct
 
     def width_pct(self, pct: float = 0.01) -> float:
         """Width percentage of the image
