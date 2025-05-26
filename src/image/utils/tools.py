@@ -101,14 +101,28 @@ def prep_obj_draw(objects: list | np.ndarray, _type: Any) -> list | np.ndarray:
     return objects
 
 
-def interpolate_color(alpha: float, is_bgr: bool = False) -> tuple:
-    """Interpolates between red, yellow, and green based on the parameter alpha.
+def interpolate_color(
+    alpha: float,
+    is_bgr: bool = False,
+    start_color: tuple = (255, 0, 0),
+    mid_color: tuple = (255, 255, 0),
+    end_color: tuple = (0, 255, 0),
+) -> tuple:
+    """Interpolates between start_color, mid_color, and end_color
+    based on the parameter alpha.
+
+    By default, it interpolates from red to yellow to green.
+    This is the default behaviour as it is mostly used to show red for a low score (0),
+    yellow for a medium score (0.5), and green for a high score (1).
 
     Args:
         alpha (float): Parameter ranging from 0 to 1.
-            0 corresponds to red, 0.5 to yellow, and 1 to green.
+            0 corresponds to start_color, 0.5 to mid_color, and 1 to end_color.
         is_bgr (bool, optional): Whether to return a BGR color or RGB color.
             Defaults to False.
+        start_color (tuple, optional): Color at alpha=0. Defaults to (255, 0, 0).
+        mid_color (tuple, optional): Color at alpha=0.5. Defaults to (255, 255, 0).
+        end_color (tuple, optional): Color at alpha=1. Defaults to (0, 255, 0).
 
     Returns:
         tuple: RGB color as a tuple (R, G, B) where each value is in the range [0, 255].
@@ -116,23 +130,18 @@ def interpolate_color(alpha: float, is_bgr: bool = False) -> tuple:
     if alpha < 0 or alpha > 1:
         raise ValueError("Alpha must be between 0 and 1")
 
-    # Define RGB colors
-    red = (255, 0, 0)
-    yellow = (255, 255, 0)
-    green = (0, 255, 0)
-
     if alpha <= 0.5:
-        # Interpolate between red and yellow
+        # Interpolate between start_color and mid_color
         t = alpha * 2
-        r = int((1 - t) * red[0] + t * yellow[0])
-        g = int((1 - t) * red[1] + t * yellow[1])
-        b = int((1 - t) * red[2] + t * yellow[2])
+        r = int((1 - t) * start_color[0] + t * mid_color[0])
+        g = int((1 - t) * start_color[1] + t * mid_color[1])
+        b = int((1 - t) * start_color[2] + t * mid_color[2])
     else:
-        # Interpolate between yellow and green
+        # Interpolate between mid_color and end_color
         t = (alpha - 0.5) * 2
-        r = int((1 - t) * yellow[0] + t * green[0])
-        g = int((1 - t) * yellow[1] + t * green[1])
-        b = int((1 - t) * yellow[2] + t * green[2])
+        r = int((1 - t) * mid_color[0] + t * end_color[0])
+        g = int((1 - t) * mid_color[1] + t * end_color[1])
+        b = int((1 - t) * mid_color[2] + t * end_color[2])
 
     if is_bgr:
         return (b, g, r)
