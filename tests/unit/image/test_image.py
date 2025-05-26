@@ -9,7 +9,7 @@ from src.geometry import Polygon, Segment, Rectangle, LinearSpline
 from src.image import Image, PolygonsRender, SegmentsRender, LinearSplinesRender
 
 
-class TestImageGlobalMethods:
+class TestImageIOU:
 
     def test_iou_zero(self):
         img0 = Image.from_fillvalue(shape=(5, 5), value=255)
@@ -28,7 +28,7 @@ class TestImageGlobalMethods:
         assert img0.iou(img1) == 1
 
 
-class TestImageScoreMethods:
+class TestImageScoreContainsBase:
 
     def test_score_contains(self):
         img0 = Image.from_fillvalue(shape=(5, 5), value=255)
@@ -54,6 +54,9 @@ class TestImageScoreMethods:
         img1 = img0.copy()
         assert img0.score_contains(img1) == 1
 
+
+class TestImageScoreContainsSegments:
+
     def test_score_contains_segment_one(self):
         shape = (5, 5)
         img = Image.from_fillvalue(shape=shape, value=255)
@@ -62,6 +65,9 @@ class TestImageScoreMethods:
             segments=[segment], render=SegmentsRender(default_color=(0, 0, 0))
         )
         assert img.score_contains_segments(segments=[segment])[0] == 1.0
+
+
+class TestImageScoreDistanceFromCenter:
 
     def test_score_distance_from_center_error_method(self):
         with pytest.raises(ValueError):
