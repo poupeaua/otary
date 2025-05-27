@@ -83,6 +83,32 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
         mask1 = other.binaryrev()
         return np.sum(mask0 * mask1) / np.count_nonzero(mask0 + mask1)
 
+    def score_contains_v2(
+        self, other: Image, binarization_method: BinarizationMethods = "sauvola"
+    ) -> float:
+        """Score contains version 2 which is more efficient and faster.
+
+        Args:
+            other (Image): other Image object
+            binarization_method (str, optional): binarization method to turn images
+                into 0 and 1 images. The black pixels will be 1 and the white pixels
+                will be 0. This is used to compute the score.
+                Defaults to "sauvola".
+
+        Returns:
+            float: a score from 0 to 1. The greater the score the greater the other
+                image is contained within the original image
+        """
+        assert self.is_equal_shape(other, consider_channel=False)
+
+        cur_binaryrev = self.binaryrev(method=binarization_method)
+        other_binaryrev = other.binaryrev(method=binarization_method)
+
+        other_pixels = cur_binaryrev[other_binaryrev == 1]
+
+        coverage = np.sum(other_pixels) / np.sum(other_binaryrev)
+        return coverage
+
     def score_contains(
         self, other: Image, binarization_method: BinarizationMethods = "sauvola"
     ) -> float:
@@ -90,7 +116,10 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
 
         Args:
             other (Image): other Image object
-            method (str, optional): binarization method. Defaults to "sauvola".
+            binarization_method (str, optional): binarization method to turn images
+                into 0 and 1 images. The black pixels will be 1 and the white pixels
+                will be 0. This is used to compute the score.
+                Defaults to "sauvola".
 
         Returns:
             float: a score from 0 to 1. The greater the score the greater the other
@@ -101,6 +130,134 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
         return np.sum(
             self.binaryrev(method=binarization_method) * other_binaryrev
         ) / np.sum(other_binaryrev)
+
+    def score_contains_segments_v2(
+        self,
+        segments: list[geo.Segment],
+        dilate_kernel: tuple = (5, 5),
+        dilate_iterations: int = 0,
+        binarization_method: BinarizationMethods = "sauvola",
+    ) -> list[float]:
+        """Compute the contains score in [0, 1] for each individual segment.
+        This method can be better than :func:`~Image.score_contains_polygons()` in some
+        cases.
+        It provides a score for each single segments. This way it is better to
+        identify which segments specifically are contained in the image or not.
+
+        Args:
+            segments (np.ndarray | list[geo.Segment]): a list of segments
+            dilate_kernel (tuple, optional): dilate kernel param. Defaults to (5, 5).
+            dilate_iterations (int, optional): dilate iterations param. Defaults to 0.
+            binarization_method (str, optional): binarization method. Here
+                we can afford the sauvola method since we crop the image first
+                and the binarization occurs on a small image.
+                Defaults to "sauvola".
+
+        Returns:
+            np.ndarray: list of score for each individual segment in the same order
+                as the list of segments
+        """
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
+        score_segments: list[float] = []
+
+        im = self.copy().dilate(kernel=dilate_kernel, iterations=dilate_iterations)
+        im_white = im.copy().as_white()
+
+        for segment in segments:
+
+            # create all-white image of same size as original with the segment drawn
+            other = im_white.draw_segments(
+                segments=[segment],
+                render=SegmentsRender(thickness=1, default_color=(0, 0, 0)),
+            ).as_grayscale()
+
+            score = im.score_contains_v2(
+                other=other, binarization_method=binarization_method
+            )
+
+            score_segments.append(score)
+
+        return score_segments
+
+    def score_contains_segments(
+        self,
+        segments: list[geo.Segment],
+        dilate_kernel: tuple = (5, 5),
+        dilate_iterations: int = 0,
+        binarization_method: BinarizationMethods = "sauvola",
+        resize_factor: float = 1.0,
+    ) -> list[float]:
+        """Compute the contains score in [0, 1] for each individual segment.
+        This method can be better than :func:`~Image.score_contains_polygons()` in some
+        cases.
+        It provides a score for each single segments. This way it is better to
+        identify which segments specifically are contained in the image or not.
+
+        Args:
+            segments (np.ndarray | list[geo.Segment]): a list of segments
+            dilate_kernel (tuple, optional): dilate kernel param. Defaults to (5, 5).
+            dilate_iterations (int, optional): dilate iterations param. Defaults to 0.
+            binarization_method (str, optional): binarization method. Here
+                we can afford the sauvola method since we crop the image first
+                and the binarization occurs on a small image.
+                Defaults to "sauvola".
+            resize_factor (float, optional): resize factor that can be adjusted to
+                provide extra speed. A lower value will be faster but less accurate.
+                Typically 0.5 works well but less can have a negative impact on accuracy
+                Defaults to 1.0 which implies no resize.
+
+        Returns:
+            np.ndarray: list of score for each individual segment in the same order
+                as the list of segments
+        """
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
+        added_width = 10
+        height_crop = 30
+        mid_height_crop = int(height_crop / 2)
+        score_segments: list[float] = []
+
+        for segment in segments:
+
+            im = self.crop_around_segment_horizontal_faster(
+                segment=segment.asarray,
+                dim_crop_rect=(-1, height_crop),
+                added_width=added_width,
+                pad_value=255,
+            )
+
+            im.dilate(kernel=dilate_kernel, iterations=dilate_iterations)
+
+            im.resize(factor=resize_factor)
+
+            # re-compute the segment in the crop referential
+            segment_crop = geo.Segment(
+                np.array(
+                    [
+                        [added_width, mid_height_crop],
+                        [segment.length + added_width, mid_height_crop],
+                    ]
+                )
+                * resize_factor
+            )
+
+            # create all-white image of same size as original with the segment drawn
+            other = (
+                im.copy()
+                .as_white()
+                .draw_segments(
+                    segments=[segment_crop],
+                    render=SegmentsRender(thickness=1, default_color=(0, 0, 0)),
+                )
+                .as_grayscale()
+            )
+
+            score = im.score_contains_v2(
+                other=other, binarization_method=binarization_method
+            )
+
+            score_segments.append(score)
+
+        return score_segments
 
     def score_contains_polygons(
         self,
@@ -170,92 +327,13 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
                 .as_grayscale()
             )
 
-            cur_score = im.score_contains(
+            cur_score = im.score_contains_v2(
                 other=other, binarization_method=binarization_method
             )
 
             scores.append(cur_score)
 
         return scores
-
-    def score_contains_segments(
-        self,
-        segments: list[geo.Segment],
-        dilate_kernel: tuple = (5, 5),
-        dilate_iterations: int = 0,
-        binarization_method: BinarizationMethods = "sauvola",
-        resize_factor: float = 1.0,
-    ) -> list[float]:
-        """Compute the contains score in [0, 1] for each individual segment.
-        This method can be better than :func:`~Image.score_contains_polygons()` in some
-        cases.
-        It provides a score for each single segments. This way it is better to
-        identify which segments specifically are contained in the image or not.
-
-        Args:
-            segments (np.ndarray | list[geo.Segment]): a list of segments
-            dilate_kernel (tuple, optional): dilate kernel param. Defaults to (5, 5).
-            dilate_iterations (int, optional): dilate iterations param. Defaults to 0.
-            binarization_method (str, optional): binarization method. Here
-                we can afford the sauvola method since we crop the image first
-                and the binarization occurs on a small image.
-                Defaults to "sauvola".
-            resize_factor (float, optional): resize factor that can be adjusted to
-                provide extra speed. A lower value will be faster but less accurate.
-                Typically 0.5 works well but less can have a negative impact on accuracy
-                Defaults to 1.0 which implies no resize.
-
-        Returns:
-            np.ndarray: list of score for each individual segment in the same order
-                as the list of segments
-        """
-        # pylint: disable=too-many-arguments, too-many-positional-arguments
-        added_width = 10
-        height_crop = 30
-        mid_height_crop = int(height_crop / 2)
-        score_segments: list[float] = []
-
-        for segment in segments:
-
-            im = self.crop_around_segment_horizontal_faster(
-                segment=segment.asarray,
-                dim_crop_rect=(-1, height_crop),
-                added_width=added_width,
-            )
-
-            im.dilate(kernel=dilate_kernel, iterations=dilate_iterations)
-
-            im.resize(factor=resize_factor)
-
-            # re-compute the segment in the crop referential
-            segment_crop = geo.Segment(
-                np.array(
-                    [
-                        [added_width, mid_height_crop],
-                        [segment.length + added_width, mid_height_crop],
-                    ]
-                )
-                * resize_factor
-            )
-
-            # create all-white image of same size as original with the segment drawn
-            other = (
-                im.copy()
-                .as_white()
-                .draw_segments(
-                    segments=[segment_crop],
-                    render=SegmentsRender(thickness=1, default_color=(0, 0, 0)),
-                )
-                .as_grayscale()
-            )
-
-            score = im.score_contains(
-                other=other, binarization_method=binarization_method
-            )
-
-            score_segments.append(score)
-
-        return score_segments
 
     def score_contains_linear_splines(
         self,
@@ -313,7 +391,7 @@ class Image(ReaderImage, DrawerImage, TransformerImage):
                 .as_grayscale()
             )
 
-            cur_score = im.score_contains(
+            cur_score = im.score_contains_v2(
                 other=other, binarization_method=binarization_method
             )
 

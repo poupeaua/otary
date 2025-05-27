@@ -1006,6 +1006,7 @@ class TransformerImage(BaseImage, ABC):
         segment: np.ndarray,
         dim_crop_rect: tuple[int, int] = (-1, 100),
         added_width: int = 75,
+        pad_value: int = 0,
     ) -> Self:
         """Crop around a specific segment in the image.
         This method is generally faster especially for large images.
@@ -1057,6 +1058,7 @@ class TransformerImage(BaseImage, ABC):
             pad=True,
             clip=False,
             copy=True,  # copy the image after cropping for very fast performance
+            pad_value=pad_value,
         )
 
         # rotate the image so that the line is horizontal
