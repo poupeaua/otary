@@ -14,6 +14,7 @@ import numpy as np
 from shapely import LinearRing, Polygon as SPolygon
 
 from src.geometry.entity import GeometryEntity
+from src.geometry.discrete.linear.entity import LinearEntity
 from src.geometry.discrete.entity import DiscreteGeometryEntity
 from src.geometry import Segment, Vector, LinearSpline
 
@@ -45,6 +46,30 @@ class Polygon(DiscreteGeometryEntity):
                 f"Please check at those indices: {bad_idxs}"
             )
         points = lines[:, 0]
+        return Polygon(points=points)
+
+    @classmethod
+    def from_linear_entities(
+        cls, linear_entities: list[LinearEntity], connected: bool = False
+    ) -> Polygon:
+        """Convert a list of linear entities to polygon.
+
+        Returns:
+            Polygon: polygon representation of the linear entity
+        """
+        points = []
+        for linear_entity in linear_entities:
+            if not isinstance(linear_entity, LinearEntity):
+                raise TypeError(
+                    f"Expected a list of LinearEntity, but got {type(linear_entity)}"
+                )
+            if connected:
+                # if we assume all linear entites sorted and connected
+                # we need to remove the last point of each linear entity
+                points.append(linear_entity.points[:-1, :])
+            else:
+                points.append(linear_entity.points)
+        points = np.concatenate(points, axis=0)
         return Polygon(points=points)
 
     @classmethod

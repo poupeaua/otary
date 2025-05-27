@@ -2,8 +2,6 @@
 LinearEntity class useful to describe any kind of linear object
 """
 
-from __future__ import annotations
-from typing import TYPE_CHECKING
 from abc import ABC
 
 import numpy as np
@@ -11,9 +9,6 @@ import numpy as np
 from shapely import LineString
 
 from src.geometry.discrete.entity import DiscreteGeometryEntity
-
-if TYPE_CHECKING:
-    from src.geometry.discrete.shape.polygon import Polygon
 
 
 class LinearEntity(DiscreteGeometryEntity, ABC):
@@ -76,32 +71,6 @@ class LinearEntity(DiscreteGeometryEntity, ABC):
         return np.stack([self.points, np.roll(self.points, shift=-1, axis=0)], axis=1)[
             :-1, :, :
         ]
-
-    @staticmethod
-    def linear_entities_to_polygon(
-        linear_entities: list[LinearEntity], connected: bool = False
-    ) -> Polygon:
-        """Convert a list of linear entities to polygon.
-
-        Returns:
-            Polygon: polygon representation of the linear entity
-        """
-        from src.geometry.discrete.shape.polygon import Polygon
-
-        points = []
-        for linear_entity in linear_entities:
-            if not isinstance(linear_entity, LinearEntity):
-                raise TypeError(
-                    f"Expected a list of LinearEntity, but got {type(linear_entity)}"
-                )
-            if connected:
-                # if we assume all linear entites sorted and connected
-                # we need to remove the last point of each linear entity
-                points.append(linear_entity.points[:-1, :])
-            else:
-                points.append(linear_entity.points)
-        points = np.concatenate(points, axis=0)
-        return Polygon(points=points)
 
     def __str__(self) -> str:
         return (
