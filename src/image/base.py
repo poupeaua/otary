@@ -12,6 +12,7 @@ import cv2
 import numpy as np
 from numpy.typing import NDArray
 from PIL import Image as ImagePIL
+import io
 
 
 class BaseImage(ABC):
@@ -196,6 +197,17 @@ class BaseImage(ABC):
             ImagePIL: PIL Image
         """
         return ImagePIL.fromarray(self.asarray)
+
+    def as_bytes(self, format="PNG") -> bytes:
+        """Return the image as bytes
+
+        Returns:
+            bytes: image in bytes
+        """
+        pil_image = self.as_pil()
+        with io.BytesIO() as output:
+            pil_image.save(output, format=format)
+            return output.getvalue()
 
     def as_grayscale(self) -> Self:
         """Generate the image in grayscale of shape (height, width)

@@ -929,7 +929,6 @@ class TransformerImage(BaseImage, ABC):
         crop_center = rect.centroid
         crop_center += crop_shift[0] * rect_shift_left.normalized  # shift left
         crop_center += crop_shift[1] * rect_shift_up.normalized  # shift up
-        print(rect.centroid, crop_center)
 
         # get the crop segment
         crop_segment = geo.Segment(
