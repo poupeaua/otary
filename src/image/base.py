@@ -198,8 +198,11 @@ class BaseImage(ABC):
         """
         return ImagePIL.fromarray(self.asarray)
 
-    def as_bytes(self, format="PNG") -> bytes:
+    def as_bytes(self, format: str = "PNG") -> bytes:
         """Return the image as bytes
+
+        Args:
+            format (str, optional): format of the image. Defaults to "PNG".
 
         Returns:
             bytes: image in bytes
@@ -208,6 +211,30 @@ class BaseImage(ABC):
         with io.BytesIO() as output:
             pil_image.save(output, format=format)
             return output.getvalue()
+
+    def as_api_file_input(
+        self, format: str = "PNG", filename: str = "image"
+    ) -> dict[str, tuple[str, bytes, str]]:
+        """Return the image as a file input for API requests.
+
+        Args:
+            format (str, optional): format of the image. Defaults to "PNG".
+            filename (str, optional): name of the file. Defaults to "image".
+
+        Returns:
+            dict[str, tuple[str, bytes, str]]: dictionary with file input
+                for API requests, where the key is "file" and the value is a tuple
+                containing the filename, image bytes, and content type.
+        """
+        fmt_lower = format.lower()
+        files = {
+            "file": (
+                f"{filename}.{fmt_lower}",
+                self.as_bytes(format=format),
+                f"image/{fmt_lower}",
+            )
+        }
+        return files
 
     def as_grayscale(self) -> Self:
         """Generate the image in grayscale of shape (height, width)
