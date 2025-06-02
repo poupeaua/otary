@@ -5,6 +5,7 @@ It only contains very low-level, basic and generic image methods.
 
 from __future__ import annotations
 
+import io
 from typing import Self
 from abc import ABC
 
@@ -12,7 +13,6 @@ import cv2
 import numpy as np
 from numpy.typing import NDArray
 from PIL import Image as ImagePIL
-import io
 
 
 class BaseImage(ABC):
@@ -198,27 +198,27 @@ class BaseImage(ABC):
         """
         return ImagePIL.fromarray(self.asarray)
 
-    def as_bytes(self, format: str = "PNG") -> bytes:
+    def as_bytes(self, fmt: str = "PNG") -> bytes:
         """Return the image as bytes
 
         Args:
-            format (str, optional): format of the image. Defaults to "PNG".
+            fmt (str, optional): format of the image. Defaults to "PNG".
 
         Returns:
             bytes: image in bytes
         """
         pil_image = self.as_pil()
         with io.BytesIO() as output:
-            pil_image.save(output, format=format)
+            pil_image.save(output, format=fmt)
             return output.getvalue()
 
     def as_api_file_input(
-        self, format: str = "PNG", filename: str = "image"
+        self, fmt: str = "PNG", filename: str = "image"
     ) -> dict[str, tuple[str, bytes, str]]:
         """Return the image as a file input for API requests.
 
         Args:
-            format (str, optional): format of the image. Defaults to "PNG".
+            fmt (str, optional): format of the image. Defaults to "PNG".
             filename (str, optional): name of the file. Defaults to "image".
 
         Returns:
@@ -226,11 +226,11 @@ class BaseImage(ABC):
                 for API requests, where the key is "file" and the value is a tuple
                 containing the filename, image bytes, and content type.
         """
-        fmt_lower = format.lower()
+        fmt_lower = fmt.lower()
         files = {
             "file": (
                 f"{filename}.{fmt_lower}",
-                self.as_bytes(format=format),
+                self.as_bytes(fmt=fmt),
                 f"image/{fmt_lower}",
             )
         }
