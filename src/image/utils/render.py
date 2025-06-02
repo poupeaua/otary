@@ -78,6 +78,8 @@ class SegmentsRender(GeometryRender):
 class LinearSplinesRender(SegmentsRender):
     """Render for Linear Splines objects"""
 
+    pct_ix_tail: float = 0.1
+
 
 @dataclass
 class PolygonsRender(SegmentsRender):

@@ -27,7 +27,7 @@ from src.image.base import BaseImage
 class DrawerImage(BaseImage, ABC):
     """Image Drawer class to draw objects on a given image"""
 
-    def __pre_draw(self, n_objects: int, render: Render) -> np.ndarray:
+    def _pre_draw(self, n_objects: int, render: Render) -> np.ndarray:
         render.adjust_colors_length(n=n_objects)
         return self.as_colorscale().asarray
 
@@ -44,7 +44,7 @@ class DrawerImage(BaseImage, ABC):
         Returns:
             Image: new image
         """
-        im_array = self.__pre_draw(n_objects=len(circles), render=render)
+        im_array = self._pre_draw(n_objects=len(circles), render=render)
         for circle, color in zip(circles, render.colors):
             cv2.circle(  # type: ignore[call-overload]
                 img=im_array,
@@ -81,7 +81,7 @@ class DrawerImage(BaseImage, ABC):
             Image: new image
         """
         _points = prep_obj_draw(objects=points, _type=geo.Point)
-        im_array = self.__pre_draw(n_objects=len(_points), render=render)
+        im_array = self._pre_draw(n_objects=len(_points), render=render)
         for point, color in zip(_points, render.colors):
             cv2.circle(
                 img=im_array,
@@ -110,7 +110,7 @@ class DrawerImage(BaseImage, ABC):
             (DrawerImage): original image changed that contains the segments drawn
         """
         _segments = prep_obj_draw(objects=segments, _type=geo.Segment)
-        im_array = self.__pre_draw(n_objects=len(segments), render=render)
+        im_array = self._pre_draw(n_objects=len(segments), render=render)
         if render.as_vectors:
             for segment, color in zip(_segments, render.colors):
                 cv2.arrowedLine(
@@ -151,7 +151,7 @@ class DrawerImage(BaseImage, ABC):
             Self: image with the added splines drawn.
         """
         _splines = prep_obj_draw(objects=splines, _type=geo.LinearSpline)
-        im_array = self.__pre_draw(n_objects=len(_splines), render=render)
+        im_array = self._pre_draw(n_objects=len(_splines), render=render)
         for spline, color in zip(_splines, render.colors):
 
             if render.as_vectors:
@@ -165,7 +165,8 @@ class DrawerImage(BaseImage, ABC):
                 )
 
                 # Draw the last edge as a vector
-                segment = spline[-2:]
+                ix = int(len(spline) * (1 - render.pct_ix_tail))
+                segment = [spline[ix], spline[-1]]
                 cv2.arrowedLine(
                     img=im_array,
                     pt1=segment[0],
@@ -199,7 +200,7 @@ class DrawerImage(BaseImage, ABC):
             Image: image with the added polygons
         """
         _polygons = prep_obj_draw(objects=polygons, _type=geo.Polygon)
-        im_array = self.__pre_draw(n_objects=len(_polygons), render=render)
+        im_array = self._pre_draw(n_objects=len(_polygons), render=render)
         for polygon, color in zip(_polygons, render.colors):
             if render.is_filled:
                 cv2.fillPoly(
@@ -235,7 +236,7 @@ class DrawerImage(BaseImage, ABC):
         Returns:
             Image: a new image with the bounding boxes displayed
         """
-        im_array = self.__pre_draw(n_objects=len(ocr_outputs), render=render)
+        im_array = self._pre_draw(n_objects=len(ocr_outputs), render=render)
         for ocrso, color in zip(ocr_outputs, render.colors):
             if not isinstance(ocrso, OcrSingleOutput) or ocrso.bbox is None:
                 # warnings.warn(
