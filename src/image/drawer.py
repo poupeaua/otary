@@ -166,6 +166,7 @@ class DrawerImage(BaseImage, ABC):
 
                 # Draw the last edge as a vector
                 ix = int(len(spline) * (1 - render.pct_ix_tail))
+                ix = ix - 1 if ix == len(spline) - 1 else ix
                 segment = [spline[ix], spline[-1]]
                 cv2.arrowedLine(
                     img=im_array,
