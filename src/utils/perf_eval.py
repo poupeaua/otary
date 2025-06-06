@@ -5,6 +5,10 @@ Perfomance evaluation
 import time
 from functools import wraps
 
+# ruff: noqa: F401
+import numpy as np
+from src.cv.ocr.output import OcrMultiOutput
+
 
 def timer(func):
     """Timer decorator to quickly measure the execution time of a function"""
