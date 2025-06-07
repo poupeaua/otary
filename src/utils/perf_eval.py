@@ -2,10 +2,11 @@
 Perfomance evaluation
 """
 
+# ruff: noqa: F401
+import pprint
 import time
 from functools import wraps
 
-# ruff: noqa: F401
 import numpy as np
 from src.cv.ocr.output import OcrMultiOutput
 
