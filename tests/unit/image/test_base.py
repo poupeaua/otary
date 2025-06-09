@@ -48,34 +48,34 @@ class TestBaseImageFromFillValue:
 
 class TestBaseImageFromFileImage:
 
-    def test_init_image_class_method_from_jpg(self, jpg_filepath):
+    def test_init_image_class_method_from_jpg(self, jpg_filepath: str):
         img = Image.from_file(filepath=jpg_filepath)
         assert len(img.shape_array) == 3
 
-    def test_init_image_class_method_from_jpg_grayscale(self, jpg_filepath):
+    def test_init_image_class_method_from_jpg_grayscale(self, jpg_filepath: str):
         img = Image.from_file(filepath=jpg_filepath, as_grayscale=True)
         assert len(img.shape_array) == 2
 
 
 class TestBaseImageFromPdf:
 
-    def test_init_image_class_method_from_pdf(self, pdf_filepath):
+    def test_init_image_class_method_from_pdf(self, pdf_filepath: str):
         img = Image.from_pdf(filepath=pdf_filepath, resolution=50)
         assert len(img.shape_array) == 3
 
-    def test_init_image_class_method_from_pdf_grayscale(self, pdf_filepath):
+    def test_init_image_class_method_from_pdf_grayscale(self, pdf_filepath: str):
         img = Image.from_pdf(filepath=pdf_filepath, as_grayscale=True, resolution=50)
         assert len(img.shape_array) == 2
 
-    def test_init_image_class_method_from_pdf_error_page_nb(self, pdf_filepath):
+    def test_init_image_class_method_from_pdf_error_page_nb(self, pdf_filepath: str):
         with pytest.raises(IndexError):
             Image.from_pdf(filepath=pdf_filepath, page_nb=1, resolution=50)
 
-    def test_init_image_class_method_from_pdf_neg_page_nb(self, pdf_filepath):
+    def test_init_image_class_method_from_pdf_neg_page_nb(self, pdf_filepath: str):
         img = Image.from_pdf(filepath=pdf_filepath, page_nb=-1, resolution=50)
         assert len(img.shape_array) == 3
 
-    def test_init_image_class_method_from_pdf_clip(self, pdf_filepath):
+    def test_init_image_class_method_from_pdf_clip(self, pdf_filepath: str):
         img = Image.from_pdf(
             filepath=pdf_filepath,
             resolution=50,
@@ -88,11 +88,6 @@ class TestBaseImageGlobalMethods:
 
     def test_init_image_from_array(self):
         img = Image(image=np.full(shape=(5, 5, 3), fill_value=0))
-        assert len(img.shape_array) == 3
-
-    def test_init_image_from_other_image(self):
-        img_other = Image(image=np.full(shape=(5, 5, 3), fill_value=0))
-        img = Image(img_other)
         assert len(img.shape_array) == 3
 
     def test_asarray_getter(self):
@@ -230,15 +225,3 @@ class TestBaseImageAsMethods:
         pil_img = img.as_pil()
         assert pil_img.size == (img.width, img.height)
         assert pil_img.mode == "L"
-
-    def test_width_pct(self):
-        pct = 0.2
-        width = 50
-        img = Image.from_fillvalue(shape=(25, width), value=0)
-        assert img.width_pct(pct=pct) == width * pct
-
-    def test_height_pct(self):
-        pct = 0.3
-        height = 40
-        img = Image.from_fillvalue(shape=(height, 25), value=0)
-        assert img.height_pct(pct=pct) == height * pct

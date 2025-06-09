@@ -288,7 +288,7 @@ class TestTransformerImageRotateMethods:
             angle=70, is_degree=True, border_fill_value=(255, 255, 255), reshape=True
         )
 
-        _height_exect_color = int(img.height_pct(0.71))
+        _height_exect_color = int(img.height * 0.71)
         # img.draw_segments(segments=np.array([[[0, _height_exect_color], [img.width, _height_exect_color]]]))
         # img.draw_segments(segments=np.array([[[_height_exect_color, 0], [_height_exect_color, img.height]]]))
 
@@ -364,18 +364,18 @@ class TestTransformerImageShiftMethods:
         img.shift(shift=np.array([2, 2]), border_fill_value=border_fill_value)
         assert np.all(img.asarray[0, 0] == border_fill_value)
 
-    def test_center_image_to_point(self):
+    def test_center_to_point(self):
         val = 87
         img = Image.from_fillvalue(shape=(5, 5), value=0)
         img.asarray[0, 0] = val
-        img.center_image_to_point(point=[0, 0])
+        img.center_to_point(point=[0, 0])
         assert img.asarray[*img.center] == val
 
-    def test_center_image_to_segment(self):
+    def test_center_to_segment(self):
         val = 87
         img = Image.from_fillvalue(shape=(5, 5), value=0)
         img.asarray[2, 2] = val
-        img.center_image_to_segment(segment=[[0, 0], [4, 4]])
+        img.center_to_segment(segment=[[0, 0], [4, 4]])
         assert img.asarray[*img.center] == val
 
 

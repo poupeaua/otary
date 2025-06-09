@@ -6,7 +6,8 @@ import pytest
 import numpy as np
 
 from src.geometry import Point, Polygon
-from src.image.utils.tools import is_color_tuple, interpolate_color, prep_obj_draw
+from src.image.components.drawer.utils.tools import is_color_tuple, prep_obj_draw
+from src.image.utils.colors import interpolate_color
 
 
 class TestToolsIsColorTuple:

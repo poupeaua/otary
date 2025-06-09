@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import io
 from typing import Self
-from abc import ABC
 
 import cv2
 import numpy as np
@@ -15,44 +14,23 @@ from numpy.typing import NDArray
 from PIL import Image as ImagePIL
 
 
-class BaseImage(ABC):
+class BaseImage:
     """Base Image class"""
 
     # pylint: disable=too-many-public-methods
 
-    def __init__(self, image: np.ndarray | BaseImage) -> None:
+    def __init__(self, image: NDArray | BaseImage) -> None:
         if isinstance(image, BaseImage):
             image = image.asarray
-        self.__asarray: np.ndarray = image.copy()
-
-    @classmethod
-    def from_fillvalue(cls, value: int = 255, shape: tuple = (128, 128, 3)) -> Self:
-        """Class method to create an image from a single value
-
-        Args:
-            value (int, optional): value in [0, 255]. Defaults to 255.
-            shape (tuple, optional): image shape. If it has three elements then
-                the last one must be a 3 for a coloscale image.
-                Defaults to (128, 128, 3).
-
-        Returns:
-            Self: new Image object with a single value
-        """
-        if value < 0 or value > 255:
-            raise ValueError(f"The value {value} must be in [0, 255]")
-        if len(shape) < 2 or len(shape) >= 4:
-            raise ValueError(f"The shape {shape} must be of length 2 or 3")
-        if len(shape) == 3 and shape[-1] != 3:
-            raise ValueError(f"The last value of {shape} must be 3")
-        return cls(np.full(shape=shape, fill_value=value, dtype=np.uint8))
+        self.__asarray: NDArray = image.copy()
 
     @property
-    def asarray(self) -> np.ndarray:
+    def asarray(self) -> NDArray:
         """Array representation of the image"""
         return self.__asarray
 
     @asarray.setter
-    def asarray(self, value: np.ndarray):
+    def asarray(self, value: NDArray) -> None:
         """Setter for the asarray property
 
         Args:
@@ -129,17 +107,17 @@ class BaseImage(ABC):
         return int(np.sqrt(self.area))
 
     @property
-    def asarray_binary(self) -> np.ndarray:
+    def asarray_binary(self) -> NDArray:
         """Returns the representation of the image as a array with value not in
         [0, 255] but in [0, 1].
 
         Returns:
-            np.ndarray: an array with value in [0, 1]
+            NDArray: an array with value in [0, 1]
         """
         return (self.asarray / 255).astype(np.float32)
 
     @property
-    def corners(self) -> np.ndarray:
+    def corners(self) -> NDArray:
         """Returns the corners in clockwise order:
 
         0. top left corner
@@ -148,45 +126,45 @@ class BaseImage(ABC):
         3. bottom left corner
 
         Returns:
-            np.ndarray: array containing the corners
+            NDArray: array containing the corners
         """
         return np.array(
             [self.top_left, self.top_right, self.bottom_right, self.bottom_left]
         )
 
     @property
-    def bottom_right(self) -> np.ndarray:
+    def bottom_right(self) -> NDArray:
         """Get the bottom right point coordinate of the image
 
         Returns:
-            np.ndarray: 2D point
+            NDArray: 2D point
         """
         return np.array([self.width, self.height], dtype=int)
 
     @property
-    def bottom_left(self) -> np.ndarray:
+    def bottom_left(self) -> NDArray:
         """Get the bottom right point coordinate of the image
 
         Returns:
-            np.ndarray: 2D point
+            NDArray: 2D point
         """
         return np.array([0, self.height], dtype=int)
 
     @property
-    def top_right(self) -> np.ndarray:
+    def top_right(self) -> NDArray:
         """Get the bottom right point coordinate of the image
 
         Returns:
-            np.ndarray: 2D point
+            NDArray: 2D point
         """
         return np.array([self.width, 0], dtype=int)
 
     @property
-    def top_left(self) -> np.ndarray:
+    def top_left(self) -> NDArray:
         """Get the bottom right point coordinate of the image
 
         Returns:
-            np.ndarray: 2D point
+            NDArray: 2D point
         """
         return np.array([0, 0], dtype=int)
 
@@ -295,6 +273,15 @@ class BaseImage(ABC):
         self.as_filled(fill_value=0)
         return self
 
+    def rev(self) -> Self:
+        """Reverse the image colors. Each pixel color value V becomes |V - 255|.
+
+        Applied on a grayscale image the black pixel becomes white and the
+        white pixels become black.
+        """
+        self.asarray = np.abs(self.asarray.astype(np.int16) - 255).astype(np.uint8)
+        return self
+
     def is_equal_shape(self, other: BaseImage, consider_channel: bool = True) -> bool:
         """Check whether two images have the same shape
 
@@ -320,7 +307,7 @@ class BaseImage(ABC):
             )
         return shape0 == shape1
 
-    def dist_pct(self, pct: float = 0.01) -> float:
+    def dist_pct(self, pct: float) -> float:
         """Distance percentage that can be used an acceptable distance error margin.
         It is calculated based on the normalized side length.
 
@@ -333,50 +320,3 @@ class BaseImage(ABC):
             float: margin distance error
         """
         return self.norm_side_length * pct
-
-    def area_pct(self, pct: float = 0.01) -> float:
-        """Area percentage of the image
-
-        Args:
-            pct (float, optional): percentage of area. Defaults to 0.01.
-
-        Returns:
-            float: Area percentage of the image value distance
-        """
-        return self.area * pct
-
-    def width_pct(self, pct: float = 0.01) -> float:
-        """Width percentage of the image
-
-        Args:
-            pct (float, optional): percentage of width. Defaults to 0.01.
-
-        Returns:
-            float: Width percentage of the image value distance
-        """
-        return self.width * pct
-
-    def height_pct(self, pct: float = 0.01) -> float:
-        """Height percentage of the image
-
-        Args:
-            pct (float, optional): percentage of height. Defaults to 0.01.
-
-        Returns:
-            float: Height percentage of the image value distance
-        """
-        return self.height * pct
-
-    def copy(self) -> Self:
-        """Copy of the image.
-
-        For NumPy arrays containing basic data types (e.g., int, float, bool),
-        using copy.deepcopy() is generally unnecessary.
-        The numpy.copy() method achieves the same result more efficiently.
-        numpy.copy() creates a new array in memory with a separate copy of the data,
-        ensuring that modifications to the copy do not affect the original array.
-
-        Returns:
-            Image: image copy
-        """
-        return type(self)(image=self.asarray.copy())

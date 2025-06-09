@@ -5,14 +5,14 @@ Image Drawer module. It only contains methods to draw objects in images.
 from __future__ import annotations
 
 from typing import Self
-from abc import ABC
+
 import cv2
 import numpy as np
 
 import src.geometry as geo
 from src.cv.ocr.output.ocr_single_output import OcrSingleOutput
-from src.image.utils.tools import prep_obj_draw
-from src.image.utils.render import (
+from src.image.components.drawer.utils.tools import prep_obj_draw
+from src.image.components.drawer.utils.render import (
     Render,
     PointsRender,
     CirclesRender,
@@ -24,12 +24,15 @@ from src.image.utils.render import (
 from src.image.base import BaseImage
 
 
-class DrawerImage(BaseImage, ABC):
+class DrawerImage:
     """Image Drawer class to draw objects on a given image"""
+
+    def __init__(self, base: BaseImage):
+        self.base = base
 
     def _pre_draw(self, n_objects: int, render: Render) -> np.ndarray:
         render.adjust_colors_length(n=n_objects)
-        return self.as_colorscale().asarray
+        return self.base.as_colorscale().asarray
 
     def draw_circles(
         self,
@@ -63,7 +66,7 @@ class DrawerImage(BaseImage, ABC):
                     thickness=render.thickness,
                     lineType=render.line_type,
                 )
-        self.asarray = im_array
+        self.base.asarray = im_array
         return self
 
     def draw_points(
@@ -132,7 +135,7 @@ class DrawerImage(BaseImage, ABC):
                     thickness=render.thickness,
                     lineType=render.line_type,
                 )
-        self.asarray = im_array
+        self.base.asarray = im_array
         return self
 
     def draw_splines(
@@ -219,7 +222,7 @@ class DrawerImage(BaseImage, ABC):
                     thickness=render.thickness,
                     lineType=render.line_type,
                 )
-        self.asarray = im_array
+        self.base.asarray = im_array
         return self
 
     def draw_ocr_outputs(
@@ -254,5 +257,5 @@ class DrawerImage(BaseImage, ABC):
                 color=color,
                 lineType=render.line_type,
             )
-        self.asarray = im_array
+        self.base.asarray = im_array
         return self
