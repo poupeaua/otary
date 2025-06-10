@@ -19,9 +19,7 @@ class BaseImage:
 
     # pylint: disable=too-many-public-methods
 
-    def __init__(self, image: NDArray | BaseImage) -> None:
-        if isinstance(image, BaseImage):
-            image = image.asarray
+    def __init__(self, image: NDArray) -> None:
         self.__asarray: NDArray = image.copy()
 
     @property
@@ -37,6 +35,16 @@ class BaseImage:
             value (np.ndarray): value of the asarray to be changed
         """
         self.__asarray = value
+
+    @property
+    def asarray_binary(self) -> NDArray:
+        """Returns the representation of the image as a array with value not in
+        [0, 255] but in [0, 1].
+
+        Returns:
+            NDArray: an array with value in [0, 1]
+        """
+        return (self.asarray / 255).astype(np.float32)
 
     @property
     def is_gray(self) -> bool:
@@ -58,7 +66,7 @@ class BaseImage:
 
     @property
     def height(self) -> int:
-        """Height of the image. In numpy it is defined as the first image shape value
+        """Height of the image.
 
         Returns:
             int: image height
@@ -67,7 +75,7 @@ class BaseImage:
 
     @property
     def width(self) -> int:
-        """Width of the image. In numpy it is defined as the second image shape value
+        """Width of the image.
 
         Returns:
             int: image width
@@ -87,8 +95,8 @@ class BaseImage:
     def center(self) -> NDArray[np.int16]:
         """Center point of the image.
 
-        Please note that it is returned as type int because the center needs to
-        represent a X-Y coords of a pixel.
+        Please note that it is returned as type int because the center is
+        represented as a X-Y coords of a pixel.
 
         Returns:
             np.ndarray: center point of the image
@@ -105,16 +113,6 @@ class BaseImage:
             int: normalized side length
         """
         return int(np.sqrt(self.area))
-
-    @property
-    def asarray_binary(self) -> NDArray:
-        """Returns the representation of the image as a array with value not in
-        [0, 255] but in [0, 1].
-
-        Returns:
-            NDArray: an array with value in [0, 1]
-        """
-        return (self.asarray / 255).astype(np.float32)
 
     @property
     def corners(self) -> NDArray:

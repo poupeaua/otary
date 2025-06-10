@@ -6,6 +6,10 @@ than inheritance. This is because the Image has got a "has-a" relationship with
 the other classes not a "is-a" relationship.
 """
 
+# BEWARE this pylint error is disabled because the Image class is the most
+# important class in the module and gathers all the methods from all the components.
+# pylint: disable=too-many-lines
+
 from __future__ import annotations
 
 from typing import Self, Optional, Literal, Sequence
@@ -45,24 +49,48 @@ class Image:
     from all the image classes.
     """
 
+    # pylint: disable=too-many-public-methods
+
     reader = ReaderImage()
 
     def __init__(self, image: NDArray) -> None:
-        self._base = BaseImage(image=image)
-        self.drawer = DrawerImage(base=self._base)
-        self.writer = WriterImage(base=self._base)
-        self.transformer = TransformerImage(base=self._base)
+        self.base = BaseImage(image=image)
+        self.drawer = DrawerImage(base=self.base)
+        self.writer = WriterImage(base=self.base)
+        self.transformer = TransformerImage(base=self.base)
 
     # -------------------------------- CLASS METHODS ----------------------------------
 
     @classmethod
     def from_fillvalue(cls, value: int = 255, shape: tuple = (128, 128, 3)) -> Image:
+        """Class method to create an image from a single value
+
+        Args:
+            value (int, optional): value in [0, 255]. Defaults to 255.
+            shape (tuple, optional): image shape. If it has three elements then
+                the last one must be a 3 for a coloscale image.
+                Defaults to (128, 128, 3).
+
+        Returns:
+            Image: array with a single value
+        """
         return cls(image=cls.reader.from_fillvalue(value=value, shape=shape))
 
     @classmethod
     def from_file(
         cls, filepath: str, as_grayscale: bool = False, resolution: Optional[int] = None
     ) -> Image:
+        """Create a Image array from a file image path
+
+        Args:
+            filepath (str): path to the image file
+            as_grayscale (bool, optional): turn the image in grayscale.
+                Defaults to False.
+            resolution (Optional[int], optional): resolution of the image.
+
+        Returns:
+            Image: Image object with a single value
+        """
         return cls(
             cls.reader.from_file(
                 filepath=filepath, as_grayscale=as_grayscale, resolution=resolution
@@ -78,6 +106,22 @@ class Image:
         resolution: Optional[int] = None,
         clip_pct: Optional[pymupdf.Rect] = None,
     ) -> Image:
+        """Create an Image array from a pdf file.
+
+        Args:
+            filepath (str): path to the pdf file
+            as_grayscale (bool, optional): turn the image in grayscale.
+                Defaults to False.
+            page_nb (int, optional): page number to extract. Defaults to 0.
+            resolution (Optional[int], optional): resolution of the image.
+            clip_pct (Optional[pymupdf.Rect], optional): clip percentage of the image
+                to only load a small part of the image (crop) for faster loading and
+                less memory usage. Defaults to None.
+
+        Returns:
+            Image: Image object from pdf
+        """
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
         return cls(
             cls.reader.from_pdf(
                 filepath=filepath,
@@ -92,83 +136,223 @@ class Image:
 
     @property
     def asarray(self) -> np.ndarray:
-        return self._base.asarray
+        """Array representation of the image"""
+        return self.base.asarray
 
     @asarray.setter
     def asarray(self, value: NDArray) -> None:
-        self._base.asarray = value
+        """Setter for the asarray property
+
+        Args:
+            value (np.ndarray): value of the asarray to be changed
+        """
+        self.base.asarray = value
 
     @property
     def asarray_binary(self) -> NDArray:
-        return self._base.asarray_binary
+        """Returns the representation of the image as a array with value not in
+        [0, 255] but in [0, 1].
+
+        Returns:
+            NDArray: an array with value in [0, 1]
+        """
+        return self.base.asarray_binary
 
     @property
     def width(self) -> int:
-        return self._base.width
+        """Width of the image.
+
+        Returns:
+            int: image width
+        """
+        return self.base.width
 
     @property
     def height(self) -> int:
-        return self._base.height
+        """Height of the image
+
+        Returns:
+            int: image height
+        """
+        return self.base.height
 
     @property
     def center(self) -> NDArray[np.int16]:
-        return self._base.center
+        """Center point of the image.
+
+        Please note that it is returned as type int because the center is
+        represented as a X-Y coords of a pixel.
+
+        Returns:
+            np.ndarray: center point of the image
+        """
+        return self.base.center
 
     @property
     def area(self) -> int:
-        return self._base.area
+        """Area of the image
+
+        Returns:
+            int: image area
+        """
+        return self.base.area
 
     @property
     def shape_array(self) -> tuple[int, int, int]:
-        return self._base.shape_array
+        """Returns the array shape value (height, width, channel)
+
+        Returns:
+            tuple[int]: image shape
+        """
+        return self.base.shape_array
 
     @property
     def is_gray(self) -> bool:
-        return self._base.is_gray
+        """Whether the image is a grayscale image or not
+
+        Returns:
+            bool: True if image is in grayscale, 0 otherwise
+        """
+        return self.base.is_gray
 
     @property
     def norm_side_length(self) -> int:
-        return self._base.norm_side_length
+        """Returns the normalized side length of the image.
+        This is the side length if the image had the same area but
+        the shape of a square (four sides of the same length).
+
+        Returns:
+            int: normalized side length
+        """
+        return self.base.norm_side_length
 
     @property
     def corners(self) -> NDArray:
-        return self._base.corners
+        """Returns the corners in clockwise order:
+
+        0. top left corner
+        1. top right corner
+        2. bottom right corner
+        3. bottom left corner
+
+        Returns:
+            NDArray: array containing the corners
+        """
+        return self.base.corners
 
     # ---------------------------------- BASE METHODS ---------------------------------
 
     def as_grayscale(self) -> Self:
-        self._base.as_grayscale()
+        """Generate the image in grayscale of shape (height, width)
+
+        Returns:
+            Self: original image in grayscale
+        """
+        self.base.as_grayscale()
         return self
 
     def as_colorscale(self) -> Self:
-        self._base.as_colorscale()
+        """Generate the image in colorscale (height, width, 3).
+        This property can be useful when we wish to draw objects in a given color
+        on a grayscale image.
+
+        Returns:
+            Self: original image in color
+        """
+        self.base.as_colorscale()
         return self
 
     def as_filled(self, fill_value: int | np.ndarray = 255) -> Self:
-        self._base.as_filled(fill_value=fill_value)
+        """Returns an entirely white image of the same size as the original.
+        Can be useful to get an empty representation of the same image to paint
+        and draw things on an image of the same dimension.
+
+        Args:
+            fill_value (int | np.ndarray, optional): color to fill the new empty image.
+                Defaults to 255 which means that is returns a entirely white image.
+
+        Returns:
+            Self: new image with a single color of the same size as original.
+        """
+        self.base.as_filled(fill_value=fill_value)
         return self
 
     def as_white(self) -> Self:
-        self._base.as_white()
+        """Returns an entirely white image with the same dimension as the original.
+
+        Returns:
+            Self: new white image
+        """
+        self.base.as_white()
         return self
 
     def as_black(self) -> Self:
-        self._base.as_black()
+        """Returns an entirely black image with the same dimension as the original.
+
+        Returns:
+            Self: new black image
+        """
+        self.base.as_black()
         return self
 
     def as_pil(self) -> ImagePIL.Image:
-        return self._base.as_pil()
+        """Return the image as PIL Image
+
+        Returns:
+            ImagePIL: PIL Image
+        """
+        return self.base.as_pil()
+
+    def as_api_file_input(
+        self, fmt: str = "PNG", filename: str = "image"
+    ) -> dict[str, tuple[str, bytes, str]]:
+        """Return the image as a file input for API requests.
+
+        Args:
+            fmt (str, optional): format of the image. Defaults to "PNG".
+            filename (str, optional): name of the file. Defaults to "image".
+
+        Returns:
+            dict[str, tuple[str, bytes, str]]: dictionary with file input
+                for API requests, where the key is "file" and the value is a tuple
+                containing the filename, image bytes, and content type.
+        """
+        return self.base.as_api_file_input(fmt=fmt, filename=filename)
 
     def rev(self) -> Self:
-        self._base.rev()
+        """Reverse the image colors. Each pixel color value V becomes |V - 255|.
+
+        Applied on a grayscale image the black pixel becomes white and the
+        white pixels become black.
+        """
+        self.base.rev()
         return self
 
     def dist_pct(self, pct: float) -> float:
-        return self._base.dist_pct(pct=pct)
+        """Distance percentage that can be used an acceptable distance error margin.
+        It is calculated based on the normalized side length.
+
+        Args:
+            pct (float, optional): percentage of distance error. Defaults to 0.01,
+                which means 1% of the normalized side length as the
+                default margin distance error.
+
+        Returns:
+            float: margin distance error
+        """
+        return self.base.dist_pct(pct=pct)
 
     def is_equal_shape(self, other: Image, consider_channel: bool = True) -> bool:
-        return self._base.is_equal_shape(
-            other=other._base, consider_channel=consider_channel
+        """Check whether two images have the same shape
+
+        Args:
+            other (BaseImage): BaseImage object
+
+        Returns:
+            bool: True if the objects have the same shape, False otherwise
+        """
+        return self.base.is_equal_shape(
+            other=other.base, consider_channel=consider_channel
         )
 
     # ---------------------------------- COPY METHOD ----------------------------------
@@ -190,15 +374,31 @@ class Image:
     # -------------------------------- WRITE METHODS ----------------------------------
 
     def save(self, save_filepath: str) -> None:
+        """Save the image in a local file
+
+        Args:
+            save_filepath (str): path to the file
+        """
         self.writer.save(save_filepath=save_filepath)
 
     def show(
         self,
         title: Optional[str] = None,
-        figsize: tuple[float, float] = (8.0, 6.0),
+        figsize: tuple[int, int] = (8, 6),
         color_conversion: int = cv2.COLOR_BGR2RGB,
         save_filepath: Optional[str] = None,
     ) -> None:
+        """Show the image
+
+        Args:
+            title (Optional[str], optional): title of the image. Defaults to None.
+            figsize (tuple[float, float], optional): size of the figure.
+                Defaults to (8.0, 6.0).
+            color_conversion (int, optional): color conversion parameter.
+                Defaults to cv2.COLOR_BGR2RGB.
+            save_filepath (Optional[str], optional): save the image if needed.
+                Defaults to None.
+        """
         self.writer.show(
             title=title,
             figsize=figsize,
@@ -209,79 +409,233 @@ class Image:
     # -------------------------------- DRAWER METHODS ---------------------------------
 
     def draw_circles(
-        self, circles: list[geo.Circle], render: CirclesRender = CirclesRender()
+        self, circles: Sequence[geo.Circle], render: CirclesRender = CirclesRender()
     ) -> Self:
+        """Draw circles in the image
+
+        Args:
+            circles (list[Circle]): list of Circle geometry objects.
+            render (CirclesRender): circle renderer
+
+        Returns:
+            Image: new image with circles drawn
+        """
         self.drawer.draw_circles(circles=circles, render=render)
         return self
 
     def draw_points(
         self,
-        points: np.ndarray | list[geo.Point],
+        points: list | NDArray | Sequence[geo.Point],
         render: PointsRender = PointsRender(),
     ) -> Self:
+        """Draw points in the image
+
+        Args:
+            points (NDArray): list of points. It must be of shape (n, 2). This
+                means n points of shape 2 (x and y coordinates).
+            render (PointsRender): point renderer
+
+        Returns:
+            Image: new image with points drawn
+        """
         self.drawer.draw_points(points=points, render=render)
         return self
 
     def draw_segments(
         self,
-        segments: np.ndarray | list[geo.Segment],
+        segments: np.ndarray | Sequence[geo.Segment],
         render: SegmentsRender = SegmentsRender(),
     ) -> Self:
+        """Draw segments in the image. It can be arrowed segments (vectors) too.
+
+        Args:
+            segments (np.ndarray): list of segments. Can be a numpy array of shape
+                (n, 2, 2) which means n array of shape (2, 2) that define a segment
+                by two 2D points.
+            render (SegmentsRender): segment renderer
+
+        Returns:
+            Image: new image with segments drawn
+        """
         self.drawer.draw_segments(segments=segments, render=render)
         return self
 
     def draw_polygons(
         self,
-        polygons: list[geo.Polygon],
+        polygons: Sequence[geo.Polygon],
         render: PolygonsRender = PolygonsRender(),
     ) -> Self:
+        """Draw polygons in the image
+
+        Args:
+            polygons (Sequence[Polygon]): list of Polygon objects
+            render (PolygonsRender): PolygonRender object
+
+        Returns:
+            Image: new image with polygons drawn
+        """
         self.drawer.draw_polygons(polygons=polygons, render=render)
         return self
 
     def draw_splines(
         self,
-        splines: list[geo.LinearSpline],
+        splines: Sequence[geo.LinearSpline],
         render: LinearSplinesRender = LinearSplinesRender(),
     ) -> Self:
+        """Draw linear splines in the image.
+
+        Args:
+            splines (Sequence[geo.LinearSpline]): linear splines to draw.
+            render (LinearSplinesRender, optional): linear splines render.
+                Defaults to LinearSplinesRender().
+
+        Returns:
+            Image: new image with splines drawn
+        """
         self.drawer.draw_splines(splines=splines, render=render)
         return self
 
     def draw_ocr_outputs(
         self,
-        ocr_outputs: list[OcrSingleOutput],
+        ocr_outputs: Sequence[OcrSingleOutput],
         render: OcrSingleOutputRender = OcrSingleOutputRender(),
     ) -> Self:
+        """Return the image with the bounding boxes displayed from a list of OCR
+        single output. It allows you to show bounding boxes that can have an angle,
+        not necessarily vertical or horizontal.
+
+        Args:
+            ocr_outputs (list[OcrSingleOutput]): list of OcrSingleOutput objects
+            render (OcrSingleOutputRender): OcrSingleOutputRender object
+
+        Returns:
+            Image: new image with ocr outputs drawn
+        """
         self.drawer.draw_ocr_outputs(ocr_outputs=ocr_outputs, render=render)
         return self
 
     # --------------------------------- BINARIZER -------------------------------------
 
     def threshold_simple(self, thresh: int) -> Self:
+        """Compute the image thesholded by a single value T.
+        All pixels with value v <= T are turned black and those with value v > T are
+        turned white.
+
+        Args:
+            thresh (int): value to separate the black from the white pixels.
+
+        Returns:
+            Image: new image thresholded with only two values 0 and 255.
+        """
         self.transformer.binarizer.threshold_simple(thresh=thresh)
         return self
 
     def threshold_adaptative(self) -> Self:
+        """Apply adaptive thresholding.
+
+        A median blur is applied before for better thresholding results.
+        See https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html.
+
+        As the input image must be a grayscale before applying any thresholding
+        methods we convert the image to grayscale.
+
+        Returns:
+            Self: image thresholded where its values are now pure 0 or 255
+        """
         self.transformer.binarizer.threshold_adaptative()
         return self
 
     def threshold_otsu(self) -> Self:
+        """Apply Ostu thresholding.
+
+        A gaussian blur is applied before for better thresholding results.
+        See https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html.
+
+        As the input image must be a grayscale before applying any thresholding
+        methods we convert the image to grayscale.
+
+        Returns:
+            Self: image thresholded where its values are now pure 0 or 255
+        """
         self.transformer.binarizer.threshold_otsu()
         return self
 
     def threshold_niblack(self, window_size: int = 15, k: float = 0.2) -> Self:
+        """Apply Niblack thresholding.
+        See https://scikit-image.org/docs/stable/auto_examples/segmentation/\
+                plot_niblack_sauvola.html
+
+        As the input image must be a grayscale before applying any thresholding
+        methods we convert the image to grayscale.
+
+        Args:
+            window_size (int, optional): apply on the
+                image. Defaults to 15.
+            k (float, optional): factor to apply to regulate the impact
+                of the std. Defaults to 0.2.
+
+        Returns:
+            Self: image thresholded where its values are now pure 0 or 255
+        """
         self.transformer.binarizer.threshold_niblack(window_size=window_size, k=k)
         return self
 
     def threshold_sauvola(
         self, window_size: int = 15, k: float = 0.2, r: float = 128.0
     ) -> Self:
+        """Apply Sauvola thresholding.
+        See https://scikit-image.org/docs/stable/auto_examples/segmentation/\
+                plot_niblack_sauvola.html.
+
+        As the input image must be a grayscale before applying any thresholding
+        methods we convert the image to grayscale.
+
+        Args:
+            window_size (int, optional): sauvola window size to apply on the
+                image. Defaults to 15.
+            k (float, optional): sauvola k factor to apply to regulate the impact
+                of the std. Defaults to 0.2.
+            r (float, optional): sauvola r value. Defaults to 128.
+
+        Returns:
+            Self: image thresholded where its values are now pure 0 or 255
+        """
         self.transformer.binarizer.threshold_sauvola(window_size=window_size, k=k, r=r)
         return self
 
     def binary(self, method: BinarizationMethods = "sauvola") -> NDArray:
+        """Binary representation of the image with values that can be only 0 or 1.
+        The value 0 is now 0 and value of 255 are now 1. Black is 0 and white is 1.
+        We can also talk about the mask of the image to refer to the binary
+        representation of it.
+
+        The sauvola is generally the best binarization method however it is
+        way slower than the others methods. The adaptative or otsu method are the best
+        method in terms of speed and quality.
+
+        Args:
+            method (str, optional): the binarization method to apply.
+                Must be in ["adaptative", "otsu", "sauvola", "niblack", "nick", "wolf"].
+                Defaults to "sauvola".
+
+        Returns:
+            NDArray: array where its inner values are 0 or 1
+        """
         return self.transformer.binarizer.binary(method=method)
 
     def binaryrev(self, method: BinarizationMethods = "sauvola") -> NDArray:
+        """Reversed binary representation of the image.
+        The value 0 is now 1 and value of 255 are now 0. Black is 1 and white is 0.
+        This is why it is called the "binary rev" or "binary reversed".
+
+        Args:
+            method (str, optional): the binarization method to apply.
+                Must be in ["adaptative", "otsu", "sauvola", "niblack", "nick", "wolf"].
+                Defaults to "adaptative".
+
+        Returns:
+            NDArray: array where its inner values are 0 or 1
+        """
         return self.transformer.binarizer.binaryrev(method=method)
 
     # ---------------------------------- CROPPER --------------------------------------
@@ -294,57 +648,164 @@ class Image:
     def crop(
         self, x0: int, y0: int, x1: int, y1: int, copy: bool = False, **kwargs
     ) -> Image | Self:
+        """Crop the image in a straight axis-aligned rectangle way given
+        by the top-left point [x0, y0] and the bottom-right point [x1, y1]
+
+        This function inputs represents the top-left and bottom-right points.
+        This method does not provide a way to extract a rotated rectangle or a
+        different shape from the image.
+
+        Remember that in this library the x coordinates represent the y coordinates of
+        the image array (horizontal axis of the image).
+        The array representation is always rows then columns.
+        In this library this is the contrary like in opencv.
+
+        Args:
+            x0 (int): top-left x coordinate
+            y0 (int): top-left y coordinate
+            x1 (int): bottom-right x coordinate
+            y1 (int): bottom-right y coordinate
+            clip (bool, optional): whether to clip or not. Defaults to True.
+            pad (bool, optional): whether to pad or not. Defaults to False.
+            copy (bool, optional): whether to copy or not. Defaults to False.
+            extra_border_size (int, optional): extra border size to add to the crop
+                in the x and y directions. Defaults to 0 which means no extra border.
+            pad_value (int, optional): pad fill value. Defaults to 0.
+
+        Returns:
+            Image | Self: new cropped image if copy=True else the current image cropped
+        """
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
         out = self.transformer.cropper.crop(
             x0=x0, y0=y0, x1=x1, y1=y1, copy=copy, **kwargs
         )
-        return out if copy else self
+        return out if out is not None else self
 
     def crop_from_topleft(
         self, topleft: NDArray, width: int, height: int, copy: bool = False, **kwargs
     ) -> Image | Self:
+        """Crop the image from a rectangle defined by its top-left point, its width and
+        its height.
+
+        Args:
+            topleft (np.ndarray): (x, y) coordinates of the top-left point
+            width (int): width of the rectangle to crop
+            height (int): height of the rectangle to crop
+            clip (bool, optional): whether to clip or not. Defaults to True.
+            pad (bool, optional): whether to pad or not. Defaults to False.
+            copy (bool, optional): whether to copy or not. Defaults to False.
+            extra_border_size (int, optional): extra border size to add to the crop
+                in the x and y directions. Defaults to 0 which means no extra border.
+            pad_value (int, optional): pad fill value. Defaults to 0.
+
+        Returns:
+            Image | Self: new cropped image if copy=True else the current image cropped
+        """
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
         out = self.transformer.cropper.crop_from_topleft(
             topleft=topleft, width=width, height=height, copy=copy, **kwargs
         )
-        return out if copy else self
+        return out if out is not None else self
 
     def crop_from_center(
         self, center: NDArray, width: int, height: int, copy: bool = False, **kwargs
     ) -> Image | Self:
+        """Crop the image from a rectangle defined by its center point, its width and
+        its height.
+
+        Args:
+            center (NDArray): (x, y) coordinates of the center point
+            width (int): width of the rectangle to crop
+            height (int): height of the rectangle to crop
+            clip (bool, optional): whether to clip or not. Defaults to True.
+            pad (bool, optional): whether to pad or not. Defaults to False.
+            copy (bool, optional): whether to copy or not. Defaults to False.
+            extra_border_size (int, optional): extra border size to add to the crop
+                in the x and y directions. Defaults to 0 which means no extra border.
+            pad_value (int, optional): pad fill value. Defaults to 0.
+
+        Returns:
+            Image | Self: new cropped image if copy=True else the current image cropped
+        """
         out = self.transformer.cropper.crop_from_center(
             center=center, width=width, height=height, copy=copy, **kwargs
         )
-        return out if copy else self
+        return out if out is not None and copy else self
 
     def crop_from_axis_aligned_bbox(
         self, bbox: geo.Rectangle, copy: bool = False, **kwargs
     ) -> Image | Self:
+        """Crop the image from an Axis-Aligned Bounding Box (AABB).
+        Inclusive crops which means that the cropped image will have
+        width and height equal to the width and height of the AABB.
+
+        Args:
+            bbox (geo.Rectangle): axis-aligned bounding box
+            clip (bool, optional): whether to clip or not. Defaults to True.
+            pad (bool, optional): whether to pad or not. Defaults to False.
+            copy (bool, optional): whether to copy or not. Defaults to False.
+            extra_border_size (int, optional): extra border size to add to the crop
+                in the x and y directions. Defaults to 0 which means no extra border.
+            pad_value (int, optional): pad fill value. Defaults to 0.
+
+        Returns:
+            Image | Self: new cropped image if copy=True else the current image cropped
+        """
         out = self.transformer.cropper.crop_from_axis_aligned_bbox(
             bbox=bbox, copy=copy, **kwargs
         )
-        return out if copy else self
+        return out if out is not None and copy else self
 
     def crop_from_polygon(
         self, polygon: geo.Polygon, copy: bool = False, **kwargs
     ) -> Image | Self:
+        """Crop from a polygon using its Axis-Aligned Bounding Box (AABB)
+
+        Args:
+            polygon (geo.Polygon): polygon object to crop in the image
+            copy (bool, optional): whether to create a copy or not. Defaults to False.
+            clip (bool, optional): whether to clip or not. Defaults to True.
+            pad (bool, optional): whether to pad or not. Defaults to False.
+            extra_border_size (int, optional): extra border size to add to the crop
+                in the x and y directions. Defaults to 0 which means no extra border.
+            pad_value (int, optional): pad fill value. Defaults to 0.
+
+        Returns:
+            Image | Self: new cropped image if copy=True else the current image cropped
+        """
         out = self.transformer.cropper.crop_from_polygon(
             polygon=polygon, copy=copy, **kwargs
         )
-        return out if copy else self
+        return out if out is not None and copy else self
 
     def crop_from_linear_spline(
         self, spline: geo.LinearSpline, copy: bool = False, **kwargs
     ) -> Image | Self:
+        """Crop from a Linear Spline using its Axis-Aligned Bounding Box (AABB)
+
+        Args:
+            spline (geo.LinearSpline): linear spline object to crop in the image
+            copy (bool, optional): whether to create a copy or not. Defaults to False.
+                        clip (bool, optional): whether to clip or not. Defaults to True.
+            pad (bool, optional): whether to pad or not. Defaults to False.
+            extra_border_size (int, optional): extra border size to add to the crop
+                in the x and y directions. Defaults to 0 which means no extra border.
+            pad_value (int, optional): pad fill value. Defaults to 0.
+
+        Returns:
+            Image | Self: new cropped image if copy=True else the current image cropped
+        """
         out = self.transformer.cropper.crop_from_linear_spline(
             spline=spline, copy=copy, **kwargs
         )
-        return out if copy else self
+        return out if out is not None and copy else self
 
     def crop_around_segment_horizontal(
         self,
         segment: np.ndarray,
         dim_crop_rect: tuple[int, int] = (-1, 100),
         added_width: int = 75,
-    ) -> tuple[Self, np.ndarray, float, np.ndarray]:
+    ) -> tuple[Image, np.ndarray, float, np.ndarray]:
         """Crop around a specific segment in the image. This is done in three
         specific steps:
         1) shift image so that the middle of the segment is in the middle of the image
@@ -387,12 +848,12 @@ class Image:
 
         # cropping
         im_crop = im.crop_from_center(
-            center=im._base.center,
+            center=im.base.center,
             width=width_crop_rect,
             height=height_crop_rect,
         )
 
-        crop_translation_vector = self._base.center - im_crop._base.center
+        crop_translation_vector = self.base.center - im_crop.base.center
         return im_crop, translation_vector, angle, crop_translation_vector
 
     def crop_around_segment_horizontal_faster(
@@ -403,7 +864,7 @@ class Image:
         pad_value: int = 0,
     ) -> Image:
         """Crop around a specific segment in the image.
-        This method is generally faster especially for large images.
+        This method is faster especially for large images.
 
         Here is a comparison of the total time taken for cropping with the two methods
         with a loop over 1000 iterations:
@@ -460,7 +921,7 @@ class Image:
 
         # cropping around segment center
         im.crop_from_center(
-            center=im._base.center,
+            center=im.base.center,
             width=width_crop_rect,
             height=height_crop_rect,
         )
@@ -473,7 +934,7 @@ class Image:
         rect_topleft_ix: int,
         crop_dim: tuple[int, int] = (-1, -1),
         crop_shift: tuple[int, int] = (0, 0),
-    ) -> Self:
+    ) -> Image:
         """Crop image in the referential of the rectangle.
 
         Args:
@@ -526,12 +987,20 @@ class Image:
 
     # ------------------------------- GEOMETRY METHODS --------------------------------
 
-    def shift(
-        self, shift: NDArray, border_fill_value: Sequence[float] = (0.0,)
-    ) -> Self:
-        self.transformer.geometrizer.shift(
-            shift=shift, border_fill_value=border_fill_value
-        )
+    def shift(self, shift: NDArray, fill_value: Sequence[float] = (0.0,)) -> Self:
+        """Shift the image by performing a translation operation
+
+        Args:
+            shift (NDArray): Vector for translation
+            border_fill_value (int | tuple[int, int, int], optional): value to fill the
+                border of the image after the rotation in case reshape is True.
+                Can be a tuple of 3 integers for RGB image or a single integer for
+                grayscale image. Defaults to (0.0,) which is black.
+
+        Returns:
+            Self: shifted image
+        """
+        self.transformer.geometrizer.shift(shift=shift, fill_value=fill_value)
         return self
 
     def rotate(
@@ -540,28 +1009,82 @@ class Image:
         is_degree: bool = False,
         is_clockwise: bool = True,
         reshape: bool = True,
-        border_fill_value: Sequence[float] = (0.0,),
+        fill_value: Sequence[float] = (0.0,),
         fast: bool = True,
     ) -> Self:
+        """Rotate the image by a given angle.
+
+        For the rotation with reshape, meaning preserving the whole image,
+        we used the code from the imutils library:
+        https://github.com/PyImageSearch/imutils/blob/master/imutils/convenience.py#L41
+
+        Args:
+            angle (float): angle to rotate the image
+            is_degree (bool, optional): whether the angle is in degree or not.
+                If not it is considered to be in radians.
+                Defaults to False which means radians.
+            is_clockwise (bool, optional): whether the rotation is clockwise or
+                counter-clockwise. Defaults to True.
+            reshape (bool, optional): whether to preserve the original image or not.
+                If True, the complete image is preserved hence the width and height
+                of the rotated image are different than in the original image.
+                Defaults to True.
+            border_fill_value (Sequence[float], optional): value to
+                fill the border of the image after the rotation in case reshape is True.
+                Can be a tuple of 3 integers for RGB image or a single integer for
+                grayscale image. Defaults to (0.0,) which is black.
+            fast: bool, optional: whether to use the fast rotation or not.
+                Defaults to True. False is much slower but more accurate using the
+                scipy.ndimage library.
+        """
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
         self.transformer.geometrizer.rotate(
             angle=angle,
             is_degree=is_degree,
             is_clockwise=is_clockwise,
             reshape=reshape,
-            border_fill_value=border_fill_value,
+            fill_value=fill_value,
             fast=fast,
         )
         return self
 
     def center_to_point(self, point: NDArray) -> tuple[Self, NDArray]:
+        """Shift the image so that the input point ends up in the middle of the
+        new image
+
+        Args:
+            point (NDArray): point as (2,) shape numpy array
+
+        Returns:
+            (tuple[Self, NDArray]): Self, translation Vector
+        """
         shift_vector = self.transformer.geometrizer.center_to_point(point=point)
         return self, shift_vector
 
     def center_to_segment(self, segment: NDArray) -> tuple[Self, NDArray]:
+        """Shift the image so that the segment middle point ends up in the middle
+        of the new image
+
+        Args:
+            segment (NDArray): segment as numpy array of shape (2, 2)
+
+        Returns:
+            (tuple[Self, NDArray]): Self, vector_shift
+        """
         shift_vector = self.transformer.geometrizer.center_to_segment(segment=segment)
         return self, shift_vector
 
     def restrict_rect_in_frame(self, rectangle: geo.Rectangle) -> geo.Rectangle:
+        """Create a new rectangle that is contained within the image borders.
+        If the input rectangle is outside the image, the returned rectangle is a
+        image frame-fitted rectangle that preserve the same shape.
+
+        Args:
+            rectangle (geo.Rectangle): input rectangle
+
+        Returns:
+            geo.Rectangle: new rectangle
+        """
         return self.transformer.geometrizer.restrict_rect_in_frame(rectangle=rectangle)
 
     # ----------------------------- MORPHOLOGICAL METHODS -----------------------------
@@ -572,18 +1095,53 @@ class Image:
         interpolation: int = cv2.INTER_AREA,
         copy: bool = False,
     ) -> Image | Self:
+        """Resize the image using a fixed dimension well defined.
+        This function can result in a distorted image if the ratio between
+        width and height is different in the original and the new image.
+
+        If the dim argument has a negative value in height or width, then
+        a proportional ratio is applied based on the one of the two dimension given.
+
+        Args:
+            dim (tuple[int, int]): a tuple with two integers in the following order
+                (width, height).
+            interpolation (int, optional): resize interpolation.
+                Defaults to cv2.INTER_AREA.
+            copy (bool, optional): whether to return a new image or not.
+
+        Returns:
+            Image | Self: resized new image if copy=True else resized original image
+        """
         out = self.transformer.morphologyzer.resize_fixed(
             dim=dim, interpolation=interpolation, copy=copy
         )
-        return out if copy else self
+        return out if out is not None and copy else self
 
     def resize(
         self, factor: float, interpolation: int = cv2.INTER_AREA, copy: bool = False
     ) -> Image | Self:
+        """Resize the image to a new size using a scaling factor value that
+        will be applied to all dimensions (width and height).
+
+        Applying this method can not result in a distorted image.
+
+        Args:
+            factor (float): factor in [0, 5] to resize the image.
+                A value of 1 does not change the image.
+                A value of 2 doubles the image size.
+                A maximum value of 5 is set to avoid accidentally producing a gigantic
+                image.
+            interpolation (int, optional): resize interpolation.
+                Defaults to cv2.INTER_AREA.
+            copy (bool, optional): whether to return a new image or not.
+
+        Returns:
+            Image | Self: resized new image if copy=True else resized original image
+        """
         out = self.transformer.morphologyzer.resize(
             factor=factor, interpolation=interpolation, copy=copy
         )
-        return out if copy else self
+        return out if out is not None and copy else self
 
     def blur(
         self,
@@ -592,6 +1150,20 @@ class Image:
         method: BlurMethods = "average",
         sigmax: float = 0,
     ) -> Self:
+        """Blur the image
+
+        Args:
+            kernel (tuple, optional): blur kernel size. Defaults to (5, 5).
+            iterations (int, optional): number of iterations. Defaults to 1.
+            method (str, optional): blur method.
+                Must be in ["average", "median", "gaussian", "bilateral"].
+                Defaults to "average".
+            sigmax (float, optional): sigmaX value for the gaussian blur.
+                Defaults to 0.
+
+        Returns:
+            Self: blurred image
+        """
         self.transformer.morphologyzer.blur(
             kernel=kernel, iterations=iterations, method=method, sigmax=sigmax
         )
@@ -603,6 +1175,18 @@ class Image:
         iterations: int = 1,
         dilate_black_pixels: bool = True,
     ) -> Self:
+        """Dilate the image by making the black pixels expand in the image.
+        The dilatation can be parametrize thanks to the kernel and iterations
+        arguments.
+
+        Args:
+            kernel (tuple, optional): kernel to dilate. Defaults to (5, 5).
+            iterations (int, optional): number of dilatation iterations. Defaults to 1.
+            dilate_black_pixels (bool, optional): whether to dilate black pixels or not
+
+        Returns:
+            Self: dilated image
+        """
         self.transformer.morphologyzer.dilate(
             kernel=kernel,
             iterations=iterations,
@@ -616,6 +1200,18 @@ class Image:
         iterations: int = 1,
         erode_black_pixels: bool = True,
     ) -> Self:
+        """Erode the image by making the black pixels shrink in the image.
+        The anti-dilatation can be parametrize thanks to the kernel and iterations
+        arguments.
+
+        Args:
+            kernel (tuple, optional): kernel to erode. Defaults to (5, 5).
+            iterations (int, optional): number of iterations. Defaults to 1.
+            erode_black_pixels (bool, optional): whether to erode black pixels or not
+
+        Returns:
+            Self: eroded image
+        """
         self.transformer.morphologyzer.erode(
             kernel=kernel, iterations=iterations, erode_black_pixels=erode_black_pixels
         )
@@ -696,7 +1292,7 @@ class Image:
 
     def score_contains_segments_v2(
         self,
-        segments: list[geo.Segment],
+        segments: Sequence[geo.Segment],
         dilate_kernel: tuple = (5, 5),
         dilate_iterations: int = 0,
         binarization_method: BinarizationMethods = "sauvola",
@@ -744,7 +1340,7 @@ class Image:
 
     def score_contains_segments(
         self,
-        segments: list[geo.Segment],
+        segments: Sequence[geo.Segment],
         dilate_kernel: tuple = (5, 5),
         dilate_iterations: int = 0,
         binarization_method: BinarizationMethods = "sauvola",
@@ -824,7 +1420,7 @@ class Image:
 
     def score_contains_polygons(
         self,
-        polygons: list[geo.Polygon],
+        polygons: Sequence[geo.Polygon],
         dilate_kernel: tuple = (5, 5),
         dilate_iterations: int = 0,
         binarization_method: BinarizationMethods = "sauvola",
@@ -900,7 +1496,7 @@ class Image:
 
     def score_contains_linear_splines(
         self,
-        splines: list[geo.LinearSpline],
+        splines: Sequence[geo.LinearSpline],
         dilate_kernel: tuple = (5, 5),
         dilate_iterations: int = 0,
         binarization_method: BinarizationMethods = "sauvola",
@@ -964,7 +1560,7 @@ class Image:
 
     def score_contains_linear_entities(
         self,
-        entities: list[LinearEntity],
+        entities: Sequence[LinearEntity],
         dilate_kernel: tuple = (5, 5),
         dilate_iterations: int = 0,
         binarization_method: BinarizationMethods = "sauvola",

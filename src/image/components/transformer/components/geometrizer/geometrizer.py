@@ -1,3 +1,7 @@
+"""
+Geometry Transformer component
+"""
+
 import numpy as np
 from numpy.typing import NDArray
 from typing import Sequence
@@ -14,10 +18,8 @@ class GeometrizerImage:
     def __init__(self, base: BaseImage) -> None:
         self.base = base
 
-    def shift(
-        self, shift: NDArray, border_fill_value: Sequence[float] = (0.0,)
-    ) -> None:
-        """Shift the image doing a translation operation
+    def shift(self, shift: NDArray, fill_value: Sequence[float] = (0.0,)) -> None:
+        """Shift the image by performing a translation operation
 
         Args:
             shift (NDArray): Vector for translation
@@ -38,7 +40,7 @@ class GeometrizerImage:
             dsize=(self.base.width, self.base.height),
             flags=cv2.INTER_LINEAR,
             borderMode=cv2.BORDER_CONSTANT,
-            borderValue=border_fill_value,
+            borderValue=fill_value,
         )  # type: ignore[call-overload]
 
     def __rotate_exact(
@@ -85,12 +87,12 @@ class GeometrizerImage:
         is_degree: bool = False,
         is_clockwise: bool = True,
         reshape: bool = True,
-        border_fill_value: Sequence[float] = (0.0,),
+        fill_value: Sequence[float] = (0.0,),
         fast: bool = True,
     ) -> None:
         """Rotate the image by a given angle.
 
-        For the rotation with reshape, meaning preserveing the whole image,
+        For the rotation with reshape, meaning preserving the whole image,
         we used the code from the imutils library:
         https://github.com/PyImageSearch/imutils/blob/master/imutils/convenience.py#L41
 
@@ -113,7 +115,7 @@ class GeometrizerImage:
         # pylint: disable=too-many-arguments, too-many-positional-arguments
         # pylint: disable=too-many-locals
         if not fast:  # using scipy rotate which is slower than cv2
-            border_fill_value_scalar = border_fill_value[0]
+            border_fill_value_scalar = fill_value[0]
             if not isinstance(border_fill_value_scalar, float):
                 raise ValueError(
                     f"The border_fill_value {border_fill_value_scalar} is not a valid "
@@ -156,7 +158,7 @@ class GeometrizerImage:
             dsize=(w, h),
             flags=cv2.INTER_LINEAR,
             borderMode=cv2.BORDER_CONSTANT,
-            borderValue=border_fill_value,
+            borderValue=fill_value,
         )  # type: ignore[call-overload]
 
     def center_to_point(self, point: NDArray) -> NDArray:

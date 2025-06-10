@@ -1,3 +1,7 @@
+"""
+Binarizer component
+"""
+
 from typing import Literal, get_args
 
 import cv2
@@ -26,10 +30,7 @@ class BinarizerImage:
         turned white.
 
         Args:
-            threshold_value (int): value to separate the black from the white pixels.
-
-        Returns:
-            Self: new image thresholded
+            thresh (int): value to separate the black from the white pixels.
         """
         self.base.as_grayscale()
         self.base.asarray = np.array((self.base.asarray > thresh) * 255, dtype=np.uint8)
@@ -42,9 +43,6 @@ class BinarizerImage:
 
         As the input image must be a grayscale before applying any thresholding
         methods we convert the image to grayscale.
-
-        Returns:
-            Self: image thresholded where its values are now pure 0 or 255
         """
         self.base.as_grayscale()
         binary = cv2.adaptiveThreshold(
@@ -65,9 +63,6 @@ class BinarizerImage:
 
         As the input image must be a grayscale before applying any thresholding
         methods we convert the image to grayscale.
-
-        Returns:
-            Self: image thresholded where its values are now pure 0 or 255
         """
         self.base.as_grayscale()
         _, img_thresholded = cv2.threshold(
@@ -91,9 +86,6 @@ class BinarizerImage:
             k (float, optional): sauvola k factor to apply to regulate the impact
                 of the std. Defaults to 0.2.
             r (float, optional): sauvola r value. Defaults to 128.
-
-        Returns:
-            Self: image thresholded where its values are now pure 0 or 255
         """
         self.base.as_grayscale()
         self.base.asarray = threshold_niblack_like(
@@ -113,9 +105,6 @@ class BinarizerImage:
                 image. Defaults to 15.
             k (float, optional): factor to apply to regulate the impact
                 of the std. Defaults to 0.2.
-
-        Returns:
-            Self: image thresholded where its values are now pure 0 or 255
         """
         self.base.as_grayscale()
         self.base.asarray = threshold_niblack_like(

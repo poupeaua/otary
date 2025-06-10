@@ -4,7 +4,7 @@ Image Drawer module. It only contains methods to draw objects in images.
 
 from __future__ import annotations
 
-from typing import Self
+from typing import Sequence
 
 import cv2
 import numpy as np
@@ -36,16 +36,14 @@ class DrawerImage:
 
     def draw_circles(
         self,
-        circles: list[geo.Circle],
+        circles: Sequence[geo.Circle],
         render: CirclesRender = CirclesRender(),
-    ) -> Self:
+    ) -> None:
         """Draw circles in the image
 
         Args:
-            circles (list[Circle]): list of Circle geometry objects.
-
-        Returns:
-            Image: new image
+            circles (Sequence[Circle]): list of Circle geometry objects.
+            render (CirclesRender): circle renderer
         """
         im_array = self._pre_draw(n_objects=len(circles), render=render)
         for circle, color in zip(circles, render.colors):
@@ -67,21 +65,18 @@ class DrawerImage:
                     lineType=render.line_type,
                 )
         self.base.asarray = im_array
-        return self
 
     def draw_points(
         self,
-        points: np.ndarray | list[geo.Point],
+        points: np.ndarray | Sequence[geo.Point],
         render: PointsRender = PointsRender(),
-    ) -> Self:
+    ) -> None:
         """Draw points in the image
 
         Args:
             points (np.ndarray): list of points. It must be of shape (n, 2). This
                 means n points of shape 2 (x and y coordinates).
-
-        Returns:
-            Image: new image
+            render (PointsRender): point renderer
         """
         _points = prep_obj_draw(objects=points, _type=geo.Point)
         im_array = self._pre_draw(n_objects=len(_points), render=render)
@@ -94,23 +89,20 @@ class DrawerImage:
                 thickness=render.thickness,
                 lineType=render.line_type,
             )
-        self.asarray = im_array
-        return self
+        self.base.asarray = im_array
 
     def draw_segments(
         self,
-        segments: np.ndarray | list[geo.Segment],
+        segments: np.ndarray | Sequence[geo.Segment],
         render: SegmentsRender = SegmentsRender(),
-    ) -> Self:
+    ) -> None:
         """Draw segments in the image. It can be arrowed segments (vectors) too.
 
         Args:
             segments (np.ndarray): list of segments. Can be a numpy array of shape
                 (n, 2, 2) which means n array of shape (2, 2) that define a segment
                 by two 2D points.
-
-        Returns:
-            (DrawerImage): original image changed that contains the segments drawn
+            render (SegmentsRender): segment renderer
         """
         _segments = prep_obj_draw(objects=segments, _type=geo.Segment)
         im_array = self._pre_draw(n_objects=len(segments), render=render)
@@ -136,22 +128,18 @@ class DrawerImage:
                     lineType=render.line_type,
                 )
         self.base.asarray = im_array
-        return self
 
     def draw_splines(
         self,
-        splines: list[geo.LinearSpline],
+        splines: Sequence[geo.LinearSpline],
         render: LinearSplinesRender = LinearSplinesRender(),
-    ) -> Self:
+    ) -> None:
         """Draw linear splines in the image.
 
         Args:
-            splines (list[geo.LinearSpline]): linear splines to draw.
+            splines (Sequence[geo.LinearSpline]): linear splines to draw.
             render (LinearSplinesRender, optional): linear splines render.
                 Defaults to LinearSplinesRender().
-
-        Returns:
-            Self: image with the added splines drawn.
         """
         _splines = prep_obj_draw(objects=splines, _type=geo.LinearSpline)
         im_array = self._pre_draw(n_objects=len(_splines), render=render)
@@ -189,19 +177,15 @@ class DrawerImage:
                     thickness=render.thickness,
                     lineType=render.line_type,
                 )
-        return self
 
     def draw_polygons(
-        self, polygons: list[geo.Polygon], render: PolygonsRender = PolygonsRender()
-    ) -> Self:
+        self, polygons: Sequence[geo.Polygon], render: PolygonsRender = PolygonsRender()
+    ) -> None:
         """Draw polygons in the image
 
         Args:
-            polygons (list[Polygon]): list of Polygon objects
+            polygons (Sequence[Polygon]): list of Polygon objects
             render (PolygonsRender): PolygonRender object
-
-        Returns:
-            Image: image with the added polygons
         """
         _polygons = prep_obj_draw(objects=polygons, _type=geo.Polygon)
         im_array = self._pre_draw(n_objects=len(_polygons), render=render)
@@ -223,22 +207,19 @@ class DrawerImage:
                     lineType=render.line_type,
                 )
         self.base.asarray = im_array
-        return self
 
     def draw_ocr_outputs(
         self,
-        ocr_outputs: list[OcrSingleOutput],
+        ocr_outputs: Sequence[OcrSingleOutput],
         render: OcrSingleOutputRender = OcrSingleOutputRender(),
-    ) -> Self:
+    ) -> None:
         """Return the image with the bounding boxes displayed from a list of OCR
         single output. It allows you to show bounding boxes that can have an angle,
         not necessarily vertical or horizontal.
 
         Args:
-            ocr_outputs (list[OcrSingleOutput]): list of OcrSingleOutput objects
-
-        Returns:
-            Image: a new image with the bounding boxes displayed
+            ocr_outputs (Sequence[OcrSingleOutput]): list of OcrSingleOutput objects
+            render (OcrSingleOutputRender): OcrSingleOutputRender object
         """
         im_array = self._pre_draw(n_objects=len(ocr_outputs), render=render)
         for ocrso, color in zip(ocr_outputs, render.colors):
@@ -258,4 +239,3 @@ class DrawerImage:
                 lineType=render.line_type,
             )
         self.base.asarray = im_array
-        return self

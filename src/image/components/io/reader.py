@@ -19,7 +19,7 @@ class ReaderImage:
 
     @staticmethod
     def from_fillvalue(value: int = 255, shape: tuple = (128, 128, 3)) -> NDArray:
-        """Class method to create an image from a single value
+        """Create an array image from a single value
 
         Args:
             value (int, optional): value in [0, 255]. Defaults to 255.
@@ -67,7 +67,7 @@ class ReaderImage:
     def from_png(
         filepath: str, as_grayscale: bool = False, resolution: Optional[int] = None
     ) -> NDArray:
-        """Create a Image object from a PNG file image path
+        """Create a Image array from a PNG file image path
 
         Args:
             filepath (str): path to the image file
@@ -75,7 +75,7 @@ class ReaderImage:
                 Defaults to False.
 
         Returns:
-            Self: Image object
+            NDArray: Image as array
         """
         return ReaderImage.from_jpg(
             filepath=filepath, as_grayscale=as_grayscale, resolution=resolution
@@ -90,7 +90,7 @@ class ReaderImage:
         clip_pct: Optional[pymupdf.Rect] = None,
     ) -> NDArray:
         # pylint: disable=too-many-arguments, too-many-positional-arguments
-        """Create an Image object from a pdf file.
+        """Create an Image array from a pdf file.
 
         Args:
             filepath (str): path to the pdf file.
@@ -106,7 +106,7 @@ class ReaderImage:
                 the image loading time especially combined with a high resolution.
 
         Returns:
-            Self: Image object
+            NDArray: Image as array
         """
         arr = read_pdf_to_images(
             filepath_or_stream=filepath,
@@ -124,7 +124,7 @@ class ReaderImage:
     def from_file(
         filepath: str, as_grayscale: bool = False, resolution: Optional[int] = None
     ) -> NDArray:
-        """Create a Image object from a file image path
+        """Create a Image array from a file image path
 
         Args:
             filepath (str): path to the image file
@@ -132,7 +132,7 @@ class ReaderImage:
                 Defaults to False.
 
         Returns:
-            Self: Image object
+            NDArray: Image as array
         """
         valid_format = ["png", "jpg", "jpeg", "pdf"]
 

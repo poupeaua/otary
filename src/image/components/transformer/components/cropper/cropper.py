@@ -1,3 +1,7 @@
+"""
+Cropper Transformer component
+"""
+
 from __future__ import annotations
 
 from typing import Optional, TYPE_CHECKING
@@ -20,6 +24,23 @@ class CropperImage:
     def __crop_with_padding(
         self, x0: int, y0: int, x1: int, y1: int, pad_value: int = 0
     ) -> NDArray:
+        """Crop the image in a straight axis-aligned rectangle way given
+        by the top-left point [x0, y0] and the bottom-right point [x1, y1].
+
+        This method is specific to crop with padding meaning that if the
+        coordinates are out of the image bounds, the padding is added to the
+        output cropped image with the pad value parameter, black by default.
+
+        Args:
+            x0 (int): x coordinate of the top-left point
+            y0 (int): y coordinate of the top-left point
+            x1 (int): x coordinate of the bottom-right point
+            y1 (int): y coordinate of the bottom-right point
+            pad_value (int, optional): pad fill value. Defaults to 0.
+
+        Returns:
+            NDArray: output cropped image
+        """
         # pylint: disable=too-many-locals
         # pylint: disable=too-many-arguments, too-many-positional-arguments
         x0, y0, x1, y1 = int(x0), int(y0), int(x1), int(y1)
@@ -55,22 +76,17 @@ class CropperImage:
         return result
 
     def __crop_with_clipping(self, x0: int, y0: int, x1: int, y1: int) -> NDArray:
-        """Crop the image. A straight axis-aligned rectangle is used for cropping.
-        This function inputs represents the top-left and bottom-right points.
+        """Crop the image in a straight axis-aligned rectangle way given
+        by the top-left point [x0, y0] and the bottom-right point [x1, y1].
 
-        This method does not provide a way to extract a rotated rectangle or a
-        different shape from the image.
-
-        Remember that in this library the x coordinates represent the y coordinates of
-        the image array (horizontal axis of the image).
-        The array representation is always rows then columns.
-        In this library this is the contrary like in opencv.
+        Crop by clipping meaning that if the coordinates are out of the image
+        bounds the output is only the part of the image that is in the bounds.
 
         Args:
-            x0 (int): x coordinate of the first point
-            y0 (int): y coordinate of the first point
-            x1 (int): x coordinate of the second point
-            y1 (int): y coordinate of the second point
+            x0 (int): x coordinate of the top-left point
+            y0 (int): y coordinate of the top-left point
+            x1 (int): x coordinate of the bottom-right point
+            y1 (int): y coordinate of the bottom-right point
 
         Returns:
             Self: image cropped
@@ -80,18 +96,19 @@ class CropperImage:
         if x0 >= self.base.width or y0 >= self.base.height or x1 <= 0 or y1 <= 0:
             raise ValueError(
                 f"The coordinates ({x0}, {y0}, {x1}, {y1}) are out of the image "
-                f"boundaries (width={self.base.width}, height={self.base.height})"
+                f"boundaries (width={self.base.width}, height={self.base.height}). "
+                "No crop is possible."
             )
 
         def clip(value: int, min_value: int, max_value: int) -> int:
-            return max(min_value, min(value, max_value))
+            return int(max(min_value, min(value, max_value)))
 
         x0 = clip(x0, 0, self.base.width)
         y0 = clip(y0, 0, self.base.height)
         x1 = clip(x1, 0, self.base.width)
         y1 = clip(y1, 0, self.base.height)
 
-        result = self.base.asarray[int(y0) : int(y1), int(x0) : int(x1)]
+        result = self.base.asarray[y0:y1, x0:x1]
         return result
 
     def crop(
@@ -106,7 +123,8 @@ class CropperImage:
         extra_border_size: int = 0,
         pad_value: int = 0,
     ) -> Optional[Image]:
-        """Crop an image using the top-left and bottom-right points.
+        """Crop the image in a straight axis-aligned rectangle way given
+        by the top-left point [x0, y0] and the bottom-right point [x1, y1]
 
         This function inputs represents the top-left and bottom-right points.
         This method does not provide a way to extract a rotated rectangle or a
@@ -130,7 +148,7 @@ class CropperImage:
             pad_value (int, optional): pad fill value. Defaults to 0.
 
         Returns:
-            Self: cropped image
+            Optional[Image]: cropped image if copy=True else None
         """
         # pylint: disable=too-many-arguments, too-many-positional-arguments
         if (clip and pad) or (not clip and not pad):
@@ -162,6 +180,7 @@ class CropperImage:
             return Image(image=array_crop)
 
         self.base.asarray = array_crop
+        return None
 
     def crop_from_topleft(
         self,
@@ -189,7 +208,7 @@ class CropperImage:
             pad_value (int, optional): pad fill value. Defaults to 0.
 
         Returns:
-            Self: image cropped
+            Optional[Image]: image cropped if copy=True else None
         """
         # pylint: disable=too-many-arguments, too-many-positional-arguments
         return self.crop(
@@ -230,7 +249,7 @@ class CropperImage:
             pad_value (int, optional): pad fill value. Defaults to 0.
 
         Returns:
-            Self: image cropped
+            Optional[Image]: image cropped if copy=True else None
         """
         # pylint: disable=too-many-arguments, too-many-positional-arguments
         return self.crop_from_topleft(
@@ -253,14 +272,7 @@ class CropperImage:
         extra_border_size: int = 0,
         pad_value: int = 0,
     ) -> Optional[Image]:
-        """Crop the image from a polygon
-
-        Args:
-            polygon (geo.Polygon): polygon
-
-        Returns:
-            Self: image cropped
-        """
+        """Crop the image from a polygon"""
         # pylint: disable=too-many-arguments, too-many-positional-arguments
         return self.crop(
             x0=int(polygon.xmin),
@@ -283,14 +295,7 @@ class CropperImage:
         extra_border_size: int = 0,
         pad_value: int = 0,
     ) -> Optional[Image]:
-        """Crop the image from a linear spline
-
-        Args:
-            spline (geo.LinearSpline): linear spline
-
-        Returns:
-            Self: image cropped
-        """
+        """Crop the image from a linear spline"""
         # pylint: disable=too-many-arguments, too-many-positional-arguments
         return self.crop(
             x0=int(spline.xmin),
@@ -327,7 +332,7 @@ class CropperImage:
             pad_value (int, optional): pad fill value. Defaults to 0.
 
         Returns:
-            Self: cropped image
+            Optional[Image]: cropped image if copy=True else None
         """
         # pylint: disable=too-many-arguments, too-many-positional-arguments
         assert bbox.is_axis_aligned

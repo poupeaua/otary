@@ -3,6 +3,7 @@ Perfomance evaluation
 """
 
 # ruff: noqa: F401
+# pylint: disable=unused-import
 import pprint
 import time
 from functools import wraps

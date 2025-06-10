@@ -3,7 +3,7 @@ Image tools module.
 It contains all the utility common functions used by the Image class
 """
 
-from typing import Any
+from typing import Any, Sequence
 
 import numpy as np
 
@@ -27,7 +27,7 @@ def is_color_tuple(color: Any) -> bool:
     return cond
 
 
-def is_list_elements_type(_list: list | np.ndarray, _type: Any) -> bool:
+def is_list_elements_type(_list: Sequence | np.ndarray, _type: Any) -> bool:
     """Assert that a given list is only constituted by elements of the given type
 
     Args:
@@ -40,7 +40,7 @@ def is_list_elements_type(_list: list | np.ndarray, _type: Any) -> bool:
     return bool(np.all([isinstance(_list[i], _type) for i in range(len(_list))]))
 
 
-def cast_geometry_to_array(objects: list | np.ndarray, _type: Any) -> list:
+def cast_geometry_to_array(objects: Sequence | np.ndarray, _type: Any) -> list:
     """Convert a list of geometric objects to array for drawing
 
     Warning: the limit of int range is int16 which means that the maximum value
@@ -58,7 +58,9 @@ def cast_geometry_to_array(objects: list | np.ndarray, _type: Any) -> list:
     return objects
 
 
-def prep_obj_draw(objects: list | np.ndarray, _type: Any) -> list | np.ndarray:
+def prep_obj_draw(
+    objects: Sequence | list | np.ndarray, _type: Any
+) -> list | np.ndarray:
     """Preparation function for the objects to be drawn
 
     Args:

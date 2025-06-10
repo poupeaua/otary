@@ -22,3 +22,9 @@ class TransformerImage:
         self.cropper = CropperImage(base=self._base)
         self.geometrizer = GeometrizerImage(base=self._base)
         self.morphologyzer = MorphologyzerImage(base=self._base)
+
+    def __repr__(self):
+        return f"TransformerImage(base={self._base})"
+
+    def __str__(self):
+        return f"TransformerImage(base={self._base})"

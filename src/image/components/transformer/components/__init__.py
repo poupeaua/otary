@@ -1,3 +1,7 @@
+"""
+Transformer Image components
+"""
+
 __all__ = [
     "BinarizerImage",
     "BinarizationMethods",

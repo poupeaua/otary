@@ -1,3 +1,8 @@
+"""
+Utils file related to color operations
+"""
+
+
 def interpolate_color(
     alpha: float,
     is_bgr: bool = False,

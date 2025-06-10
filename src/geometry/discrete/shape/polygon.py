@@ -5,7 +5,7 @@ Polygon class to handle complexity with polygon calculation
 from __future__ import annotations
 
 import copy
-from typing import Optional, Self
+from typing import Optional, Self, Sequence
 import logging
 
 import cv2
@@ -50,7 +50,7 @@ class Polygon(DiscreteGeometryEntity):
 
     @classmethod
     def from_linear_entities(
-        cls, linear_entities: list[LinearEntity], connected: bool = False
+        cls, linear_entities: Sequence[LinearEntity], connected: bool = False
     ) -> Polygon:
         """Convert a list of linear entities to polygon.
 

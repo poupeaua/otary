@@ -1,9 +1,18 @@
-from typing import Literal, get_args
+"""
+Morphologyzer Transformer component
+"""
+
+from __future__ import annotations
+
+from typing import Optional, Literal, get_args, TYPE_CHECKING
 
 import cv2
 import numpy as np
 
 from src.image.base import BaseImage
+
+if TYPE_CHECKING:
+    from src.image import Image
 
 BlurMethods = Literal["average", "median", "gaussian", "bilateral"]
 
@@ -19,7 +28,7 @@ class MorphologyzerImage:
         dim: tuple[int, int],
         interpolation: int = cv2.INTER_AREA,
         copy: bool = False,
-    ) -> None:
+    ) -> Optional[Image]:
         """Resize the image using a fixed dimension well defined.
         This function can result in a distorted image if the ratio between
         width and height is different in the original and the new image.
@@ -32,9 +41,7 @@ class MorphologyzerImage:
                 (width, height).
             interpolation (int, optional): resize interpolation.
                 Defaults to cv2.INTER_AREA.
-
-        Returns:
-            Self: image object
+            copy (bool, optional): whether to return a new image or not.
         """
         if dim[0] < 0 and dim[1] < 0:  # check that the dim is positive
             raise ValueError(f"The dim argument {dim} has two negative values.")
@@ -57,10 +64,11 @@ class MorphologyzerImage:
             return Image(image=result)
 
         self.base.asarray = result
+        return None
 
     def resize(
         self, factor: float, interpolation: int = cv2.INTER_AREA, copy: bool = False
-    ) -> None:
+    ) -> Optional[Image]:
         """Resize the image to a new size using a scaling factor value that
         will be applied to all dimensions (width and height).
 
@@ -72,12 +80,12 @@ class MorphologyzerImage:
                 A value of 2 doubles the image size.
                 A maximum value of 5 is set to avoid accidentally producing a gigantic
                 image.
-
-        Returns:
-            (Self): resized image
+            interpolation (int, optional): resize interpolation.
+                Defaults to cv2.INTER_AREA.
+            copy (bool, optional): whether to return a new image or not.
         """
         if factor == 1:
-            return self
+            return None
 
         if factor < 0:
             raise ValueError(
@@ -92,7 +100,7 @@ class MorphologyzerImage:
         height = int(self.base.height * factor)
         dim = (width, height)
 
-        self.resize_fixed(dim=dim, interpolation=interpolation, copy=copy)
+        return self.resize_fixed(dim=dim, interpolation=interpolation, copy=copy)
 
     def blur(
         self,
@@ -101,7 +109,7 @@ class MorphologyzerImage:
         method: BlurMethods = "average",
         sigmax: float = 0,
     ) -> None:
-        """Blur the images
+        """Blur the image
 
         Args:
             kernel (tuple, optional): blur kernel size. Defaults to (5, 5).
@@ -109,9 +117,8 @@ class MorphologyzerImage:
             method (str, optional): blur method.
                 Must be in ["average", "median", "gaussian", "bilateral"].
                 Defaults to "average".
-
-        Returns:
-            Self: the new image blurred
+            sigmax (float, optional): sigmaX value for the gaussian blur.
+                Defaults to 0.
         """
         if method not in list(get_args(BlurMethods)):
             raise ValueError(f"Invalid blur method {method}. Must be in {BlurMethods}")
@@ -146,12 +153,9 @@ class MorphologyzerImage:
             kernel (tuple, optional): kernel to dilate. Defaults to (5, 5).
             iterations (int, optional): number of dilatation iterations. Defaults to 1.
             dilate_black_pixels (bool, optional): whether to dilate black pixels or not
-
-        Returns:
-            Self: image dilated
         """
         if iterations == 0:
-            return self
+            return None
 
         if dilate_black_pixels:
             self.base.asarray = 255 - np.asarray(
@@ -172,6 +176,8 @@ class MorphologyzerImage:
                 dtype=np.uint8,
             )
 
+        return None
+
     def erode(
         self,
         kernel: tuple = (5, 5),
@@ -186,9 +192,6 @@ class MorphologyzerImage:
             kernel (tuple, optional): kernel to erode. Defaults to (5, 5).
             iterations (int, optional): number of iterations. Defaults to 1.
             erode_black_pixels (bool, optional): whether to erode black pixels or not
-
-        Returns:
-            Self: image eroded
         """
         if iterations == 0:
             pass

@@ -18,11 +18,16 @@ class WriterImage:
         color_conversion: int = cv2.COLOR_BGR2RGB,
         save_filepath: Optional[str] = None,
     ) -> None:
-        """Display the image
+        """Show the image
 
         Args:
-            title (str, optional): optional title for the image. Defaults to None.
-            conversion (int, optional): color conversion. Defaults to cv2.COLOR_BGR2RGB.
+            title (Optional[str], optional): title of the image. Defaults to None.
+            figsize (tuple[float, float], optional): size of the figure.
+                Defaults to (8.0, 6.0).
+            color_conversion (int, optional): color conversion parameter.
+                Defaults to cv2.COLOR_BGR2RGB.
+            save_filepath (Optional[str], optional): save the image if needed.
+                Defaults to None.
         """
         # Converts from one colour space to the other. this is needed as RGB
         # is not the default colour space for OpenCV

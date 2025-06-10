@@ -267,9 +267,7 @@ class TestTransformerImageRotateMethods:
         color = (128, 245, 128)
         for i in range(10):
             img.asarray[i, :] = color
-        img.rotate(
-            angle=45, is_degree=True, border_fill_value=(255, 255, 255), reshape=True
-        )
+        img.rotate(angle=45, is_degree=True, fill_value=(255, 255, 255), reshape=True)
 
         _height_exect_color = int(img.height / 2)
         # img.draw_segments(segments=np.array([[[0, _height_exect_color], [img.width, _height_exect_color]]]))
@@ -284,9 +282,7 @@ class TestTransformerImageRotateMethods:
         for i in range(10):
             img.asarray[i, :] = color
 
-        img.rotate(
-            angle=70, is_degree=True, border_fill_value=(255, 255, 255), reshape=True
-        )
+        img.rotate(angle=70, is_degree=True, fill_value=(255, 255, 255), reshape=True)
 
         _height_exect_color = int(img.height * 0.71)
         # img.draw_segments(segments=np.array([[[0, _height_exect_color], [img.width, _height_exect_color]]]))
@@ -304,16 +300,14 @@ class TestTransformerImageRotateMethods:
     def test_rotate_with_border_fill_value_tuple(self):
         img = Image.from_fillvalue(shape=(5, 5, 3), value=0)
         border_fill_value = (128, 128, 128)
-        img.rotate(
-            angle=45, is_degree=True, border_fill_value=border_fill_value, reshape=True
-        )
+        img.rotate(angle=45, is_degree=True, fill_value=border_fill_value, reshape=True)
         assert np.all(img.asarray[0, 0] == border_fill_value)
 
     def test_rotate_without_reshape_with_border_fill_value_tuple(self):
         img = Image.from_fillvalue(shape=(5, 5, 3), value=0)
         border_fill_value = (255, 0, 0)
         img.rotate(
-            angle=90, is_degree=True, border_fill_value=border_fill_value, reshape=False
+            angle=90, is_degree=True, fill_value=border_fill_value, reshape=False
         )
         assert np.all(img.asarray[0, 0] == border_fill_value)
 
@@ -321,7 +315,7 @@ class TestTransformerImageRotateMethods:
         img = Image.from_fillvalue(shape=(5, 5, 3), value=0)
         img.asarray[2, 2] = (255, 255, 255)
         border_fill_value = (0, 255, 0)
-        img.rotate(angle=-45, is_degree=True, border_fill_value=border_fill_value)
+        img.rotate(angle=-45, is_degree=True, fill_value=border_fill_value)
         assert np.all(img.asarray[0, 0] == border_fill_value)
 
 
@@ -334,7 +328,7 @@ class TestTransformerImageShiftMethods:
         arr = np.full(shape=shape, fill_value=0)
         arr[4, 4] = 255
         assert np.array_equal(
-            img.shift(shift=np.array([4, 4]), border_fill_value=0).asarray, arr
+            img.shift(shift=np.array([4, 4]), fill_value=0).asarray, arr
         )
 
     def test_shift_x(self):
@@ -344,7 +338,7 @@ class TestTransformerImageShiftMethods:
         arr = np.full(shape=shape, fill_value=0)
         arr[0, 4] = 255
         assert np.array_equal(
-            img.shift(shift=np.array([4, 0]), border_fill_value=0).asarray, arr
+            img.shift(shift=np.array([4, 0]), fill_value=0).asarray, arr
         )
 
     def test_shift_y(self):
@@ -354,14 +348,14 @@ class TestTransformerImageShiftMethods:
         arr = np.full(shape=shape, fill_value=0)
         arr[4, 0] = 255
         assert np.array_equal(
-            img.shift(shift=np.array([0, 4]), border_fill_value=0).asarray, arr
+            img.shift(shift=np.array([0, 4]), fill_value=0).asarray, arr
         )
 
     def test_shift_with_border_fill_value_tuple(self):
         img = Image.from_fillvalue(shape=(5, 5, 3), value=0)
         img.asarray[2, 2] = (255, 255, 255)
         border_fill_value = (128, 128, 128)
-        img.shift(shift=np.array([2, 2]), border_fill_value=border_fill_value)
+        img.shift(shift=np.array([2, 2]), fill_value=border_fill_value)
         assert np.all(img.asarray[0, 0] == border_fill_value)
 
     def test_center_to_point(self):
