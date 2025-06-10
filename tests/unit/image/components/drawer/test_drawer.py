@@ -9,11 +9,14 @@ from src.geometry import Polygon, Rectangle, Circle, LinearSpline
 from src.image import Image, SegmentsRender, CirclesRender, LinearSplinesRender
 
 
-class TestDrawerImage:
+class TestDrawerPointsImage:
 
     def test_draw_points(self):
         points = np.array([[0, 0], [1, 1], [2, 3]])
         Image.from_fillvalue(shape=(5, 5, 3), value=0).draw_points(points=points)
+
+
+class TestDrawerSegmentsImage:
 
     def test_draw_segments(self):
         segments = np.array([[[0, 0], [1, 1]]])
@@ -25,10 +28,16 @@ class TestDrawerImage:
             segments=segments, render=SegmentsRender(as_vectors=True)
         )
 
-    def test_draw_contours(self):
+
+class TestDrawerPolygonsImage:
+
+    def test_draw_polygons(self):
         points = np.array([[0, 0], [1, 1], [2, 3]])
         cnt = Polygon(points=points)
         Image.from_fillvalue(shape=(5, 5, 3), value=0).draw_polygons(polygons=[cnt])
+
+
+class TestDrawerOcrImage:
 
     def test_draw_ocrso(self):
         ocrso = OcrSingleOutput(
@@ -50,6 +59,9 @@ class TestDrawerImage:
             ocr_outputs=[ocrso]
         )
 
+
+class TestDrawerCirclesImage:
+
     def test_draw_circles(self):
 
         circles = [
@@ -68,6 +80,9 @@ class TestDrawerImage:
         Image.from_fillvalue(shape=(15, 15, 3), value=0).draw_circles(
             circles=circles, render=render
         )
+
+
+class TestDrawerSplinesImage:
 
     def test_draw_splines(self):
         splines = [
