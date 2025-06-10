@@ -5,6 +5,7 @@ Vectors class they are like segments, but with a given direction
 from __future__ import annotations
 
 import numpy as np
+from numpy.typing import NDArray
 
 from src.geometry.discrete.linear.directed.entity import DirectedLinearEntity
 from src.geometry import Segment
@@ -14,11 +15,11 @@ class Vector(Segment, DirectedLinearEntity):
     """Vector class to manipulate vector which can be seen as Segment with direction"""
 
     @classmethod
-    def from_single_point(cls, point: np.ndarray) -> Vector:
+    def from_single_point(cls, point: NDArray) -> Vector:
         """Get vector that goes from [0, 0] to point
 
         Args:
-            point (np.ndarray): point of shape 2
+            point (NDArray): point of shape 2
 
         Returns:
             Vector: new vector object
@@ -51,20 +52,20 @@ class Vector(Segment, DirectedLinearEntity):
         return cardinal_degree
 
     @property
-    def coordinates_shift(self) -> np.ndarray:
+    def coordinates_shift(self) -> NDArray:
         """Return the vector as a single point (x1-x0, y1-y0)
 
         Returns:
-            np.ndarray: coordinates shift
+            NDArray: coordinates shift
         """
         return self.origin[1]
 
     @property
-    def normalized(self) -> np.ndarray:
+    def normalized(self) -> NDArray:
         """Nornalized vector
 
         Returns:
-            np.ndarray: normalized vector
+            NDArray: normalized vector
         """
         return self.coordinates_shift / np.linalg.norm(self.coordinates_shift)
 

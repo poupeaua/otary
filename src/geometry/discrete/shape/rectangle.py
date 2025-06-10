@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import Optional, Self
 
 import numpy as np
+from numpy.typing import NDArray
 import pymupdf
 
 from src.geometry import Polygon, Segment, Vector
@@ -16,7 +17,7 @@ from src.geometry import Polygon, Segment, Vector
 class Rectangle(Polygon):
     """Rectangle class to manipulate rectangle object"""
 
-    def __init__(self, points: np.ndarray | list, is_cast_int: bool = False) -> None:
+    def __init__(self, points: NDArray | list, is_cast_int: bool = False) -> None:
         assert len(points) == 4
         super().__init__(points=points, is_cast_int=is_cast_int)
 
@@ -32,7 +33,7 @@ class Rectangle(Polygon):
     @classmethod
     def from_center(
         cls,
-        center: np.ndarray,
+        center: NDArray,
         width: float,
         height: float,
         angle: float = 0.0,
@@ -48,7 +49,7 @@ class Rectangle(Polygon):
             index 3: bottom left point
 
         Args:
-            center (np.ndarray): center point of the rectangle
+            center (NDArray): center point of the rectangle
             width (float): width of the rectangle
             height (float): height of the rectangle
             angle (float, optional): radian rotation angle for the rectangle.
@@ -86,8 +87,8 @@ class Rectangle(Polygon):
     @classmethod
     def from_topleft_bottomright(
         cls,
-        topleft: np.ndarray,
-        bottomright: np.ndarray,
+        topleft: NDArray,
+        bottomright: NDArray,
         is_cast_int: bool = False,
     ) -> Rectangle:
         """Create a Rectangle object using the top left and bottom right points.
@@ -99,8 +100,8 @@ class Rectangle(Polygon):
             index 3: bottom left point
 
         Args:
-            topleft (np.ndarray): top left point of the rectangle
-            bottomright (np.ndarray): bottom right point of the rectangle
+            topleft (NDArray): top left point of the rectangle
+            bottomright (NDArray): bottom right point of the rectangle
 
         Returns:
             Rectangle: new Rectangle object
@@ -115,7 +116,7 @@ class Rectangle(Polygon):
     @classmethod
     def from_topleft(
         cls,
-        topleft: np.ndarray,
+        topleft: NDArray,
         width: float,
         height: float,
         is_cast_int: bool = False,
@@ -129,7 +130,7 @@ class Rectangle(Polygon):
             index 3: bottom left point
 
         Args:
-            topleft (np.ndarray): top left point of the rectangle
+            topleft (NDArray): top left point of the rectangle
             width (float): width of the rectangle
             height (float): height of the rectangle
             is_cast_int (bool, optional): whether to cast int or not. Defaults to False.
@@ -282,53 +283,53 @@ class Rectangle(Polygon):
         # if 3 or more points in common it is the same rectangle
         return self
 
-    def _topright_vertice_from_topleft(self, topleft_index: int) -> np.ndarray:
+    def _topright_vertice_from_topleft(self, topleft_index: int) -> NDArray:
         """Get the top-right vertice from the topleft vertice
 
         Args:
             topleft_index (int): index of the topleft vertice
 
         Returns:
-            np.ndarray: topright vertice
+            NDArray: topright vertice
         """
         if self.is_clockwise(is_y_axis_down=True):
             return self.asarray[(topleft_index + 1) % len(self)]
         else:
             return self.asarray[topleft_index - 1]
 
-    def _bottomleft_vertice_from_topleft(self, topleft_index: int) -> np.ndarray:
+    def _bottomleft_vertice_from_topleft(self, topleft_index: int) -> NDArray:
         """Get the bottom-left vertice from the topleft vertice
 
         Args:
             topleft_index (int): index of the topleft vertice
 
         Returns:
-            np.ndarray: topright vertice
+            NDArray: topright vertice
         """
         if self.is_clockwise(is_y_axis_down=True):
             return self.asarray[topleft_index - 1]
         else:
             return self.asarray[(topleft_index + 1) % len(self)]
 
-    def _bottomright_vertice_from_topleft(self, topleft_index: int) -> np.ndarray:
+    def _bottomright_vertice_from_topleft(self, topleft_index: int) -> NDArray:
         """Get the bottom-right vertice from the topleft vertice
 
         Args:
             topleft_index (int): index of the topleft vertice
 
         Returns:
-            np.ndarray: topright vertice
+            NDArray: topright vertice
         """
         return self.asarray[(topleft_index + 2) % len(self)]
 
     def get_vertice_from_topleft(
         self, topleft_index: int, vertice: str = "topright"
-    ) -> np.ndarray:
+    ) -> NDArray:
         """Get vertice from the topleft vertice. You can use this method to
         obtain the topright, bottomleft, bottomright vertice from the topleft vertice.
 
         Returns:
-            np.ndarray: topright vertice
+            NDArray: topright vertice
         """
         if vertice not in ("topright", "bottomleft", "bottomright"):
             raise ValueError(

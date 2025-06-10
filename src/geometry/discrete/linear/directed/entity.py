@@ -6,6 +6,7 @@ from abc import abstractmethod
 
 from metpy.calc import angle_to_direction
 import numpy as np
+from numpy.typing import NDArray
 
 from src.geometry.discrete.linear.entity import LinearEntity
 
@@ -19,25 +20,25 @@ class DirectedLinearEntity(LinearEntity):
         """Return the cardinal degree of the Directed Linear Entity"""
 
     @property
-    def head(self) -> np.ndarray:
+    def head(self) -> NDArray:
         """Return the head point at the end-extremity of the arrow directed object.
 
         Returns:
-            np.ndarray: the head point
+            NDArray: the head point
         """
         return self.asarray[-1]
 
     @property
-    def tail(self) -> np.ndarray:
+    def tail(self) -> NDArray:
         """Return the tail point at the start-extremity of the arrow directed object.
 
         Returns:
-            np.ndarray: the tail point
+            NDArray: the tail point
         """
         return self.asarray[0]
 
     @property
-    def origin(self) -> np.ndarray:
+    def origin(self) -> NDArray:
         """Representation shifted to the origin (0,0)
         It is the same entity but with the tail point at (0,0) and the other
         points shifted accordingly.
@@ -45,11 +46,11 @@ class DirectedLinearEntity(LinearEntity):
         return self.asarray - self.tail
 
     @property
-    def cv2_space_coords(self) -> np.ndarray:
+    def cv2_space_coords(self) -> NDArray:
         """Inverted coordinates in the cv2 space
 
         Returns:
-            np.ndarray: with inverted coordinates
+            NDArray: with inverted coordinates
         """
         return np.roll(self.points, shift=1, axis=1)
 

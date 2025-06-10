@@ -16,6 +16,7 @@ from shapely import (
 )
 
 import numpy as np
+from numpy.typing import NDArray
 
 if TYPE_CHECKING:
     from src.geometry import Polygon, Rectangle  # pragma: no cover
@@ -62,12 +63,12 @@ class GeometryEntity(ABC):
 
     @property
     @abstractmethod
-    def centroid(self) -> np.ndarray:
+    def centroid(self) -> NDArray:
         """Compute the centroid point which can be seen as the center of gravity of
         the shape
 
         Returns:
-            np.ndarray: centroid point
+            NDArray: centroid point
         """
 
     @property
@@ -76,7 +77,7 @@ class GeometryEntity(ABC):
         """Get the maximum X coordinate of the geometry entity
 
         Returns:
-            np.ndarray: 2D point
+            NDArray: 2D point
         """
 
     @property
@@ -85,7 +86,7 @@ class GeometryEntity(ABC):
         """Get the minimum X coordinate of the geometry entity
 
         Returns:
-            np.ndarray: 2D point
+            NDArray: 2D point
         """
 
     @property
@@ -94,7 +95,7 @@ class GeometryEntity(ABC):
         """Get the maximum Y coordinate of the geometry entity
 
         Returns:
-            np.ndarray: 2D point
+            NDArray: 2D point
         """
 
     @property
@@ -103,7 +104,7 @@ class GeometryEntity(ABC):
         """Get the minimum Y coordinate of the geometry entity
 
         Returns:
-            np.ndarray: 2D point
+            NDArray: 2D point
         """
 
     # ---------------------------- MODIFICATION METHODS -------------------------------
@@ -114,7 +115,7 @@ class GeometryEntity(ABC):
         angle: float,
         is_degree: bool = False,
         is_clockwise: bool = True,
-        pivot: Optional[np.ndarray] = None,
+        pivot: Optional[NDArray] = None,
     ) -> Self:
         """Rotate the geometry entity object.
         A pivot point can be passed as an argument to rotate the object around the pivot
@@ -125,7 +126,7 @@ class GeometryEntity(ABC):
                 Defaults to False which means radians.
             is_clockwise (bool, optional): whether the rotation is clockwise or
                 counter-clockwise. Defaults to True.
-            pivot (np.ndarray, optional): pivot point.
+            pivot (NDArray, optional): pivot point.
                 Defaults to None which means that by default the centroid point of
                 the shape is taken as the pivot point.
 
@@ -134,11 +135,11 @@ class GeometryEntity(ABC):
         """
 
     @abstractmethod
-    def shift(self, vector: np.ndarray) -> Self:
+    def shift(self, vector: NDArray) -> Self:
         """Shift the geometry entity by the vector direction
 
         Args:
-            vector (np.ndarray): vector that describes the shift as a array with
+            vector (NDArray): vector that describes the shift as a array with
                 two elements. Example: [2, -8] which describes the
                 vector [[0, 0], [2, -8]]. The vector can also be a vector of shape
                 (2, 2) of the form [[2, 6], [1, 3]].
@@ -170,9 +171,7 @@ class GeometryEntity(ABC):
             GeometryEntity: copy of the geometry entity object
         """
 
-    def intersection(
-        self, other: GeometryEntity, only_points: bool = True
-    ) -> np.ndarray:
+    def intersection(self, other: GeometryEntity, only_points: bool = True) -> NDArray:
         """Compute the intersections between two geometric objects.
         If the only_points parameter is True, then we only consider intersection points
         as valid. We can not have another type of intersection.
@@ -183,7 +182,7 @@ class GeometryEntity(ABC):
                 Defaults to True.
 
         Returns:
-            np.ndarray: list of n points of shape (n, 2)
+            NDArray: list of n points of shape (n, 2)
         """
         it = self.shapely_edges.intersection(other=other.shapely_edges)
 

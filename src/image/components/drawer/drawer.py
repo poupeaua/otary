@@ -8,6 +8,7 @@ from typing import Sequence
 
 import cv2
 import numpy as np
+from numpy.typing import NDArray
 
 import src.geometry as geo
 from src.cv.ocr.output.ocr_single_output import OcrSingleOutput
@@ -30,7 +31,7 @@ class DrawerImage:
     def __init__(self, base: BaseImage):
         self.base = base
 
-    def _pre_draw(self, n_objects: int, render: Render) -> np.ndarray:
+    def _pre_draw(self, n_objects: int, render: Render) -> NDArray:
         render.adjust_colors_length(n=n_objects)
         return self.base.as_colorscale().asarray
 
@@ -68,13 +69,13 @@ class DrawerImage:
 
     def draw_points(
         self,
-        points: np.ndarray | Sequence[geo.Point],
+        points: NDArray | Sequence[geo.Point],
         render: PointsRender = PointsRender(),
     ) -> None:
         """Draw points in the image
 
         Args:
-            points (np.ndarray): list of points. It must be of shape (n, 2). This
+            points (NDArray): list of points. It must be of shape (n, 2). This
                 means n points of shape 2 (x and y coordinates).
             render (PointsRender): point renderer
         """
@@ -93,13 +94,13 @@ class DrawerImage:
 
     def draw_segments(
         self,
-        segments: np.ndarray | Sequence[geo.Segment],
+        segments: NDArray | Sequence[geo.Segment],
         render: SegmentsRender = SegmentsRender(),
     ) -> None:
         """Draw segments in the image. It can be arrowed segments (vectors) too.
 
         Args:
-            segments (np.ndarray): list of segments. Can be a numpy array of shape
+            segments (NDArray): list of segments. Can be a numpy array of shape
                 (n, 2, 2) which means n array of shape (2, 2) that define a segment
                 by two 2D points.
             render (SegmentsRender): segment renderer

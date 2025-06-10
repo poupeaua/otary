@@ -135,7 +135,7 @@ class Image:
     # ---------------------------------- PROPERTIES -----------------------------------
 
     @property
-    def asarray(self) -> np.ndarray:
+    def asarray(self) -> NDArray:
         """Array representation of the image"""
         return self.base.asarray
 
@@ -144,7 +144,7 @@ class Image:
         """Setter for the asarray property
 
         Args:
-            value (np.ndarray): value of the asarray to be changed
+            value (NDArray): value of the asarray to be changed
         """
         self.base.asarray = value
 
@@ -184,7 +184,7 @@ class Image:
         represented as a X-Y coords of a pixel.
 
         Returns:
-            np.ndarray: center point of the image
+            NDArray: center point of the image
         """
         return self.base.center
 
@@ -262,13 +262,13 @@ class Image:
         self.base.as_colorscale()
         return self
 
-    def as_filled(self, fill_value: int | np.ndarray = 255) -> Self:
+    def as_filled(self, fill_value: int | NDArray = 255) -> Self:
         """Returns an entirely white image of the same size as the original.
         Can be useful to get an empty representation of the same image to paint
         and draw things on an image of the same dimension.
 
         Args:
-            fill_value (int | np.ndarray, optional): color to fill the new empty image.
+            fill_value (int | NDArray, optional): color to fill the new empty image.
                 Defaults to 255 which means that is returns a entirely white image.
 
         Returns:
@@ -443,13 +443,13 @@ class Image:
 
     def draw_segments(
         self,
-        segments: np.ndarray | Sequence[geo.Segment],
+        segments: NDArray | Sequence[geo.Segment],
         render: SegmentsRender = SegmentsRender(),
     ) -> Self:
         """Draw segments in the image. It can be arrowed segments (vectors) too.
 
         Args:
-            segments (np.ndarray): list of segments. Can be a numpy array of shape
+            segments (NDArray): list of segments. Can be a numpy array of shape
                 (n, 2, 2) which means n array of shape (2, 2) that define a segment
                 by two 2D points.
             render (SegmentsRender): segment renderer
@@ -688,7 +688,7 @@ class Image:
         its height.
 
         Args:
-            topleft (np.ndarray): (x, y) coordinates of the top-left point
+            topleft (NDArray): (x, y) coordinates of the top-left point
             width (int): width of the rectangle to crop
             height (int): height of the rectangle to crop
             clip (bool, optional): whether to clip or not. Defaults to True.
@@ -802,10 +802,10 @@ class Image:
 
     def crop_around_segment_horizontal(
         self,
-        segment: np.ndarray,
+        segment: NDArray,
         dim_crop_rect: tuple[int, int] = (-1, 100),
         added_width: int = 75,
-    ) -> tuple[Image, np.ndarray, float, np.ndarray]:
+    ) -> tuple[Image, NDArray, float, NDArray]:
         """Crop around a specific segment in the image. This is done in three
         specific steps:
         1) shift image so that the middle of the segment is in the middle of the image
@@ -813,7 +813,7 @@ class Image:
         3) crop the image
 
         Args:
-            segment (np.ndarray): segment as numpy array of shape (2, 2).
+            segment (NDArray): segment as numpy array of shape (2, 2).
             dim_crop_rect (tuple, optional): represents (width, height).
                 Defaults to heigth of 100 and width of -1 which means
                 that the width is automatically computed based on the length of
@@ -823,7 +823,7 @@ class Image:
                 Defaults to 75.
 
         Returns:
-            tuple[Self, np.ndarray, float, np.ndarray]: returns in the following order:
+            tuple[Self, NDArray, float, NDArray]: returns in the following order:
                 1) the cropped image
                 2) the translation vector used to center the image
                 3) the angle of rotation applied to the image
@@ -858,7 +858,7 @@ class Image:
 
     def crop_around_segment_horizontal_faster(
         self,
-        segment: np.ndarray,
+        segment: NDArray,
         dim_crop_rect: tuple[int, int] = (-1, 100),
         added_width: int = 75,
         pad_value: int = 0,
@@ -876,7 +876,7 @@ class Image:
         | 4896 x 3784     | 23.2s   | 0.25s       |
 
         Args:
-            segment (np.ndarray): segment as numpy array of shape (2, 2).
+            segment (NDArray): segment as numpy array of shape (2, 2).
             dim_crop_rect (tuple, optional): represents (width, height).
                 Defaults to heigth of 100 and width of -1 which means
                 that the width is automatically computed based on the length of
@@ -1304,7 +1304,7 @@ class Image:
         identify which segments specifically are contained in the image or not.
 
         Args:
-            segments (np.ndarray | list[geo.Segment]): a list of segments
+            segments (NDArray | list[geo.Segment]): a list of segments
             dilate_kernel (tuple, optional): dilate kernel param. Defaults to (5, 5).
             dilate_iterations (int, optional): dilate iterations param. Defaults to 0.
             binarization_method (str, optional): binarization method. Here
@@ -1313,7 +1313,7 @@ class Image:
                 Defaults to "sauvola".
 
         Returns:
-            np.ndarray: list of score for each individual segment in the same order
+            NDArray: list of score for each individual segment in the same order
                 as the list of segments
         """
         # pylint: disable=too-many-arguments, too-many-positional-arguments
@@ -1353,7 +1353,7 @@ class Image:
         identify which segments specifically are contained in the image or not.
 
         Args:
-            segments (np.ndarray | list[geo.Segment]): a list of segments
+            segments (NDArray | list[geo.Segment]): a list of segments
             dilate_kernel (tuple, optional): dilate kernel param. Defaults to (5, 5).
             dilate_iterations (int, optional): dilate iterations param. Defaults to 0.
             binarization_method (str, optional): binarization method. Here
@@ -1366,7 +1366,7 @@ class Image:
                 Defaults to 1.0 which implies no resize.
 
         Returns:
-            np.ndarray: list of score for each individual segment in the same order
+            NDArray: list of score for each individual segment in the same order
                 as the list of segments
         """
         # pylint: disable=too-many-arguments, too-many-positional-arguments
@@ -1506,7 +1506,7 @@ class Image:
         It provides a score for each single linear spline.
 
         Args:
-            segments (np.ndarray | list[geo.Segment]): a list of segments
+            segments (NDArray | list[geo.Segment]): a list of segments
             dilate_kernel (tuple, optional): dilate kernel param. Defaults to (5, 5).
             dilate_iterations (int, optional): dilate iterations param. Defaults to 0.
             binarization_method (str, optional): binarization method. Here
@@ -1610,7 +1610,7 @@ class Image:
         return scores
 
     def score_distance_from_center(
-        self, point: np.ndarray, method: ScoreDistanceFromCenterMethods = "linear"
+        self, point: NDArray, method: ScoreDistanceFromCenterMethods = "linear"
     ) -> float:
         """Compute a score to evaluate how far a point is from the
         image center point.
@@ -1628,7 +1628,7 @@ class Image:
         - On the contrary, a high score does not ensure a high quality contour.
 
         Args:
-            point (np.ndarray): 2D point
+            point (NDArray): 2D point
             method (str): the method to be used to compute the score. Defaults to
                 "linear".
 

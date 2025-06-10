@@ -7,6 +7,7 @@ from __future__ import annotations
 import itertools
 
 import numpy as np
+from numpy.typing import NDArray
 from sympy.geometry import Line
 
 from src.geometry.utils.constants import DEFAULT_MARGIN_ANGLE_ERROR
@@ -16,18 +17,18 @@ from src.geometry.discrete.linear.entity import LinearEntity
 class Segment(LinearEntity):
     """Segment Class to manipulate easily segments objects"""
 
-    def __init__(self, points: np.ndarray | list, is_cast_int: bool = False) -> None:
+    def __init__(self, points: NDArray | list, is_cast_int: bool = False) -> None:
         assert len(points) == 2
         assert len(points[0]) == 2
         assert len(points[1]) == 2
         super().__init__(points=points, is_cast_int=is_cast_int)
 
     @property
-    def centroid(self) -> np.ndarray:
+    def centroid(self) -> NDArray:
         """Returns the center point of the segment
 
         Returns:
-            np.ndarray: point of shape (1, 2)
+            NDArray: point of shape (1, 2)
         """
         return np.sum(self.points, axis=0) / 2
 
@@ -55,11 +56,11 @@ class Segment(LinearEntity):
         return -self.slope
 
     @staticmethod
-    def assert_list_of_lines(lines: np.ndarray) -> None:
+    def assert_list_of_lines(lines: NDArray) -> None:
         """Check that the lines argument is really a list of lines
 
         Args:
-            lines (np.ndarray): a expected list of lines
+            lines (NDArray): a expected list of lines
         """
         if lines.shape[1:] != (2, 2):
             raise ValueError(
@@ -110,9 +111,9 @@ class Segment(LinearEntity):
 
     @staticmethod
     def is_points_collinear(
-        p1: np.ndarray,
-        p2: np.ndarray,
-        p3: np.ndarray,
+        p1: NDArray,
+        p2: NDArray,
+        p3: NDArray,
         margin_error_angle: float = DEFAULT_MARGIN_ANGLE_ERROR,
     ) -> bool:
         """Verify whether three points on the plane are collinear or not.
@@ -146,13 +147,13 @@ class Segment(LinearEntity):
 
     def is_point_collinear(
         self,
-        point: np.ndarray,
+        point: NDArray,
         margin_error_angle: float = DEFAULT_MARGIN_ANGLE_ERROR,
     ) -> bool:
         """Check whether a point is collinear with the segment
 
         Args:
-            point (np.ndarray): point of shape (2,)
+            point (NDArray): point of shape (2,)
             margin_error_angle (float, optional): Threshold value for validating
                 collinearity. Defaults to DEFAULT_MARGIN_ANGLE_ERROR.
 
@@ -212,7 +213,7 @@ class Segment(LinearEntity):
         _is_collinear = 1 in val_arr
         return bool(_is_parallel and _is_collinear)
 
-    def intersection_line(self, other: Segment) -> np.ndarray:
+    def intersection_line(self, other: Segment) -> NDArray:
         """Compute the intersection point that would exist between two segments if we
         consider them as lines - which means as lines with infinite length.
 
@@ -223,7 +224,7 @@ class Segment(LinearEntity):
             other (Segment): other Segment object
 
         Returns:
-            np.ndarray: intersection point between the two lines
+            NDArray: intersection point between the two lines
         """
         if self.is_parallel(segment=other, margin_error_angle=0):
             return np.array([])

@@ -6,6 +6,7 @@ from typing import Self, Optional
 import math
 
 import numpy as np
+from numpy.typing import NDArray
 
 from shapely import Polygon as SPolygon, LinearRing
 
@@ -20,14 +21,14 @@ class Circle(Ellipse):
 
     def __init__(
         self,
-        center: np.ndarray,
+        center: NDArray,
         radius: float,
         n_points_polygonal_approx: int = ContinuousGeometryEntity.DEFAULT_N_POINTS_POLYGONAL_APPROX,
     ):
         """Initialize a Circle geometrical object
 
         Args:
-            center (np.ndarray): center 2D point
+            center (NDArray): center 2D point
             radius (float): radius value
             n_points_polygonal_approx (int, optional): number of points to be used in
                 the polygonal approximation of the circle. Defaults to
@@ -55,7 +56,7 @@ class Circle(Ellipse):
         return 2 * math.pi * self.radius
 
     @property
-    def centroid(self) -> np.ndarray:
+    def centroid(self) -> NDArray:
         """Center of the circle
 
         Returns:
@@ -106,7 +107,7 @@ class Circle(Ellipse):
         poly = Polygon(points=np.asarray(points), is_cast_int=is_cast_int)
         return poly
 
-    def curvature(self, point: Optional[np.ndarray] = None) -> float:
+    def curvature(self, point: Optional[NDArray] = None) -> float:
         """Curvature of circle is a constant and does not depend on a position of
         a point
 
@@ -120,7 +121,7 @@ class Circle(Ellipse):
         """Get the maximum X coordinate of the geometry entity
 
         Returns:
-            np.ndarray: 2D point
+            NDArray: 2D point
         """
         return self.center[0] + self.radius
 
@@ -129,7 +130,7 @@ class Circle(Ellipse):
         """Get the minimum X coordinate of the geometry entity
 
         Returns:
-            np.ndarray: 2D point
+            NDArray: 2D point
         """
         return self.center[0] - self.radius
 
@@ -138,7 +139,7 @@ class Circle(Ellipse):
         """Get the maximum Y coordinate of the geometry entity
 
         Returns:
-            np.ndarray: 2D point
+            NDArray: 2D point
         """
         return self.center[1] + self.radius
 
@@ -147,7 +148,7 @@ class Circle(Ellipse):
         """Get the minimum Y coordinate of the geometry entity
 
         Returns:
-            np.ndarray: 2D point
+            NDArray: 2D point
         """
         return self.center[1] - self.radius
 
@@ -158,7 +159,7 @@ class Circle(Ellipse):
         angle: float,
         is_degree: bool = False,
         is_clockwise: bool = True,
-        pivot: Optional[np.ndarray] = None,
+        pivot: Optional[NDArray] = None,
     ) -> Self:
         """Rotate the circle around a pivot point.
 
@@ -166,7 +167,7 @@ class Circle(Ellipse):
             angle (float): angle by which to rotate the circle
             is_degree (bool, optional): whether the angle is in degrees. Defaults to False.
             is_clockwise (bool, optional): whether the rotation is clockwise. Defaults to True.
-            pivot (Optional[np.ndarray], optional): pivot point around which to rotate. Defaults to None.
+            pivot (Optional[NDArray], optional): pivot point around which to rotate. Defaults to None.
 
         Returns:
             Self: rotated circle object
@@ -186,11 +187,11 @@ class Circle(Ellipse):
         self.update_polyapprox()
         return self
 
-    def shift(self, vector: np.ndarray) -> Self:
+    def shift(self, vector: NDArray) -> Self:
         """Shift the circle by a given vector.
 
         Args:
-            vector (np.ndarray): 2D vector by which to shift the circle
+            vector (NDArray): 2D vector by which to shift the circle
 
         Returns:
             Self: shifted circle object

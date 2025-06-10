@@ -3,30 +3,32 @@ Tools function to be used in the Geometry classes
 """
 
 import math
+
 import numpy as np
+from numpy.typing import NDArray
 
 
 def rotate_2d_points(
-    points: np.ndarray,
+    points: NDArray,
     angle: float,
-    pivot: np.ndarray,
+    pivot: NDArray,
     is_degree: bool = False,
     is_clockwise: bool = True,
-) -> np.ndarray:
+) -> NDArray:
     """Rotate the points.
     A pivot point can be passed as an argument to rotate the object around the pivot
 
     Args:
-        points (np.ndarray): points to be rotated
+        points (NDArray): points to be rotated
         angle (float): rotation angle
-        pivot (np.ndarray): pivot point.
+        pivot (NDArray): pivot point.
         is_degree (bool, optional): whether the angle is in degree or radian.
             Defaults to False which means radians.
         is_clockwise (bool, optional): whether the rotation is clockwise or
             counter-clockwise. Defaults to True.
 
     Returns:
-        np.ndarray: rotated points.
+        NDArray: rotated points.
     """
 
     if is_degree:  # transform angle to radian if in degree

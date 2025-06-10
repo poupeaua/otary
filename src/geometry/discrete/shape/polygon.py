@@ -11,6 +11,7 @@ import logging
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy.typing import NDArray
 from shapely import LinearRing, Polygon as SPolygon
 
 from src.geometry.entity import GeometryEntity
@@ -25,11 +26,11 @@ class Polygon(DiscreteGeometryEntity):
     # ---------------------------------- OTHER CONSTRUCTORS ----------------------------
 
     @classmethod
-    def from_lines(cls, lines: np.ndarray) -> Polygon:
+    def from_lines(cls, lines: NDArray) -> Polygon:
         """The lines should describe a perfect closed shape polygon
 
         Args:
-            lines (np.ndarray): array of lines of shape (n, 2, 2)
+            lines (NDArray): array of lines of shape (n, 2, 2)
 
         Returns:
             (Polygon): a Polygon object
@@ -75,11 +76,11 @@ class Polygon(DiscreteGeometryEntity):
     @classmethod
     def from_unordered_lines_approx(
         cls,
-        lines: np.ndarray,
+        lines: NDArray,
         max_dist_thresh: float = 50,
         max_iterations: int = 50,
         start_line_index: int = 0,
-        img: Optional[np.ndarray] = None,
+        img: Optional[NDArray] = None,
         is_debug_enabled: bool = False,
     ) -> Polygon:
         # pylint: disable=too-many-positional-arguments,too-many-arguments
@@ -89,7 +90,7 @@ class Polygon(DiscreteGeometryEntity):
 
         Args:
             img (_type_): array of shape (lx, ly)
-            lines (np.ndarray): array of lines of shape (n, 2, 2)
+            lines (NDArray): array of lines of shape (n, 2, 2)
             max_dist_thresh (float, optional): For any given point,
                 the maximum distance to consider two points as close. Defaults to 50.
             max_iterations (float, optional): Maximum number of iterations before
@@ -106,7 +107,7 @@ class Polygon(DiscreteGeometryEntity):
         lines = np.asarray(lines)
         Segment.assert_list_of_lines(lines=lines)
 
-        def debug_visualize(seg: np.ndarray):
+        def debug_visualize(seg: NDArray):
             if is_debug_enabled and img is not None:
                 im = img.copy()
                 im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
@@ -236,14 +237,14 @@ class Polygon(DiscreteGeometryEntity):
         return cv2.isContourConvex(contour=self.asarray)
 
     @property
-    def edges(self) -> np.ndarray:
+    def edges(self) -> NDArray:
         """Get the lines that compose the geometry entity.
 
         Args:
-            points (np.ndarray): array of points of shape (n, 2)
+            points (NDArray): array of points of shape (n, 2)
 
         Returns:
-            np.ndarray: array of lines of shape (n, 2, 2)
+            NDArray: array of lines of shape (n, 2, 2)
         """
         return np.stack([self.points, np.roll(self.points, shift=-1, axis=0)], axis=1)
 
@@ -361,19 +362,17 @@ class Polygon(DiscreteGeometryEntity):
             surface = self.shapely_surface
         return surface.contains(other.shapely_surface)
 
-    def score_vertices_in_points(
-        self, points: np.ndarray, min_distance: float
-    ) -> np.ndarray:
+    def score_vertices_in_points(self, points: NDArray, min_distance: float) -> NDArray:
         """Returns a score of 0 or 1 for each point in the polygon if it is close
         enough to any point in the input points.
 
         Args:
-            points (np.ndarray): list of 2D points
+            points (NDArray): list of 2D points
             margin_dist_error (float): mininum distance to consider two points as
                 close enough to be considered as the same points
 
         Returns:
-            np.ndarray: a list of score for each point in the contour
+            NDArray: a list of score for each point in the contour
         """
         indices = self.find_shared_approx_vertices_ix(
             other=Polygon(points=points), margin_dist_error=min_distance
@@ -381,7 +380,7 @@ class Polygon(DiscreteGeometryEntity):
         score = np.bincount(indices, minlength=len(self))
         return score
 
-    def find_vertices_between(self, start_index: int, end_index: int) -> np.ndarray:
+    def find_vertices_between(self, start_index: int, end_index: int) -> NDArray:
         """Get the vertices between two indices.
 
         Returns always the vertices between start_index and end_index using the
@@ -395,7 +394,7 @@ class Polygon(DiscreteGeometryEntity):
             end_index (int): index of the last vertex
 
         Returns:
-            np.ndarray: array of vertices
+            NDArray: array of vertices
         """
         if start_index < 0:
             start_index += len(self)
@@ -422,7 +421,7 @@ class Polygon(DiscreteGeometryEntity):
 
     def find_interpolated_point(
         self, start_index: int, end_index: int, pct_dist: float
-    ) -> np.ndarray:
+    ) -> NDArray:
         """Return a point along the contour path from start_idx to end_idx (inclusive),
         at a relative distance pct_dist ∈ [0, 1] along that path.
 
@@ -437,7 +436,7 @@ class Polygon(DiscreteGeometryEntity):
                 pct_dist along the path.
 
         Returns:
-            np.ndarray: Interpolated point [x, y]
+            NDArray: Interpolated point [x, y]
         """
         if not (0 <= pct_dist <= 1):
             raise ValueError("pct_dist must be in [0, 1]")
@@ -478,11 +477,11 @@ class Polygon(DiscreteGeometryEntity):
 
     # ---------------------------- MODIFICATION METHODS -------------------------------
 
-    def add_vertice(self, point: np.ndarray, index: int) -> Self:
+    def add_vertice(self, point: NDArray, index: int) -> Self:
         """Add a point at a given index in the Polygon object
 
         Args:
-            point (np.ndarray): point to be added
+            point (NDArray): point to be added
             index (int): index where the point will be added
 
         Returns:
@@ -537,14 +536,14 @@ class Polygon(DiscreteGeometryEntity):
         return self
 
     def rearrange_first_vertice_closest_to_point(
-        self, point: np.ndarray = np.zeros(shape=(2,))
+        self, point: NDArray = np.zeros(shape=(2,))
     ) -> Polygon:
         """Rearrange the list of vertices that defines the Polygon so that the first
         point in the list of vertices is the one that is the closest by distance to
         the reference point.
 
         Args:
-            reference_point (np.ndarray): point that is taken as a reference in the
+            reference_point (NDArray): point that is taken as a reference in the
                 space to find the one in the Polygon list of points that is the
                 closest to this reference point. Default to origin point [0, 0].
 
