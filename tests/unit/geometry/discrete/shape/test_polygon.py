@@ -115,231 +115,11 @@ class TestPolygonSelfIntersect:
         assert not cnt1.is_self_intersected
 
 
-class TestPolygonReduceMethods:
-    @pytest.mark.parametrize(
-        "input,output",
-        (
-            (
-                [[0, 0], [100, 100], [500, 500], [0, 250]],
-                [[0, 0], [500, 500], [0, 250]],
-            ),
-            (
-                [[0, 0], [100, 100], [200, 200], [350, 350], [500, 500], [850, 120]],
-                [[0, 0], [500, 500], [850, 120]],
-            ),
-            (
-                [[0, 0], [100, 100], [200, 325], [350, 350], [500, 500], [120, 120]],
-                [[100, 100], [200, 325], [350, 350]],
-            ),
-            (
-                [
-                    [0, 0],
-                    [0, 100],
-                    [0, 200],
-                    [100, 200],
-                    [250, 200],
-                    [250, 120],
-                    [250, 0],
-                    [125, 0],
-                ],
-                [[0, 0], [0, 200], [250, 200], [250, 0]],
-            ),
-            # reduce collinear with perturbation
-            (
-                [[0, -1], [100, 101], [505, 498], [-2, 253]],
-                [[0, -1], [505, 498], [-2, 253]],
-            ),
-            (
-                [[0, 0], [102, 95], [202, 195], [345, 350], [501, 500], [850, 121]],
-                [[0, 0], [501, 500], [850, 121]],
-            ),
-            (
-                [[2, -1], [102, 100], [200, 326], [351, 350], [500, 502], [120, 121]],
-                [[102, 100], [200, 326], [351, 350]],
-            ),
-            (
-                [
-                    [-1, 0],
-                    [0, 100],
-                    [0, 199],
-                    [100, 200],
-                    [253, 200],
-                    [253, 120],
-                    [248, -3],
-                    [125, 0],
-                ],
-                [[-1, 0], [0, 199], [253, 200], [248, -3]],
-            ),
-        ),
-    )
-    def test_polygon_reduce_collinear(self, input, output):
-        points = Polygon.reduce_collinear(points=input, n_iterations=3)
-        assert np.array_equal(points, output)
-
-    @pytest.mark.parametrize(
-        "input,output",
-        (
-            (
-                [[0, 0], [100, 100], [500, 500], [0, 250], [0, 2]],
-                [[0, 0], [100, 100], [500, 500], [0, 250]],
-            ),
-            (
-                [[0, 1], [100, 100], [500, 500], [0, 250], [0, 2], [1, 2], [2, 2]],
-                [[0, 1], [100, 100], [500, 500], [0, 250]],
-            ),
-            (
-                [[0, 0], [100, 100], [200, 200], [202, 199], [500, 500], [850, 120]],
-                [[0, 0], [100, 100], [202, 199], [500, 500], [850, 120]],
-            ),
-            (
-                [[0, 0], [100, 100], [200, 325], [350, 350], [351, 348], [-1, 1]],
-                [[0, 0], [100, 100], [200, 325], [351, 348]],
-            ),
-            (
-                [
-                    [0, 0],
-                    [-2, 199],
-                    [0, 200],
-                    [249, 200],
-                    [250, 200],
-                    [250, 200],
-                    [250, -2],
-                    [250, 0],
-                ],
-                [[0, 0], [0, 200], [250, 200], [250, 0]],
-            ),
-        ),
-    )
-    def test_polygon_reduce_by_distance(self, input, output):
-        points = Polygon.reduce_by_distance(points=input, min_dist_threshold=5)
-        assert np.array_equal(points, output)
-
-    @pytest.mark.parametrize(
-        "input,output",
-        (
-            (
-                [[0, 0], [100, 100], [500, 500], [0, 250], [0, 2], [0, 5], [1, 5]],
-                [[0, 0], [100, 100], [500, 500], [0, 250], [0, 2], [1, 5]],
-            ),
-            (
-                [
-                    [0, 0],
-                    [100, 100],
-                    [200, 200],
-                    [202, 199],
-                    [203, 198],
-                    [500, 500],
-                    [850, 120],
-                ],
-                [[0, 0], [100, 100], [200, 200], [203, 198], [500, 500], [850, 120]],
-            ),
-            (
-                [[0, 0], [100, 100], [200, 325], [351, 348], [-1, 1], [1, 0], [1, 1]],
-                [[0, 0], [100, 100], [200, 325], [351, 348], [-1, 1], [1, 1]],
-            ),
-            (
-                [
-                    [0, 0],
-                    [-2, 199],
-                    [0, 200],
-                    [249, 200],
-                    [250, 200],
-                    [250, 201],
-                    [250, -2],
-                    [250, 0],
-                ],
-                [
-                    [0, 0],
-                    [-2, 199],
-                    [0, 200],
-                    [249, 200],
-                    [250, 201],
-                    [250, -2],
-                    [250, 0],
-                ],
-            ),
-        ),
-    )
-    def test_polygon_reduce_by_distance_unsuccessive(self, input, output):
-        points = Polygon.reduce_by_distance_unsuccessive(
-            points=input, min_dist_threshold=5, n_iterations=3
-        )
-        assert np.array_equal(points, output)
-
-    @pytest.mark.parametrize(
-        "input,output",
-        (
-            (
-                [[0, 0], [100, 100], [500, 500], [0, 250], [0, 2], [0, 4], [2, 0]],
-                [[0, 0], [100, 100], [500, 500], [0, 250], [0, 3], [2, 0]],
-            ),
-            (
-                [[0, 0], [100, 100], [200, 325], [351, 348], [0, 0], [2, 0], [4, 2]],
-                [[0, 0], [100, 100], [200, 325], [351, 348], [1, 0], [4, 2]],
-            ),
-        ),
-    )
-    def test_polygon_reduce_by_distance_unsuccessive_mode_mean(self, input, output):
-        points = Polygon.reduce_by_distance_unsuccessive(
-            points=input, min_dist_threshold=5, mode="mean"
-        )
-        assert np.array_equal(points, output)
-
-    def test_polygon_reduce_by_distance_unsuccessive_invalid_mode(self):
-        with pytest.raises(ValueError):
-            Polygon.reduce_by_distance_unsuccessive(
-                points=[], min_dist_threshold=5, mode="no-existing-mode"
-            )
-
-    @pytest.mark.parametrize(
-        "input,output",
-        (
-            (
-                [[0, 0], [100, 100], [500, 500], [0, 250], [0, 10], [0, 5], [1, 2]],
-                [[0, 0], [500, 500], [0, 250]],
-            ),
-            (
-                [
-                    [0, 0],
-                    [100, 100],
-                    [200, 325],
-                    [351, 348],
-                    [0, 350],
-                    [0, 200],
-                    [0, 50],
-                ],
-                [[0, 0], [100, 100], [200, 325], [351, 348], [0, 350]],
-            ),
-            (
-                [
-                    [0, 0],
-                    [0, 100],
-                    [0, 200],
-                    [100, 200],
-                    [200, 200],
-                    [200, 100],
-                    [200, 0],
-                    [100, 0],
-                ],
-                [
-                    [0, 0],
-                    [0, 200],
-                    [200, 200],
-                    [200, 0],
-                ],
-            ),
-        ),
-    )
-    def test_polygon_reduce_by_triangle_area(self, input, output):
-        points = Polygon.reduce_by_triangle_area(points=input, min_triangle_area=50)
-        assert np.array_equal(points, output)
-
-
 class TestPolygonClassMethods:
     def test_construct_from_lines(self):
         lines = np.array([[[0, 0], [2, 2]], [[2, 2], [5, 5]], [[5, 5], [0, 0]]])
         cnt = Polygon.from_lines(lines=lines)
-        assert np.array_equal(cnt.segments, lines)
+        assert np.array_equal(cnt.edges, lines)
 
     def test_construct_from_lines_fails(self):
         lines = [[[0, 0], [2, 2]], [[2, 3], [5, 5]], [[5, 5], [0, 0]]]
@@ -357,67 +137,69 @@ class TestPolygonAddPoint:
         cnt = Polygon([[0, 0], [1, 1], [1, 0]])
         pt = [0, 1]
         assert np.array_equal(
-            cnt.add_point(point=pt, index=1).asarray, [[0, 0], [0, 1], [1, 1], [1, 0]]
+            cnt.add_vertice(point=pt, index=1).asarray, [[0, 0], [0, 1], [1, 1], [1, 0]]
         )
 
     def test_add_point_last(self):
         cnt = Polygon([[0, 0], [1, 1], [1, 0]])
         pt = [0, 1]
         assert np.array_equal(
-            cnt.add_point(point=pt, index=-1).asarray, [[0, 0], [1, 1], [1, 0], [0, 1]]
+            cnt.add_vertice(point=pt, index=-1).asarray,
+            [[0, 0], [1, 1], [1, 0], [0, 1]],
         )
 
     def test_add_point_first_neg(self):
         cnt = Polygon([[0, 0], [1, 1], [1, 0]])
         pt = [0, 1]
         assert np.array_equal(
-            cnt.add_point(point=pt, index=-4).asarray, [[0, 1], [0, 0], [1, 1], [1, 0]]
+            cnt.add_vertice(point=pt, index=-4).asarray,
+            [[0, 1], [0, 0], [1, 1], [1, 0]],
         )
 
     def test_add_point_first(self):
         cnt = Polygon([[0, 0], [1, 1], [1, 0]])
         pt = [0, 1]
         assert np.array_equal(
-            cnt.add_point(point=pt, index=0).asarray, [[0, 1], [0, 0], [1, 1], [1, 0]]
+            cnt.add_vertice(point=pt, index=0).asarray, [[0, 1], [0, 0], [1, 1], [1, 0]]
         )
 
     def test_add_point_index_too_big(self):
         cnt = Polygon([[0, 0], [1, 1], [1, 0]])
         pt = [0, 1]
         with pytest.raises(ValueError):
-            cnt.add_point(point=pt, index=4)
+            cnt.add_vertice(point=pt, index=4)
 
     def test_add_point_index_too_small(self):
         cnt = Polygon([[0, 0], [1, 1], [1, 0]])
         pt = [0, 1]
         with pytest.raises(ValueError):
-            cnt.add_point(point=pt, index=-5)
+            cnt.add_vertice(point=pt, index=-5)
 
 
 class TestPolygonRearrange:
     def test_rearrange_first_point_at_index_pos(self):
         cnt = Polygon([[0, 0], [1, 1], [1, 0]])
         assert np.array_equal(
-            cnt.rearrange_first_point_at_index(index=1).asarray,
+            cnt.rearrange_first_vertice_at_index(index=1).asarray,
             [[1, 1], [1, 0], [0, 0]],
         )
 
     def test_rearrange_first_point_at_index_neg(self):
         cnt = Polygon([[0, 0], [1, 1], [1, 0]])
         assert np.array_equal(
-            cnt.rearrange_first_point_at_index(index=-2).asarray,
+            cnt.rearrange_first_vertice_at_index(index=-2).asarray,
             [[1, 1], [1, 0], [0, 0]],
         )
 
     def test_rearrange_first_point_at_index_too_big(self):
         cnt = Polygon([[0, 0], [1, 1], [1, 0]])
         with pytest.raises(ValueError):
-            cnt.rearrange_first_point_at_index(index=3)
+            cnt.rearrange_first_vertice_at_index(index=3)
 
     def test_rearrange_first_point_at_index_too_small(self):
         cnt = Polygon([[0, 0], [1, 1], [1, 0]])
         with pytest.raises(ValueError):
-            cnt.rearrange_first_point_at_index(index=-4)
+            cnt.rearrange_first_vertice_at_index(index=-4)
 
 
 class TestPolygonFromUnorderedLinesApprox:
@@ -450,7 +232,7 @@ class TestPolygonFromUnorderedLinesApprox:
     )
     def test_cnt_fula_general(self, input: list, output: list):
         cnt = Polygon.from_unordered_lines_approx(input)
-        assert np.all([o in output for o in cnt.segments.tolist()])
+        assert np.all([o in output for o in cnt.edges.tolist()])
 
     @pytest.mark.parametrize(
         "input",
@@ -482,31 +264,31 @@ class TestPolygonScoreEdgesInPoints:
     def test_score_edges_in_points_all_close(self):
         cnt = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
         points = np.array([[0, 0], [1, 0], [1, 1], [0, 1]])
-        scores = cnt.score_edges_in_points(points=points, min_distance=0.1)
+        scores = cnt.score_vertices_in_points(points=points, min_distance=0.1)
         assert np.array_equal(scores, [1, 1, 1, 1])
 
     def test_score_edges_in_points_some_close(self):
         cnt = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
         points = np.array([[0, 0], [1, 0]])
-        scores = cnt.score_edges_in_points(points=points, min_distance=0.1)
+        scores = cnt.score_vertices_in_points(points=points, min_distance=0.1)
         assert np.array_equal(scores, [1, 1, 0, 0])
 
     def test_score_edges_in_points_none_close(self):
         cnt = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
         points = np.array([[2, 2], [3, 3]])
-        scores = cnt.score_edges_in_points(points=points, min_distance=0.1)
+        scores = cnt.score_vertices_in_points(points=points, min_distance=0.1)
         assert np.array_equal(scores, [0, 0, 0, 0])
 
     def test_score_edges_in_points_with_margin(self):
         cnt = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
         points = np.array([[0.05, 0.05], [1.05, 0.05]])
-        scores = cnt.score_edges_in_points(points=points, min_distance=0.1)
+        scores = cnt.score_vertices_in_points(points=points, min_distance=0.1)
         assert np.array_equal(scores, [1, 1, 0, 0])
 
     def test_score_edges_in_points_duplicate_points(self):
         cnt = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
         points = np.array([[0, 0], [0, 0], [1, 0]])
-        scores = cnt.score_edges_in_points(points=points, min_distance=0.1)
+        scores = cnt.score_vertices_in_points(points=points, min_distance=0.1)
         assert np.array_equal(scores, [1, 1, 0, 0])
 
 
@@ -613,3 +395,190 @@ class TestPolygonLengths:
         polygon = Polygon([[0, 0], [1, 0]])
         expected_lengths = [1]
         assert np.allclose(polygon.lengths, expected_lengths)
+
+
+class TestPolygonIsClockwise:
+    def test_is_clockwise_false(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        assert polygon.is_clockwise() is False
+
+    def test_is_clockwise_true(self):
+        polygon = Polygon([[0, 0], [0, 1], [1, 1], [1, 0]])
+        assert polygon.is_clockwise() is True
+
+    def test_is_clockwise_true_cv2(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        assert polygon.is_clockwise(is_y_axis_down=True) is True
+
+    def test_is_clockwise_false_cv2(self):
+        polygon = Polygon([[0, 0], [0, 1], [1, 1], [1, 0]])
+        assert polygon.is_clockwise(is_y_axis_down=True) is False
+
+    def test_is_clockwise_triangle_false(self):
+        polygon = Polygon([[0, 0], [1, 0], [0.5, 1]])
+        assert polygon.is_clockwise() is False
+
+    def test_is_clockwise_triangle_true(self):
+        polygon = Polygon([[0, 0], [0.5, 1], [1, 0]])
+        assert polygon.is_clockwise() is True
+
+
+class TestPolygonAsLinearSpline:
+    def test_as_linear_spline_default_index(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        spline = polygon.as_linear_spline()
+        expected_points = [[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]
+        assert np.array_equal(spline.points, expected_points)
+
+    def test_as_linear_spline_positive_index(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        spline = polygon.as_linear_spline(index=2)
+        expected_points = [[1, 1], [0, 1], [0, 0], [1, 0], [1, 1]]
+        assert np.array_equal(spline.points, expected_points)
+
+    def test_as_linear_spline_negative_index(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        spline = polygon.as_linear_spline(index=-2)
+        expected_points = [[1, 1], [0, 1], [0, 0], [1, 0], [1, 1]]
+        assert np.array_equal(spline.points, expected_points)
+
+    def test_as_linear_spline_index_out_of_bounds(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        spline = polygon.as_linear_spline(index=5)
+        expected_points = [[1, 0], [1, 1], [0, 1], [0, 0], [1, 0]]
+        assert np.array_equal(spline.points, expected_points)
+
+
+class TestPolygonVerticesBetween:
+    def test_vertices_between_positive_indices(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        result = polygon.find_vertices_between(1, 3)
+        expected = np.array([[1, 0], [1, 1], [0, 1]])
+        assert np.array_equal(result, expected)
+
+    def test_vertices_between_negative_indices(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        result = polygon.find_vertices_between(-3, -1)
+        expected = np.array([[1, 0], [1, 1], [0, 1]])
+        assert np.array_equal(result, expected)
+
+    def test_vertices_between_wraparound_indices(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        result = polygon.find_vertices_between(3, 1)
+        expected = np.array([[0, 1], [0, 0], [1, 0]])
+        assert np.array_equal(result, expected)
+
+    def test_vertices_between_same_start_end_index(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        result = polygon.find_vertices_between(2, 2)
+        expected = np.array([[1, 1], [0, 1], [0, 0], [1, 0], [1, 1]])
+        assert np.array_equal(result, expected)
+
+    def test_vertices_between_full_cycle(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        result = polygon.find_vertices_between(0, 3)
+        expected = np.array([[0, 0], [1, 0], [1, 1], [0, 1]])
+        assert np.array_equal(result, expected)
+
+
+class TestPolygonInterpolatedPointAlongPolygon:
+    def test_interpolated_point_start(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        result = polygon.find_interpolated_point(0, 2, 0)
+        expected = np.array([0, 0])
+        assert np.array_equal(result, expected)
+
+    def test_interpolated_point_end(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        result = polygon.find_interpolated_point(0, 2, 1)
+        expected = np.array([1, 1])
+        assert np.array_equal(result, expected)
+
+    def test_interpolated_point_middle(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        result = polygon.find_interpolated_point(0, 2, 0.5)
+        expected = np.array([2, 0])
+        assert np.array_equal(result, expected)
+
+    def test_interpolated_point_negative_indices(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        result = polygon.find_interpolated_point(-4, -2, 0.5)
+        expected = np.array([1, 0])
+        assert np.array_equal(result, expected)
+
+    def test_interpolated_point_wraparound(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        result = polygon.find_interpolated_point(3, 1, 0.5)
+        expected = np.array([0, 0])
+        assert np.array_equal(result, expected)
+
+    def test_interpolated_point_invalid_pct_dist(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        with pytest.raises(ValueError):
+            polygon.find_interpolated_point(0, 2, -0.1)
+
+    def test_interpolated_point_start_end_same(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        result = polygon.find_interpolated_point(1, 1, 0.5)
+        expected = np.array([0, 1])
+        assert np.array_equal(result, expected)
+
+    def test_interpolated_point_hard_case1(self):
+        polygon = Polygon(
+            points=np.array([[0, 0], [100, 100], [200, 100], [300, 200], [300, 0]])
+        )
+        result = polygon.find_interpolated_point(0, 3, 0.5)
+        expected = np.array([150, 100])
+        assert np.array_equal(result, expected)
+
+    def test_interpolated_point_hard_case2(self):
+        polygon = Polygon(
+            points=np.array([[0, 0], [100, 100], [200, 100], [300, 200], [300, 0]])
+        )
+        result = polygon.find_interpolated_point(
+            start_index=-2, end_index=0, pct_dist=0.4
+        )
+        expected = np.array([300, 0])
+        assert np.array_equal(result, expected)
+
+    def test_interpolated_point_hard_case3(self):
+        polygon = Polygon(
+            points=np.array([[0, 0], [100, 100], [200, 100], [300, 200], [300, 0]])
+        )
+        result = polygon.find_interpolated_point(
+            start_index=1, end_index=-4, pct_dist=0.5
+        )
+        expected = np.array([300, 0])
+        assert np.array_equal(result, expected)
+
+
+class TestPolygonReorderClockwise:
+    def test_reorder_clockwise_already_clockwise(self):
+        polygon = Polygon([[0, 0], [0, 1], [1, 1], [1, 0]])
+        reordered_polygon = polygon.reorder_clockwise()
+        expected_points = [[0, 0], [0, 1], [1, 1], [1, 0]]
+        assert np.array_equal(reordered_polygon.asarray, expected_points)
+
+    def test_reorder_clockwise_not_clockwise(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        reordered_polygon = polygon.reorder_clockwise()
+        expected_points = [[0, 0], [0, 1], [1, 1], [1, 0]]
+        assert np.array_equal(reordered_polygon.asarray, expected_points)
+
+    def test_reorder_clockwise_already_clockwise_y_axis_down(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        reordered_polygon = polygon.reorder_clockwise(is_y_axis_down=True)
+        expected_points = [[0, 0], [1, 0], [1, 1], [0, 1]]
+        assert np.array_equal(reordered_polygon.asarray, expected_points)
+
+    def test_reorder_clockwise_not_clockwise_y_axis_down(self):
+        polygon = Polygon([[0, 0], [0, 1], [1, 1], [1, 0]])
+        reordered_polygon = polygon.reorder_clockwise(is_y_axis_down=True)
+        expected_points = [[0, 0], [1, 0], [1, 1], [0, 1]]
+        assert np.array_equal(reordered_polygon.asarray, expected_points)
+
+    def test_reorder_clockwise_triangle(self):
+        polygon = Polygon([[0, 0], [1, 0], [0.5, 1]])
+        reordered_polygon = polygon.reorder_clockwise()
+        expected_points = [[0, 0], [0.5, 1], [1, 0]]
+        assert np.array_equal(reordered_polygon.asarray, expected_points)

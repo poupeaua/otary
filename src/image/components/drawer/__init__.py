@@ -1,25 +1,22 @@
 """
-Init file for image module to facilitate importation
+Expose all the image drawer utilities.
+Expose the useful Render classes.
 """
 
 __all__ = [
     "PointsRender",
+    "SegmentsRender",
     "CirclesRender",
     "PolygonsRender",
-    "SegmentsRender",
     "LinearSplinesRender",
     "OcrSingleOutputRender",
-    "Image",
-    "interpolate_color",
 ]
 
 from src.image.components.drawer.utils.render import (
     PointsRender,
+    SegmentsRender,
     CirclesRender,
     PolygonsRender,
-    SegmentsRender,
     LinearSplinesRender,
     OcrSingleOutputRender,
 )
-from src.image.image import Image
-from src.image.utils.colors import interpolate_color

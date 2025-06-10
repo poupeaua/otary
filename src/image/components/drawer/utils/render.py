@@ -7,7 +7,7 @@ from abc import ABC
 
 import cv2
 
-from src.image.utils.tools import is_color_tuple
+from src.image.components.drawer.utils.tools import is_color_tuple
 
 DEFAULT_RENDER_THICKNESS = 3
 DEFAULT_RENDER_COLOR = (0, 0, 255)
@@ -75,9 +75,18 @@ class SegmentsRender(GeometryRender):
 
 
 @dataclass
+class LinearSplinesRender(SegmentsRender):
+    """Render for Linear Splines objects"""
+
+    pct_ix_head: float = 0.25
+
+
+@dataclass
 class PolygonsRender(SegmentsRender):
     """Render for Polygon objects. It inherits from SegmentsRender because
     Polygons are drawn as a succession of drawn segments."""
+
+    is_filled: bool = False
 
 
 @dataclass

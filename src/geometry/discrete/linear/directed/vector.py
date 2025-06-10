@@ -5,6 +5,7 @@ Vectors class they are like segments, but with a given direction
 from __future__ import annotations
 
 import numpy as np
+from numpy.typing import NDArray
 
 from src.geometry.discrete.linear.directed.entity import DirectedLinearEntity
 from src.geometry import Segment
@@ -12,6 +13,18 @@ from src.geometry import Segment
 
 class Vector(Segment, DirectedLinearEntity):
     """Vector class to manipulate vector which can be seen as Segment with direction"""
+
+    @classmethod
+    def from_single_point(cls, point: NDArray) -> Vector:
+        """Get vector that goes from [0, 0] to point
+
+        Args:
+            point (NDArray): point of shape 2
+
+        Returns:
+            Vector: new vector object
+        """
+        return cls(points=[[0, 0], point])
 
     @property
     def cardinal_degree(self) -> float:
@@ -22,7 +35,7 @@ class Vector(Segment, DirectedLinearEntity):
         Returns:
             float: cardinal degree
         """
-        angle = self.slope_angle(degree=True, is_cv2=True)
+        angle = self.slope_angle(degree=True, is_y_axis_down=True)
 
         # if angle is negative
         is_neg_sign_angle = bool(np.sign(angle) - 1)
@@ -39,9 +52,22 @@ class Vector(Segment, DirectedLinearEntity):
         return cardinal_degree
 
     @property
-    def coordinates_shift(self) -> np.ndarray:
-        """Return the vector as a single point (x1-x0, y1-y0)"""
+    def coordinates_shift(self) -> NDArray:
+        """Return the vector as a single point (x1-x0, y1-y0)
+
+        Returns:
+            NDArray: coordinates shift
+        """
         return self.origin[1]
+
+    @property
+    def normalized(self) -> NDArray:
+        """Nornalized vector
+
+        Returns:
+            NDArray: normalized vector
+        """
+        return self.coordinates_shift / np.linalg.norm(self.coordinates_shift)
 
     def rescale_head(self, scale: float) -> Vector:
         """Rescale the head part of the vector without moving the first point.

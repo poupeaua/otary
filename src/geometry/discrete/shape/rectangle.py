@@ -8,15 +8,16 @@ from __future__ import annotations
 from typing import Optional, Self
 
 import numpy as np
+from numpy.typing import NDArray
 import pymupdf
 
-from src.geometry import Polygon, Segment
+from src.geometry import Polygon, Segment, Vector
 
 
 class Rectangle(Polygon):
     """Rectangle class to manipulate rectangle object"""
 
-    def __init__(self, points: np.ndarray | list, is_cast_int: bool = False) -> None:
+    def __init__(self, points: NDArray | list, is_cast_int: bool = False) -> None:
         assert len(points) == 4
         super().__init__(points=points, is_cast_int=is_cast_int)
 
@@ -32,17 +33,23 @@ class Rectangle(Polygon):
     @classmethod
     def from_center(
         cls,
-        center: np.ndarray,
+        center: NDArray,
         width: float,
         height: float,
-        angle: float = 0,
+        angle: float = 0.0,
         is_cast_int: bool = False,
     ) -> Rectangle:
         # pylint: disable=too-many-arguments, too-many-positional-arguments
         """Create a Rectangle object using the center point, width, height and angle.
 
+        Convention to create the rectangle is:
+            index 0: top left point
+            index 1: top right point
+            index 2: bottom right point
+            index 3: bottom left point
+
         Args:
-            center (np.ndarray): center point of the rectangle
+            center (NDArray): center point of the rectangle
             width (float): width of the rectangle
             height (float): height of the rectangle
             angle (float, optional): radian rotation angle for the rectangle.
@@ -61,76 +68,81 @@ class Rectangle(Polygon):
         # get the rectangle coordinates
         points = np.array(
             [
-                [center_x - half_width, center_y + half_height],
-                [center_x + half_width, center_y + half_height],
-                [center_x + half_width, center_y - half_height],
                 [center_x - half_width, center_y - half_height],
+                [center_x + half_width, center_y - half_height],
+                [center_x + half_width, center_y + half_height],
+                [center_x - half_width, center_y + half_height],
             ]
         )
 
         rect = Rectangle(points=points, is_cast_int=is_cast_int)
 
         if angle != 0:
-            rect = rect.rotate(angle=angle, pivot=center)
+            rect = rect.rotate(angle=angle)
             if is_cast_int:
                 rect.asarray = np.round(rect.asarray).astype(int)
 
         return rect
 
     @classmethod
-    def from_topleft(
-        cls,
-        topleft: np.ndarray,
-        width: float,
-        height: float,
-        angle: float = 0,
-        is_cast_int: bool = False,
-    ) -> Rectangle:
-        # pylint: disable=too-many-arguments, too-many-positional-arguments
-        """Create a Rectangle object using the top left point, width, height and angle.
-
-        Args:
-            topleft (np.ndarray): top left point of the rectangle
-            width (float): width of the rectangle
-            height (float): height of the rectangle
-            angle (float, optional): rotation angle for the rectangle. Defaults to 0.
-
-        Returns:
-            Rectangle: Rectangle object
-        """
-        center = topleft + np.array([width, height]) / 2
-        return cls.from_center(
-            center=center,
-            width=width,
-            height=height,
-            angle=angle,
-            is_cast_int=is_cast_int,
-        )
-
-    @classmethod
     def from_topleft_bottomright(
         cls,
-        topleft: np.ndarray,
-        bottomright: np.ndarray,
-        angle: float = 0,
+        topleft: NDArray,
+        bottomright: NDArray,
         is_cast_int: bool = False,
     ) -> Rectangle:
         """Create a Rectangle object using the top left and bottom right points.
 
+        Convention to create the rectangle is:
+            index 0: top left point
+            index 1: top right point
+            index 2: bottom right point
+            index 3: bottom left point
+
         Args:
-            topleft (np.ndarray): top left point of the rectangle
-            bottomright (np.ndarray): bottom right point of the rectangle
+            topleft (NDArray): top left point of the rectangle
+            bottomright (NDArray): bottom right point of the rectangle
 
         Returns:
             Rectangle: new Rectangle object
         """
-        width = bottomright[0] - topleft[0]
-        height = bottomright[1] - topleft[1]
-        return cls.from_topleft(
+        topright_vertice = np.array([bottomright[0], topleft[1]])
+        bottomleft_vertice = np.array([topleft[0], bottomright[1]])
+        return cls(
+            np.asarray([topleft, topright_vertice, bottomright, bottomleft_vertice]),
+            is_cast_int=is_cast_int,
+        )
+
+    @classmethod
+    def from_topleft(
+        cls,
+        topleft: NDArray,
+        width: float,
+        height: float,
+        is_cast_int: bool = False,
+    ) -> Rectangle:
+        """Create a Rectangle object using the top left point, width, height and angle.
+
+        Convention to create the rectangle is:
+            index 0: top left point
+            index 1: top right point
+            index 2: bottom right point
+            index 3: bottom left point
+
+        Args:
+            topleft (NDArray): top left point of the rectangle
+            width (float): width of the rectangle
+            height (float): height of the rectangle
+            is_cast_int (bool, optional): whether to cast int or not. Defaults to False.
+
+        Returns:
+            Rectangle: Rectangle object
+        """
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
+        bottomright_vertice = np.array([topleft[0] + width, topleft[1] + height])
+        return cls.from_topleft_bottomright(
             topleft=topleft,
-            width=width,
-            height=height,
-            angle=angle,
+            bottomright=bottomright_vertice,
             is_cast_int=is_cast_int,
         )
 
@@ -192,7 +204,9 @@ class Rectangle(Polygon):
         seg2 = Segment(points=[self.points[1], self.points[2]])
         return seg2.length if seg1.length > seg2.length else seg1.length
 
-    def longside_slope_angle(self, degree: bool = False, is_cv2: bool = False) -> float:
+    def longside_slope_angle(
+        self, degree: bool = False, is_y_axis_down: bool = False
+    ) -> float:
         """Compute the biggest slope of the rectangle
 
         Returns:
@@ -201,10 +215,10 @@ class Rectangle(Polygon):
         seg1 = Segment(points=[self.points[0], self.points[1]])
         seg2 = Segment(points=[self.points[1], self.points[2]])
         seg_bigside = seg1 if seg1.length > seg2.length else seg2
-        return seg_bigside.slope_angle(degree=degree, is_cv2=is_cv2)
+        return seg_bigside.slope_angle(degree=degree, is_y_axis_down=is_y_axis_down)
 
     def shortside_slope_angle(
-        self, degree: bool = False, is_cv2: bool = False
+        self, degree: bool = False, is_y_axis_down: bool = False
     ) -> float:
         """Compute the smallest slope of the rectangle
 
@@ -214,7 +228,7 @@ class Rectangle(Polygon):
         seg1 = Segment(points=[self.points[0], self.points[1]])
         seg2 = Segment(points=[self.points[1], self.points[2]])
         seg_smallside = seg2 if seg1.length > seg2.length else seg1
-        return seg_smallside.slope_angle(degree=degree, is_cv2=is_cv2)
+        return seg_smallside.slope_angle(degree=degree, is_y_axis_down=is_y_axis_down)
 
     def desintersect(self) -> Self:
         """Desintersect the rectangle if it is self-intersected.
@@ -252,7 +266,7 @@ class Rectangle(Polygon):
         Returns:
             Rectangle: the join new Rectangle object
         """
-        shared_points = self.shared_approx_vertices(rect, margin_dist_error)
+        shared_points = self.find_shared_approx_vertices(rect, margin_dist_error)
         n_shared_points = len(shared_points)
 
         if n_shared_points in (0, 1):
@@ -260,11 +274,127 @@ class Rectangle(Polygon):
         if n_shared_points == 2:
             new_rect_points = np.concatenate(
                 (
-                    self.vertices_far_from(shared_points, margin_dist_error),
-                    rect.vertices_far_from(shared_points, margin_dist_error),
+                    self.find_vertices_far_from(shared_points, margin_dist_error),
+                    rect.find_vertices_far_from(shared_points, margin_dist_error),
                 ),
                 axis=0,
             )
             return Rectangle(points=new_rect_points).desintersect()
         # if 3 or more points in common it is the same rectangle
         return self
+
+    def _topright_vertice_from_topleft(self, topleft_index: int) -> NDArray:
+        """Get the top-right vertice from the topleft vertice
+
+        Args:
+            topleft_index (int): index of the topleft vertice
+
+        Returns:
+            NDArray: topright vertice
+        """
+        if self.is_clockwise(is_y_axis_down=True):
+            return self.asarray[(topleft_index + 1) % len(self)]
+        else:
+            return self.asarray[topleft_index - 1]
+
+    def _bottomleft_vertice_from_topleft(self, topleft_index: int) -> NDArray:
+        """Get the bottom-left vertice from the topleft vertice
+
+        Args:
+            topleft_index (int): index of the topleft vertice
+
+        Returns:
+            NDArray: topright vertice
+        """
+        if self.is_clockwise(is_y_axis_down=True):
+            return self.asarray[topleft_index - 1]
+        else:
+            return self.asarray[(topleft_index + 1) % len(self)]
+
+    def _bottomright_vertice_from_topleft(self, topleft_index: int) -> NDArray:
+        """Get the bottom-right vertice from the topleft vertice
+
+        Args:
+            topleft_index (int): index of the topleft vertice
+
+        Returns:
+            NDArray: topright vertice
+        """
+        return self.asarray[(topleft_index + 2) % len(self)]
+
+    def get_vertice_from_topleft(
+        self, topleft_index: int, vertice: str = "topright"
+    ) -> NDArray:
+        """Get vertice from the topleft vertice. You can use this method to
+        obtain the topright, bottomleft, bottomright vertice from the topleft vertice.
+
+        Returns:
+            NDArray: topright vertice
+        """
+        if vertice not in ("topright", "bottomleft", "bottomright"):
+            raise ValueError(
+                "Parameter vertice must be one of"
+                "'topright', 'bottomleft', 'bottomright'"
+                f"but got {vertice}"
+            )
+        return getattr(self, f"_{vertice}_vertice_from_topleft")(topleft_index)
+
+    def get_width_from_topleft(self, topleft_index: int) -> float:
+        """Get the width from the topleft vertice
+
+        Args:
+            topleft_index (int): top-left vertice index
+
+        Returns:
+            float: width value
+        """
+        return float(
+            np.linalg.norm(
+                self.asarray[topleft_index]
+                - self.get_vertice_from_topleft(topleft_index, "topright")
+            )
+        )
+
+    def get_height_from_topleft(self, topleft_index: int) -> float:
+        """Get the heigth from the topleft vertice
+
+        Args:
+            topleft_index (int): top-left vertice index
+
+        Returns:
+            float: height value
+        """
+        return float(
+            np.linalg.norm(
+                self.asarray[topleft_index]
+                - self.get_vertice_from_topleft(topleft_index, "bottomleft")
+            )
+        )
+
+    def get_vector_up_from_topleft(self, topleft_index: int) -> Vector:
+        """Get the vector that goes from the bottomleft vertice to the topleft vertice
+
+        Args:
+            topleft_index (int): top-left vertice index
+
+        Returns:
+            Vector: Vector object descripting the vector
+        """
+        bottomleft_vertice = self.get_vertice_from_topleft(
+            topleft_index=topleft_index, vertice="bottomleft"
+        )
+        return Vector([bottomleft_vertice, self[topleft_index]])
+
+    def get_vector_left_from_topleft(self, topleft_index: int) -> Vector:
+        """Get the vector that goes from the topleft vertice to the topright vertice
+
+        Args:
+            topleft_index (int): top-left vertice index
+
+        Returns:
+            Vector: Vector object descripting the vector
+        """
+        rect_topright_vertice = self.get_vertice_from_topleft(
+            topleft_index=topleft_index, vertice="topright"
+        )
+        return Vector([self[topleft_index], rect_topright_vertice])

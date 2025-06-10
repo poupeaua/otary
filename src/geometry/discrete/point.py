@@ -3,6 +3,7 @@ Point class useful to describe any kind of points
 """
 
 import numpy as np
+from numpy.typing import NDArray
 from shapely import Point as SPoint
 
 from src.geometry.discrete.entity import DiscreteGeometryEntity
@@ -11,7 +12,7 @@ from src.geometry.discrete.entity import DiscreteGeometryEntity
 class Point(DiscreteGeometryEntity):
     """Point class"""
 
-    def __init__(self, point: np.ndarray, is_cast_int: bool = False) -> None:
+    def __init__(self, point: NDArray, is_cast_int: bool = False) -> None:
         point = np.asarray(point)
         if point.shape == (2,):
             point = point.reshape((1, 2))
@@ -23,11 +24,11 @@ class Point(DiscreteGeometryEntity):
         return self.points[0]
 
     @asarray.setter
-    def asarray(self, value: np.ndarray):
+    def asarray(self, value: NDArray):
         """Setter for the asarray property
 
         Args:
-            value (np.ndarray): value of the asarray to be changed
+            value (NDArray): value of the asarray to be changed
         """
         point = np.asarray(value)
         if point.shape == (2,):
@@ -58,8 +59,35 @@ class Point(DiscreteGeometryEntity):
         """
         return self.shapely_surface
 
+    @property
+    def area(self) -> float:
+        """Compute the area of the geometry entity
+
+        Returns:
+            float: area value
+        """
+        return 0
+
+    @property
+    def perimeter(self) -> float:
+        """Compute the perimeter of the geometry entity
+
+        Returns:
+            float: perimeter value
+        """
+        return 0
+
+    @property
+    def edges(self) -> NDArray:
+        """Get the edges of the point which returns None since a point has no edges
+
+        Returns:
+            NDArray: empty array of shape (0, 2, 2)
+        """
+        return np.empty(shape=(0, 2, 2))
+
     @staticmethod
-    def order_idxs_points_by_dist(points: np.ndarray, desc: bool = False) -> np.ndarray:
+    def order_idxs_points_by_dist(points: NDArray, desc: bool = False) -> NDArray:
         """Beware the method expects points to be collinear.
 
         Given four points [p0, p1, p2, p3], we wish to have the order in which each
@@ -71,12 +99,12 @@ class Point(DiscreteGeometryEntity):
         p2, p1 and p3. Thus the array returned by the function is [0, 2, 1, 3].
 
         Args:
-            points (np.ndarray): numpy array of shape (n, 2)
+            points (NDArray): numpy array of shape (n, 2)
             desc (bool): if True returns the indices based on distances descending
                 order. Otherwise ascending order which is the default.
 
         Returns:
-            np.ndarray: indices of the points
+            NDArray: indices of the points
         """
         distances = np.linalg.norm(x=points, axis=1)
         idxs_order_by_dist = np.argsort(distances)
@@ -84,13 +112,13 @@ class Point(DiscreteGeometryEntity):
             idxs_order_by_dist = idxs_order_by_dist[::-1]
         return idxs_order_by_dist
 
-    def distances_vertices_to_point(self, point: np.ndarray) -> np.ndarray:
+    def distances_vertices_to_point(self, point: NDArray) -> NDArray:
         """Compute the distances to a given point
 
         Args:
-            point (np.ndarray): point to which we want to compute the distances
+            point (NDArray): point to which we want to compute the distances
 
         Returns:
-            np.ndarray: distance to the given point
+            NDArray: distance to the given point
         """
         return np.linalg.norm(self.points - point, axis=1)

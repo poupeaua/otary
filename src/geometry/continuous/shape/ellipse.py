@@ -6,6 +6,7 @@ from typing import Self, Optional
 
 import math
 import numpy as np
+from numpy.typing import NDArray
 
 from shapely import Polygon as SPolygon, LinearRing
 
@@ -20,16 +21,16 @@ class Ellipse(ContinuousGeometryEntity):
 
     def __init__(
         self,
-        foci1: np.ndarray,
-        foci2: np.ndarray,
+        foci1: NDArray,
+        foci2: NDArray,
         semi_major_axis: float,
         n_points_polygonal_approx: int = ContinuousGeometryEntity.DEFAULT_N_POINTS_POLYGONAL_APPROX,
     ):
         """Initialize a Ellipse geometrical object
 
         Args:
-            foci1 (np.ndarray): first focal 2D point
-            foci2 (np.ndarray): second focal 2D point
+            foci1 (NDArray): first focal 2D point
+            foci2 (NDArray): second focal 2D point
             semi_major_axis (float): semi major axis value
             n_points_polygonal_approx (int, optional): number of points to be used in
                 the polygonal approximation.
@@ -60,11 +61,11 @@ class Ellipse(ContinuousGeometryEntity):
     # --------------------------------- PROPERTIES ------------------------------------
 
     @property
-    def centroid(self) -> np.ndarray:
+    def centroid(self) -> NDArray:
         """Compute the center point of the ellipse
 
         Returns:
-            np.ndarray: 2D point defining the center of the ellipse
+            NDArray: 2D point defining the center of the ellipse
         """
         return (self.foci1 + self.foci2) / 2
 
@@ -139,11 +140,11 @@ class Ellipse(ContinuousGeometryEntity):
         """
         return self.perimeter_approx()
 
-    def curvature(self, point: np.ndarray) -> float:
+    def curvature(self, point: NDArray) -> float:
         """Curvature at the point defined as parameter
 
         Args:
-            point (np.ndarray): input point.
+            point (NDArray): input point.
 
         Returns:
             float: _description_
@@ -181,7 +182,7 @@ class Ellipse(ContinuousGeometryEntity):
         angle: float,
         is_degree: bool = False,
         is_clockwise: bool = True,
-        pivot: Optional[np.ndarray] = None,
+        pivot: Optional[NDArray] = None,
     ) -> Self:
         """Rotate the ellipse around a pivot point.
 
@@ -189,7 +190,7 @@ class Ellipse(ContinuousGeometryEntity):
             angle (float): angle to rotate the ellipse
             is_degree (bool, optional): whether the angle is in degrees. Defaults to False.
             is_clockwise (bool, optional): whether the rotation is clockwise. Defaults to True.
-            pivot (Optional[np.ndarray], optional): pivot point to rotate around. Defaults to None.
+            pivot (Optional[NDArray], optional): pivot point to rotate around. Defaults to None.
 
         Returns:
             Self: rotated ellipse object
@@ -207,11 +208,11 @@ class Ellipse(ContinuousGeometryEntity):
         self.update_polyapprox()
         return self
 
-    def shift(self, vector: np.ndarray) -> Self:
+    def shift(self, vector: NDArray) -> Self:
         """Shift the ellipse by a given vector.
 
         Args:
-            vector (np.ndarray): vector to shift the ellipse
+            vector (NDArray): vector to shift the ellipse
 
         Returns:
             Self: shifted ellipse object

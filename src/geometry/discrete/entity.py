@@ -13,13 +13,14 @@ from shapely import (
 
 import cv2
 import numpy as np
+from numpy.typing import NDArray
 
 from src.geometry.utils.tools import rotate_2d_points
 from src.geometry.entity import GeometryEntity
 from src.utils.tools import assert_transform_shift_vector
 
 if TYPE_CHECKING:
-    from src.geometry import Polygon, Rectangle  # Import only for type checking
+    from src.geometry import Polygon, Rectangle, Segment  # pragma: no cover
 
 
 class DiscreteGeometryEntity(GeometryEntity, ABC):
@@ -53,6 +54,27 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         """
 
     @property
+    @abstractmethod
+    def edges(self) -> NDArray:
+        """Get the edges of the geometry entity
+
+        Returns:
+            NDArray: edges of the geometry entity
+        """
+
+    @property
+    def segments(self) -> list[Segment]:
+        """Get the segments of the geometry entity
+
+        Returns:
+            NDArray: segments of the geometry entity
+        """
+        # pylint: disable=import-outside-toplevel
+        from src.geometry import Segment  # delayed import to avoid circular import
+
+        return [Segment(e) for e in self.edges]
+
+    @property
     def n_points(self) -> int:
         """Returns the number of points this geometric object is made of
 
@@ -62,44 +84,26 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         return self.points.shape[0]
 
     @property
-    def asarray(self) -> np.ndarray:
+    def asarray(self) -> NDArray:
         """Array representation of the geometry object"""
         return self.points
 
     @asarray.setter
-    def asarray(self, value: np.ndarray):
+    def asarray(self, value: NDArray):
         """Setter for the asarray property
 
         Args:
-            value (np.ndarray): value of the asarray to be changed
+            value (NDArray): value of the asarray to be changed
         """
         self.points = value
 
     @property
-    def area(self) -> float:
-        """Compute the area of the geometry entity
-
-        Returns:
-            float: area value
-        """
-        return cv2.contourArea(self.points.astype(int))
-
-    @property
-    def perimeter(self) -> float:
-        """Compute the perimeter of the geometry entity
-
-        Returns:
-            float: perimeter value
-        """
-        return cv2.arcLength(self.points, True)
-
-    @property
-    def centroid(self) -> np.ndarray:
+    def centroid(self) -> NDArray:
         """Compute the centroid point which can be seen as the center of gravity of
         the shape
 
         Returns:
-            np.ndarray: centroid point
+            NDArray: centroid point
         """
         return np.mean(self.points, axis=0)
 
@@ -108,7 +112,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         """Get the maximum X coordinate of the geometry entity
 
         Returns:
-            np.ndarray: 2D point
+            NDArray: 2D point
         """
         return np.max(self.asarray[:, 0])
 
@@ -117,7 +121,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         """Get the minimum X coordinate of the geometry entity
 
         Returns:
-            np.ndarray: 2D point
+            NDArray: 2D point
         """
         return np.min(self.asarray[:, 0])
 
@@ -126,7 +130,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         """Get the maximum Y coordinate of the geometry entity
 
         Returns:
-            np.ndarray: 2D point
+            NDArray: 2D point
         """
         return np.max(self.asarray[:, 1])
 
@@ -135,9 +139,29 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         """Get the minimum Y coordinate of the geometry entity
 
         Returns:
-            np.ndarray: 2D point
+            NDArray: 2D point
         """
         return np.min(self.asarray[:, 1])
+
+    @property
+    def lengths(self) -> NDArray:
+        """Returns the length of all the segments that make up the Polygon
+
+        Returns:
+            NDArray: array of shape (n_points)
+        """
+        lengths: NDArray = np.linalg.norm(np.diff(self.edges, axis=1), axis=2)
+        return lengths.flatten()
+
+    @property
+    def crop_coordinates(self) -> NDArray:
+        """Compute the coordinates of the geometry entity in the context of
+        itself being in a crop image that make it fit pefectly
+
+        Returns:
+            Self: _description_
+        """
+        return self.asarray - np.array([self.xmin, self.ymin])
 
     # ---------------------------- MODIFICATION METHODS -------------------------------
 
@@ -146,7 +170,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         angle: float,
         is_degree: bool = False,
         is_clockwise: bool = True,
-        pivot: Optional[np.ndarray] = None,
+        pivot: Optional[NDArray] = None,
     ) -> Self:
         """Rotate the geometry entity object.
         A pivot point can be passed as an argument to rotate the object around the pivot
@@ -157,7 +181,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
                 Defaults to False which means radians.
             is_clockwise (bool, optional): whether the rotation is clockwise or
                 counter-clockwise. Defaults to True.
-            pivot (np.ndarray, optional): pivot point.
+            pivot (NDArray, optional): pivot point.
                 Defaults to None which means that by default the centroid point of
                 the shape is taken as the pivot point.
 
@@ -177,13 +201,13 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         return self
 
     def rotate_around_image_center(
-        self, img: np.ndarray, angle: float, degree: bool = False
+        self, img: NDArray, angle: float, degree: bool = False
     ) -> Self:
         """Given an geometric object and an image, rotate the object around
         the image center point.
 
         Args:
-            img (np.ndarray): image as a shape (x, y) sized array
+            img (NDArray): image as a shape (x, y) sized array
             angle (float): rotation angle
             degree (bool, optional): whether the angle is in degree or radian.
                 Defaults to False which means radians.
@@ -194,11 +218,11 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         img_center_point = np.array([img.shape[1], img.shape[0]]) / 2
         return self.rotate(angle=angle, pivot=img_center_point, is_degree=degree)
 
-    def shift(self, vector: np.ndarray) -> Self:
+    def shift(self, vector: NDArray) -> Self:
         """Shift the geometry entity by the vector direction
 
         Args:
-            vector (np.ndarray): vector that describes the shift as a array with
+            vector (NDArray): vector that describes the shift as a array with
                 two elements. Example: [2, -8] which describes the
                 vector [[0, 0], [2, -8]]. The vector can also be a vector of shape
                 (2, 2) of the form [[2, 6], [1, 3]].
@@ -257,9 +281,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         Returns:
             GeometryEntity: copy of the geometry entity object
         """
-        return type(self)(
-            points=copy.deepcopy(self.asarray), is_cast_int=self.is_cast_int
-        )
+        return type(self)(points=self.asarray.copy(), is_cast_int=self.is_cast_int)
 
     def enclosing_axis_aligned_bbox(self) -> Rectangle:
         """Compute the smallest area enclosing Axis-Aligned Bounding Box (AABB)
@@ -269,9 +291,11 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
             Rectangle: Rectangle object
         """
         # pylint: disable=import-outside-toplevel
-        from src.geometry import Rectangle
+        from src.geometry import Rectangle  # delayed import to avoid circular import
 
-        topleft_x, topleft_y, width, height = cv2.boundingRect(array=self.asarray)
+        topleft_x, topleft_y, width, height = cv2.boundingRect(
+            array=self.asarray.astype(np.float32)
+        )
         bbox = np.array(
             [
                 [topleft_x, topleft_y],
@@ -290,7 +314,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
             Rectangle: Rectangle object
         """
         # pylint: disable=import-outside-toplevel
-        from src.geometry import Rectangle
+        from src.geometry import Rectangle  # delayed import to avoid circular import
 
         rect = cv2.minAreaRect(self.asarray)
         bbox = cv2.boxPoints(rect)
@@ -304,70 +328,70 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
             Polygon: Polygon object
         """
         # pylint: disable=import-outside-toplevel
-        from src.geometry import Polygon
+        from src.geometry import Polygon  # delayed import to avoid circular import
 
         convexhull = np.squeeze(cv2.convexHull(self.asarray))
         return Polygon(convexhull)
 
-    def distances_vertices_to_point(self, point: np.ndarray) -> np.ndarray:
+    def distances_vertices_to_point(self, point: NDArray) -> NDArray:
         """Get the distance from all vertices in the geometry entity to the input point
 
         Args:
-            point (np.ndarray): 2D point
+            point (NDArray): 2D point
 
         Returns:
-            np.ndarray: array of the same len as the number of vertices in the geometry
+            NDArray: array of the same len as the number of vertices in the geometry
                 entity.
         """
         return np.linalg.norm(self.asarray - point, axis=1)
 
-    def shortest_dist_vertices_to_point(self, point: np.ndarray) -> float:
+    def shortest_dist_vertices_to_point(self, point: NDArray) -> float:
         """Compute the shortest distance from the geometry entity vertices to the point
 
         Args:
-            point (np.ndarray): 2D point
+            point (NDArray): 2D point
 
         Returns:
             float: shortest distance from the geometry entity vertices to the point
         """
         return np.min(self.distances_vertices_to_point(point=point))
 
-    def longest_dist_vertices_to_point(self, point: np.ndarray) -> float:
+    def longest_dist_vertices_to_point(self, point: NDArray) -> float:
         """Compute the longest distance from the geometry entity vertices to the point
 
         Args:
-            point (np.ndarray): 2D point
+            point (NDArray): 2D point
 
         Returns:
             float: longest distance from the geometry entity vertices to the point
         """
         return np.max(self.distances_vertices_to_point(point=point))
 
-    def index_farthest_vertice_from(self, point: np.ndarray) -> int:
+    def find_vertice_ix_farthest_from(self, point: NDArray) -> int:
         """Get the index of the farthest vertice from a given point
 
         Args:
-            point (np.ndarray): 2D point
+            point (NDArray): 2D point
 
         Returns:
             int: the index of the farthest vertice in the entity from the input point
         """
         return np.argmax(self.distances_vertices_to_point(point=point)).astype(int)
 
-    def index_closest_vertice_from(self, point: np.ndarray) -> int:
+    def find_vertice_ix_closest_from(self, point: NDArray) -> int:
         """Get the index of the closest vertice from a given point
 
         Args:
-            point (np.ndarray): 2D point
+            point (NDArray): 2D point
 
         Returns:
             int: the index of the closest point in the entity from the input point
         """
         return np.argmin(self.distances_vertices_to_point(point=point)).astype(int)
 
-    def indices_shared_approx_vertices(
+    def find_shared_approx_vertices_ix(
         self, other: DiscreteGeometryEntity, margin_dist_error: float = 5
-    ) -> np.ndarray:
+    ) -> NDArray:
         """Compute the vertices indices from this entity that correspond to shared
         vertices with the other geometric entity.
 
@@ -380,7 +404,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
                 considered as close enough to be shared. Defaults to 5.
 
         Returns:
-            np.ndarray: list of indices
+            NDArray: list of indices
         """
         list_index_shared_points = []
         for i, pt in enumerate(self.asarray):
@@ -390,9 +414,9 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
                 list_index_shared_points.append(i)
         return np.array(list_index_shared_points).astype(int)
 
-    def shared_approx_vertices(
+    def find_shared_approx_vertices(
         self, other: DiscreteGeometryEntity, margin_dist_error: float = 5
-    ) -> np.ndarray:
+    ) -> NDArray:
         """Get the shared vertices between two geometric objects.
 
         A vertice is considered shared if it is close enough to another vertice
@@ -404,27 +428,27 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
                 shared or not. Defaults to 5.
 
         Returns:
-            np.ndarray: list of vertices identified as shared between the two geometric
+            NDArray: list of vertices identified as shared between the two geometric
                 objects
         """
-        indices = self.indices_shared_approx_vertices(
+        indices = self.find_shared_approx_vertices_ix(
             other=other, margin_dist_error=margin_dist_error
         )
         return self.asarray[indices]
 
-    def vertices_far_from(
-        self, points: np.ndarray, min_distance: float = 5
-    ) -> np.ndarray:
+    def find_vertices_far_from(
+        self, points: NDArray, min_distance: float = 5
+    ) -> NDArray:
         """Get vertices that belongs to the geometric structure far from the points in
         parameters.
 
         Args:
-            points (np.ndarray): input list of points
+            points (NDArray): input list of points
             min_distance (float, optional): the threshold to define a point as
                 far enough or not from a vertice. Defaults to 5.
 
         Returns:
-            np.ndarray: vertices that belongs to the geometric structure and that
+            NDArray: vertices that belongs to the geometric structure and that
                 are far from the input points.
         """
         list_far_points = []
@@ -438,26 +462,38 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
     def __eq__(self, value: object) -> bool:
         if not isinstance(value, DiscreteGeometryEntity):
             return False
+        if not type(self) == type(value):
+            return False
         return np.array_equal(self.asarray, value.asarray)
 
-    def __add__(self, other: np.ndarray | float) -> Self:
+    def __neg__(self) -> Self:
+        self.asarray = -self.asarray
+        return self
+
+    def __add__(self, other: NDArray | float | int) -> Self:
         self.asarray += other
         return self
 
-    def __sub__(self, other: np.ndarray | float) -> Self:
+    def __sub__(self, other: NDArray | float | int) -> Self:
         self.asarray -= other
         return self
 
-    def __mul__(self, other: np.ndarray | float) -> Self:
-        self.asarray *= other
+    def __mul__(self, other: NDArray | float | int) -> Self:
+        try:
+            self.asarray *= other
+        except Exception:
+            self.asarray = self.asarray.astype(float) * other
         return self
 
-    def __truediv__(self, other: np.ndarray | float) -> Self:
+    def __truediv__(self, other: NDArray | float | int) -> Self:
         self.asarray = self.asarray / other
         return self
 
     def __len__(self) -> int:
         return self.n_points
+
+    def __getitem__(self, index: int) -> NDArray:
+        return self.points[index]
 
     def __str__(self) -> str:
         return self.__class__.__name__ + "(" + self.asarray.tolist().__str__() + ")"

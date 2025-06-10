@@ -2,26 +2,46 @@
 Image Reader module
 """
 
-from abc import ABC
-from typing import Optional, Self
+from typing import Optional
 
 import cv2
 import numpy as np
+from numpy.typing import NDArray
 import pymupdf
 
-from src.image.utils.readfile import read_pdf_to_images
-from src.image.base import BaseImage
+from src.image.components.io.utils.readfile import read_pdf_to_images
 
 
-class ReaderImage(BaseImage, ABC):
+class ReaderImage:
     """ReaderImage class to facilitate the reading of images from different formats
     such as JPG, PNG, and PDF. It provides methods to load images from file paths.
     """
 
-    @classmethod
+    @staticmethod
+    def from_fillvalue(value: int = 255, shape: tuple = (128, 128, 3)) -> NDArray:
+        """Create an array image from a single value
+
+        Args:
+            value (int, optional): value in [0, 255]. Defaults to 255.
+            shape (tuple, optional): image shape. If it has three elements then
+                the last one must be a 3 for a coloscale image.
+                Defaults to (128, 128, 3).
+
+        Returns:
+            NDArray: array with a single value
+        """
+        if value < 0 or value > 255:
+            raise ValueError(f"The value {value} must be in [0, 255]")
+        if len(shape) < 2 or len(shape) >= 4:
+            raise ValueError(f"The shape {shape} must be of length 2 or 3")
+        if len(shape) == 3 and shape[-1] != 3:
+            raise ValueError(f"The last value of {shape} must be 3")
+        return np.full(shape=shape, fill_value=value, dtype=np.uint8)
+
+    @staticmethod
     def from_jpg(
-        cls, filepath: str, as_grayscale: bool = False, resolution: Optional[int] = None
-    ) -> Self:
+        filepath: str, as_grayscale: bool = False, resolution: Optional[int] = None
+    ) -> NDArray:
         """Create a Image object from a JPG or JPEG file path
 
         Args:
@@ -41,13 +61,13 @@ class ReaderImage(BaseImage, ABC):
             new_width = int(resolution * aspect_ratio)
             arr = cv2.resize(src=arr, dsize=(new_width, resolution))
 
-        return cls(arr)
+        return arr
 
-    @classmethod
+    @staticmethod
     def from_png(
-        cls, filepath: str, as_grayscale: bool = False, resolution: Optional[int] = None
-    ) -> Self:
-        """Create a Image object from a PNG file image path
+        filepath: str, as_grayscale: bool = False, resolution: Optional[int] = None
+    ) -> NDArray:
+        """Create a Image array from a PNG file image path
 
         Args:
             filepath (str): path to the image file
@@ -55,23 +75,22 @@ class ReaderImage(BaseImage, ABC):
                 Defaults to False.
 
         Returns:
-            Self: Image object
+            NDArray: Image as array
         """
-        return cls.from_jpg(
+        return ReaderImage.from_jpg(
             filepath=filepath, as_grayscale=as_grayscale, resolution=resolution
         )
 
-    @classmethod
+    @staticmethod
     def from_pdf(
-        cls,
         filepath: str,
         as_grayscale: bool = False,
         page_nb: int = 0,
         resolution: Optional[int] = None,
         clip_pct: Optional[pymupdf.Rect] = None,
-    ) -> Self:
+    ) -> NDArray:
         # pylint: disable=too-many-arguments, too-many-positional-arguments
-        """Create an Image object from a pdf file.
+        """Create an Image array from a pdf file.
 
         Args:
             filepath (str): path to the pdf file.
@@ -87,7 +106,7 @@ class ReaderImage(BaseImage, ABC):
                 the image loading time especially combined with a high resolution.
 
         Returns:
-            Self: Image object
+            NDArray: Image as array
         """
         arr = read_pdf_to_images(
             filepath_or_stream=filepath,
@@ -99,13 +118,13 @@ class ReaderImage(BaseImage, ABC):
         if as_grayscale:
             arr = cv2.cvtColor(arr, cv2.COLOR_BGR2GRAY)
 
-        return cls(arr)
+        return arr
 
-    @classmethod
+    @staticmethod
     def from_file(
-        cls, filepath: str, as_grayscale: bool = False, resolution: Optional[int] = None
-    ) -> Self:
-        """Create a Image object from a file image path
+        filepath: str, as_grayscale: bool = False, resolution: Optional[int] = None
+    ) -> NDArray:
+        """Create a Image array from a file image path
 
         Args:
             filepath (str): path to the image file
@@ -113,22 +132,22 @@ class ReaderImage(BaseImage, ABC):
                 Defaults to False.
 
         Returns:
-            Self: Image object
+            NDArray: Image as array
         """
         valid_format = ["png", "jpg", "jpeg", "pdf"]
 
         file_format = filepath.split(".")[-1]
 
         if file_format in ["png"]:
-            return cls.from_png(
+            return ReaderImage.from_png(
                 filepath=filepath, as_grayscale=as_grayscale, resolution=resolution
             )
         if file_format in ["jpg", "jpeg"]:
-            return cls.from_jpg(
+            return ReaderImage.from_jpg(
                 filepath=filepath, as_grayscale=as_grayscale, resolution=resolution
             )
         if file_format in ["pdf"]:
-            return cls.from_pdf(
+            return ReaderImage.from_pdf(
                 filepath=filepath, as_grayscale=as_grayscale, resolution=resolution
             )
 

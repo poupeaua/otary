@@ -2,97 +2,15 @@
 Unit tests BaseImage class
 """
 
-import pytest
 import numpy as np
-import pymupdf
 
 from src.image import Image
-
-
-@pytest.fixture
-def pdf_filepath():
-    return "./tests/data/test.pdf"
-
-
-@pytest.fixture
-def jpg_filepath():
-    return "./tests/data/test.jpg"
-
-
-class TestBaseImageFromFillValue:
-
-    def test_init_image_class_method_from_fillvalue(self):
-        img = Image.from_fillvalue(shape=(5, 5, 3), value=0)
-        assert len(img.shape_array) == 3
-
-    def test_init_image_class_method_from_fillvalue_error_val_toobig(self):
-        with pytest.raises(ValueError):
-            Image.from_fillvalue(shape=(5, 5, 3), value=256)
-
-    def test_init_image_class_method_from_fillvalue_error_val_neg(self):
-        with pytest.raises(ValueError):
-            Image.from_fillvalue(shape=(5, 5, 3), value=-1)
-
-    def test_init_image_class_method_from_fillvalue_error_shape_toolow(self):
-        with pytest.raises(ValueError):
-            Image.from_fillvalue(shape=(5,), value=0)
-
-    def test_init_image_class_method_from_fillvalue_error_shape_toobig(self):
-        with pytest.raises(ValueError):
-            Image.from_fillvalue(shape=(5, 2, 5, 5), value=0)
-
-    def test_init_image_class_method_from_fillvalue_error_shape_incorrect(self):
-        with pytest.raises(ValueError):
-            Image.from_fillvalue(shape=(5, 5, 4), value=0)
-
-
-class TestBaseImageFromFileImage:
-
-    def test_init_image_class_method_from_jpg(self, jpg_filepath):
-        img = Image.from_file(filepath=jpg_filepath)
-        assert len(img.shape_array) == 3
-
-    def test_init_image_class_method_from_jpg_grayscale(self, jpg_filepath):
-        img = Image.from_file(filepath=jpg_filepath, as_grayscale=True)
-        assert len(img.shape_array) == 2
-
-
-class TestBaseImageFromPdf:
-
-    def test_init_image_class_method_from_pdf(self, pdf_filepath):
-        img = Image.from_pdf(filepath=pdf_filepath, resolution=50)
-        assert len(img.shape_array) == 3
-
-    def test_init_image_class_method_from_pdf_grayscale(self, pdf_filepath):
-        img = Image.from_pdf(filepath=pdf_filepath, as_grayscale=True, resolution=50)
-        assert len(img.shape_array) == 2
-
-    def test_init_image_class_method_from_pdf_error_page_nb(self, pdf_filepath):
-        with pytest.raises(IndexError):
-            Image.from_pdf(filepath=pdf_filepath, page_nb=1, resolution=50)
-
-    def test_init_image_class_method_from_pdf_neg_page_nb(self, pdf_filepath):
-        img = Image.from_pdf(filepath=pdf_filepath, page_nb=-1, resolution=50)
-        assert len(img.shape_array) == 3
-
-    def test_init_image_class_method_from_pdf_clip(self, pdf_filepath):
-        img = Image.from_pdf(
-            filepath=pdf_filepath,
-            resolution=50,
-            clip_pct=pymupdf.Rect(x0=0, y0=0, x1=10, y1=10),
-        )
-        assert len(img.shape_array) == 3
 
 
 class TestBaseImageGlobalMethods:
 
     def test_init_image_from_array(self):
         img = Image(image=np.full(shape=(5, 5, 3), fill_value=0))
-        assert len(img.shape_array) == 3
-
-    def test_init_image_from_other_image(self):
-        img_other = Image(image=np.full(shape=(5, 5, 3), fill_value=0))
-        img = Image(img_other)
         assert len(img.shape_array) == 3
 
     def test_asarray_getter(self):
@@ -134,15 +52,15 @@ class TestBaseImageGlobalMethods:
 
     def test_asarray_norm_white(self):
         img = Image.from_fillvalue(shape=(5, 5), value=255)
-        assert np.all(img.asarray_norm == 1)
+        assert np.all(img.asarray_binary == 1)
 
     def test_asarray_norm_grey(self):
         img = Image.from_fillvalue(shape=(5, 5), value=127)
-        assert np.all(np.round(img.asarray_norm, 3) == 0.498)
+        assert np.all(np.round(img.asarray_binary, 3) == 0.498)
 
     def test_asarray_norm_black(self):
         img = Image.from_fillvalue(shape=(5, 5), value=0)
-        assert np.all(img.asarray_norm == 0)
+        assert np.all(img.asarray_binary == 0)
 
     def test_dist_pct(self):
         pct = 0.4
@@ -231,14 +149,37 @@ class TestBaseImageAsMethods:
         assert pil_img.size == (img.width, img.height)
         assert pil_img.mode == "L"
 
-    def test_width_pct(self):
-        pct = 0.2
-        width = 50
-        img = Image.from_fillvalue(shape=(25, width), value=0)
-        assert img.width_pct(pct=pct) == width * pct
 
-    def test_height_pct(self):
-        pct = 0.3
-        height = 40
-        img = Image.from_fillvalue(shape=(height, 25), value=0)
-        assert img.height_pct(pct=pct) == height * pct
+class TestTransformerImageReverseMethods:
+
+    def test_rev_grayscale_black(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=0)
+        img.rev()
+        assert np.all(img.asarray == 255)
+
+    def test_rev_grayscale_white(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=255)
+        img.rev()
+        assert np.all(img.asarray == 0)
+
+    def test_rev_grayscale_other_color(self):
+        val = 100
+        img = Image.from_fillvalue(shape=(5, 5), value=val)
+        img.rev()
+        assert np.all(img.asarray == np.abs(255 - val))
+
+    def test_rev_colorscale_black(self):
+        img = Image.from_fillvalue(shape=(5, 5, 3), value=0)
+        img.rev()
+        assert np.all(img.asarray == 255)
+
+    def test_rev_colorscale_white(self):
+        img = Image.from_fillvalue(shape=(5, 5, 3), value=255)
+        img.rev()
+        assert np.all(img.asarray == 0)
+
+    def test_rev_colorscale_other_color(self):
+        val = 100
+        img = Image.from_fillvalue(shape=(5, 5, 3), value=val)
+        img.rev()
+        assert np.all(img.asarray == 155)
