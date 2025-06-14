@@ -1217,6 +1217,16 @@ class Image:
         )
         return self
 
+    def add_border(self, size: int, fill_value: int = 0) -> Self:
+        """Add a border to the image.
+
+        Args:
+            thickness (int): border thickness.
+            color (int, optional): border color. Defaults to 0.
+        """
+        self.transformer.morphologyzer.add_border(size=size, fill_value=fill_value)
+        return self
+
     # -------------------------- ASSEMBLED COMPOSED METHODS ---------------------------
     # methods that use multiple components
     # ---------------------------------------------------------------------------------
