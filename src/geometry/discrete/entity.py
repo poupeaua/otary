@@ -287,6 +287,12 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         """Compute the smallest area enclosing Axis-Aligned Bounding Box (AABB)
         See: https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html
 
+        Return the points in the following order:
+        1. top left
+        2. top right
+        3. bottom right
+        4. bottom left
+
         Returns:
             Rectangle: Rectangle object
         """
@@ -467,27 +473,19 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         return np.array_equal(self.asarray, value.asarray)
 
     def __neg__(self) -> Self:
-        self.asarray = -self.asarray
-        return self
+        return type(self)(-self.asarray)
 
     def __add__(self, other: NDArray | float | int) -> Self:
-        self.asarray += other
-        return self
+        return type(self)(self.asarray + other)
 
     def __sub__(self, other: NDArray | float | int) -> Self:
-        self.asarray -= other
-        return self
+        return type(self)(self.asarray - other)
 
     def __mul__(self, other: NDArray | float | int) -> Self:
-        try:
-            self.asarray *= other
-        except Exception:
-            self.asarray = self.asarray.astype(float) * other
-        return self
+        return type(self)(self.asarray.astype(float) * other)
 
     def __truediv__(self, other: NDArray | float | int) -> Self:
-        self.asarray = self.asarray / other
-        return self
+        return type(self)(self.asarray / other)
 
     def __len__(self) -> int:
         return self.n_points
