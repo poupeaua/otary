@@ -4,6 +4,7 @@ Segment class to describe defined lines and segments
 
 from __future__ import annotations
 
+import math
 import itertools
 
 import numpy as np
@@ -232,3 +233,25 @@ class Segment(LinearEntity):
         line1 = Line(other.asarray[0], other.asarray[1])
         intersection = np.array(line0.intersection(line1)[0].evalf(n=7))
         return intersection
+
+    def normal(self, position_pct: float = 0.5) -> Segment:
+        """
+        Returns the normal segment of the segment.
+        The normal segment is a segment that is orthogonal to the input segment.
+
+        Please note that the normal segment have the same length as the input segment.
+
+        Parameters:
+            position_pct (float): Position of the normal vector on the segment
+                based on the first and second point.
+                position_pct = 0.5 -> Normal vector is at the middle of the segment
+                position_pct = 0 -> Normal vector is at the first point of the segment
+                position_pct = 1 -> Normal vector is at the second point of the segment
+
+        Returns:
+            Segment: Normalized normal segment (shape: (2,))
+        """
+        normal = self.copy().rotate(angle=math.pi / 2, is_degree=False)
+        shift_vec = self.asarray[1] - self.asarray[0]
+        normal.shift(vector=shift_vec * (position_pct - 0.5))
+        return normal
