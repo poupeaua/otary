@@ -475,6 +475,46 @@ class Polygon(DiscreteGeometryEntity):
         # Fallback
         return path[-1]
 
+    def outward_normal_point(
+        self,
+        start_index: int,
+        end_index: int,
+        dist_along_edge_pct: float,
+        dist_outward: float,
+    ) -> NDArray:
+        """Compute the outward normal point.
+        This is a point that points toward the outside of the polygon
+
+        Args:
+            start_index (int): start index for the edge selection
+            end_index (int): end index for the edge selection
+            dist_along_edge_pct (float): distance along the edge to place the point
+            dist_outward (float): distance outward from the edge
+
+        Returns:
+            NDArray: 2D point as array
+        """
+        assert 0.0 <= dist_along_edge_pct <= 1.0
+
+        pt_interpolated = self.find_interpolated_point(
+            start_index=start_index, end_index=end_index, pct_dist=dist_along_edge_pct
+        )
+
+        edge = Vector(points=[self.asarray[start_index], self.asarray[end_index]])
+
+        normal = edge.normal().normalized
+
+        pt_plus = pt_interpolated + dist_outward * normal
+        pt_minus = pt_interpolated - dist_outward * normal
+
+        dist_plus = np.linalg.norm(pt_plus - self.centroid)
+        dist_minus = np.linalg.norm(pt_minus - self.centroid)
+
+        # choose the point which distance to the center is greater
+        if dist_plus > dist_minus:
+            return pt_plus
+        return pt_minus
+
     # ---------------------------- MODIFICATION METHODS -------------------------------
 
     def add_vertice(self, point: NDArray, index: int) -> Self:

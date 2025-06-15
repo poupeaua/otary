@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import math
 import itertools
+from typing import Self
 
 import numpy as np
 from numpy.typing import NDArray
@@ -234,7 +235,7 @@ class Segment(LinearEntity):
         intersection = np.array(line0.intersection(line1)[0].evalf(n=7))
         return intersection
 
-    def normal(self) -> Segment:
+    def normal(self) -> Self:
         """
         Returns the normal segment of the segment.
         The normal segment is a segment that is orthogonal to the input segment.
