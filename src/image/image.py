@@ -928,10 +928,21 @@ class Image:
 
         return im
 
+    def crop_rectangle_horizontal(
+        self, rect: geo.Rectangle, rect_topleft_ix: int = 0
+    ) -> Image:
+        crop_dim = (
+            rect.get_width_from_topleft(rect_topleft_ix),
+            rect.get_height_from_topleft(rect_topleft_ix),
+        )
+        return self.crop_next_to_rectangle(
+            rect=rect, rect_topleft_ix=rect_topleft_ix, crop_dim=crop_dim
+        )
+
     def crop_next_to_rectangle(
         self,
         rect: geo.Rectangle,
-        rect_topleft_ix: int,
+        rect_topleft_ix: int = 0,
         crop_dim: tuple[int, int] = (-1, -1),
         crop_shift: tuple[int, int] = (0, 0),
     ) -> Image:
