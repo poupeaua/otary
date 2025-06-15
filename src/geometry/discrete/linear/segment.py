@@ -35,6 +35,15 @@ class Segment(LinearEntity):
         return np.sum(self.points, axis=0) / 2
 
     @property
+    def center_within(self) -> NDArray:
+        """In the Segment, this is equivalent to the centroid
+
+        Returns:
+            NDArray: point of shape (1, 2)
+        """
+        return self.centroid
+
+    @property
     def slope(self) -> float:
         """Returns the segment slope in the classical XY coordinates referential
 

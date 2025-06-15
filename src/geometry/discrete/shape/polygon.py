@@ -455,25 +455,7 @@ class Polygon(DiscreteGeometryEntity):
             )
         )
 
-        if path.length == 0 or pct_dist == 0:
-            return path[0]
-        if pct_dist == 1:
-            return path[-1]
-
-        # Walk along the path to find the point at pct_dist * total_dist
-        target_dist = pct_dist * path.length
-        accumulated = 0
-        for i in range(len(path.edges)):
-            cur_edge_length = path.lengths[i]
-            if accumulated + cur_edge_length >= target_dist:
-                remain = target_dist - accumulated
-                direction = path[i + 1] - path[i]
-                unit_dir = direction / cur_edge_length
-                return path[i] + remain * unit_dir
-            accumulated += cur_edge_length
-
-        # Fallback
-        return path[-1]
+        return path.find_interpolated_point(pct_dist=pct_dist)
 
     def outward_normal_point(
         self,
@@ -689,3 +671,23 @@ class Polygon(DiscreteGeometryEntity):
         distances = np.linalg.norm(points_diff, axis=1)
         max_distance = np.max(distances)
         return max_distance <= dist_margin_error
+
+    def __str__(self) -> str:
+        return (
+            self.__class__.__name__
+            + "(start="
+            + self.asarray[0].tolist().__str__()
+            + ", end="
+            + self.asarray[-1].tolist().__str__()
+            + ")"
+        )
+
+    def __repr__(self) -> str:
+        return (
+            self.__class__.__name__
+            + "(start="
+            + self.asarray[0].tolist().__str__()
+            + ", end="
+            + self.asarray[-1].tolist().__str__()
+            + ")"
+        )
