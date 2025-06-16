@@ -198,6 +198,15 @@ class Image:
         return self.base.area
 
     @property
+    def channels(self) -> int:
+        """Number of channels in the image
+
+        Returns:
+            int: number of channels
+        """
+        return self.base.channels
+
+    @property
     def shape_array(self) -> tuple[int, int, int]:
         """Returns the array shape value (height, width, channel)
 
@@ -205,6 +214,15 @@ class Image:
             tuple[int]: image shape
         """
         return self.base.shape_array
+
+    @property
+    def shape(self) -> tuple[int, int, int]:
+        """Returns the array shape value (width, height, channel)
+
+        Returns:
+            tuple[int]: image shape
+        """
+        return self.base.shape
 
     @property
     def is_gray(self) -> bool:
