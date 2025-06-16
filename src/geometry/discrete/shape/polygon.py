@@ -497,6 +497,51 @@ class Polygon(DiscreteGeometryEntity):
             return pt_plus
         return pt_minus
 
+    def inter_area(self, other: Polygon) -> float:
+        """Inter area with another Polygon
+
+        Args:
+            other (Polygon): other Polygon
+
+        Returns:
+            float: inter area value
+        """
+        inter_pts = cv2.intersectConvexConvex(self.asarray, other.asarray)
+        if inter_pts[0] > 0:
+            inter_area = cv2.contourArea(inter_pts[1])
+        else:
+            inter_area = 0.0
+        return inter_area
+
+    def union_area(self, other: Polygon) -> float:
+        """Union area with another Polygon
+
+        Args:
+            other (Polygon): other Polygon
+
+        Returns:
+            float: union area value
+        """
+        return self.area + other.area - self.inter_area(other)
+
+    def iou(self, other: Polygon) -> float:
+        """Intersection over union with another Polygon
+
+        Args:
+            other (Polygon): other Polygon
+
+        Returns:
+            float: intersection over union value
+        """
+        inter_area = self.inter_area(other)
+
+        # optimized not to compute twice the inter area
+        union_area = self.area + other.area - inter_area
+
+        if union_area == 0:
+            return 0.0
+        return inter_area / union_area
+
     # ---------------------------- MODIFICATION METHODS -------------------------------
 
     def add_vertice(self, point: NDArray, index: int) -> Self:
