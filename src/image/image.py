@@ -774,6 +774,52 @@ class Image:
         )
         return out if out is not None and copy else self
 
+    def crop_hq_from_aabb_and_pdf(
+        self,
+        bbox: geo.Rectangle,
+        pdf_filepath: str,
+        page_nb: int = 0,
+        as_grayscale: bool = False,
+        resolution: int = 1000,
+    ) -> Image:
+        """Generate a new image from a pdf file by cropping a High Quality crop
+        from a given Axis-Aligned Bounding Box (AABB).
+
+        The crop is of high quality because we can load only the crop part of the image
+        from the original pdf.
+
+        Args:
+            bbox (geo.Rectangle): crop bounding box
+            pdf_filepath (str): PDF filepath
+            page_nb (int, optional): page to load in the PDF. The first page is 0.
+                Defaults to 0.
+            as_grayscale (bool, optional): whether to load the image as grayscale or
+                not. Defaults to False.
+            resolution (int, optional): resolution of the final crop image.
+                Defaults to 1000.
+
+        Returns:
+            Image: high quality crop image
+        """
+        # get the bbox normalized
+        bbox_normalized = bbox.copy().normalize(x=self.width, y=self.height)
+        clip_pct = pymupdf.Rect(
+            x0=bbox_normalized[0][0],
+            y0=bbox_normalized[0][1],
+            x1=bbox_normalized[2][0],
+            y1=bbox_normalized[2][1],
+        )
+
+        # obtain the High Quality crop image by reading
+        im_crop = Image.from_pdf(
+            filepath=pdf_filepath,
+            page_nb=page_nb,
+            as_grayscale=as_grayscale,
+            resolution=resolution,
+            clip_pct=clip_pct,
+        )
+        return im_crop
+
     def crop_from_polygon(
         self, polygon: geo.Polygon, copy: bool = False, **kwargs
     ) -> Image | Self:
@@ -818,7 +864,7 @@ class Image:
         )
         return out if out is not None and copy else self
 
-    def crop_around_segment_horizontal(
+    def crop_segment(
         self,
         segment: NDArray,
         dim_crop_rect: tuple[int, int] = (-1, 100),
@@ -874,7 +920,7 @@ class Image:
         crop_translation_vector = self.base.center - im_crop.base.center
         return im_crop, translation_vector, angle, crop_translation_vector
 
-    def crop_around_segment_horizontal_faster(
+    def crop_segment_faster(
         self,
         segment: NDArray,
         dim_crop_rect: tuple[int, int] = (-1, 100),
@@ -946,18 +992,7 @@ class Image:
 
         return im
 
-    def crop_rectangle_horizontal(
-        self, rect: geo.Rectangle, rect_topleft_ix: int = 0
-    ) -> Image:
-        crop_dim = (
-            rect.get_width_from_topleft(rect_topleft_ix),
-            rect.get_height_from_topleft(rect_topleft_ix),
-        )
-        return self.crop_next_to_rectangle(
-            rect=rect, rect_topleft_ix=rect_topleft_ix, crop_dim=crop_dim
-        )
-
-    def crop_next_to_rectangle(
+    def crop_from_rectangle_referential(
         self,
         rect: geo.Rectangle,
         rect_topleft_ix: int = 0,
@@ -1008,10 +1043,30 @@ class Image:
             ]
         )
 
-        return self.crop_around_segment_horizontal_faster(
+        return self.crop_segment_faster(
             segment=crop_segment.asarray,
             dim_crop_rect=(crop_width, crop_height),
             added_width=0,
+        )
+
+    def crop_rectangle(self, rect: geo.Rectangle, rect_topleft_ix: int = 0) -> Image:
+        """Crop from a rectangle that can be rotated in any direction.
+        The crop is done using the information of the top-left vertice index to
+        determine the width and height of the crop.
+
+        Args:
+            rect (geo.Rectangle): rectangle to crop in the referential of the image
+            rect_topleft_ix (int, optional): top-left vertice index. Defaults to 0.
+
+        Returns:
+            Image: crop of the image
+        """
+        crop_dim = (
+            rect.get_width_from_topleft(rect_topleft_ix),
+            rect.get_height_from_topleft(rect_topleft_ix),
+        )
+        return self.crop_from_rectangle_referential(
+            rect=rect, rect_topleft_ix=rect_topleft_ix, crop_dim=crop_dim
         )
 
     # ------------------------------- GEOMETRY METHODS --------------------------------
@@ -1416,7 +1471,7 @@ class Image:
 
         for segment in segments:
 
-            im = self.crop_around_segment_horizontal_faster(
+            im = self.crop_segment_faster(
                 segment=segment.asarray,
                 dim_crop_rect=(-1, height_crop),
                 added_width=added_width,
