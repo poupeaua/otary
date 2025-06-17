@@ -38,21 +38,21 @@ class TestTransformerImageCropAroundSegment:
 
     def test_crop_around_segment_horizontal(self):
         img = Image.from_fillvalue(shape=(5, 5), value=0)
-        img, _, _, _ = img.crop_around_segment_horizontal(
+        img, _, _, _ = img.crop_segment(
             segment=[[1, 2], [3, 2]], dim_crop_rect=(-1, 3), added_width=0
         )
         assert img.shape_array == (3, 2)
 
     def test_crop_around_segment_horizontal_with_segment_horizontal(self):
         img = Image.from_fillvalue(shape=(5, 5), value=0)
-        img = img.crop_around_segment_horizontal_faster(
+        img = img.crop_segment_faster(
             segment=[[1, 1], [3, 1]], dim_crop_rect=(-1, 3), added_width=0
         )
         assert img.shape_array == (3, 2)
 
     def test_crop_around_segment_horizontal_with_segment_vertical(self):
         img = Image.from_fillvalue(shape=(5, 5), value=0)
-        img = img.crop_around_segment_horizontal_faster(
+        img = img.crop_segment_faster(
             segment=[[1, 1], [1, 3]], dim_crop_rect=(-1, 3), added_width=0
         )
         assert img.shape_array == (3, 2)
@@ -63,13 +63,13 @@ class TestTransformerImageCropNextToRectangle:
     def test_crop_next_to_rectangle_default_params(self):
         img = Image.from_fillvalue(shape=(10, 10), value=0)
         rect = Rectangle.from_topleft_bottomright(topleft=[3, 3], bottomright=[5, 5])
-        cropped_img = img.crop_next_to_rectangle(rect=rect, rect_topleft_ix=0)
+        cropped_img = img.crop_from_rectangle_referential(rect=rect, rect_topleft_ix=0)
         assert cropped_img.shape_array == (2, 2)
 
     def test_crop_next_to_rectangle_custom_crop_dim(self):
         img = Image.from_fillvalue(shape=(10, 10), value=0)
         rect = Rectangle.from_topleft_bottomright(topleft=[3, 3], bottomright=[5, 5])
-        cropped_img = img.crop_next_to_rectangle(
+        cropped_img = img.crop_from_rectangle_referential(
             rect=rect, rect_topleft_ix=0, crop_dim=(3, 3)
         )
         assert cropped_img.shape_array == (3, 3)
@@ -82,7 +82,7 @@ class TestTransformerImageCropNextToRectangle:
         img.asarray[4, 4] = 4
         img.asarray[4, 3] = 3
         rect = Rectangle.from_topleft_bottomright(topleft=[3, 3], bottomright=[5, 5])
-        cropped_img = img.crop_next_to_rectangle(
+        cropped_img = img.crop_from_rectangle_referential(
             rect=rect, rect_topleft_ix=0, crop_shift=(3, -1), crop_dim=(3, 3)
         )
         assert cropped_img.asarray[1, 1] == 5
@@ -92,12 +92,14 @@ class TestTransformerImageCropNextToRectangle:
         img = Image.from_fillvalue(shape=(10, 10), value=0)
         rect = Rectangle.from_topleft_bottomright(topleft=[3, 3], bottomright=[5, 5])
         with pytest.raises(AssertionError):
-            img.crop_next_to_rectangle(rect=rect, rect_topleft_ix=0, crop_dim=(-1, -5))
+            img.crop_from_rectangle_referential(
+                rect=rect, rect_topleft_ix=0, crop_dim=(-1, -5)
+            )
 
     def test_crop_next_to_rectangle_large_crop_dim(self):
         img = Image.from_fillvalue(shape=(10, 10), value=0)
         rect = Rectangle.from_topleft_bottomright(topleft=[3, 3], bottomright=[5, 5])
-        cropped_img = img.crop_next_to_rectangle(
+        cropped_img = img.crop_from_rectangle_referential(
             rect=rect, rect_topleft_ix=0, crop_dim=(10, 10)
         )
         assert cropped_img.shape_array == (10, 10)

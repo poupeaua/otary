@@ -145,7 +145,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
 
     @property
     def lengths(self) -> NDArray:
-        """Returns the length of all the segments that make up the Polygon
+        """Returns the length of all the segments that make up the geometry entity
 
         Returns:
             NDArray: array of shape (n_points)

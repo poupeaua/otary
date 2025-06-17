@@ -5,7 +5,7 @@ Polygon class to handle complexity with polygon calculation
 from __future__ import annotations
 
 import copy
-from typing import Optional, Self, Sequence
+from typing import Optional, Self, Sequence, TYPE_CHECKING
 import logging
 
 import cv2
@@ -18,6 +18,9 @@ from src.geometry.entity import GeometryEntity
 from src.geometry.discrete.linear.entity import LinearEntity
 from src.geometry.discrete.entity import DiscreteGeometryEntity
 from src.geometry import Segment, Vector, LinearSpline
+
+if TYPE_CHECKING:
+    from src.geometry.discrete.shape.rectangle import Rectangle
 
 
 class Polygon(DiscreteGeometryEntity):
@@ -51,27 +54,41 @@ class Polygon(DiscreteGeometryEntity):
 
     @classmethod
     def from_linear_entities(
-        cls, linear_entities: Sequence[LinearEntity], connected: bool = False
-    ) -> Polygon:
+        cls,
+        linear_entities: Sequence[LinearEntity],
+        return_vertices_ix: bool = False,
+    ) -> Polygon | tuple[Polygon, list[int]]:
         """Convert a list of linear entities to polygon.
+
+        Beware: the method assumes entities are sorted and connected.
+
+        Args:
+            linear_entities (Sequence[LinearEntity]): List of linear entities.
+            return_vertices_ix (bool, optional): If True, also returns the indices of the first vertex of each entity.
 
         Returns:
             Polygon: polygon representation of the linear entity
+            or
+            (Polygon, list[int]): polygon and indices of first vertex of each entity
         """
         points = []
+        vertices_ix: list[int] = []
+        current_ix = 0
         for linear_entity in linear_entities:
             if not isinstance(linear_entity, LinearEntity):
                 raise TypeError(
                     f"Expected a list of LinearEntity, but got {type(linear_entity)}"
                 )
-            if connected:
-                # if we assume all linear entites sorted and connected
-                # we need to remove the last point of each linear entity
-                points.append(linear_entity.points[:-1, :])
-            else:
-                points.append(linear_entity.points)
+            entity_points = linear_entity.points[:-1, :]
+            points.append(entity_points)
+            vertices_ix.append(current_ix)
+            current_ix += len(entity_points)
+
         points = np.concatenate(points, axis=0)
-        return Polygon(points=points)
+        polygon = Polygon(points=points)
+        if return_vertices_ix:
+            return polygon, vertices_ix
+        return polygon
 
     @classmethod
     def from_unordered_lines_approx(
@@ -689,6 +706,67 @@ class Polygon(DiscreteGeometryEntity):
                 f"Found {scale}"
             )
         return self.__rescale(scale=1 / scale)
+
+    def to_image_crop_referential(
+        self,
+        other: Polygon,
+        crop: Rectangle,
+        image_crop_shape: Optional[tuple[int, int]] = None,
+    ) -> Polygon:
+        """This function can be useful for a very specific need:
+        In a single image you have two polygons and their coordinates are defined
+        in this image referential.
+
+        You want to obtain the original polygon and all its vertices information
+        in the image crop referential to match the other polygon within it.
+
+        This method manipulates three referentials:
+        1. image referential (main referential)
+        2. crop referential
+        3. image crop referential. It is different from the crop referential
+            because the width and height of the crop referential may not be the same.
+
+        Args:
+            other (Polygon): other Polygon in the image referential
+            crop_rect (Rectangle): crop rectangle in the image referential
+            image_crop_shape (tuple[int, int], optionla): [width, height] of the crop
+                image. If None, the shape is assumed to be directly the crop shape.
+
+
+        Returns:
+            Polygon: original polygon in the image crop referential
+        """
+        assert crop.contains(other=other)
+        crop_width = crop.get_width_from_topleft(0)
+        crop_height = crop.get_height_from_topleft(0)
+
+        if image_crop_shape is None:
+            image_crop_shape = (crop_width, crop_height)
+
+        # self polygon in the original image shifted and normalized
+        aabb_main = self.enclosing_axis_aligned_bbox()
+        contour_main_shifted_normalized = self.copy().shift(
+            vector=-np.asarray([self.xmin, self.ymin])
+        ) / np.array(
+            [aabb_main.get_width_from_topleft(0), aabb_main.get_height_from_topleft(0)]
+        )
+
+        # AABB of the polygon in the crop referential
+        aabb_crop = other.enclosing_axis_aligned_bbox()
+        aabb_crop_normalized = (
+            aabb_crop - np.asarray([crop.xmin, crop.ymin])
+        ) / np.array([crop_width, crop_height])
+
+        # obtain the self polygon in the image crop referential
+        aabb_crop2 = aabb_crop_normalized * np.array(image_crop_shape)
+        new_polygon = contour_main_shifted_normalized * np.array(
+            [
+                aabb_crop2.get_width_from_topleft(0),
+                aabb_crop2.get_height_from_topleft(0),
+            ]
+        ) + np.asarray([aabb_crop2.xmin, aabb_crop2.ymin])
+
+        return new_polygon
 
     # ------------------------------- Fundamental Methods ------------------------------
 
