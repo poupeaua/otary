@@ -56,6 +56,17 @@ class BaseImage:
         return bool(len(self.asarray.shape) == 2)
 
     @property
+    def channels(self) -> int:
+        """Number of channels in the image
+
+        Returns:
+            int: number of channels
+        """
+        if self.is_gray:
+            return 1
+        return self.asarray.shape[2]
+
+    @property
     def shape_array(self) -> tuple:
         """Returns the array shape value (height, width, channel)
 
@@ -63,6 +74,15 @@ class BaseImage:
             tuple[int]: image shape
         """
         return self.asarray.shape
+
+    @property
+    def shape(self) -> tuple:
+        """Returns the array shape value (width, height, channel)
+
+        Returns:
+            tuple[int]: image shape
+        """
+        return (self.width, self.height, self.channels)
 
     @property
     def height(self) -> int:

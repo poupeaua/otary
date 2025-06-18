@@ -75,7 +75,7 @@ def threshold_niblack_like(
     elif method == "niblack":
         thresh = mean + k * std
     elif method == "wolf":
-        max_std = max(std, 1e-5)  # Avoid division by zero
+        max_std = np.max(std, 1e-5)  # Avoid division by zero
         min_i = np.min(img)
         thresh = mean + k * (std / max_std) * (mean - min_i)
     elif method == "nick":

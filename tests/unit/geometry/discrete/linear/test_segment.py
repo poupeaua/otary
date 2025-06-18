@@ -206,3 +206,52 @@ class TestAreLinesCollinear:
         seg1 = Segment([[0, 0], [2, 2]])
         seg2 = Segment([[1, 1], [-355, 56]])
         assert seg1.is_collinear(seg2) is False
+
+
+class TestSegmentNormal:
+    def test_normal_is_orthogonal(self):
+        """Check that dot product between the normal and original vector is 0"""
+        seg = Segment([[0, 0], [1, 0]])
+        normal = seg.normal()
+        # The direction vector of seg is [1, 0], normal should be [0, 1] or [0, -1]
+        direction = seg.points[1] - seg.points[0]
+        normal_direction = normal.points[1] - normal.points[0]
+        dot_product = np.dot(direction, normal_direction)
+        assert np.isclose(dot_product, 0)
+
+    def test_normal_length_equals_original(self):
+        seg = Segment([[0, 0], [3, 4]])
+        normal = seg.normal()
+        length = np.linalg.norm(seg.points[1] - seg.points[0])
+        normal_length = np.linalg.norm(normal.points[1] - normal.points[0])
+        assert np.isclose(length, normal_length)
+
+    def test_normal_centroid_equals_original(self):
+        seg = Segment([[2, 2], [4, 6]])
+        normal = seg.normal()
+        assert np.allclose(seg.centroid, normal.centroid)
+
+    def test_normal_of_vertical_segment(self):
+        seg = Segment([[0, 0], [0, 2]])
+        normal = seg.normal()
+        # The normal should be horizontal
+        direction = normal.points[1] - normal.points[0]
+        assert np.isclose(direction[1], 0)
+
+    def test_normal_of_horizontal_segment(self):
+        seg = Segment([[1, 5], [4, 5]])
+        normal = seg.normal()
+        # The normal should be vertical
+        direction = normal.points[1] - normal.points[0]
+        assert np.isclose(direction[0], 0)
+
+    def test_normal_of_normal_is_equivalent(self):
+        """Test that the normal of the normal segment is equivalent to the original segment (up to direction)."""
+        seg = Segment([[1, 2], [4, 6]])
+        normal = seg.normal()
+        normal_of_normal = normal.normal()
+        # The normal of the normal should be the original segment, possibly reversed
+        # Compare sorted points to ignore direction
+        orig_points_sorted = np.sort(seg.points, axis=0)
+        normal2_points_sorted = np.sort(normal_of_normal.points, axis=0)
+        assert np.allclose(orig_points_sorted, normal2_points_sorted)

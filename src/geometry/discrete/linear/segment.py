@@ -4,7 +4,9 @@ Segment class to describe defined lines and segments
 
 from __future__ import annotations
 
+import math
 import itertools
+from typing import Self
 
 import numpy as np
 from numpy.typing import NDArray
@@ -31,6 +33,15 @@ class Segment(LinearEntity):
             NDArray: point of shape (1, 2)
         """
         return np.sum(self.points, axis=0) / 2
+
+    @property
+    def center_within(self) -> NDArray:
+        """In the Segment, this is equivalent to the centroid
+
+        Returns:
+            NDArray: point of shape (1, 2)
+        """
+        return self.centroid
 
     @property
     def slope(self) -> float:
@@ -232,3 +243,15 @@ class Segment(LinearEntity):
         line1 = Line(other.asarray[0], other.asarray[1])
         intersection = np.array(line0.intersection(line1)[0].evalf(n=7))
         return intersection
+
+    def normal(self) -> Self:
+        """
+        Returns the normal segment of the segment.
+        The normal segment is a segment that is orthogonal to the input segment.
+        Please note that the normal segment have the same length as the input segment.
+
+        Returns:
+            Segment: normal segment centered at the original segment centroid
+        """
+        normal = self.copy().rotate(angle=math.pi / 2, is_degree=False)
+        return normal

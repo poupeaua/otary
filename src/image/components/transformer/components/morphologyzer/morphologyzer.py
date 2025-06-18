@@ -214,3 +214,22 @@ class MorphologyzerImage:
                 ),
                 dtype=np.uint8,
             )
+
+    def add_border(self, size: int, fill_value: int = 0) -> None:
+        """Add a border to the image.
+
+        Args:
+            thickness (int): border thickness.
+            color (int, optional): border color. Defaults to 0.
+        """
+        size = int(size)
+        self.base.asarray = cv2.copyMakeBorder(
+            src=self.base.asarray,
+            top=size,
+            bottom=size,
+            left=size,
+            right=size,
+            borderType=cv2.BORDER_CONSTANT,
+            value=fill_value,
+        )
+        return self

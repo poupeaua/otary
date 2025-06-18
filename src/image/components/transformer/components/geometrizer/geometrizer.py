@@ -138,7 +138,7 @@ class GeometrizerImage:
         center = (w / 2, h / 2)
 
         # Compute rotation matrix
-        rotmat = cv2.getRotationMatrix2D(center, angle, 1.0)
+        rotmat = cv2.getRotationMatrix2D(center, angle, 1.0)  # param angle in degree
 
         if reshape:
             # Compute new bounding dimensions

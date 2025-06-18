@@ -5,7 +5,7 @@ Polygon class to handle complexity with polygon calculation
 from __future__ import annotations
 
 import copy
-from typing import Optional, Self, Sequence
+from typing import Optional, Self, Sequence, TYPE_CHECKING
 import logging
 
 import cv2
@@ -18,6 +18,9 @@ from src.geometry.entity import GeometryEntity
 from src.geometry.discrete.linear.entity import LinearEntity
 from src.geometry.discrete.entity import DiscreteGeometryEntity
 from src.geometry import Segment, Vector, LinearSpline
+
+if TYPE_CHECKING:
+    from src.geometry.discrete.shape.rectangle import Rectangle
 
 
 class Polygon(DiscreteGeometryEntity):
@@ -51,27 +54,41 @@ class Polygon(DiscreteGeometryEntity):
 
     @classmethod
     def from_linear_entities(
-        cls, linear_entities: Sequence[LinearEntity], connected: bool = False
-    ) -> Polygon:
+        cls,
+        linear_entities: Sequence[LinearEntity],
+        return_vertices_ix: bool = False,
+    ) -> Polygon | tuple[Polygon, list[int]]:
         """Convert a list of linear entities to polygon.
+
+        Beware: the method assumes entities are sorted and connected.
+
+        Args:
+            linear_entities (Sequence[LinearEntity]): List of linear entities.
+            return_vertices_ix (bool, optional): If True, also returns the indices of the first vertex of each entity.
 
         Returns:
             Polygon: polygon representation of the linear entity
+            or
+            (Polygon, list[int]): polygon and indices of first vertex of each entity
         """
         points = []
+        vertices_ix: list[int] = []
+        current_ix = 0
         for linear_entity in linear_entities:
             if not isinstance(linear_entity, LinearEntity):
                 raise TypeError(
                     f"Expected a list of LinearEntity, but got {type(linear_entity)}"
                 )
-            if connected:
-                # if we assume all linear entites sorted and connected
-                # we need to remove the last point of each linear entity
-                points.append(linear_entity.points[:-1, :])
-            else:
-                points.append(linear_entity.points)
+            entity_points = linear_entity.points[:-1, :]
+            points.append(entity_points)
+            vertices_ix.append(current_ix)
+            current_ix += len(entity_points)
+
         points = np.concatenate(points, axis=0)
-        return Polygon(points=points)
+        polygon = Polygon(points=points)
+        if return_vertices_ix:
+            return polygon, vertices_ix
+        return polygon
 
     @classmethod
     def from_unordered_lines_approx(
@@ -455,25 +472,92 @@ class Polygon(DiscreteGeometryEntity):
             )
         )
 
-        if path.length == 0 or pct_dist == 0:
-            return path[0]
-        if pct_dist == 1:
-            return path[-1]
+        return path.find_interpolated_point(pct_dist=pct_dist)
 
-        # Walk along the path to find the point at pct_dist * total_dist
-        target_dist = pct_dist * path.length
-        accumulated = 0
-        for i in range(len(path.edges)):
-            cur_edge_length = path.lengths[i]
-            if accumulated + cur_edge_length >= target_dist:
-                remain = target_dist - accumulated
-                direction = path[i + 1] - path[i]
-                unit_dir = direction / cur_edge_length
-                return path[i] + remain * unit_dir
-            accumulated += cur_edge_length
+    def outward_normal_point(
+        self,
+        start_index: int,
+        end_index: int,
+        dist_along_edge_pct: float,
+        dist_outward: float,
+    ) -> NDArray:
+        """Compute the outward normal point.
+        This is a point that points toward the outside of the polygon
 
-        # Fallback
-        return path[-1]
+        Args:
+            start_index (int): start index for the edge selection
+            end_index (int): end index for the edge selection
+            dist_along_edge_pct (float): distance along the edge to place the point
+            dist_outward (float): distance outward from the edge
+
+        Returns:
+            NDArray: 2D point as array
+        """
+        assert 0.0 <= dist_along_edge_pct <= 1.0
+
+        pt_interpolated = self.find_interpolated_point(
+            start_index=start_index, end_index=end_index, pct_dist=dist_along_edge_pct
+        )
+
+        edge = Vector(points=[self.asarray[start_index], self.asarray[end_index]])
+
+        normal = edge.normal().normalized
+
+        pt_plus = pt_interpolated + dist_outward * normal
+        pt_minus = pt_interpolated - dist_outward * normal
+
+        dist_plus = np.linalg.norm(pt_plus - self.centroid)
+        dist_minus = np.linalg.norm(pt_minus - self.centroid)
+
+        # choose the point which distance to the center is greater
+        if dist_plus > dist_minus:
+            return pt_plus
+        return pt_minus
+
+    def inter_area(self, other: Polygon) -> float:
+        """Inter area with another Polygon
+
+        Args:
+            other (Polygon): other Polygon
+
+        Returns:
+            float: inter area value
+        """
+        inter_pts = cv2.intersectConvexConvex(self.asarray, other.asarray)
+        if inter_pts[0] > 0:
+            inter_area = cv2.contourArea(inter_pts[1])
+        else:
+            inter_area = 0.0
+        return inter_area
+
+    def union_area(self, other: Polygon) -> float:
+        """Union area with another Polygon
+
+        Args:
+            other (Polygon): other Polygon
+
+        Returns:
+            float: union area value
+        """
+        return self.area + other.area - self.inter_area(other)
+
+    def iou(self, other: Polygon) -> float:
+        """Intersection over union with another Polygon
+
+        Args:
+            other (Polygon): other Polygon
+
+        Returns:
+            float: intersection over union value
+        """
+        inter_area = self.inter_area(other)
+
+        # optimized not to compute twice the inter area
+        union_area = self.area + other.area - inter_area
+
+        if union_area == 0:
+            return 0.0
+        return inter_area / union_area
 
     # ---------------------------- MODIFICATION METHODS -------------------------------
 
@@ -623,6 +707,67 @@ class Polygon(DiscreteGeometryEntity):
             )
         return self.__rescale(scale=1 / scale)
 
+    def to_image_crop_referential(
+        self,
+        other: Polygon,
+        crop: Rectangle,
+        image_crop_shape: Optional[tuple[int, int]] = None,
+    ) -> Polygon:
+        """This function can be useful for a very specific need:
+        In a single image you have two polygons and their coordinates are defined
+        in this image referential.
+
+        You want to obtain the original polygon and all its vertices information
+        in the image crop referential to match the other polygon within it.
+
+        This method manipulates three referentials:
+        1. image referential (main referential)
+        2. crop referential
+        3. image crop referential. It is different from the crop referential
+            because the width and height of the crop referential may not be the same.
+
+        Args:
+            other (Polygon): other Polygon in the image referential
+            crop_rect (Rectangle): crop rectangle in the image referential
+            image_crop_shape (tuple[int, int], optionla): [width, height] of the crop
+                image. If None, the shape is assumed to be directly the crop shape.
+
+
+        Returns:
+            Polygon: original polygon in the image crop referential
+        """
+        assert crop.contains(other=other)
+        crop_width = crop.get_width_from_topleft(0)
+        crop_height = crop.get_height_from_topleft(0)
+
+        if image_crop_shape is None:
+            image_crop_shape = (crop_width, crop_height)
+
+        # self polygon in the original image shifted and normalized
+        aabb_main = self.enclosing_axis_aligned_bbox()
+        contour_main_shifted_normalized = self.copy().shift(
+            vector=-np.asarray([self.xmin, self.ymin])
+        ) / np.array(
+            [aabb_main.get_width_from_topleft(0), aabb_main.get_height_from_topleft(0)]
+        )
+
+        # AABB of the polygon in the crop referential
+        aabb_crop = other.enclosing_axis_aligned_bbox()
+        aabb_crop_normalized = (
+            aabb_crop - np.asarray([crop.xmin, crop.ymin])
+        ) / np.array([crop_width, crop_height])
+
+        # obtain the self polygon in the image crop referential
+        aabb_crop2 = aabb_crop_normalized * np.array(image_crop_shape)
+        new_polygon = contour_main_shifted_normalized * np.array(
+            [
+                aabb_crop2.get_width_from_topleft(0),
+                aabb_crop2.get_height_from_topleft(0),
+            ]
+        ) + np.asarray([aabb_crop2.xmin, aabb_crop2.ymin])
+
+        return new_polygon
+
     # ------------------------------- Fundamental Methods ------------------------------
 
     def is_equal(self, polygon: Polygon, dist_margin_error: float = 5) -> bool:
@@ -649,3 +794,23 @@ class Polygon(DiscreteGeometryEntity):
         distances = np.linalg.norm(points_diff, axis=1)
         max_distance = np.max(distances)
         return max_distance <= dist_margin_error
+
+    def __str__(self) -> str:
+        return (
+            self.__class__.__name__
+            + "(start="
+            + self.asarray[0].tolist().__str__()
+            + ", end="
+            + self.asarray[-1].tolist().__str__()
+            + ")"
+        )
+
+    def __repr__(self) -> str:
+        return (
+            self.__class__.__name__
+            + "(start="
+            + self.asarray[0].tolist().__str__()
+            + ", end="
+            + self.asarray[-1].tolist().__str__()
+            + ")"
+        )

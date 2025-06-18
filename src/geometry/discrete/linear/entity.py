@@ -2,7 +2,7 @@
 LinearEntity class useful to describe any kind of linear object
 """
 
-from abc import ABC
+from abc import ABC, abstractmethod
 
 import numpy as np
 from numpy.typing import NDArray
@@ -72,6 +72,15 @@ class LinearEntity(DiscreteGeometryEntity, ABC):
         return np.stack([self.points, np.roll(self.points, shift=-1, axis=0)], axis=1)[
             :-1, :, :
         ]
+
+    @property
+    @abstractmethod
+    def center_within(self) -> NDArray:
+        """Returns the center point of the linear entity that within along the entity
+
+        Returns:
+            NDArray: 2D point
+        """
 
     def __str__(self) -> str:
         return (
