@@ -801,6 +801,7 @@ class Image:
         Returns:
             Image: high quality crop image
         """
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
         # get the bbox normalized
         bbox_normalized = bbox.copy().normalize(x=self.width, y=self.height)
         clip_pct = pymupdf.Rect(
