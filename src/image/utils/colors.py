@@ -5,7 +5,7 @@ Utils file related to color operations
 
 def interpolate_color(
     alpha: float,
-    is_bgr: bool = False,
+    as_bgr: bool = False,
     start_color: tuple = (255, 0, 0),
     mid_color: tuple = (255, 255, 0),
     end_color: tuple = (0, 255, 0),
@@ -20,7 +20,7 @@ def interpolate_color(
     Args:
         alpha (float): Parameter ranging from 0 to 1.
             0 corresponds to start_color, 0.5 to mid_color, and 1 to end_color.
-        is_bgr (bool, optional): Whether to return a BGR color or RGB color.
+        as_bgr (bool, optional): Whether to return a BGR color or RGB color.
             Defaults to False.
         start_color (tuple, optional): Color at alpha=0. Defaults to (255, 0, 0).
         mid_color (tuple, optional): Color at alpha=0.5. Defaults to (255, 255, 0).
@@ -45,6 +45,6 @@ def interpolate_color(
         g = int((1 - t) * mid_color[1] + t * end_color[1])
         b = int((1 - t) * mid_color[2] + t * end_color[2])
 
-    if is_bgr:
+    if as_bgr:
         return (b, g, r)
     return (r, g, b)
