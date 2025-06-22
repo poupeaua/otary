@@ -53,22 +53,16 @@ class Polygon(DiscreteGeometryEntity):
         return Polygon(points=points)
 
     @classmethod
-    def from_linear_entities(
-        cls,
-        linear_entities: Sequence[LinearEntity],
-        return_vertices_ix: bool = False,
-    ) -> Polygon | tuple[Polygon, list[int]]:
+    def from_linear_entities_returns_vertices_ix(
+        cls, linear_entities: Sequence[LinearEntity]
+    ) -> tuple[Polygon, list[int]]:
         """Convert a list of linear entities to polygon.
-
-        Beware: the method assumes entities are sorted and connected.
+        Beware: this method assumes entities are sorted and connected.
 
         Args:
             linear_entities (Sequence[LinearEntity]): List of linear entities.
-            return_vertices_ix (bool, optional): If True, also returns the indices of the first vertex of each entity.
 
         Returns:
-            Polygon: polygon representation of the linear entity
-            or
             (Polygon, list[int]): polygon and indices of first vertex of each entity
         """
         points = []
@@ -86,9 +80,24 @@ class Polygon(DiscreteGeometryEntity):
 
         points = np.concatenate(points, axis=0)
         polygon = Polygon(points=points)
-        if return_vertices_ix:
-            return polygon, vertices_ix
-        return polygon
+        return polygon, vertices_ix
+
+    @classmethod
+    def from_linear_entities(
+        cls,
+        linear_entities: Sequence[LinearEntity],
+    ) -> Polygon:
+        """Convert a list of linear entities to polygon.
+
+        Beware: the method assumes entities are sorted and connected.
+
+        Args:
+            linear_entities (Sequence[LinearEntity]): List of linear entities.
+
+        Returns:
+            Polygon: polygon representation of the linear entity
+        """
+        return cls.from_linear_entities_returns_vertices_ix(linear_entities)[0]
 
     @classmethod
     def from_unordered_lines_approx(
