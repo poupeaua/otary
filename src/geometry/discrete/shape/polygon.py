@@ -737,8 +737,8 @@ class Polygon(DiscreteGeometryEntity):
             Polygon: original polygon in the image crop referential
         """
         assert crop.contains(other=other)
-        crop_width = crop.get_width_from_topleft(0)
-        crop_height = crop.get_height_from_topleft(0)
+        crop_width = int(crop.get_width_from_topleft(0))
+        crop_height = int(crop.get_height_from_topleft(0))
 
         if image_crop_shape is None:
             image_crop_shape = (crop_width, crop_height)

@@ -997,17 +997,17 @@ class Image:
         self,
         rect: geo.Rectangle,
         rect_topleft_ix: int = 0,
-        crop_dim: tuple[int, int] = (-1, -1),
-        crop_shift: tuple[int, int] = (0, 0),
+        crop_dim: tuple[float, float] = (-1, -1),
+        crop_shift: tuple[float, float] = (0, 0),
     ) -> Image:
         """Crop image in the referential of the rectangle.
 
         Args:
             rect (geo.Rectangle): rectangle for reference to crop.
             rect_topleft_ix (int): top-left vertice index of the rectangle
-            crop_dim (tuple[int, int], optional): (width, height) crop dimension.
+            crop_dim (tuple[float, float], optional): (width, height) crop dimension.
                 Defaults to (-1, -1).
-            crop_shift (tuple[int, int], optional): The shift is (x, y).
+            crop_shift (tuple[float, float], optional): The shift is (x, y).
                 The crop_shift argument is applied from the rectangle center based on
                 the axis referential of the rectangle.
                 This means that the shift in the Y direction
