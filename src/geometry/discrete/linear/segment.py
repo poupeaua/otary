@@ -35,7 +35,7 @@ class Segment(LinearEntity):
         return np.sum(self.points, axis=0) / 2
 
     @property
-    def center_within(self) -> NDArray:
+    def midpoint(self) -> NDArray:
         """In the Segment, this is equivalent to the centroid
 
         Returns:

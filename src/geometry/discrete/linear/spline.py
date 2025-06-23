@@ -2,6 +2,7 @@
 Curve class useful to describe any kind of curves
 """
 
+import numpy as np
 from numpy.typing import NDArray
 
 from src.geometry.discrete.linear.entity import LinearEntity
@@ -21,7 +22,34 @@ class LinearSpline(LinearEntity):
         raise NotImplementedError
 
     @property
-    def center_within(self) -> NDArray:
+    def centroid(self) -> NDArray:
+        """Returns the center point that is within the linear spline.
+        This means that this points necessarily belongs to the linear spline.
+
+        This can be useful when the centroid is not a good representation of what
+        is needed as 'center'.
+
+        Returns:
+            NDArray: point of shape (1, 2)
+        """
+        total_length: float = 0.0
+        cx: float = 0.0
+        cy: float = 0.0
+
+        for i in range(len(self.points) - 1):
+            p1, p2 = self.points[i], self.points[i + 1]
+            mid = (p1 + p2) / 2
+            length = float(np.linalg.norm(p2 - p1))
+            cx += mid[0] * length
+            cy += mid[1] * length
+            total_length += length
+
+        if total_length == 0:
+            return self.points[0]  # or handle degenerate case
+        return np.asarray([cx / total_length, cy / total_length])
+
+    @property
+    def midpoint(self) -> NDArray:
         """Returns the center point that is within the linear spline.
         This means that this points necessarily belongs to the linear spline.
 

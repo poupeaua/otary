@@ -227,6 +227,26 @@ class Polygon(DiscreteGeometryEntity):
         return LinearRing(coordinates=self.asarray)
 
     @property
+    def centroid(self) -> NDArray:
+        """Compute the centroid point which can be seen as the center of gravity
+        or center of mass of the shape
+
+        Returns:
+            NDArray: centroid point
+        """
+        M = cv2.moments(self.asarray.astype(np.float32).reshape((-1, 1, 2)))
+
+        # Avoid division by zero
+        if M["m00"] != 0:
+            cx = M["m10"] / M["m00"]
+            cy = M["m01"] / M["m00"]
+            centroid = np.asarray([cx, cy])
+        else:
+            centroid = self.center_mean
+
+        return centroid
+
+    @property
     def area(self) -> float:
         """Compute the area of the geometry entity
 

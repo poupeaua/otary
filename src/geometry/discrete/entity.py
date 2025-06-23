@@ -7,10 +7,10 @@ from __future__ import annotations
 from typing import Optional, Self, TYPE_CHECKING
 import copy
 from abc import ABC, abstractmethod
+
 from shapely import (
     GeometryCollection,
 )
-
 import cv2
 import numpy as np
 from numpy.typing import NDArray
@@ -30,7 +30,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         _arr = (
             np.asarray(points)
             if not is_cast_int
-            else np.round(np.asarray(points)).astype(int)
+            else np.round(np.asarray(points)).astype(np.int32)
         )
         self.points = copy.deepcopy(_arr)
         self.is_cast_int = is_cast_int
@@ -98,12 +98,22 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         self.points = value
 
     @property
+    @abstractmethod
     def centroid(self) -> NDArray:
-        """Compute the centroid point which can be seen as the center of gravity of
-        the shape
+        """Compute the centroid point which can be seen as the center of gravity
+        or center of mass of the shape
 
         Returns:
             NDArray: centroid point
+        """
+
+    @property
+    def center_mean(self) -> NDArray:
+        """Compute the center as the mean of all the points. This can be really
+        different than the centroid.
+
+        Returns:
+            NDArray: center mean as a 2D point
         """
         return np.mean(self.points, axis=0)
 
