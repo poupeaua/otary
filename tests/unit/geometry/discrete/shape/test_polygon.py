@@ -582,3 +582,72 @@ class TestPolygonReorderClockwise:
         reordered_polygon = polygon.reorder_clockwise()
         expected_points = [[0, 0], [0.5, 1], [1, 0]]
         assert np.array_equal(reordered_polygon.asarray, expected_points)
+
+
+class TestPolygonArea:
+    def test_area_square(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        assert polygon.area == 4.0
+
+    def test_area_rectangle(self):
+        polygon = Polygon([[0, 0], [3, 0], [3, 2], [0, 2]])
+        assert polygon.area == 6.0
+
+    def test_area_triangle(self):
+        polygon = Polygon([[0, 0], [4, 0], [0, 3]])
+        assert polygon.area == 6.0
+
+    def test_area_irregular_quadrilateral(self):
+        polygon = Polygon([[0, 0], [4, 0], [3, 2], [0, 3]])
+        # Area can be calculated using Shoelace formula: 0.5*|0*0+4*2+3*3+0*0 - (0*4+0*3+2*0+3*0)| = 0.5*|0+8+9+0 - (0+0+0+0)| = 0.5*17 = 8.5
+        assert polygon.area == 8.5
+
+    def test_area_negative_coordinates(self):
+        polygon = Polygon([[-1, -1], [-1, 1], [1, 1], [1, -1]])
+        assert polygon.area == 4.0
+
+    def test_area_non_integer_coordinates(self):
+        polygon = Polygon([[0.5, 0.5], [2.5, 0.5], [2.5, 2.5], [0.5, 2.5]])
+        # cv2.contourArea casts to int, so all points become [0,0],[2,0],[2,2],[0,2], area=4
+        assert polygon.area == 4.0
+
+
+class TestPolygonPerimeter:
+    def test_perimeter_square(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        # 4 sides of length 2
+        assert polygon.perimeter == 8.0
+
+    def test_perimeter_rectangle(self):
+        polygon = Polygon([[0, 0], [3, 0], [3, 2], [0, 2]])
+        # 2 sides of 3, 2 sides of 2
+        assert polygon.perimeter == 10.0
+
+    def test_perimeter_triangle(self):
+        polygon = Polygon([[0, 0], [4, 0], [0, 3]])
+        # Sides: 4, 5, 3
+        assert polygon.perimeter == 12.0
+
+    def test_perimeter_irregular_quadrilateral(self):
+        polygon = Polygon([[0, 0], [4, 0], [3, 2], [0, 3]])
+        # Calculate each side
+        pts = np.array([[0, 0], [4, 0], [3, 2], [0, 3]])
+        lengths = [
+            np.linalg.norm(pts[0] - pts[1]),
+            np.linalg.norm(pts[1] - pts[2]),
+            np.linalg.norm(pts[2] - pts[3]),
+            np.linalg.norm(pts[3] - pts[0]),
+        ]
+        expected = sum(lengths)
+        assert np.isclose(polygon.perimeter, expected)
+
+    def test_perimeter_negative_coordinates(self):
+        polygon = Polygon([[-1, -1], [-1, 1], [1, 1], [1, -1]])
+        # 4 sides of length 2
+        assert polygon.perimeter == 8.0
+
+    def test_perimeter_non_integer_coordinates(self):
+        polygon = Polygon([[0.5, 0.5], [200.5, 0.5], [200.5, 200.5], [0.5, 200.5]])
+        # Each side is 2, so perimeter is 8
+        print(polygon.perimeter)
+        assert np.isclose(polygon.perimeter, 800.0)

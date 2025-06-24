@@ -253,7 +253,7 @@ class Polygon(DiscreteGeometryEntity):
         Returns:
             float: area value
         """
-        return cv2.contourArea(self.points.astype(int))
+        return cv2.contourArea(self.points.astype(np.int32))
 
     @property
     def perimeter(self) -> float:
@@ -262,7 +262,7 @@ class Polygon(DiscreteGeometryEntity):
         Returns:
             float: perimeter value
         """
-        return cv2.arcLength(self.points, True)
+        return cv2.arcLength(self.points.astype(np.float32), True)
 
     @property
     def is_self_intersected(self) -> bool:
