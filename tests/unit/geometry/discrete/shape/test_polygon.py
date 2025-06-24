@@ -8,7 +8,37 @@ import pytest
 from src.geometry import Polygon
 
 
-class TestPolygonBase:
+class TestPolygonInstantiationBasic:
+
+    def test_polygon_instantiation_with_numpy_array(self):
+        arr = np.array([[0, 0], [1, 0], [1, 1], [0, 1]])
+        polygon = Polygon(arr)
+        assert np.array_equal(polygon.asarray, arr)
+
+    def test_polygon_instantiation_with_list(self):
+        points = [[0, 0], [1, 0], [1, 1], [0, 1]]
+        polygon = Polygon(points)
+        assert np.array_equal(polygon.asarray, np.array(points))
+
+    def test_polygon_instantiation_cast_int(self):
+        points = [[0.1, 0.9], [1.2, 0.2], [1.8, 1.7], [0.3, 1.1]]
+        polygon = Polygon(points, is_cast_int=True)
+        assert np.issubdtype(polygon.asarray.dtype, np.integer)
+
+    def test_polygon_instantiation_too_few_points_2(self):
+        with pytest.raises(ValueError):
+            Polygon([[0, 0], [1, 1]])
+
+    def test_polygon_instantiation_too_few_points_1(self):
+        with pytest.raises(ValueError):
+            Polygon([[0, 0]])
+
+    def test_polygon_instantiation_too_few_points_0(self):
+        with pytest.raises(ValueError):
+            Polygon([])
+
+
+class TestPolygonIsConvex:
     def test_is_convex_true(self):
         rect = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
         assert rect.is_convex
@@ -53,7 +83,7 @@ class TestPolygonIsEqual:
         assert not cnt1.is_equal(cnt2, dist_margin_error=5)
 
 
-class TestPolygonIsregular:
+class TestPolygonIsRegular:
     def test_polygon_is_regular_square(self):
         cnt1 = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
         assert cnt1.is_regular(margin_dist_error_pct=0.0001)
@@ -264,31 +294,31 @@ class TestPolygonScoreEdgesInPoints:
     def test_score_edges_in_points_all_close(self):
         cnt = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
         points = np.array([[0, 0], [1, 0], [1, 1], [0, 1]])
-        scores = cnt.score_vertices_in_points(points=points, min_distance=0.1)
+        scores = cnt.score_vertices_in_points(points=points, max_distance=0.1)
         assert np.array_equal(scores, [1, 1, 1, 1])
 
     def test_score_edges_in_points_some_close(self):
         cnt = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
         points = np.array([[0, 0], [1, 0]])
-        scores = cnt.score_vertices_in_points(points=points, min_distance=0.1)
+        scores = cnt.score_vertices_in_points(points=points, max_distance=0.1)
         assert np.array_equal(scores, [1, 1, 0, 0])
 
     def test_score_edges_in_points_none_close(self):
         cnt = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
         points = np.array([[2, 2], [3, 3]])
-        scores = cnt.score_vertices_in_points(points=points, min_distance=0.1)
+        scores = cnt.score_vertices_in_points(points=points, max_distance=0.1)
         assert np.array_equal(scores, [0, 0, 0, 0])
 
     def test_score_edges_in_points_with_margin(self):
         cnt = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
         points = np.array([[0.05, 0.05], [1.05, 0.05]])
-        scores = cnt.score_vertices_in_points(points=points, min_distance=0.1)
+        scores = cnt.score_vertices_in_points(points=points, max_distance=0.1)
         assert np.array_equal(scores, [1, 1, 0, 0])
 
     def test_score_edges_in_points_duplicate_points(self):
         cnt = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
         points = np.array([[0, 0], [0, 0], [1, 0]])
-        scores = cnt.score_vertices_in_points(points=points, min_distance=0.1)
+        scores = cnt.score_vertices_in_points(points=points, max_distance=0.1)
         assert np.array_equal(scores, [1, 1, 0, 0])
 
 
@@ -389,11 +419,6 @@ class TestPolygonLengths:
             np.sqrt(4 + 1),  # top diagonal
             np.sqrt(1 + 4),  # left diagonal
         ]
-        assert np.allclose(polygon.lengths, expected_lengths)
-
-    def test_lengths_single_segment(self):
-        polygon = Polygon([[0, 0], [1, 0]])
-        expected_lengths = [1]
         assert np.allclose(polygon.lengths, expected_lengths)
 
 

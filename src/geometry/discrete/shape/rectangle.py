@@ -17,9 +17,27 @@ from src.geometry import Polygon, Segment, Vector
 class Rectangle(Polygon):
     """Rectangle class to manipulate rectangle object"""
 
-    def __init__(self, points: NDArray | list, is_cast_int: bool = False) -> None:
-        assert len(points) == 4
+    def __init__(
+        self,
+        points: NDArray | list,
+        is_cast_int: bool = False,
+        desintersect: bool = False,
+    ) -> None:
+        """Create a Rectangle object
+
+        Args:
+            points (NDArray | list): 2D points that define the rectangle
+            is_cast_int (bool, optional): cast points to int. Defaults to False.
+            desintersect (bool, optional): whether to desintersect the rectangle or not.
+                Can be useful if the input points are in a random order and
+                self-intersection is possible. Defaults to False.
+        """
+        if len(points) != 4:
+            raise ValueError("Cannot create a Rectangle since it must have 4 points")
         super().__init__(points=points, is_cast_int=is_cast_int)
+
+        if desintersect:
+            self.desintersect()
 
     @classmethod
     def unit(cls) -> Rectangle:

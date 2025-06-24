@@ -18,6 +18,7 @@ from src.geometry.entity import GeometryEntity
 from src.geometry.discrete.linear.entity import LinearEntity
 from src.geometry.discrete.entity import DiscreteGeometryEntity
 from src.geometry import Segment, Vector, LinearSpline
+from src.geometry.utils.tools import get_shared_point_indices
 
 if TYPE_CHECKING:
     from src.geometry.discrete.shape.rectangle import Rectangle
@@ -25,6 +26,13 @@ if TYPE_CHECKING:
 
 class Polygon(DiscreteGeometryEntity):
     """Polygon class which defines a polygon object which means any closed-shape"""
+
+    def __init__(self, points: NDArray | list, is_cast_int: bool = False) -> None:
+        if len(points) <= 2:
+            raise ValueError(
+                "Cannot create a Polygon since it must have 3 or more points"
+            )
+        super().__init__(points=points, is_cast_int=is_cast_int)
 
     # ---------------------------------- OTHER CONSTRUCTORS ----------------------------
 
@@ -408,7 +416,7 @@ class Polygon(DiscreteGeometryEntity):
             surface = self.shapely_surface
         return surface.contains(other.shapely_surface)
 
-    def score_vertices_in_points(self, points: NDArray, min_distance: float) -> NDArray:
+    def score_vertices_in_points(self, points: NDArray, max_distance: float) -> NDArray:
         """Returns a score of 0 or 1 for each point in the polygon if it is close
         enough to any point in the input points.
 
@@ -420,8 +428,13 @@ class Polygon(DiscreteGeometryEntity):
         Returns:
             NDArray: a list of score for each point in the contour
         """
-        indices = self.find_shared_approx_vertices_ix(
-            other=Polygon(points=points), margin_dist_error=min_distance
+
+        indices = get_shared_point_indices(
+            points_to_check=self.asarray,
+            checkpoints=points,
+            margin_dist_error=max_distance,
+            method="close",
+            cond="any",
         )
         score = np.bincount(indices, minlength=len(self))
         return score

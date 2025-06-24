@@ -51,3 +51,60 @@ def rotate_2d_points(
     # Translate the point back to its original space and return
     final_points = rotated_points + pivot
     return final_points
+
+
+def get_shared_point_indices(
+    points_to_check: NDArray,
+    checkpoints: NDArray,
+    margin_dist_error: float,
+    method: str = "close",
+    cond: str = "any",
+) -> NDArray:
+    """Find indices of points in `points_to_check` that are within or beyond a specified distance from any point in `checkpoints`.
+
+    Args:
+        points_to_check (NDArray): An array of points to check, of shape (N, D).
+        checkpoints (NDArray): An array of reference points, of shape (M, D).
+        margin_dist_error (float): The distance threshold for comparison.
+        method (str, optional): Determines the comparison method.
+            "close" returns indices of points within the threshold distance.
+            "far" returns indices of points beyond the threshold distance.
+            Defaults to "close".
+        cond (str, optional): if cond='any' returns the indices of points that satisfy
+            at least one condition, if cond='all' returns the indices of points that
+            satisfy all the conditions. Defaults to "any".
+
+    Returns:
+        NDArray: Indices of `points_to_check` that satisfy the distance condition with
+            respect to cond condition point in `checkpoints`.
+    """
+    valid_methods = ["close", "far"]
+    if method not in valid_methods:
+        raise ValueError(f"Invalid method, must be in {valid_methods}")
+
+    valid_cond = ["any", "all"]
+    if cond not in valid_cond:
+        raise ValueError(f"Invalid cond, must be in {valid_cond}")
+
+    # Compute pairwise distances: shape (N, M) where
+    # N = len(points_to_check), M = len(checkpoints)
+    # points_to_check[:, None, :] has shape (N, 1, 2)
+    # checkpoints[None, :, :] has shape (1, M, 2)
+    distances = np.linalg.norm(
+        points_to_check[:, None, :] - checkpoints[None, :, :], axis=2
+    )
+
+    # Apply threshold depending on method
+    if method == "close":
+        mask = distances < margin_dist_error
+    else:  # method == "far"
+        mask = distances > margin_dist_error
+
+    # Find which rows (i.e., points_to_check indices) have at least one True
+    if cond == "any":
+        valid_rows = np.any(mask, axis=1)
+    else:
+        valid_rows = np.all(mask, axis=1)
+
+    # Get indices of valid rows
+    return np.nonzero(valid_rows)[0].astype(int)
