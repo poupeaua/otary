@@ -61,7 +61,9 @@ class LinearSpline(LinearEntity):
         """
         return self.find_interpolated_point(pct_dist=0.5)
 
-    def find_interpolated_point(self, pct_dist: float):
+    def find_interpolated_point_and_prev_ix(
+        self, pct_dist: float
+    ) -> tuple[NDArray, int]:
         """Return a point along the curve at a relative distance pct_dist ∈ [0, 1]
 
         Parameters:
@@ -70,15 +72,15 @@ class LinearSpline(LinearEntity):
                 pct_dist along the path.
 
         Returns:
-            NDArray: Interpolated point [x, y]
+            tuple[NDArray, int]: Interpolated point [x, y] and previous index in path.
         """
         if not (0 <= pct_dist <= 1):
             raise ValueError("pct_dist must be in [0, 1]")
 
         if self.length == 0 or pct_dist == 0:
-            return self[0]
+            return self[0], 0
         if pct_dist == 1:
-            return self[-1]
+            return self[-1], len(self) - 1
 
         # Walk along the path to find the point at pct_dist * total_dist
         target_dist = pct_dist * self.length
@@ -89,8 +91,21 @@ class LinearSpline(LinearEntity):
                 remain = target_dist - accumulated
                 direction = self[i + 1] - self[i]
                 unit_dir = direction / cur_edge_length
-                return self[i] + remain * unit_dir
+                return self[i] + remain * unit_dir, i
             accumulated += cur_edge_length
 
         # Fallback
-        return self[-1]
+        return self[-1], i
+
+    def find_interpolated_point(self, pct_dist: float) -> NDArray:
+        """Return a point along the curve at a relative distance pct_dist ∈ [0, 1]
+
+        Parameters:
+            pct_dist (float): Value in [0, 1], 0 returns start, 1 returns end.
+                Any value in [0, 1] returns a point between start and end that is
+                pct_dist along the path.
+
+        Returns:
+            NDArray: Interpolated point [x, y]
+        """
+        return self.find_interpolated_point_and_prev_ix(pct_dist)[0]

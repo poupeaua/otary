@@ -478,9 +478,9 @@ class Polygon(DiscreteGeometryEntity):
 
         return vertices
 
-    def find_interpolated_point(
+    def find_interpolated_point_and_prev_ix(
         self, start_index: int, end_index: int, pct_dist: float
-    ) -> NDArray:
+    ) -> tuple[NDArray, int]:
         """Return a point along the contour path from start_idx to end_idx (inclusive),
         at a relative distance pct_dist ∈ [0, 1] along that path.
 
@@ -514,14 +514,41 @@ class Polygon(DiscreteGeometryEntity):
             )
         )
 
-        return path.find_interpolated_point(pct_dist=pct_dist)
+        point, index = path.find_interpolated_point_and_prev_ix(pct_dist=pct_dist)
+        index = (index + start_index) % len(self)
 
-    def outward_normal_point(
+        return point, index
+
+    def find_interpolated_point(
+        self, start_index: int, end_index: int, pct_dist: float
+    ) -> NDArray:
+        """Return a point along the contour path from start_idx to end_idx (inclusive),
+        at a relative distance pct_dist ∈ [0, 1] along that path.
+
+        By convention, if start_index == end_index, then use the whole contour
+        start at this index position.
+
+        Parameters:
+            start_idx (int): Index of the start point in the contour
+            end_idx (int): Index of the end point in the contour
+            pct_dist (float): Value in [0, 1], 0 returns start, 1 returns end.
+                Any value in [0, 1] returns a point between start and end that is
+                pct_dist along the path.
+
+        Returns:
+            NDArray: Interpolated point [x, y]
+        """
+        return self.find_interpolated_point_and_prev_ix(
+            start_index=start_index, end_index=end_index, pct_dist=pct_dist
+        )[0]
+
+    def normal_point(
         self,
         start_index: int,
         end_index: int,
         dist_along_edge_pct: float,
-        dist_outward: float,
+        dist_from_edge: float,
+        is_outward: bool = True,
     ) -> NDArray:
         """Compute the outward normal point.
         This is a point that points toward the outside of the polygon
@@ -530,31 +557,40 @@ class Polygon(DiscreteGeometryEntity):
             start_index (int): start index for the edge selection
             end_index (int): end index for the edge selection
             dist_along_edge_pct (float): distance along the edge to place the point
-            dist_outward (float): distance outward from the edge
+            dist_from_edge (float): distance outward from the edge
+            is_outward (bool, optional): True if the normal points to the outside of
+                the polygon. False if the normal points to the inside of the polygon. Defaults to True.
 
         Returns:
             NDArray: 2D point as array
         """
         assert 0.0 <= dist_along_edge_pct <= 1.0
 
-        pt_interpolated = self.find_interpolated_point(
+        pt_interpolated, prev_ix = self.find_interpolated_point_and_prev_ix(
             start_index=start_index, end_index=end_index, pct_dist=dist_along_edge_pct
         )
 
-        edge = Vector(points=[self.asarray[start_index], self.asarray[end_index]])
+        edge = Vector(
+            points=[self.asarray[prev_ix], self.asarray[(prev_ix + 1) % len(self)]]
+        )
 
         normal = edge.normal().normalized
 
-        pt_plus = pt_interpolated + dist_outward * normal
-        pt_minus = pt_interpolated - dist_outward * normal
+        pt_plus = pt_interpolated + dist_from_edge * normal
+        pt_minus = pt_interpolated - dist_from_edge * normal
 
         dist_plus = np.linalg.norm(pt_plus - self.centroid)
         dist_minus = np.linalg.norm(pt_minus - self.centroid)
 
         # choose the point which distance to the center is greater
         if dist_plus > dist_minus:
-            return pt_plus
-        return pt_minus
+            if is_outward:
+                return pt_plus
+            return pt_minus
+
+        if is_outward:
+            return pt_minus
+        return pt_plus
 
     def inter_area(self, other: Polygon) -> float:
         """Inter area with another Polygon
@@ -756,7 +792,7 @@ class Polygon(DiscreteGeometryEntity):
         image_crop_shape: Optional[tuple[int, int]] = None,
     ) -> Polygon:
         """This function can be useful for a very specific need:
-        In a single image you have two polygons and their coordinates are defined
+        In a single image you have two same polygons and their coordinates are defined
         in this image referential.
 
         You want to obtain the original polygon and all its vertices information

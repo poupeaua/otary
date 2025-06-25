@@ -157,7 +157,7 @@ class BaseImage:
         Returns:
             NDArray: 2D point
         """
-        return np.array([self.width, self.height], dtype=int)
+        return np.array([self.width - 1, self.height - 1], dtype=int)
 
     @property
     def bottom_left(self) -> NDArray:
@@ -166,7 +166,7 @@ class BaseImage:
         Returns:
             NDArray: 2D point
         """
-        return np.array([0, self.height], dtype=int)
+        return np.array([0, self.height - 1], dtype=int)
 
     @property
     def top_right(self) -> NDArray:
@@ -175,7 +175,7 @@ class BaseImage:
         Returns:
             NDArray: 2D point
         """
-        return np.array([self.width, 0], dtype=int)
+        return np.array([self.width - 1, 0], dtype=int)
 
     @property
     def top_left(self) -> NDArray:
@@ -209,12 +209,12 @@ class BaseImage:
             return output.getvalue()
 
     def as_api_file_input(
-        self, fmt: str = "PNG", filename: str = "image"
+        self, fmt: str = "png", filename: str = "image"
     ) -> dict[str, tuple[str, bytes, str]]:
         """Return the image as a file input for API requests.
 
         Args:
-            fmt (str, optional): format of the image. Defaults to "PNG".
+            fmt (str, optional): format of the image. Defaults to "png".
             filename (str, optional): name of the file. Defaults to "image".
 
         Returns:

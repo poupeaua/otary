@@ -322,13 +322,14 @@ class Image:
         return self.base.as_pil()
 
     def as_api_file_input(
-        self, fmt: str = "PNG", filename: str = "image"
+        self, fmt: str = "png", filename: str = "image"
     ) -> dict[str, tuple[str, bytes, str]]:
         """Return the image as a file input for API requests.
 
         Args:
-            fmt (str, optional): format of the image. Defaults to "PNG".
-            filename (str, optional): name of the file. Defaults to "image".
+            fmt (str, optional): format of the image. Defaults to "png".
+            filename (str, optional): name of the file without the format.
+                Defaults to "image".
 
         Returns:
             dict[str, tuple[str, bytes, str]]: dictionary with file input
@@ -1384,54 +1385,6 @@ class Image:
         return np.sum(
             self.binaryrev(method=binarization_method) * other_binaryrev
         ) / np.sum(other_binaryrev)
-
-    def score_contains_segments_v2(
-        self,
-        segments: Sequence[geo.Segment],
-        dilate_kernel: tuple = (5, 5),
-        dilate_iterations: int = 0,
-        binarization_method: BinarizationMethods = "sauvola",
-    ) -> list[float]:
-        """Compute the contains score in [0, 1] for each individual segment.
-        This method can be better than :func:`~Image.score_contains_polygons()` in some
-        cases.
-        It provides a score for each single segments. This way it is better to
-        identify which segments specifically are contained in the image or not.
-
-        Args:
-            segments (NDArray | list[geo.Segment]): a list of segments
-            dilate_kernel (tuple, optional): dilate kernel param. Defaults to (5, 5).
-            dilate_iterations (int, optional): dilate iterations param. Defaults to 0.
-            binarization_method (str, optional): binarization method. Here
-                we can afford the sauvola method since we crop the image first
-                and the binarization occurs on a small image.
-                Defaults to "sauvola".
-
-        Returns:
-            NDArray: list of score for each individual segment in the same order
-                as the list of segments
-        """
-        # pylint: disable=too-many-arguments, too-many-positional-arguments
-        score_segments: list[float] = []
-
-        im = self.copy().dilate(kernel=dilate_kernel, iterations=dilate_iterations)
-        im_white = im.copy().as_white()
-
-        for segment in segments:
-
-            # create all-white image of same size as original with the segment drawn
-            other = im_white.draw_segments(
-                segments=[segment],
-                render=SegmentsRender(thickness=1, default_color=(0, 0, 0)),
-            ).as_grayscale()
-
-            score = im.score_contains_v2(
-                other=other, binarization_method=binarization_method
-            )
-
-            score_segments.append(score)
-
-        return score_segments
 
     def score_contains_segments(
         self,

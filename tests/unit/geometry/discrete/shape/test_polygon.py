@@ -676,3 +676,31 @@ class TestPolygonPerimeter:
         # Each side is 2, so perimeter is 8
         print(polygon.perimeter)
         assert np.isclose(polygon.perimeter, 800.0)
+
+
+class TestPolygonNormalPoint:
+    def test_normal_point_outward_square_horizontal_edge(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        # bottom edge from (0,0) to (2,0), midpoint is (1,0)
+        # normal should point outward (down), so (1,0) + [0,-1] = (1,-1) for dist=1
+        pt = polygon.normal_point(0, 1, 0.5, 1, is_outward=True)
+        assert np.allclose(pt, [1, -1])
+
+    def test_normal_point_inward_square_horizontal_edge(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        pt = polygon.normal_point(0, 1, 0.5, 1, is_outward=False)
+        # inward should point up, so (1,0) + [0,1] = (1,1)
+        assert np.allclose(pt, [1, 1])
+
+    def test_normal_point_outward_square_vertical_edge(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        # right edge from (2,0) to (2,2), midpoint is (2,1)
+        pt = polygon.normal_point(1, 2, 0.5, 1, is_outward=True)
+        # outward should point right, so (2,1) + [1,0] = (3,1)
+        assert np.allclose(pt, [3, 1])
+
+    def test_normal_point_inward_square_vertical_edge(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        pt = polygon.normal_point(1, 2, 0.5, 1, is_outward=False)
+        # inward should point left, so (2,1) + [-1,0] = (1,1)
+        assert np.allclose(pt, [1, 1])

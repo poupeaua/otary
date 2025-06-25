@@ -2,10 +2,12 @@
 Unit Tests for the generic image methods
 """
 
+import os
+
 import pytest
 import numpy as np
 
-from src.geometry import Polygon, Segment, LinearSpline
+from src.geometry import Polygon, Segment, LinearSpline, Rectangle
 from src.image import Image, PolygonsRender, SegmentsRender, LinearSplinesRender
 
 
@@ -444,3 +446,146 @@ class TestImageScoreContainsPolygons:
             polygons=[smaller_polygon], dilate_kernel=(3, 3), dilate_iterations=3
         )
         assert scores[0] == 1.0
+
+
+class TestImageCropRectangle:
+    def test_crop_rectangle_axis_aligned(self):
+        img = Image.from_fillvalue(shape=(100, 100), value=255)
+        rect = Rectangle(points=[[10, 10], [10, 30], [30, 30], [30, 10]])
+        cropped = img.crop_rectangle(rect)
+        assert cropped.asarray.shape[0] == 20
+        assert cropped.asarray.shape[1] == 20
+
+    def test_crop_rectangle_rotated(self):
+        img = Image.from_fillvalue(shape=(100, 100), value=255)
+        # Rectangle rotated 45 degrees
+        rect = Rectangle(points=[[50, 40], [60, 50], [50, 60], [40, 50]])
+        cropped = img.crop_rectangle(rect)
+        # The width and height should be equal for a square rotated 45 degrees
+        assert cropped.asarray.shape[0] == cropped.asarray.shape[1]
+        assert cropped.asarray.shape[0] > 0
+
+    def test_crop_rectangle_with_different_topleft_ix(self):
+        img = Image.from_fillvalue(shape=(100, 100), value=255)
+        rect = Rectangle(points=[[10, 10], [10, 30], [30, 30], [30, 10]])
+        cropped0 = img.crop_rectangle(rect, rect_topleft_ix=0)
+        cropped1 = img.crop_rectangle(rect, rect_topleft_ix=1)
+        assert cropped0.asarray.shape == cropped1.asarray.shape
+
+    def test_crop_rectangle_out_of_bounds(self):
+        img = Image.from_fillvalue(shape=(50, 50), value=255)
+        rect = Rectangle(points=[[-10, -10], [-10, 10], [10, 10], [10, -10]])
+        cropped = img.crop_rectangle(rect)
+        assert cropped.asarray.shape[0] > 0
+        assert cropped.asarray.shape[1] > 0
+
+    def test_crop_rectangle_returns_image_instance(self):
+        img = Image.from_fillvalue(shape=(20, 20), value=255)
+        rect = Rectangle(points=[[5, 5], [5, 15], [15, 15], [15, 5]])
+        cropped = img.crop_rectangle(rect)
+        assert isinstance(cropped, Image)
+
+
+class TestImageScoreContainsLinearEntities:
+
+    def test_score_contains_linear_entities_segment_one(self):
+        shape = (50, 50)
+        img = Image.from_fillvalue(shape=shape, value=255)
+        segment = Segment(points=[[10, 10], [40, 40]])
+        img.draw_segments(
+            segments=[segment],
+            render=SegmentsRender(default_color=(0, 0, 0), thickness=7),
+        )
+        scores = img.score_contains_linear_entities([segment])
+        assert scores[0] == 1.0
+
+    def test_score_contains_linear_entities_spline_one(self):
+        shape = (50, 50)
+        img = Image.from_fillvalue(shape=shape, value=255)
+        spline = LinearSpline(points=[[10, 10], [25, 40], [40, 10]])
+        img.draw_splines(
+            splines=[spline],
+            render=LinearSplinesRender(default_color=(0, 0, 0), thickness=3),
+        )
+        scores = img.score_contains_linear_entities([spline])
+        assert scores[0] == 1.0
+
+    def test_score_contains_linear_entities_mixed(self):
+        shape = (50, 50)
+        img = Image.from_fillvalue(shape=shape, value=255)
+        segment = Segment(points=[[5, 5], [45, 5]])
+        spline = LinearSpline(points=[[10, 10], [25, 40], [40, 10]])
+        img.draw_segments(
+            segments=[segment],
+            render=SegmentsRender(default_color=(0, 0, 0), thickness=10),
+        )
+        img.draw_splines(
+            splines=[spline],
+            render=LinearSplinesRender(default_color=(0, 0, 0), thickness=10),
+        )
+        scores = img.score_contains_linear_entities([segment, spline])
+        assert scores[0] == 1.0
+        assert scores[1] == 1.0
+
+    def test_score_contains_linear_entities_partial(self):
+        shape = (50, 50)
+        img = Image.from_fillvalue(shape=shape, value=255)
+        segment = Segment(points=[[5, 5], [25, 5]])
+        img.draw_segments(
+            segments=[segment],
+            render=SegmentsRender(default_color=(0, 0, 0), thickness=2),
+        )
+        partial_segment = Segment(points=[[5, 5], [45, 5]])
+        scores = img.score_contains_linear_entities([partial_segment])
+        assert 0 < scores[0] < 1.0
+
+    def test_score_contains_linear_entities_zero(self):
+        shape = (50, 50)
+        img = Image.from_fillvalue(shape=shape, value=255)
+        segment = Segment(points=[[5, 5], [25, 5]])
+        img.draw_segments(
+            segments=[segment],
+            render=SegmentsRender(default_color=(0, 0, 0), thickness=2),
+        )
+        other_segment = Segment(points=[[30, 30], [45, 45]])
+        scores = img.score_contains_linear_entities([other_segment])
+        assert scores[0] == 0.0
+
+    def test_score_contains_linear_entities_invalid_type(self):
+        shape = (50, 50)
+        img = Image.from_fillvalue(shape=shape, value=255)
+
+        class DummyEntity:
+            pass
+
+        dummy = DummyEntity()
+        with pytest.raises(TypeError):
+            img.score_contains_linear_entities([dummy])
+
+
+class TestImageCropHQFromAABBAndPDF:
+
+    def test_crop_hq_from_aabb_and_pdf(self):
+        # Prepare a rectangle to crop (arbitrary values within a typical A4 page)
+        bbox = Rectangle(points=[[50, 50], [100, 50], [100, 250], [50, 250]])
+        factor_scale = bbox.get_height_from_topleft(0) / bbox.get_width_from_topleft(0)
+        pdf_path = "tests/data/test.pdf"
+        # Ensure the test PDF exists
+        assert os.path.exists(pdf_path), f"Test PDF not found at {pdf_path}"
+
+        # Call the method
+        img = Image.from_pdf(pdf_path, page_nb=0, as_grayscale=True, resolution=400)
+        cropped = img.crop_hq_from_aabb_and_pdf(
+            bbox=bbox,
+            pdf_filepath=pdf_path,
+            page_nb=0,
+            as_grayscale=True,
+            resolution=800,
+        )
+
+        # Check that the result is an Image instance
+        assert isinstance(cropped, Image)
+        # Check that the cropped image is not empty
+        assert cropped.asarray.size > 0
+
+        assert factor_scale == pytest.approx(cropped.height / cropped.width, rel=0.05)

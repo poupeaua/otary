@@ -67,7 +67,7 @@ class Vector(Segment, DirectedLinearEntity):
         Returns:
             NDArray: normalized vector
         """
-        return self.coordinates_shift / np.linalg.norm(self.coordinates_shift)
+        return self.coordinates_shift / np.linalg.norm(self.coordinates_shift) + 1e-9
 
     def rescale_head(self, scale: float) -> Vector:
         """Rescale the head part of the vector without moving the first point.
