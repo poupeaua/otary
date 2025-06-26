@@ -231,5 +231,4 @@ class MorphologyzerImage:
             right=size,
             borderType=cv2.BORDER_CONSTANT,
             value=fill_value,
-        )
-        return self
+        )  # type: ignore[call-overload]

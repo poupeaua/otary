@@ -18,6 +18,7 @@ from src.geometry.entity import GeometryEntity
 from src.geometry.discrete.linear.entity import LinearEntity
 from src.geometry.discrete.entity import DiscreteGeometryEntity
 from src.geometry import Segment, Vector, LinearSpline
+from src.geometry.utils.tools import get_shared_point_indices
 
 if TYPE_CHECKING:
     from src.geometry.discrete.shape.rectangle import Rectangle
@@ -25,6 +26,13 @@ if TYPE_CHECKING:
 
 class Polygon(DiscreteGeometryEntity):
     """Polygon class which defines a polygon object which means any closed-shape"""
+
+    def __init__(self, points: NDArray | list, is_cast_int: bool = False) -> None:
+        if len(points) <= 2:
+            raise ValueError(
+                "Cannot create a Polygon since it must have 3 or more points"
+            )
+        super().__init__(points=points, is_cast_int=is_cast_int)
 
     # ---------------------------------- OTHER CONSTRUCTORS ----------------------------
 
@@ -53,22 +61,16 @@ class Polygon(DiscreteGeometryEntity):
         return Polygon(points=points)
 
     @classmethod
-    def from_linear_entities(
-        cls,
-        linear_entities: Sequence[LinearEntity],
-        return_vertices_ix: bool = False,
-    ) -> Polygon | tuple[Polygon, list[int]]:
+    def from_linear_entities_returns_vertices_ix(
+        cls, linear_entities: Sequence[LinearEntity]
+    ) -> tuple[Polygon, list[int]]:
         """Convert a list of linear entities to polygon.
-
-        Beware: the method assumes entities are sorted and connected.
+        Beware: this method assumes entities are sorted and connected.
 
         Args:
             linear_entities (Sequence[LinearEntity]): List of linear entities.
-            return_vertices_ix (bool, optional): If True, also returns the indices of the first vertex of each entity.
 
         Returns:
-            Polygon: polygon representation of the linear entity
-            or
             (Polygon, list[int]): polygon and indices of first vertex of each entity
         """
         points = []
@@ -86,9 +88,24 @@ class Polygon(DiscreteGeometryEntity):
 
         points = np.concatenate(points, axis=0)
         polygon = Polygon(points=points)
-        if return_vertices_ix:
-            return polygon, vertices_ix
-        return polygon
+        return polygon, vertices_ix
+
+    @classmethod
+    def from_linear_entities(
+        cls,
+        linear_entities: Sequence[LinearEntity],
+    ) -> Polygon:
+        """Convert a list of linear entities to polygon.
+
+        Beware: the method assumes entities are sorted and connected.
+
+        Args:
+            linear_entities (Sequence[LinearEntity]): List of linear entities.
+
+        Returns:
+            Polygon: polygon representation of the linear entity
+        """
+        return cls.from_linear_entities_returns_vertices_ix(linear_entities)[0]
 
     @classmethod
     def from_unordered_lines_approx(
@@ -218,13 +235,33 @@ class Polygon(DiscreteGeometryEntity):
         return LinearRing(coordinates=self.asarray)
 
     @property
+    def centroid(self) -> NDArray:
+        """Compute the centroid point which can be seen as the center of gravity
+        or center of mass of the shape
+
+        Returns:
+            NDArray: centroid point
+        """
+        M = cv2.moments(self.asarray.astype(np.float32).reshape((-1, 1, 2)))
+
+        # Avoid division by zero
+        if M["m00"] != 0:
+            cx = M["m10"] / M["m00"]
+            cy = M["m01"] / M["m00"]
+            centroid = np.asarray([cx, cy])
+        else:
+            centroid = self.center_mean
+
+        return centroid
+
+    @property
     def area(self) -> float:
         """Compute the area of the geometry entity
 
         Returns:
             float: area value
         """
-        return cv2.contourArea(self.points.astype(int))
+        return cv2.contourArea(self.points.astype(np.int32))
 
     @property
     def perimeter(self) -> float:
@@ -233,7 +270,7 @@ class Polygon(DiscreteGeometryEntity):
         Returns:
             float: perimeter value
         """
-        return cv2.arcLength(self.points, True)
+        return cv2.arcLength(self.points.astype(np.float32), True)
 
     @property
     def is_self_intersected(self) -> bool:
@@ -379,7 +416,7 @@ class Polygon(DiscreteGeometryEntity):
             surface = self.shapely_surface
         return surface.contains(other.shapely_surface)
 
-    def score_vertices_in_points(self, points: NDArray, min_distance: float) -> NDArray:
+    def score_vertices_in_points(self, points: NDArray, max_distance: float) -> NDArray:
         """Returns a score of 0 or 1 for each point in the polygon if it is close
         enough to any point in the input points.
 
@@ -391,8 +428,13 @@ class Polygon(DiscreteGeometryEntity):
         Returns:
             NDArray: a list of score for each point in the contour
         """
-        indices = self.find_shared_approx_vertices_ix(
-            other=Polygon(points=points), margin_dist_error=min_distance
+
+        indices = get_shared_point_indices(
+            points_to_check=self.asarray,
+            checkpoints=points,
+            margin_dist_error=max_distance,
+            method="close",
+            cond="any",
         )
         score = np.bincount(indices, minlength=len(self))
         return score
@@ -436,9 +478,9 @@ class Polygon(DiscreteGeometryEntity):
 
         return vertices
 
-    def find_interpolated_point(
+    def find_interpolated_point_and_prev_ix(
         self, start_index: int, end_index: int, pct_dist: float
-    ) -> NDArray:
+    ) -> tuple[NDArray, int]:
         """Return a point along the contour path from start_idx to end_idx (inclusive),
         at a relative distance pct_dist ∈ [0, 1] along that path.
 
@@ -472,14 +514,41 @@ class Polygon(DiscreteGeometryEntity):
             )
         )
 
-        return path.find_interpolated_point(pct_dist=pct_dist)
+        point, index = path.find_interpolated_point_and_prev_ix(pct_dist=pct_dist)
+        index = (index + start_index) % len(self)
 
-    def outward_normal_point(
+        return point, index
+
+    def find_interpolated_point(
+        self, start_index: int, end_index: int, pct_dist: float
+    ) -> NDArray:
+        """Return a point along the contour path from start_idx to end_idx (inclusive),
+        at a relative distance pct_dist ∈ [0, 1] along that path.
+
+        By convention, if start_index == end_index, then use the whole contour
+        start at this index position.
+
+        Parameters:
+            start_idx (int): Index of the start point in the contour
+            end_idx (int): Index of the end point in the contour
+            pct_dist (float): Value in [0, 1], 0 returns start, 1 returns end.
+                Any value in [0, 1] returns a point between start and end that is
+                pct_dist along the path.
+
+        Returns:
+            NDArray: Interpolated point [x, y]
+        """
+        return self.find_interpolated_point_and_prev_ix(
+            start_index=start_index, end_index=end_index, pct_dist=pct_dist
+        )[0]
+
+    def normal_point(
         self,
         start_index: int,
         end_index: int,
         dist_along_edge_pct: float,
-        dist_outward: float,
+        dist_from_edge: float,
+        is_outward: bool = True,
     ) -> NDArray:
         """Compute the outward normal point.
         This is a point that points toward the outside of the polygon
@@ -488,31 +557,40 @@ class Polygon(DiscreteGeometryEntity):
             start_index (int): start index for the edge selection
             end_index (int): end index for the edge selection
             dist_along_edge_pct (float): distance along the edge to place the point
-            dist_outward (float): distance outward from the edge
+            dist_from_edge (float): distance outward from the edge
+            is_outward (bool, optional): True if the normal points to the outside of
+                the polygon. False if the normal points to the inside of the polygon. Defaults to True.
 
         Returns:
             NDArray: 2D point as array
         """
         assert 0.0 <= dist_along_edge_pct <= 1.0
 
-        pt_interpolated = self.find_interpolated_point(
+        pt_interpolated, prev_ix = self.find_interpolated_point_and_prev_ix(
             start_index=start_index, end_index=end_index, pct_dist=dist_along_edge_pct
         )
 
-        edge = Vector(points=[self.asarray[start_index], self.asarray[end_index]])
+        edge = Vector(
+            points=[self.asarray[prev_ix], self.asarray[(prev_ix + 1) % len(self)]]
+        )
 
         normal = edge.normal().normalized
 
-        pt_plus = pt_interpolated + dist_outward * normal
-        pt_minus = pt_interpolated - dist_outward * normal
+        pt_plus = pt_interpolated + dist_from_edge * normal
+        pt_minus = pt_interpolated - dist_from_edge * normal
 
         dist_plus = np.linalg.norm(pt_plus - self.centroid)
         dist_minus = np.linalg.norm(pt_minus - self.centroid)
 
         # choose the point which distance to the center is greater
         if dist_plus > dist_minus:
-            return pt_plus
-        return pt_minus
+            if is_outward:
+                return pt_plus
+            return pt_minus
+
+        if is_outward:
+            return pt_minus
+        return pt_plus
 
     def inter_area(self, other: Polygon) -> float:
         """Inter area with another Polygon
@@ -714,7 +792,7 @@ class Polygon(DiscreteGeometryEntity):
         image_crop_shape: Optional[tuple[int, int]] = None,
     ) -> Polygon:
         """This function can be useful for a very specific need:
-        In a single image you have two polygons and their coordinates are defined
+        In a single image you have two same polygons and their coordinates are defined
         in this image referential.
 
         You want to obtain the original polygon and all its vertices information
@@ -737,8 +815,8 @@ class Polygon(DiscreteGeometryEntity):
             Polygon: original polygon in the image crop referential
         """
         assert crop.contains(other=other)
-        crop_width = crop.get_width_from_topleft(0)
-        crop_height = crop.get_height_from_topleft(0)
+        crop_width = int(crop.get_width_from_topleft(0))
+        crop_height = int(crop.get_height_from_topleft(0))
 
         if image_crop_shape is None:
             image_crop_shape = (crop_width, crop_height)

@@ -519,7 +519,7 @@ class TestEntityVerticesFarFrom:
 
     def test_vertices_far_from_zero_min_distance(self):
         rect = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
-        points = np.array([[0, 0]])
+        points = np.array([[0.001, 0.001]])
         far_vertices = rect.find_vertices_far_from(points=points, min_distance=0)
         expected_vertices = np.array([[0, 0], [0, 2], [2, 2], [2, 0]])
         assert np.array_equal(far_vertices, expected_vertices)

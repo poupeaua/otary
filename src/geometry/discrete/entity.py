@@ -7,15 +7,15 @@ from __future__ import annotations
 from typing import Optional, Self, TYPE_CHECKING
 import copy
 from abc import ABC, abstractmethod
+
 from shapely import (
     GeometryCollection,
 )
-
 import cv2
 import numpy as np
 from numpy.typing import NDArray
 
-from src.geometry.utils.tools import rotate_2d_points
+from src.geometry.utils.tools import get_shared_point_indices, rotate_2d_points
 from src.geometry.entity import GeometryEntity
 from src.utils.tools import assert_transform_shift_vector
 
@@ -30,7 +30,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         _arr = (
             np.asarray(points)
             if not is_cast_int
-            else np.round(np.asarray(points)).astype(int)
+            else np.round(np.asarray(points)).astype(np.int32)
         )
         self.points = copy.deepcopy(_arr)
         self.is_cast_int = is_cast_int
@@ -98,12 +98,22 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         self.points = value
 
     @property
+    @abstractmethod
     def centroid(self) -> NDArray:
-        """Compute the centroid point which can be seen as the center of gravity of
-        the shape
+        """Compute the centroid point which can be seen as the center of gravity
+        or center of mass of the shape
 
         Returns:
             NDArray: centroid point
+        """
+
+    @property
+    def center_mean(self) -> NDArray:
+        """Compute the center as the mean of all the points. This can be really
+        different than the centroid.
+
+        Returns:
+            NDArray: center mean as a 2D point
         """
         return np.mean(self.points, axis=0)
 
@@ -412,13 +422,13 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         Returns:
             NDArray: list of indices
         """
-        list_index_shared_points = []
-        for i, pt in enumerate(self.asarray):
-            distances = np.linalg.norm(other.asarray - pt, axis=1)
-            indices = np.nonzero(distances < margin_dist_error)[0].astype(int)
-            if len(indices) > 0:
-                list_index_shared_points.append(i)
-        return np.array(list_index_shared_points).astype(int)
+        return get_shared_point_indices(
+            points_to_check=self.asarray,
+            checkpoints=other.asarray,
+            margin_dist_error=margin_dist_error,
+            method="close",
+            cond="any",
+        )
 
     def find_shared_approx_vertices(
         self, other: DiscreteGeometryEntity, margin_dist_error: float = 5
@@ -457,13 +467,14 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
             NDArray: vertices that belongs to the geometric structure and that
                 are far from the input points.
         """
-        list_far_points = []
-        for pt in self.asarray:
-            distances = np.linalg.norm(points - pt, axis=1)
-            indices = np.nonzero(distances < min_distance)[0].astype(int)
-            if len(indices) == 0:
-                list_far_points.append(pt)
-        return np.array(list_far_points)
+        indices = get_shared_point_indices(
+            points_to_check=self.asarray,
+            checkpoints=points,
+            margin_dist_error=min_distance,
+            method="far",
+            cond="all",
+        )
+        return self.asarray[indices]
 
     def __eq__(self, value: object) -> bool:
         if not isinstance(value, DiscreteGeometryEntity):

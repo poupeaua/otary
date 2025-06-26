@@ -14,6 +14,11 @@ def jpg_filepath():
     return "./tests/data/test.jpg"
 
 
+@pytest.fixture
+def png_filepath():
+    return "./tests/data/test.png"
+
+
 class TestBaseImageFromFillValue:
 
     def test_init_image_class_method_from_fillvalue(self):
@@ -41,7 +46,7 @@ class TestBaseImageFromFillValue:
             Image.from_fillvalue(shape=(5, 5, 4), value=0)
 
 
-class TestBaseImageFromFileImage:
+class TestBaseImageFromFile:
 
     def test_init_image_class_method_from_jpg(self, jpg_filepath: str):
         img = Image.from_file(filepath=jpg_filepath)
@@ -50,6 +55,26 @@ class TestBaseImageFromFileImage:
     def test_init_image_class_method_from_jpg_grayscale(self, jpg_filepath: str):
         img = Image.from_file(filepath=jpg_filepath, as_grayscale=True)
         assert len(img.shape_array) == 2
+
+    def test_init_image_class_method_from_png(self, png_filepath: str):
+        img = Image.from_file(filepath=png_filepath)
+        assert len(img.shape_array) == 3
+
+    def test_init_image_class_method_from_png_grayscale(self, png_filepath: str):
+        img = Image.from_file(filepath=png_filepath, as_grayscale=True)
+        assert len(img.shape_array) == 2
+
+    def test_init_image_class_method_from_png_with_resolution(self, png_filepath: str):
+        img = Image.from_file(filepath=png_filepath, resolution=32)
+        assert img.shape_array[0] == 32
+
+    def test_init_image_class_method_from_png_invalid_file(self):
+        with pytest.raises(ValueError):
+            Image.from_file(filepath="./tests/data/test.txt")
+
+    def test_init_image_class_method_from_file_pdf(self, pdf_filepath: str):
+        img = Image.from_file(filepath=pdf_filepath, resolution=50)
+        assert len(img.shape_array) == 3
 
 
 class TestBaseImageFromPdf:

@@ -8,7 +8,37 @@ import pytest
 from src.geometry import Polygon
 
 
-class TestPolygonBase:
+class TestPolygonInstantiationBasic:
+
+    def test_polygon_instantiation_with_numpy_array(self):
+        arr = np.array([[0, 0], [1, 0], [1, 1], [0, 1]])
+        polygon = Polygon(arr)
+        assert np.array_equal(polygon.asarray, arr)
+
+    def test_polygon_instantiation_with_list(self):
+        points = [[0, 0], [1, 0], [1, 1], [0, 1]]
+        polygon = Polygon(points)
+        assert np.array_equal(polygon.asarray, np.array(points))
+
+    def test_polygon_instantiation_cast_int(self):
+        points = [[0.1, 0.9], [1.2, 0.2], [1.8, 1.7], [0.3, 1.1]]
+        polygon = Polygon(points, is_cast_int=True)
+        assert np.issubdtype(polygon.asarray.dtype, np.integer)
+
+    def test_polygon_instantiation_too_few_points_2(self):
+        with pytest.raises(ValueError):
+            Polygon([[0, 0], [1, 1]])
+
+    def test_polygon_instantiation_too_few_points_1(self):
+        with pytest.raises(ValueError):
+            Polygon([[0, 0]])
+
+    def test_polygon_instantiation_too_few_points_0(self):
+        with pytest.raises(ValueError):
+            Polygon([])
+
+
+class TestPolygonIsConvex:
     def test_is_convex_true(self):
         rect = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
         assert rect.is_convex
@@ -53,7 +83,7 @@ class TestPolygonIsEqual:
         assert not cnt1.is_equal(cnt2, dist_margin_error=5)
 
 
-class TestPolygonIsregular:
+class TestPolygonIsRegular:
     def test_polygon_is_regular_square(self):
         cnt1 = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
         assert cnt1.is_regular(margin_dist_error_pct=0.0001)
@@ -264,31 +294,31 @@ class TestPolygonScoreEdgesInPoints:
     def test_score_edges_in_points_all_close(self):
         cnt = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
         points = np.array([[0, 0], [1, 0], [1, 1], [0, 1]])
-        scores = cnt.score_vertices_in_points(points=points, min_distance=0.1)
+        scores = cnt.score_vertices_in_points(points=points, max_distance=0.1)
         assert np.array_equal(scores, [1, 1, 1, 1])
 
     def test_score_edges_in_points_some_close(self):
         cnt = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
         points = np.array([[0, 0], [1, 0]])
-        scores = cnt.score_vertices_in_points(points=points, min_distance=0.1)
+        scores = cnt.score_vertices_in_points(points=points, max_distance=0.1)
         assert np.array_equal(scores, [1, 1, 0, 0])
 
     def test_score_edges_in_points_none_close(self):
         cnt = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
         points = np.array([[2, 2], [3, 3]])
-        scores = cnt.score_vertices_in_points(points=points, min_distance=0.1)
+        scores = cnt.score_vertices_in_points(points=points, max_distance=0.1)
         assert np.array_equal(scores, [0, 0, 0, 0])
 
     def test_score_edges_in_points_with_margin(self):
         cnt = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
         points = np.array([[0.05, 0.05], [1.05, 0.05]])
-        scores = cnt.score_vertices_in_points(points=points, min_distance=0.1)
+        scores = cnt.score_vertices_in_points(points=points, max_distance=0.1)
         assert np.array_equal(scores, [1, 1, 0, 0])
 
     def test_score_edges_in_points_duplicate_points(self):
         cnt = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
         points = np.array([[0, 0], [0, 0], [1, 0]])
-        scores = cnt.score_vertices_in_points(points=points, min_distance=0.1)
+        scores = cnt.score_vertices_in_points(points=points, max_distance=0.1)
         assert np.array_equal(scores, [1, 1, 0, 0])
 
 
@@ -389,11 +419,6 @@ class TestPolygonLengths:
             np.sqrt(4 + 1),  # top diagonal
             np.sqrt(1 + 4),  # left diagonal
         ]
-        assert np.allclose(polygon.lengths, expected_lengths)
-
-    def test_lengths_single_segment(self):
-        polygon = Polygon([[0, 0], [1, 0]])
-        expected_lengths = [1]
         assert np.allclose(polygon.lengths, expected_lengths)
 
 
@@ -582,3 +607,100 @@ class TestPolygonReorderClockwise:
         reordered_polygon = polygon.reorder_clockwise()
         expected_points = [[0, 0], [0.5, 1], [1, 0]]
         assert np.array_equal(reordered_polygon.asarray, expected_points)
+
+
+class TestPolygonArea:
+    def test_area_square(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        assert polygon.area == 4.0
+
+    def test_area_rectangle(self):
+        polygon = Polygon([[0, 0], [3, 0], [3, 2], [0, 2]])
+        assert polygon.area == 6.0
+
+    def test_area_triangle(self):
+        polygon = Polygon([[0, 0], [4, 0], [0, 3]])
+        assert polygon.area == 6.0
+
+    def test_area_irregular_quadrilateral(self):
+        polygon = Polygon([[0, 0], [4, 0], [3, 2], [0, 3]])
+        # Area can be calculated using Shoelace formula: 0.5*|0*0+4*2+3*3+0*0 - (0*4+0*3+2*0+3*0)| = 0.5*|0+8+9+0 - (0+0+0+0)| = 0.5*17 = 8.5
+        assert polygon.area == 8.5
+
+    def test_area_negative_coordinates(self):
+        polygon = Polygon([[-1, -1], [-1, 1], [1, 1], [1, -1]])
+        assert polygon.area == 4.0
+
+    def test_area_non_integer_coordinates(self):
+        polygon = Polygon([[0.5, 0.5], [2.5, 0.5], [2.5, 2.5], [0.5, 2.5]])
+        # cv2.contourArea casts to int, so all points become [0,0],[2,0],[2,2],[0,2], area=4
+        assert polygon.area == 4.0
+
+
+class TestPolygonPerimeter:
+    def test_perimeter_square(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        # 4 sides of length 2
+        assert polygon.perimeter == 8.0
+
+    def test_perimeter_rectangle(self):
+        polygon = Polygon([[0, 0], [3, 0], [3, 2], [0, 2]])
+        # 2 sides of 3, 2 sides of 2
+        assert polygon.perimeter == 10.0
+
+    def test_perimeter_triangle(self):
+        polygon = Polygon([[0, 0], [4, 0], [0, 3]])
+        # Sides: 4, 5, 3
+        assert polygon.perimeter == 12.0
+
+    def test_perimeter_irregular_quadrilateral(self):
+        polygon = Polygon([[0, 0], [4, 0], [3, 2], [0, 3]])
+        # Calculate each side
+        pts = np.array([[0, 0], [4, 0], [3, 2], [0, 3]])
+        lengths = [
+            np.linalg.norm(pts[0] - pts[1]),
+            np.linalg.norm(pts[1] - pts[2]),
+            np.linalg.norm(pts[2] - pts[3]),
+            np.linalg.norm(pts[3] - pts[0]),
+        ]
+        expected = sum(lengths)
+        assert np.isclose(polygon.perimeter, expected)
+
+    def test_perimeter_negative_coordinates(self):
+        polygon = Polygon([[-1, -1], [-1, 1], [1, 1], [1, -1]])
+        # 4 sides of length 2
+        assert polygon.perimeter == 8.0
+
+    def test_perimeter_non_integer_coordinates(self):
+        polygon = Polygon([[0.5, 0.5], [200.5, 0.5], [200.5, 200.5], [0.5, 200.5]])
+        # Each side is 2, so perimeter is 8
+        print(polygon.perimeter)
+        assert np.isclose(polygon.perimeter, 800.0)
+
+
+class TestPolygonNormalPoint:
+    def test_normal_point_outward_square_horizontal_edge(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        # bottom edge from (0,0) to (2,0), midpoint is (1,0)
+        # normal should point outward (down), so (1,0) + [0,-1] = (1,-1) for dist=1
+        pt = polygon.normal_point(0, 1, 0.5, 1, is_outward=True)
+        assert np.allclose(pt, [1, -1])
+
+    def test_normal_point_inward_square_horizontal_edge(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        pt = polygon.normal_point(0, 1, 0.5, 1, is_outward=False)
+        # inward should point up, so (1,0) + [0,1] = (1,1)
+        assert np.allclose(pt, [1, 1])
+
+    def test_normal_point_outward_square_vertical_edge(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        # right edge from (2,0) to (2,2), midpoint is (2,1)
+        pt = polygon.normal_point(1, 2, 0.5, 1, is_outward=True)
+        # outward should point right, so (2,1) + [1,0] = (3,1)
+        assert np.allclose(pt, [3, 1])
+
+    def test_normal_point_inward_square_vertical_edge(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        pt = polygon.normal_point(1, 2, 0.5, 1, is_outward=False)
+        # inward should point left, so (2,1) + [-1,0] = (1,1)
+        assert np.allclose(pt, [1, 1])

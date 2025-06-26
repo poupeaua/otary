@@ -75,8 +75,12 @@ class LinearEntity(DiscreteGeometryEntity, ABC):
 
     @property
     @abstractmethod
-    def center_within(self) -> NDArray:
-        """Returns the center point of the linear entity that within along the entity
+    def midpoint(self) -> NDArray:
+        """Returns the mid-point of the linear entity that is within or
+        along the entity.
+
+        This method can be useful in the case of a curved linear entity. The
+        centroid is not necessarily along the curved linear entity, the mid-point is.
 
         Returns:
             NDArray: 2D point

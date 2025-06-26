@@ -231,9 +231,9 @@ class TestRectangleJoin:
         rect1 = Rectangle.from_topleft(topleft=[0, 0], width=2, height=2)
         rect2 = Rectangle.from_topleft(topleft=[2.05, 0], width=2, height=2)
         result = rect1.join(rect2, margin_dist_error=0.5)
-        expected_points = [[0.0, 0.0], [4.05, 0.0], [4.05, 2.0], [0.0, 2.0]]
+        expected_rect = Rectangle([[0.0, 0.0], [4.05, 0.0], [4.05, 2.0], [0.0, 2.0]])
         assert result is not None
-        assert np.allclose(result.asarray, expected_points)
+        assert result.is_equal(expected_rect)
 
 
 class TestRectangleGetVerticeFromTopleft:

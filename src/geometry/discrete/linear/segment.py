@@ -35,7 +35,7 @@ class Segment(LinearEntity):
         return np.sum(self.points, axis=0) / 2
 
     @property
-    def center_within(self) -> NDArray:
+    def midpoint(self) -> NDArray:
         """In the Segment, this is equivalent to the centroid
 
         Returns:
@@ -248,10 +248,14 @@ class Segment(LinearEntity):
         """
         Returns the normal segment of the segment.
         The normal segment is a segment that is orthogonal to the input segment.
+
         Please note that the normal segment have the same length as the input segment.
+        Moreover the normal segment is rotated by 90 degrees clockwise.
 
         Returns:
             Segment: normal segment centered at the original segment centroid
         """
-        normal = self.copy().rotate(angle=math.pi / 2, is_degree=False)
+        normal = self.copy().rotate(
+            angle=math.pi / 2, is_degree=False, is_clockwise=True
+        )
         return normal
