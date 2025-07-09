@@ -73,5 +73,5 @@ filterwarnings = [
 omit = [
     "*__init__*",
     "*/tests/*",
-    "src/utils/perf_eval.py"
+    "otary/utils/perf_eval.py"
 ]

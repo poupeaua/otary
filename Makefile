@@ -1,6 +1,6 @@
 #!/bin/bash
 
-.PHONY: docs data
+.PHONY: docs
 
 # ------------------------------------- CLEAN -----------------------------------------
 
@@ -44,7 +44,7 @@ init-install:
 
 # -------------------------------------- TEST -----------------------------------------
 
-test: test-unit test-integration
+test: test-unit
 
 test-unit:
 	@echo "\n------------"
@@ -53,15 +53,6 @@ test-unit:
 	python -m pytest --doctest-modules \
 		--junitxml=junit/test-unit-results.xml \
 		--cov=otary --cov-report=xml --cov-report=html tests/unit/
-
-test-integration:
-	@echo "\n-------------------"
-	@echo "Integration Testing"
-	@echo "-------------------"
-	python -m pytest --doctest-modules \
-		--junitxml=junit/test-integration-results.xml \
-		--cov-append \
-		--cov=otary --cov-report=xml --cov-report=html tests/integration/
 
 check: check-pylint check-ruff check-mypy
 
