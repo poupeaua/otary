@@ -1,8 +1,8 @@
 import pytest
 import numpy as np
 
-from src.image import Image
-from src.geometry import Rectangle
+from otary.image import Image
+from otary.geometry import Rectangle
 
 
 class TestTransformerImageShiftMethods:

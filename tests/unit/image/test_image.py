@@ -7,8 +7,8 @@ import os
 import pytest
 import numpy as np
 
-from src.geometry import Polygon, Segment, LinearSpline, Rectangle
-from src.image import Image, PolygonsRender, SegmentsRender, LinearSplinesRender
+from otary.geometry import Polygon, Segment, LinearSpline, Rectangle
+from otary.image import Image, PolygonsRender, SegmentsRender, LinearSplinesRender
 
 
 class TestImageIOU:

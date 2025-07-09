@@ -6,7 +6,7 @@ import io
 import pytest
 import numpy as np
 
-from src.image.components.io.utils.readfile import read_pdf_to_images
+from otary.image.components.io.utils.readfile import read_pdf_to_images
 
 
 @pytest.fixture

@@ -1,7 +1,7 @@
 import pytest
 import pymupdf
 
-from src.image import Image
+from otary.image import Image
 
 
 @pytest.fixture

@@ -5,7 +5,7 @@ Test the Ellipse class.
 import pytest
 import math
 import numpy as np
-from src.geometry.continuous.shape.ellipse import Ellipse
+from otary.geometry.continuous.shape.ellipse import Ellipse
 from shapely.geometry import Polygon as SPolygon, LineString
 
 

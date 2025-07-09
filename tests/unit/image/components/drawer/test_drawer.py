@@ -4,9 +4,9 @@ Unit Tests for the drawer image methods
 
 import numpy as np
 
-from src.cv.ocr.output.ocr_single_output import OcrSingleOutput
-from src.geometry import Polygon, Rectangle, Circle, LinearSpline
-from src.image import Image, SegmentsRender, CirclesRender, LinearSplinesRender
+from otary.utils.cv.ocrsingleoutput import OcrSingleOutput
+from otary.geometry import Polygon, Rectangle, Circle, LinearSpline
+from otary.image import Image, SegmentsRender, CirclesRender, LinearSplinesRender
 
 
 class TestDrawerPointsImage:

@@ -1,0 +1,77 @@
+[project]
+name = "otary"
+version = "0.1.0"
+description = "Image and 2D Geometry library for easy and fast image manipulation"
+authors = [
+    {name="Alexandre Poupeau", email="alexandre.poupeau.contact@gmail.com"}
+]
+readme = "README.md"
+package-mode = true
+
+[tool.poetry.dependencies]
+python = "^3.11.2"
+metpy = "^1.6.2"
+opencv-python = "^4.10.0.84"
+setuptools = "^70.0.0"
+sympy = "^1.12"
+shapely = "^2.0.4"
+pymupdf = "^1.24.12"
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.4"
+pytest-cov = "^5.0.0"
+mypy = "^1.10.0"
+pylint = "^3.2.2"
+pylint-exit = "^1.2.0"
+ruff = "^0.4.4"
+black = "^24.4.2"
+pre-commit = "^3.7.1"
+
+[tool.poetry.group.docs.dependencies]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 88
+
+[tool.pylint]
+fail-under = 9.5
+max-line-length = 88
+generated-members = ["cv2.*"]
+extension-pkg-whitelist = ["cv2"]
+disable = """
+    fixme
+"""
+
+[tool.pylint."MESSAGES CONTROL"]
+good-names = [
+    "M", # matrix basic name
+]
+
+[tool.black]
+line-length = 88
+
+[tool.mypy]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "yaml,requests"
+ignore_missing_imports = true
+
+[tool.bandit]
+skips = ["B101"]
+exclude_dirs = ['tests']
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::DeprecationWarning:importlib.*"
+]
+
+[tool.coverage.run]
+omit = [
+    "*__init__*",
+    "*/tests/*",
+    "src/utils/perf_eval.py"
+]

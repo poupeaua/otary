@@ -5,7 +5,7 @@ Unit tests for Polygon geometry class
 import numpy as np
 import pytest
 
-from src.geometry import Polygon
+from otary.geometry import Polygon
 
 
 class TestPolygonInstantiationBasic:

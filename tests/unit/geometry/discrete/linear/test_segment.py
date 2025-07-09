@@ -5,7 +5,7 @@ Test geometry file
 import pytest
 import numpy as np
 
-from src.geometry import Segment
+from otary.geometry import Segment
 
 
 class TestSegmentProperties:

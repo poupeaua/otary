@@ -5,7 +5,7 @@ Unit tests for Rectangle geometry class
 import copy
 import numpy as np
 
-from src.geometry import Rectangle
+from otary.geometry import Rectangle
 import pytest
 import pymupdf
 

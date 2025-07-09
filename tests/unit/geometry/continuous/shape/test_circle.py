@@ -4,7 +4,7 @@ Test the Circle class.
 
 import numpy as np
 from copy import copy
-from src.geometry import Circle, Polygon
+from otary.geometry import Circle, Polygon
 
 
 class TestCircle:

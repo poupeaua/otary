@@ -1,7 +1,7 @@
 import pytest
 
-from src.image import Image
-from src.geometry import Rectangle
+from otary.image import Image
+from otary.geometry import Rectangle
 
 
 class TestTransformerImageCropClipping:

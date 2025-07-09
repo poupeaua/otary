@@ -5,9 +5,9 @@ Unit tests for tools image funtions
 import pytest
 import numpy as np
 
-from src.geometry import Point, Polygon
-from src.image.components.drawer.utils.tools import is_color_tuple, prep_obj_draw
-from src.image.utils.colors import interpolate_color
+from otary.geometry import Point, Polygon
+from otary.image.components.drawer.utils.tools import is_color_tuple, prep_obj_draw
+from otary.image.utils.colors import interpolate_color
 
 
 class TestToolsIsColorTuple:

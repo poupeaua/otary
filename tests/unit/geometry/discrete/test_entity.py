@@ -5,7 +5,7 @@ Test GeometryEntity file
 import pytest
 import numpy as np
 
-from src.geometry import Polygon, Segment, Rectangle
+from otary.geometry import Polygon, Segment, Rectangle
 
 
 class TestEntityBasics:

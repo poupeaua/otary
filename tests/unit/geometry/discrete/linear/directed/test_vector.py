@@ -4,7 +4,7 @@ Test Vector class util
 
 import numpy as np
 
-from src.geometry import Vector
+from otary.geometry import Vector
 
 
 class TestVectorCardinal:

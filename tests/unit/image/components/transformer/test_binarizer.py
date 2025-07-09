@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from src.image import Image
+from otary.image import Image
 
 
 class TestTransformerThresholdGeneral:
