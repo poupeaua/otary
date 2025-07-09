@@ -25,10 +25,10 @@ from otary.geometry.discrete.linear.entity import LinearEntity
 from otary.utils.cv.ocrsingleoutput import OcrSingleOutput
 from otary.image.base import BaseImage
 from otary.image.components import (
-    ReaderImage, 
-    WriterImage, 
-    DrawerImage, 
-    TransformerImage
+    ReaderImage,
+    WriterImage,
+    DrawerImage,
+    TransformerImage,
 )
 from otary.image.components.transformer.components.binarizer.binarizer import (
     BinarizationMethods,

@@ -37,7 +37,7 @@ build-backend = "poetry.core.masonry.api"
 line-length = 88
 
 [tool.pylint]
-fail-under = 9.5
+fail-under = 10
 max-line-length = 88
 generated-members = ["cv2.*"]
 extension-pkg-whitelist = ["cv2"]

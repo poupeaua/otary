@@ -479,7 +479,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
     def __eq__(self, value: object) -> bool:
         if not isinstance(value, DiscreteGeometryEntity):
             return False
-        if not type(self) == type(value):
+        if not isinstance(self, type(value)):
             return False
         return np.array_equal(self.asarray, value.asarray)
 

@@ -42,7 +42,7 @@ class Ellipse(ContinuousGeometryEntity):
         self.semi_major_axis = semi_major_axis  # also called "a" usually
         self.__assert_ellipse()
 
-        if type(self) == Ellipse:
+        if isinstance(self, Ellipse):
             # to avoid computation in circle class instantiation
             # since the center attribute is not defined in the Circle class yet
             self.update_polyapprox()

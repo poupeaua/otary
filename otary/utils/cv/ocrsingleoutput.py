@@ -7,6 +7,7 @@ from typing import Optional
 from otary.geometry.discrete.shape.rectangle import Rectangle
 from dataclasses import dataclass
 
+
 @dataclass
 class OcrSingleOutput:
     bbox: Rectangle
