@@ -18,8 +18,8 @@ from shapely import (
 import numpy as np
 from numpy.typing import NDArray
 
-if TYPE_CHECKING:
-    from otary.geometry import Polygon, Rectangle  # pragma: no cover
+if TYPE_CHECKING: # pragma: no cover
+    from otary.geometry import Polygon, Rectangle  
 
 
 class GeometryEntity(ABC):

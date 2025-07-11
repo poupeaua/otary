@@ -20,7 +20,7 @@ from otary.geometry.discrete.entity import DiscreteGeometryEntity
 from otary.geometry import Segment, Vector, LinearSpline
 from otary.geometry.utils.tools import get_shared_point_indices
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from otary.geometry.discrete.shape.rectangle import Rectangle
 
 
@@ -65,7 +65,11 @@ class Polygon(DiscreteGeometryEntity):
         cls, linear_entities: Sequence[LinearEntity]
     ) -> tuple[Polygon, list[int]]:
         """Convert a list of linear entities to polygon.
+
         Beware: this method assumes entities are sorted and connected.
+        Conneted means that the last point of each entity is the first point
+        of the next entity.
+        This implies that the polygon is necessarily closed.
 
         Args:
             linear_entities (Sequence[LinearEntity]): List of linear entities.
@@ -76,15 +80,23 @@ class Polygon(DiscreteGeometryEntity):
         points = []
         vertices_ix: list[int] = []
         current_ix = 0
-        for linear_entity in linear_entities:
+        for i, linear_entity in enumerate(linear_entities):
             if not isinstance(linear_entity, LinearEntity):
                 raise TypeError(
                     f"Expected a list of LinearEntity, but got {type(linear_entity)}"
                 )
-            entity_points = linear_entity.points[:-1, :]
-            points.append(entity_points)
+
+            cond_first_pt_is_equal_prev_entity_last_pt = np.array_equal(
+                linear_entity.points[0], linear_entities[i - 1].points[-1]
+            )
+            if not cond_first_pt_is_equal_prev_entity_last_pt:
+                raise ValueError(
+                    f"The first point of entity {i} ({linear_entity.points[0]}) is not equal to the last point of entity {i-1} ({linear_entities[i-1].points[-1]})"
+                )
+            pts_except_last = linear_entity.points[:-1, :]
+            points.append(pts_except_last)
             vertices_ix.append(current_ix)
-            current_ix += len(entity_points)
+            current_ix += len(pts_except_last)
 
         points = np.concatenate(points, axis=0)
         polygon = Polygon(points=points)
@@ -117,7 +129,6 @@ class Polygon(DiscreteGeometryEntity):
         img: Optional[NDArray] = None,
         is_debug_enabled: bool = False,
     ) -> Polygon:
-        # pylint: disable=too-many-positional-arguments,too-many-arguments
         """Create a Polygon object from an unordered list of lines that approximate a
         closed-shape. They approximate in the sense that they do not necessarily
         share common points. This method computes the intersection points between lines.
@@ -136,7 +147,7 @@ class Polygon(DiscreteGeometryEntity):
         Returns:
             (Polygon): a Polygon object
         """
-
+        # pylint: disable=too-many-positional-arguments,too-many-arguments
         # pylint: disable=too-many-locals
         lines = np.asarray(lines)
         Segment.assert_list_of_lines(lines=lines)
@@ -559,20 +570,28 @@ class Polygon(DiscreteGeometryEntity):
             dist_along_edge_pct (float): distance along the edge to place the point
             dist_from_edge (float): distance outward from the edge
             is_outward (bool, optional): True if the normal points to the outside of
-                the polygon. False if the normal points to the inside of the polygon. Defaults to True.
+                the polygon. False if the normal points to the inside of the polygon. 
+                Defaults to True.
 
         Returns:
             NDArray: 2D point as array
         """
-        assert 0.0 <= dist_along_edge_pct <= 1.0
+        if not (0.0 <= dist_along_edge_pct <= 1.0):
+            raise ValueError("dist_along_edge_pct must be in [0, 1]")
 
         pt_interpolated, prev_ix = self.find_interpolated_point_and_prev_ix(
             start_index=start_index, end_index=end_index, pct_dist=dist_along_edge_pct
         )
+        next_ix = (prev_ix + 1) % len(self)
 
-        edge = Vector(
-            points=[self.asarray[prev_ix], self.asarray[(prev_ix + 1) % len(self)]]
-        )
+        is_interpolated_pt_existing_edge = np.array_equal(pt_interpolated, self.asarray[prev_ix]) or np.array_equal(pt_interpolated, self.asarray[next_ix])
+        if is_interpolated_pt_existing_edge:
+            raise ValueError(
+                "Interpolated point for normal computation is an existing vertice " \
+                "along polygon. Please choose another dist_along_edge_pct parameter."
+            )
+
+        edge = Vector(points=[self.asarray[prev_ix], self.asarray[next_ix]])
 
         normal = edge.normal().normalized
 
@@ -814,7 +833,10 @@ class Polygon(DiscreteGeometryEntity):
         Returns:
             Polygon: original polygon in the image crop referential
         """
-        assert crop.contains(other=other)
+        if not crop.contains(other=other):
+            raise ValueError(
+                f"The crop rectangle {crop} does not contain the other polygon {other}"
+            )
         crop_width = int(crop.get_width_from_topleft(0))
         crop_height = int(crop.get_height_from_topleft(0))
 

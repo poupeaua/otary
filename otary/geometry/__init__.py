@@ -21,7 +21,7 @@ from otary.geometry.utils.constants import DEFAULT_MARGIN_ANGLE_ERROR
 from otary.geometry.discrete.point import Point
 from otary.geometry.discrete.linear.segment import Segment
 from otary.geometry.discrete.linear.directed.vector import Vector
-from otary.geometry.discrete.linear.spline import LinearSpline
+from otary.geometry.discrete.linear.linear_spline import LinearSpline
 from otary.geometry.discrete.linear.directed.vectorized_linear_spline import (
     VectorizedLinearSpline,
 )

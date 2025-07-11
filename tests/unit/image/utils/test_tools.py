@@ -8,6 +8,7 @@ import numpy as np
 from otary.geometry import Point, Polygon
 from otary.image.components.drawer.utils.tools import is_color_tuple, prep_obj_draw
 from otary.image.utils.colors import interpolate_color
+from otary.geometry.utils.tools import get_shared_point_indices
 
 
 class TestToolsIsColorTuple:
@@ -81,3 +82,18 @@ class TestPrepObjDraw:
     def test_prep_obj_draw_error_unexpected_type(self):
         with pytest.raises(RuntimeError):
             prep_obj_draw(objects=["hop", "string"], _type=str)
+
+
+class TestGetSharedPointIndices:
+
+    def test_invalid_method(self):
+        points = np.array([[0, 0]])
+        checkpoints = np.array([[0, 0]])
+        with pytest.raises(ValueError):
+            get_shared_point_indices(points, checkpoints, 1, method="invalid")
+
+    def test_invalid_cond(self):
+        points = np.array([[0, 0]])
+        checkpoints = np.array([[0, 0]])
+        with pytest.raises(ValueError):
+            get_shared_point_indices(points, checkpoints, 1, cond="invalid")

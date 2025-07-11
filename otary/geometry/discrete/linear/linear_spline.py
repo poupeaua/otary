@@ -11,9 +11,17 @@ from otary.geometry.discrete.linear.entity import LinearEntity
 class LinearSpline(LinearEntity):
     """Curve class"""
 
+    def __init__(self, points: NDArray | list, is_cast_int: bool = False) -> None:
+        if len(points) < 2:
+            raise ValueError(
+                "Cannot create a LinearSpline since it must have 2 or more points"
+            )
+        super().__init__(points=points, is_cast_int=is_cast_int)
+
     @property
     def curvature(self) -> float:
-        """Get the curvature of the linear spline
+        """Get the curvature of the linear spline as-if it had a well-defined
+        curvature, meaning as-if it were a continuous curve.
 
         Returns:
             float: curvature value

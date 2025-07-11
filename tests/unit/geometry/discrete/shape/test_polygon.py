@@ -5,7 +5,8 @@ Unit tests for Polygon geometry class
 import numpy as np
 import pytest
 
-from otary.geometry import Polygon
+from otary.geometry import Polygon, Segment, Vector, LinearSpline
+from otary.geometry.discrete.shape.rectangle import Rectangle
 
 
 class TestPolygonInstantiationBasic:
@@ -133,6 +134,14 @@ class TestPolygonIsRegular:
     def test_polygon_is_not_regular_less_than_four_points(self):
         cnt1 = Polygon([[0, 0], [1, 0], [1.5, 1]])
         assert not cnt1.is_regular(margin_dist_error_pct=10)
+
+    def test_is_regular_rectangle_on_single_line(self):
+        """Important test that checks the multiple intersection points case"""
+        # All points are colinear (degenerate rectangle)
+        points = [[0, 0], [4, 0], [4, 0], [0, 0]]
+        polygon = Polygon(points)
+        # Should not be regular: diagonals do not intersect at a single point
+        assert not polygon.is_regular(margin_dist_error_pct=0.01)
 
 
 class TestPolygonSelfIntersect:
@@ -704,3 +713,318 @@ class TestPolygonNormalPoint:
         pt = polygon.normal_point(1, 2, 0.5, 1, is_outward=False)
         # inward should point left, so (2,1) + [-1,0] = (1,1)
         assert np.allclose(pt, [1, 1])
+
+
+class TestPolygonFromLinearEntities:
+    def test_from_linear_entities_returns_vertices_ix_segments(self):
+        segs = [
+            Segment([[0, 0], [1, 0]]),
+            Segment([[1, 0], [1, 1]]),
+            Segment([[1, 1], [0, 1]]),
+            Segment([[0, 1], [0, 0]]),
+        ]
+        polygon, vertices_ix = Polygon.from_linear_entities_returns_vertices_ix(segs)
+        expected_points = np.array([[0, 0], [1, 0], [1, 1], [0, 1]])
+        assert np.array_equal(polygon.asarray, expected_points)
+        assert vertices_ix == [0, 1, 2, 3]
+
+    def test_from_linear_entities_returns_vertices_ix_linear_splines(self):
+        # Multiple LinearSplines, each a segment of the polygon
+        splines = [
+            LinearSpline([[0, 0], [1, 0], [2, 0]]),
+            LinearSpline([[2, 0], [2, 1], [2, 2]]),
+            LinearSpline([[2, 2], [1, 2], [0, 2]]),
+            LinearSpline([[0, 2], [0, 1], [0, 0]]),
+        ]
+        polygon, vertices_ix = Polygon.from_linear_entities_returns_vertices_ix(splines)
+        expected_points = np.array(
+            [[0, 0], [1, 0], [2, 0], [2, 1], [2, 2], [1, 2], [0, 2], [0, 1]]
+        )
+        assert np.array_equal(polygon.asarray, expected_points)
+        assert vertices_ix == [0, 2, 4, 6]
+
+    def test_from_linear_entities_returns_vertices_ix_mixed(self):
+        # Mix of Segment, Vector, and LinearSpline
+        seg = Segment([[0, 0], [2, 0]])
+        v = Vector([[2, 0], [2, 2]])
+        spline = LinearSpline([[2, 2], [1, 2], [0, 2]])
+        v2 = Vector([[0, 2], [0, 0]])
+        polygon, vertices_ix = Polygon.from_linear_entities_returns_vertices_ix(
+            [seg, v, spline, v2]
+        )
+        expected_points = np.array([[0, 0], [2, 0], [2, 2], [1, 2], [0, 2]])
+        assert np.array_equal(polygon.asarray, expected_points)
+        assert vertices_ix == [0, 1, 2, 4]
+
+    def test_from_linear_entities_returns_vertices_ix_empty(self):
+        # Should raise ValueError if linear_entities is empty
+        with pytest.raises(ValueError):
+            Polygon.from_linear_entities_returns_vertices_ix([])
+
+    def test_from_linear_entites_returns_vertices_ix_not_linear_entities(self):
+        # Should raise TypeError if linear_entities is not a list of LinearEntities
+        with pytest.raises(TypeError):
+            Polygon.from_linear_entities_returns_vertices_ix([1, "str", 3.14])
+
+    def test_from_linear_entities_returns_vertices_ix_not_connected(self):
+        # Should raise ValueError if entities are not connected
+        segs = [
+            Segment([[0, 0], [1, 0]]),
+            Segment([[2, 0], [2, 1]]),  # Not connected to previous
+            Segment([[2, 1], [0, 1]]),
+            Segment([[0, 1], [0, 0]]),
+        ]
+        with pytest.raises(ValueError):
+            Polygon.from_linear_entities_returns_vertices_ix(segs)
+
+
+class TestPolygonFromLinearEntitiesMethod:
+
+    def test_from_linear_entities_mixed_types(self):
+        seg = Segment([[0, 0], [2, 0]])
+        v = Vector([[2, 0], [2, 2]])
+        spline = LinearSpline([[2, 2], [1, 2], [0, 2]])
+        v2 = Vector([[0, 2], [0, 0]])
+        polygon = Polygon.from_linear_entities([seg, v, spline, v2])
+        expected_points = np.array([[0, 0], [2, 0], [2, 2], [1, 2], [0, 2]])
+        assert np.array_equal(polygon.asarray, expected_points)
+
+
+class TestPolygonInterArea:
+    def test_inter_area_identical_polygons(self):
+        polygon1 = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        polygon2 = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        assert np.isclose(polygon1.inter_area(polygon2), polygon1.area)
+
+    def test_inter_area_partial_overlap(self):
+        polygon1 = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        polygon2 = Polygon([[1, 1], [3, 1], [3, 3], [1, 3]])
+        # Overlapping area is a square from (1,1) to (2,2), area = 1
+        assert np.isclose(polygon1.inter_area(polygon2), 1.0)
+
+    def test_inter_area_no_overlap(self):
+        polygon1 = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        polygon2 = Polygon([[2, 2], [3, 2], [3, 3], [2, 3]])
+        assert polygon1.inter_area(polygon2) == 0.0
+
+    def test_inter_area_one_inside_another(self):
+        polygon1 = Polygon([[0, 0], [4, 0], [4, 4], [0, 4]])
+        polygon2 = Polygon([[1, 1], [3, 1], [3, 3], [1, 3]])
+        # polygon2 is fully inside polygon1, so intersection is area of polygon2
+        assert np.isclose(polygon1.inter_area(polygon2), polygon2.area)
+
+    def test_inter_area_touching_edges(self):
+        polygon1 = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        polygon2 = Polygon([[1, 0], [2, 0], [2, 1], [1, 1]])
+        # Touch at edge, intersection area should be 0
+        assert polygon1.inter_area(polygon2) == 0.0
+
+    def test_inter_area_touching_at_point(self):
+        polygon1 = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        polygon2 = Polygon([[1, 1], [2, 1], [2, 2], [1, 2]])
+        # Touch at a single point, intersection area should be 0
+        assert polygon1.inter_area(polygon2) == 0.0
+
+
+class TestPolygonUnionArea:
+    def test_union_area_identical_polygons(self):
+        polygon1 = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        polygon2 = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        # Union area should be the same as the area of one polygon
+        assert np.isclose(polygon1.union_area(polygon2), polygon1.area)
+
+    def test_union_area_partial_overlap(self):
+        polygon1 = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        polygon2 = Polygon([[1, 1], [3, 1], [3, 3], [1, 3]])
+        # Each area is 4, overlap is 1, so union = 4 + 4 - 1 = 7
+        assert np.isclose(polygon1.union_area(polygon2), 7.0)
+
+    def test_union_area_no_overlap(self):
+        polygon1 = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        polygon2 = Polygon([[2, 2], [3, 2], [3, 3], [2, 3]])
+        # No overlap, so union = 1 + 1 - 0 = 2
+        assert np.isclose(polygon1.union_area(polygon2), 2.0)
+
+    def test_union_area_one_inside_another(self):
+        polygon1 = Polygon([[0, 0], [4, 0], [4, 4], [0, 4]])
+        polygon2 = Polygon([[1, 1], [3, 1], [3, 3], [1, 3]])
+        # polygon2 is fully inside polygon1, so union = area of polygon1
+        assert np.isclose(polygon1.union_area(polygon2), polygon1.area)
+
+    def test_union_area_touching_edges(self):
+        polygon1 = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        polygon2 = Polygon([[1, 0], [2, 0], [2, 1], [1, 1]])
+        # Touch at edge, no overlap, union = 1 + 1 - 0 = 2
+        assert np.isclose(polygon1.union_area(polygon2), 2.0)
+
+    def test_union_area_touching_at_point(self):
+        polygon1 = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        polygon2 = Polygon([[1, 1], [2, 1], [2, 2], [1, 2]])
+        # Touch at a single point, no overlap, union = 1 + 1 - 0 = 2
+        assert np.isclose(polygon1.union_area(polygon2), 2.0)
+
+
+class TestPolygonIOU:
+    def test_iou_identical_polygons(self):
+        polygon1 = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        polygon2 = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        assert np.isclose(polygon1.iou(polygon2), 1.0)
+
+    def test_iou_partial_overlap(self):
+        polygon1 = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        polygon2 = Polygon([[1, 1], [3, 1], [3, 3], [1, 3]])
+        # Overlap area = 1, union area = 7
+        assert np.isclose(polygon1.iou(polygon2), 1.0 / 7.0)
+
+    def test_iou_no_overlap(self):
+        polygon1 = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        polygon2 = Polygon([[2, 2], [3, 2], [3, 3], [2, 3]])
+        assert polygon1.iou(polygon2) == 0.0
+
+    def test_iou_one_inside_another(self):
+        polygon1 = Polygon([[0, 0], [4, 0], [4, 4], [0, 4]])
+        polygon2 = Polygon([[1, 1], [3, 1], [3, 3], [1, 3]])
+        # IOU = area of inner / area of outer
+        assert np.isclose(polygon1.iou(polygon2), polygon2.area / polygon1.area)
+
+    def test_iou_touching_edges(self):
+        polygon1 = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        polygon2 = Polygon([[1, 0], [2, 0], [2, 1], [1, 1]])
+        assert polygon1.iou(polygon2) == 0.0
+
+    def test_iou_touching_at_point(self):
+        polygon1 = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        polygon2 = Polygon([[1, 1], [2, 1], [2, 2], [1, 2]])
+        assert polygon1.iou(polygon2) == 0.0
+
+    def test_iou_union_area_zero(self):
+        # Degenerate case: both polygons have zero area (all points the same)
+        polygon1 = Polygon([[0, 0], [0, 0], [0, 0]])
+        polygon2 = Polygon([[0, 0], [0, 0], [0, 0]])
+        assert polygon1.iou(polygon2) == 0.0
+
+
+class TestPolygonNormalPointMethod:
+    def test_normal_point_outward_horizontal_edge(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        # bottom edge from (0,0) to (2,0), midpoint is (1,0)
+        pt = polygon.normal_point(0, 1, 0.5, 1, is_outward=True)
+        # outward normal should point down, so (1,0) + [0,-1] = (1,-1)
+        assert np.allclose(pt, [1, -1])
+
+    def test_normal_point_inward_horizontal_edge(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        pt = polygon.normal_point(0, 1, 0.5, 1, is_outward=False)
+        # inward normal should point up, so (1,0) + [0,1] = (1,1)
+        assert np.allclose(pt, [1, 1])
+
+    def test_normal_point_outward_vertical_edge(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        pt = polygon.normal_point(1, 2, 0.5, 1, is_outward=True)
+        # right edge from (2,0) to (2,2), midpoint is (2,1)
+        # outward normal should point right, so (2,1) + [1,0] = (3,1)
+        assert np.allclose(pt, [3, 1])
+
+    def test_normal_point_inward_vertical_edge(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        pt = polygon.normal_point(1, 2, 0.5, 1, is_outward=False)
+        # inward normal should point left, so (2,1) + [-1,0] = (1,1)
+        assert np.allclose(pt, [1, 1])
+
+    def test_normal_point_start_of_edge(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        with pytest.raises(ValueError):
+            polygon.normal_point(0, 1, 0.0, 1, is_outward=True)
+
+    def test_normal_point_end_of_edge(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        with pytest.raises(ValueError):
+            polygon.normal_point(0, 1, 1.0, 1, is_outward=True)
+
+    def test_normal_point_on_edge_special_case(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        with pytest.raises(ValueError):
+            polygon.normal_point(0, 2, 0.5, 1, is_outward=True)
+
+    def test_normal_point_invalid_pct(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        with pytest.raises(ValueError):
+            polygon.normal_point(0, 1, -0.1, 1)
+        with pytest.raises(ValueError):
+            polygon.normal_point(0, 1, 1.1, 1)
+
+    def test_normal_point_triangle(self):
+        polygon = Polygon([[0, 0], [2, 0], [1, 2]])
+        pt = polygon.normal_point(0, 1, 0.5, 1, is_outward=True)
+        # For triangle, bottom edge midpoint is (1,0), normal points down
+        assert np.allclose(pt, [1, -1])
+
+    def test_normal_point_triangle_hard_case(self):
+        polygon = Polygon([[0, 0], [2, 0], [1, 2]])
+        pt = polygon.normal_point(1, 2, 0.5, np.sqrt(5), is_outward=True)
+        # For triangle, bottom edge midpoint is (1,0), normal points down
+        assert np.allclose(pt, [3.5, 2])
+
+    def test_normal_point_non_unit_distance(self):
+        polygon = Polygon([[0, 0], [2, 0], [2, 2], [0, 2]])
+        pt = polygon.normal_point(0, 1, 0.5, 2, is_outward=True)
+        # Should be (1,0) + 2*[0,-1] = (1,-2)
+        assert np.allclose(pt, [1, -2])
+
+    def test_normal_point_other_direction_polygon_outward(self):
+        polygon = Polygon([[0, 0], [0, 2], [2, 2], [2, 0]])
+        pt = polygon.normal_point(0, 1, 0.5, 1, is_outward=True)
+        assert np.allclose(pt, [-1, 1])
+
+    def test_normal_point_other_direction_polygon_inward(self):
+        polygon = Polygon([[0, 0], [0, 2], [2, 2], [2, 0]])
+        pt = polygon.normal_point(0, 1, 0.5, 1, is_outward=False)
+        assert np.allclose(pt, [1, 1])
+
+
+class TestPolygonStrRepr:
+    def test_str_square(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        s = str(polygon)
+        assert s.startswith("Polygon(")
+        assert "start=[0, 0]" in s
+        assert "end=[0, 1]" in s
+
+    def test_repr_square(self):
+        polygon = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+        r = repr(polygon)
+        assert r.startswith("Polygon(")
+        assert "start=[0, 0]" in r
+        assert "end=[0, 1]" in r
+        
+
+class TestPolygonToImageCropReferential:
+        
+    def test_to_image_crop_referential_basic(self):
+        # Main polygon in image referential
+        poly_main = Polygon([[10, 10], [20, 10], [20, 20], [10, 20]])
+        # Other polygon (same shape, different position)
+        poly_other = Polygon([[2, 2], [8, 2], [8, 8], [2, 8]])
+        # Crop rectangle in image referential
+        crop = Rectangle.from_topleft_bottomright(topleft=[0, 0], bottomright=[10, 10], is_cast_int=True)
+        # image_crop_shape is None (should default to crop size)
+        result = poly_main.to_image_crop_referential(poly_other, crop)
+        assert isinstance(result, Polygon)
+        # The result should be a polygon (Polygon) with 4 points
+        assert result.asarray.shape == (4, 2)
+
+    def test_to_image_crop_referential_with_image_crop_shape(self):
+        poly_main = Polygon([[10, 10], [20, 10], [20, 20], [10, 20]])
+        poly_other = Polygon([[2, 2], [8, 2], [8, 8], [2, 8]])
+        crop = Rectangle.from_topleft_bottomright(topleft=[0, 0], bottomright=[10, 10], is_cast_int=True)
+        image_crop_shape = (100, 200)
+        result = poly_main.to_image_crop_referential(poly_other, crop, image_crop_shape=image_crop_shape)
+        assert isinstance(result, Polygon)
+        assert result.asarray.shape == (4, 2)
+
+    def test_to_image_crop_referential_assertion_fails(self):
+        poly_main = Polygon([[10, 10], [20, 10], [20, 20], [10, 20]])
+        poly_other = Polygon([[2, 2], [8, 2], [8, 8], [2, 8]])
+        crop = Rectangle.from_topleft_bottomright(topleft=[0, 0], bottomright=[5, 5], is_cast_int=True)
+        with pytest.raises(ValueError):
+            poly_main.to_image_crop_referential(poly_other, crop)

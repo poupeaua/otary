@@ -13,15 +13,21 @@ class Point(DiscreteGeometryEntity):
     """Point class"""
 
     def __init__(self, point: NDArray, is_cast_int: bool = False) -> None:
+        point = self._ensure_transform_point_array(point=point)
+        super().__init__(points=point, is_cast_int=is_cast_int)
+
+    @staticmethod
+    def _ensure_transform_point_array(point: NDArray) -> NDArray:
         point = np.asarray(point)
         if point.shape == (2,):
             point = point.reshape((1, 2))
-        assert len(point) == 1
-        super().__init__(points=point, is_cast_int=is_cast_int)
+        if len(point) != 1:
+            raise ValueError(f"The input point has not the expected shape {point}")
+        return point
 
     @property
     def asarray(self):
-        return self.points[0]
+        return self.points
 
     @asarray.setter
     def asarray(self, value: NDArray):
@@ -30,11 +36,7 @@ class Point(DiscreteGeometryEntity):
         Args:
             value (NDArray): value of the asarray to be changed
         """
-        point = np.asarray(value)
-        if point.shape == (2,):
-            point = point.reshape((1, 2))
-        assert len(point) == 1
-        self.points = value
+        self.points = self._ensure_transform_point_array(point=value)
 
     @property
     def centroid(self):

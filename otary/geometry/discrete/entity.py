@@ -19,8 +19,8 @@ from otary.geometry.utils.tools import get_shared_point_indices, rotate_2d_point
 from otary.geometry.entity import GeometryEntity
 from otary.utils.tools import assert_transform_shift_vector
 
-if TYPE_CHECKING:
-    from otary.geometry import Polygon, Rectangle, Segment  # pragma: no cover
+if TYPE_CHECKING: # pragma: no cover
+    from otary.geometry import Polygon, Rectangle, Segment
 
 
 class DiscreteGeometryEntity(GeometryEntity, ABC):
