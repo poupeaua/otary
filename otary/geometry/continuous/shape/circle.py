@@ -10,6 +10,7 @@ from numpy.typing import NDArray
 
 from shapely import Polygon as SPolygon, LinearRing
 
+from otary.geometry.discrete.shape.rectangle import Rectangle
 from otary.geometry.utils.tools import rotate_2d_points
 from otary.geometry.continuous.entity import ContinuousGeometryEntity
 from otary.geometry import Ellipse, Polygon
@@ -21,7 +22,7 @@ class Circle(Ellipse):
 
     def __init__(
         self,
-        center: NDArray,
+        center: NDArray | list,
         radius: float,
         n_points_polygonal_approx: int = ContinuousGeometryEntity.DEFAULT_N_POINTS_POLYGONAL_APPROX,
     ):
@@ -40,7 +41,7 @@ class Circle(Ellipse):
             semi_major_axis=radius,
             n_points_polygonal_approx=n_points_polygonal_approx,
         )
-        self.center = center
+        self.center = np.asarray(center)
         self.radius = radius
         self.update_polyapprox()
 
@@ -151,6 +152,15 @@ class Circle(Ellipse):
             NDArray: 2D point
         """
         return self.center[1] - self.radius
+    
+    @property
+    def is_circle(self) -> bool:
+        """Check if the circle is a circle
+
+        Returns:
+            bool: True if circle else False
+        """
+        return True
 
     # ---------------------------- MODIFICATION METHODS -------------------------------
 

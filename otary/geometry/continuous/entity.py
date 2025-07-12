@@ -135,7 +135,7 @@ class ContinuousGeometryEntity(GeometryEntity, ABC):
             Rectangle: Rectangle object
         """
         topleft_x, topleft_y, width, height = cv2.boundingRect(
-            array=self.polyaprox.asarray
+            array=self.polyaprox.asarray.astype(np.float32)
         )
         bbox = np.array(
             [
@@ -158,15 +158,13 @@ class ContinuousGeometryEntity(GeometryEntity, ABC):
         bbox = cv2.boxPoints(rect)
         return Rectangle(bbox)
 
-    def enclosing_convex_hull(self) -> "Polygon":
+    def enclosing_convex_hull(self) -> Polygon:
         """Compute the smallest area enclosing Convex Hull
         See: https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html
 
         Returns:
             Polygon: Polygon object
         """
-        # pylint: disable=import-outside-toplevel
-        from otary.geometry import Polygon
 
         convexhull = np.squeeze(cv2.convexHull(self.polyaprox.asarray))
         return Polygon(convexhull)

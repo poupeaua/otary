@@ -84,3 +84,19 @@ class TestCircle:
         assert (
             repr(self.circle) == f"Circle(center={self.center}, radius={self.radius})"
         )
+
+
+class TestCircleIsCircle:
+
+    def test_is_circle(self):
+        assert Circle(center=[0, 0], radius=1).is_circle
+
+
+class TestCircleEnclosingOBB:
+
+    def test_enclosing_obb(self):
+        circle = Circle(center=[0, 0], radius=100)
+        bbox = circle.enclosing_oriented_bbox()
+        expected_points = circle.enclosing_axis_aligned_bbox().asarray
+        for point in expected_points:
+            assert np.any(np.all(np.isclose(bbox.asarray, point, atol=1), axis=1))

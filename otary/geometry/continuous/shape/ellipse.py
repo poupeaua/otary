@@ -21,24 +21,24 @@ class Ellipse(ContinuousGeometryEntity):
 
     def __init__(
         self,
-        foci1: NDArray,
-        foci2: NDArray,
+        foci1: NDArray | list,
+        foci2: NDArray | list,
         semi_major_axis: float,
         n_points_polygonal_approx: int = ContinuousGeometryEntity.DEFAULT_N_POINTS_POLYGONAL_APPROX,
     ):
         """Initialize a Ellipse geometrical object
 
         Args:
-            foci1 (NDArray): first focal 2D point
-            foci2 (NDArray): second focal 2D point
+            foci1 (NDArray | list): first focal 2D point
+            foci2 (NDArray | list): second focal 2D point
             semi_major_axis (float): semi major axis value
             n_points_polygonal_approx (int, optional): number of points to be used in
                 the polygonal approximation.
                 Defaults to ContinuousGeometryEntity.DEFAULT_N_POINTS_POLYGONAL_APPROX.
         """
         super().__init__(n_points_polygonal_approx=n_points_polygonal_approx)
-        self.foci1 = foci1
-        self.foci2 = foci2
+        self.foci1 = np.asarray(foci1)
+        self.foci2 = np.asarray(foci2)
         self.semi_major_axis = semi_major_axis  # also called "a" usually
         self.__assert_ellipse()
 
@@ -174,6 +174,15 @@ class Ellipse(ContinuousGeometryEntity):
             LinearRing: shapely.LinearRing object
         """
         return LinearRing(coordinates=self.polyaprox.asarray)
+    
+    @property
+    def is_circle(self) -> bool:
+        """Check if the ellipse is a circle
+
+        Returns:
+            bool: True if circle else False
+        """
+        return self.semi_major_axis == self.semi_minor_axis
 
     # ---------------------------- MODIFICATION METHODS -------------------------------
 
@@ -321,6 +330,22 @@ class Ellipse(ContinuousGeometryEntity):
             semi_major_axis=self.semi_major_axis,
             n_points_polygonal_approx=self.n_points_polygonal_approx,
         )
+    
+    def enclosing_oriented_bbox(self):
+        """
+        Enclosing oriented bounding box.
+        Manage the case where the ellipse is a circle and return the enclosing 
+        axis-aligned bounding box in that case.
+
+        Returns:
+            Rectangle: Enclosing oriented bounding box
+        """
+        if self.is_circle:
+            # In a circle the enclosing oriented bounding box could be in any
+            # direction. Thus we return the enclosing axis-aligned bounding box
+            # by default.
+            return self.enclosing_axis_aligned_bbox()
+        return super().enclosing_oriented_bbox()
 
     def __str__(self) -> str:
         return (

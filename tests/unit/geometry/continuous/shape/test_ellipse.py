@@ -147,3 +147,30 @@ class TestEllipse:
         semi_major_axis = 5
         ellipse = Ellipse(foci1, foci2, semi_major_axis)
         assert repr(ellipse) == "Ellipse(foci1=[0 0], foci2=[4 0], a=5)"
+
+
+class TestEllipseIsCircle:
+    def test_is_circle_true(self):
+        # Circle: foci coincide, a == b
+        foci1 = np.array([0, 0])
+        foci2 = np.array([0, 0])
+        semi_major_axis = 5
+        ellipse = Ellipse(foci1, foci2, semi_major_axis)
+        assert ellipse.is_circle is True
+
+    def test_is_circle_false(self):
+        # Ellipse: foci do not coincide, a > b
+        foci1 = np.array([0, 0])
+        foci2 = np.array([4, 0])
+        semi_major_axis = 5
+        ellipse = Ellipse(foci1, foci2, semi_major_axis)
+        assert ellipse.is_circle is False
+
+    def test_is_circle_almost_circle(self):
+        # Ellipse: foci very close, a ≈ b, but not exactly
+        foci1 = np.array([0, 0])
+        foci2 = np.array([1e-5, 0])
+        semi_major_axis = 5
+        ellipse = Ellipse(foci1, foci2, semi_major_axis)
+        # Should be False because equality is strict
+        assert ellipse.is_circle is False
