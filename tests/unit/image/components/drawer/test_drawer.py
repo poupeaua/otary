@@ -5,8 +5,15 @@ Unit Tests for the drawer image methods
 import numpy as np
 
 from otary.utils.cv.ocrsingleoutput import OcrSingleOutput
-from otary.geometry import Polygon, Rectangle, Circle, LinearSpline
-from otary.image import Image, SegmentsRender, CirclesRender, LinearSplinesRender
+from otary.geometry import Polygon, Rectangle, Circle, Ellipse, LinearSpline
+from otary.image import (
+    Image,
+    SegmentsRender,
+    CirclesRender,
+    LinearSplinesRender,
+    EllipsesRender,
+    PolygonsRender,
+)
 
 
 class TestDrawerPointsImage:
@@ -35,6 +42,14 @@ class TestDrawerPolygonsImage:
         points = np.array([[0, 0], [1, 1], [2, 3]])
         cnt = Polygon(points=points)
         Image.from_fillvalue(shape=(5, 5, 3), value=0).draw_polygons(polygons=[cnt])
+
+    def test_draw_polygons_with_filled_render(self):
+        points = np.array([[0, 0], [1, 1], [2, 3]])
+        cnt = Polygon(points=points)
+        render = PolygonsRender(is_filled=True)
+        Image.from_fillvalue(shape=(5, 5, 3), value=0).draw_polygons(
+            polygons=[cnt], render=render
+        )
 
 
 class TestDrawerOcrImage:
@@ -100,3 +115,37 @@ class TestDrawerSplinesImage:
         Image.from_fillvalue(shape=(10, 10, 3), value=0).draw_splines(
             splines=splines, render=render
         )
+
+
+class TestDrawerEllipsesImage:
+
+    def test_draw_ellipses_basic(self):
+        ellipses = [
+            Ellipse(
+                foci1=np.array([5, 5]), foci2=np.array([10, 10]), semi_major_axis=10
+            ),
+            Ellipse(
+                foci1=np.array([10, 10]), foci2=np.array([20, 15]), semi_major_axis=15
+            ),
+        ]
+        img = Image.from_fillvalue(shape=(20, 20, 3), value=0)
+        img.draw_ellipses(ellipses=ellipses)
+
+    def test_draw_ellipses_with_render_options(self):
+        ellipses = [
+            Ellipse(
+                foci1=np.array([5, 5]), foci2=np.array([10, 10]), semi_major_axis=10
+            )
+        ]
+        render = EllipsesRender(
+            thickness=2,
+            is_filled=True,
+            is_draw_center_point_enabled=True,
+            is_draw_focis_enabled=True,
+        )
+        img = Image.from_fillvalue(shape=(20, 20, 3), value=0)
+        img.draw_ellipses(ellipses=ellipses, render=render)
+
+    def test_draw_ellipses_empty(self):
+        img = Image.from_fillvalue(shape=(10, 10, 3), value=0)
+        img.draw_ellipses(ellipses=[])

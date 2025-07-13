@@ -1,25 +1,20 @@
-import cv2
-import pytest
-from unittest import mock
-import numpy as np
-from otary.image import Image
-
 """
 Unit tests for the writer image class
 """
 
+from unittest import mock
+import numpy as np
+from otary.image import Image
+
+
 class TestWriterShow:
-    
+
     @mock.patch("otary.image.components.io.writer.plt")
     def test_show_with_all_args(self, mock_plt):
         arr = np.ones((10, 10, 3), dtype=np.uint8)
         im = Image(arr)
 
-        im.show(
-            title="Test Image",
-            figsize=(5, 5),
-            save_filepath="test.png"
-        )
+        im.show(title="Test Image", figsize=(5, 5), save_filepath="test.png")
 
         mock_plt.figure.assert_called_once_with(figsize=(5, 5))
         mock_plt.xticks.assert_called_once_with([])
@@ -48,7 +43,7 @@ class TestWriterShow:
         mock_plt.savefig.assert_not_called()
         mock_plt.show.assert_called_once()
 
- 
+
 class TestWriterSave:
 
     @mock.patch("otary.image.components.io.writer.WriterImage.show")

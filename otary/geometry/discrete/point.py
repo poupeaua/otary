@@ -39,7 +39,12 @@ class Point(DiscreteGeometryEntity):
         self.points = self._ensure_transform_point_array(point=value)
 
     @property
-    def centroid(self):
+    def centroid(self) -> NDArray:
+        """Return the point as the centroid of a point is simply the point
+
+        Returns:
+            NDArray: centroid of the point
+        """
         return self.asarray
 
     @property

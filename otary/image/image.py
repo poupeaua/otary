@@ -447,7 +447,7 @@ class Image:
         """
         self.drawer.draw_circles(circles=circles, render=render)
         return self
-    
+
     def draw_ellipses(
         self, ellipses: Sequence[geo.Ellipse], render: EllipsesRender = EllipsesRender()
     ) -> Self:

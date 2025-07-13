@@ -302,14 +302,14 @@ class Ellipse(ContinuousGeometryEntity):
             poly.asarray = poly.asarray.astype(int)
 
         return poly
-    
+
     def angle(self, degree: bool = False, is_y_axis_down: bool = False) -> float:
         """Angle of the ellipse
 
         Args:
             degree (bool, optional): whether to output angle in degree,
                 Defaults to False meaning radians.
-            is_y_axis_down (bool, optional): whether the y axis is down. 
+            is_y_axis_down (bool, optional): whether the y axis is down.
                 Defaults to False.
 
         Returns:
