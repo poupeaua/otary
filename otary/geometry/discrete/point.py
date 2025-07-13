@@ -45,7 +45,7 @@ class Point(DiscreteGeometryEntity):
         Returns:
             NDArray: centroid of the point
         """
-        return self.asarray
+        return self.asarray[0]
 
     @property
     def shapely_edges(self) -> SPoint:
@@ -59,12 +59,12 @@ class Point(DiscreteGeometryEntity):
 
     @property
     def shapely_surface(self) -> SPoint:
-        """Same as shapely curve in this case
+        """Returns None since a point has no surface
 
         Returns:
-            SPoint: shapely.Point object
+            None: None value
         """
-        return self.shapely_surface
+        return None
 
     @property
     def area(self) -> float:
@@ -86,7 +86,8 @@ class Point(DiscreteGeometryEntity):
 
     @property
     def edges(self) -> NDArray:
-        """Get the edges of the point which returns None since a point has no edges
+        """Get the edges of the point which returns empty array 
+        since a point has no edges
 
         Returns:
             NDArray: empty array of shape (0, 2, 2)
