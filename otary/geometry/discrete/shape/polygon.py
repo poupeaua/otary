@@ -152,7 +152,7 @@ class Polygon(DiscreteGeometryEntity):
         lines = np.asarray(lines)
         Segment.assert_list_of_lines(lines=lines)
 
-        def debug_visualize(seg: NDArray):
+        def debug_visualize(seg: NDArray): # pragma: no cover
             if is_debug_enabled and img is not None:
                 im = img.copy()
                 im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)

@@ -3,7 +3,7 @@ Tests for the ContinuousGeometryEntity class
 """
 
 import numpy as np
-from otary.geometry import Rectangle, Circle
+from otary.geometry import Rectangle, Circle, Ellipse
 
 
 class TestContinuousGeometryEntityBase:
@@ -24,52 +24,24 @@ class TestContinuousGeometryEntityBase:
 
 class TestContinuousGeometryEntityMaxMinCoordinates:
     def test_xmax_returns_maximum_x_of_polygonal_approx(self):
-        # Circle centered at (0,0) with radius 2, xmax should be close to 2
-        entity = Circle(center=[0, 0], radius=2, n_points_polygonal_approx=50)
-        xmax = entity.xmax
-        assert abs(xmax - 2) < 1e-2
-
-    def test_xmax_changes_when_entity_is_moved(self):
-        # Move the circle, xmax should reflect new position
-        entity = Circle(center=[5, 0], radius=3, n_points_polygonal_approx=50)
-        xmax = entity.xmax
-        assert abs(xmax - 8) < 1e-2
+        entity = Ellipse(foci1=[4, 4], foci2=[4, 10], semi_major_axis=4)
+        expected = entity.centroid[0] + entity.semi_minor_axis
+        assert np.isclose(entity.xmax, expected)
 
     def test_xmin_returns_minimum_x_of_polygonal_approx(self):
-        # Circle centered at (0,0) with radius 2, xmin should be close to -2
-        entity = Circle(center=[0, 0], radius=2, n_points_polygonal_approx=50)
-        xmin = entity.xmin
-        assert abs(xmin + 2) < 1e-2
-
-    def test_xmin_changes_when_entity_is_moved(self):
-        # Move the circle, xmin should reflect new position
-        entity = Circle(center=[5, 0], radius=3, n_points_polygonal_approx=50)
-        xmin = entity.xmin
-        assert abs(xmin - 2) < 1e-2
+        entity = Ellipse(foci1=[4, 4], foci2=[4, 10], semi_major_axis=4)
+        expected = entity.centroid[0] - entity.semi_minor_axis
+        assert np.isclose(entity.xmin, expected)
 
     def test_ymax_returns_maximum_y_of_polygonal_approx(self):
-        # Circle centered at (0,0) with radius 2, ymax should be close to 2
-        entity = Circle(center=[0, 0], radius=2, n_points_polygonal_approx=50)
-        ymax = entity.ymax
-        assert abs(ymax - 2) < 1e-2
-
-    def test_ymax_changes_when_entity_is_moved(self):
-        # Move the circle, ymax should reflect new position
-        entity = Circle(center=[0, 5], radius=3, n_points_polygonal_approx=50)
-        ymax = entity.ymax
-        assert abs(ymax - 8) < 1e-2
+        entity = Ellipse(foci1=[4, 4], foci2=[4, 10], semi_major_axis=4)
+        expected = entity.centroid[1] + entity.semi_major_axis
+        assert np.isclose(entity.ymax, expected)
 
     def test_ymin_returns_minimum_y_of_polygonal_approx(self):
-        # Circle centered at (0,0) with radius 2, ymin should be close to -2
-        entity = Circle(center=[0, 0], radius=2, n_points_polygonal_approx=50)
-        ymin = entity.ymin
-        assert abs(ymin + 2) < 1e-2
-
-    def test_ymin_changes_when_entity_is_moved(self):
-        # Move the circle, ymin should reflect new position
-        entity = Circle(center=[0, 5], radius=3, n_points_polygonal_approx=50)
-        ymin = entity.ymin
-        assert abs(ymin - 2) < 1e-2
+        entity = Ellipse(foci1=[4, 4], foci2=[4, 10], semi_major_axis=4)
+        expected = entity.centroid[1] - entity.semi_major_axis
+        assert np.isclose(entity.ymin, expected)
 
 
 class TestContinuousGeometryEntityEnclosingAABB:

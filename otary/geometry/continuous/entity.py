@@ -169,7 +169,7 @@ class ContinuousGeometryEntity(GeometryEntity, ABC):
         Returns:
             Rectangle: Rectangle object
         """
-        rect = cv2.minAreaRect(self.polyaprox.asarray)
+        rect = cv2.minAreaRect(self.polyaprox.asarray.astype(np.float32))
         bbox = cv2.boxPoints(rect)
         return Rectangle(bbox)
 

@@ -70,7 +70,7 @@ class TestEllipse:
         assert np.array_equal(normalized_ellipse.foci1, np.array([0, 1 / 2]))
         assert np.array_equal(normalized_ellipse.foci2, np.array([1, 0]))
 
-    def test_ellipse_perimeter_approx(self):
+    def test_ellipse_perimeter_approx_ramanujan(self):
         foci1 = np.array([0, 0])
         foci2 = np.array([4, 0])
         semi_major_axis = 5
@@ -78,6 +78,15 @@ class TestEllipse:
         perimeter = ellipse.perimeter_approx()
         assert perimeter == pytest.approx(
             ellipse.perimeter_approx(is_ramanujan=True), rel=1e-2
+        )
+
+    def test_ellipse_perimeter(self):
+        foci1 = np.array([0, 0])
+        foci2 = np.array([0, 0])
+        semi_major_axis = 5
+        ellipse = Ellipse(foci1, foci2, semi_major_axis)
+        assert ellipse.perimeter == pytest.approx(
+            2 * math.pi * semi_major_axis, rel=1e-2
         )
 
     def test_ellipse_polygonal_approx(self):
@@ -174,3 +183,21 @@ class TestEllipseIsCircle:
         ellipse = Ellipse(foci1, foci2, semi_major_axis)
         # Should be False because equality is strict
         assert ellipse.is_circle is False
+
+
+class TestEllipseOBB:
+
+    def test_obb_hard(self):
+
+        ellipse = Ellipse(
+            foci1=np.array([10, 10]),
+            foci2=np.array([20, 20]),
+            semi_major_axis=10,
+        )
+        obb = ellipse.enclosing_oriented_bbox()
+        expected_points = [[2.9312877655029297, 12.915367126464844],
+            [12.942522048950195, 2.9266505241394043],
+            [27.068700790405273, 17.084674835205078],
+            [17.057466506958008, 27.07339096069336]]
+        for point in expected_points:
+            assert np.any(np.all(np.isclose(obb.asarray, point, atol=1), axis=1))
