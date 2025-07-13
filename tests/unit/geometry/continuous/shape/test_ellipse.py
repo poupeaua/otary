@@ -195,9 +195,11 @@ class TestEllipseOBB:
             semi_major_axis=10,
         )
         obb = ellipse.enclosing_oriented_bbox()
-        expected_points = [[2.9312877655029297, 12.915367126464844],
+        expected_points = [
+            [2.9312877655029297, 12.915367126464844],
             [12.942522048950195, 2.9266505241394043],
             [27.068700790405273, 17.084674835205078],
-            [17.057466506958008, 27.07339096069336]]
+            [17.057466506958008, 27.07339096069336],
+        ]
         for point in expected_points:
             assert np.any(np.all(np.isclose(obb.asarray, point, atol=1), axis=1))

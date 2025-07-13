@@ -86,7 +86,7 @@ class Point(DiscreteGeometryEntity):
 
     @property
     def edges(self) -> NDArray:
-        """Get the edges of the point which returns empty array 
+        """Get the edges of the point which returns empty array
         since a point has no edges
 
         Returns:

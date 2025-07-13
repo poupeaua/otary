@@ -36,7 +36,7 @@ class TestPointSetArray:
         p = Point(np.array([0.0, 0.0]))
         p.asarray = [7.0, 8.0]
         np.testing.assert_array_equal(p.asarray, np.array([[7.0, 8.0]]))
-        
+
 
 class TestPointCentroid:
     def test_centroid_returns_point_for_flat_array(self):
@@ -131,8 +131,12 @@ class TestOrderIdxsPointsByDist:
 
     def test_order_idxs_points_by_dist_desc(self):
         arr = np.array([[0, 0], [1, 1], [2, 2], [3, 3]])
-        assert np.all(Point.order_idxs_points_by_dist(points=arr, desc=True) == [0, 1, 2, 3])
+        assert np.all(
+            Point.order_idxs_points_by_dist(points=arr, desc=True) == [0, 1, 2, 3]
+        )
 
     def test_order_idxs_points_by_dist(self):
         arr = np.array([[0, 0], [1, 1], [2, 2], [3, 3]])
-        assert np.all(Point.order_idxs_points_by_dist(points=arr, desc=False) == [3, 2, 1, 0])
+        assert np.all(
+            Point.order_idxs_points_by_dist(points=arr, desc=False) == [3, 2, 1, 0]
+        )

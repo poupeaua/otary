@@ -292,10 +292,12 @@ class Ellipse(ContinuousGeometryEntity):
             x = self.semi_major_axis * math.cos(theta)
             y = self.semi_minor_axis * math.sin(theta)
             points.append([x, y])
-        points = np.asarray(points)
 
-        poly = Polygon(points=points, is_cast_int=False) \
-            .shift(vector=self.centroid).rotate(angle=self.angle())
+        poly = (
+            Polygon(points=np.asarray(points), is_cast_int=False)
+            .shift(vector=self.centroid)
+            .rotate(angle=self.angle())
+        )
 
         if is_cast_int:
             poly.asarray = poly.asarray.astype(int)
