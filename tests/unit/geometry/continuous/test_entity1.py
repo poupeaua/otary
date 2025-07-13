@@ -3,20 +3,24 @@ Tests for the ContinuousGeometryEntity class
 """
 
 import numpy as np
-from otary.geometry import Rectangle, Circle, Polygon
+from otary.geometry import Rectangle, Circle
+
 
 class TestContinuousGeometryEntityBase:
 
     def test_n_points_polygonal_approx(self):
         entity = Circle(center=[0, 0], radius=1, n_points_polygonal_approx=1000)
         assert entity.n_points_polygonal_approx == 1000
-        
-    def test_setter_n_points_polygonal_approx_updates_value_and_polyapprox(self, mocker):
+
+    def test_setter_n_points_polygonal_approx_updates_value_and_polyapprox(
+        self, mocker
+    ):
         entity = Circle(center=[0, 0], radius=1, n_points_polygonal_approx=1000)
         mocker.spy(entity, "update_polyapprox")
         entity.n_points_polygonal_approx = 200
         assert entity.n_points_polygonal_approx == 200
         assert entity.update_polyapprox.call_count == 1
+
 
 class TestContinuousGeometryEntityMaxMinCoordinates:
     def test_xmax_returns_maximum_x_of_polygonal_approx(self):

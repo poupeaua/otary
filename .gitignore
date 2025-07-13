@@ -1,11 +1,11 @@
 # custom
 .tmp/
 ./data/
-notebooks/random.ipynb
 .credentials/
 junit/
 .vscode
 .DS_Store
+notebooks
 
 # ruff
 .ruff_cache

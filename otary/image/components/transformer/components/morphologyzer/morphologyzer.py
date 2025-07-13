@@ -11,7 +11,7 @@ import numpy as np
 
 from otary.image.base import BaseImage
 
-if TYPE_CHECKING: # pragma: no cover
+if TYPE_CHECKING:  # pragma: no cover
     from otary.image import Image
 
 BlurMethods = Literal["average", "median", "gaussian", "bilateral"]

@@ -17,6 +17,7 @@ from otary.image.components.drawer.utils.render import (
     Render,
     PointsRender,
     CirclesRender,
+    EllipsesRender,
     SegmentsRender,
     LinearSplinesRender,
     PolygonsRender,
@@ -53,7 +54,7 @@ class DrawerImage:
                 center=np.round(circle.center).astype(int),
                 radius=int(circle.radius),
                 color=color,
-                thickness=render.thickness,
+                thickness=render.thickness if not render.is_filled else -1,
                 lineType=render.line_type,
             )
             if render.is_draw_center_point_enabled:
@@ -65,6 +66,52 @@ class DrawerImage:
                     thickness=render.thickness,
                     lineType=render.line_type,
                 )
+        self.base.asarray = im_array
+
+    def draw_ellipses(
+        self,
+        ellipses: Sequence[geo.Ellipse],
+        render: EllipsesRender = EllipsesRender(),
+    ) -> None:
+        """Draw ellipses in the image
+
+        Args:
+            ellipses (Sequence[Ellipse]): list of Ellipse geometry objects.
+            render (EllipseRender): renderer (uses EllipseRender for color/thickness)
+        """
+        im_array = self._pre_draw(n_objects=len(ellipses), render=render)
+        for ellipse, color in zip(ellipses, render.colors):
+            axes = (int(ellipse.semi_major_axis), int(ellipse.semi_minor_axis))
+            cv2.ellipse(
+                img=im_array,
+                center=ellipse.centroid.astype(int),
+                axes=axes,
+                angle=ellipse.angle(degree=True),
+                startAngle=0,
+                endAngle=360,
+                color=color,
+                thickness=render.thickness if not render.is_filled else -1,
+                lineType=render.line_type,
+            )
+            if render.is_draw_center_point_enabled:
+                cv2.circle(
+                    img=im_array,
+                    center=ellipse.centroid.astype(int),
+                    radius=1,
+                    color=color,
+                    thickness=render.thickness,
+                    lineType=render.line_type,
+                )
+            if render.is_draw_focis_enabled:
+                for foci in [ellipse.foci1, ellipse.foci2]:
+                    cv2.circle(
+                        img=im_array,
+                        center=foci.astype(int),
+                        radius=1,
+                        color=color,
+                        thickness=render.thickness,
+                        lineType=render.line_type,
+                    )
         self.base.asarray = im_array
 
     def draw_points(

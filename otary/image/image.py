@@ -39,6 +39,7 @@ from otary.image.components.transformer.components.morphologyzer.morphologyzer i
 from otary.image.components.drawer import (
     PointsRender,
     CirclesRender,
+    EllipsesRender,
     SegmentsRender,
     LinearSplinesRender,
     PolygonsRender,
@@ -409,7 +410,7 @@ class Image:
         self,
         title: Optional[str] = None,
         figsize: tuple[int, int] = (8, 6),
-        color_conversion: int = cv2.COLOR_BGR2RGB,
+        color_conversion: Optional[int] = cv2.COLOR_BGR2RGB,
         save_filepath: Optional[str] = None,
     ) -> None:
         """Show the image
@@ -445,6 +446,21 @@ class Image:
             Image: new image with circles drawn
         """
         self.drawer.draw_circles(circles=circles, render=render)
+        return self
+    
+    def draw_ellipses(
+        self, ellipses: Sequence[geo.Ellipse], render: EllipsesRender = EllipsesRender()
+    ) -> Self:
+        """Draw ellipses in the image
+
+        Args:
+            ellipses (list[Ellipse]): list of Ellipse geometry objects.
+            render (EllipsesRender): ellipse renderer
+
+        Returns:
+            Image: new image with ellipses drawn
+        """
+        self.drawer.draw_ellipses(ellipses=ellipses, render=render)
         return self
 
     def draw_points(

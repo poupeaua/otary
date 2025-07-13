@@ -55,7 +55,7 @@ class Ellipse(ContinuousGeometryEntity):
             raise ValueError(
                 f"The semi major-axis (a={self.semi_major_axis}) can not be smaller "
                 f"than the linear eccentricity (c={self.linear_eccentricity}). "
-                "The ellipse is thus not valid."
+                "The ellipse is thus not valid. Please increase the semi major-axis."
             )
 
     # --------------------------------- PROPERTIES ------------------------------------
@@ -140,21 +140,6 @@ class Ellipse(ContinuousGeometryEntity):
         """
         return self.perimeter_approx()
 
-    def curvature(self, point: NDArray) -> float:
-        """Curvature at the point defined as parameter
-
-        Args:
-            point (NDArray): input point.
-
-        Returns:
-            float: _description_
-        """
-        x = point[0]
-        y = point[1]
-        return (1 / (self.semi_major_axis * self.semi_minor_axis) ** 2) * (
-            (x**2 / self.semi_major_axis**4) + (y**2 / self.semi_minor_axis**4)
-        ) ** (-3 / 2)
-
     @property
     def shapely_surface(self) -> SPolygon:
         """Returns the Shapely.Polygon as an surface representation of the Ellipse.
@@ -174,7 +159,7 @@ class Ellipse(ContinuousGeometryEntity):
             LinearRing: shapely.LinearRing object
         """
         return LinearRing(coordinates=self.polyaprox.asarray)
-    
+
     @property
     def is_circle(self) -> bool:
         """Check if the ellipse is a circle
@@ -317,6 +302,48 @@ class Ellipse(ContinuousGeometryEntity):
             poly.asarray = poly.asarray.astype(int)
 
         return poly
+    
+    def angle(self, degree: bool = False, is_y_axis_down: bool = False) -> float:
+        """Angle of the ellipse
+
+        Args:
+            degree (bool, optional): whether to output angle in degree,
+                Defaults to False meaning radians.
+            is_y_axis_down (bool, optional): whether the y axis is down. 
+                Defaults to False.
+
+        Returns:
+            float: angle value
+        """
+        seg = Segment([self.foci1, self.foci2])
+        return seg.slope_angle(degree=degree, is_y_axis_down=is_y_axis_down)
+
+    def curvature(self, point: NDArray) -> float:
+        r"""Computes the curvature of a point on the ellipse.
+
+        Equation is based on the following where a is semi major and b is minor axis.
+
+        \kappa = \frac{1}{a^2 b^2}
+            \left(
+                \frac{x^2}{a^4} + \frac{y^2}{b^4}
+            \right)^{-\frac{3}{2}}
+
+        Args:
+            point (NDArray): point on the ellipse
+
+        Returns:
+            float: curvature of the point
+        """
+        # TODO check that the point is on the ellipse
+        x, y = point
+        a = self.semi_major_axis
+        b = self.semi_minor_axis
+
+        numerator = 1 / (a * b) ** 2
+        inner = (x**2) / (a**4) + (y**2) / (b**4)
+        curvature = numerator * inner ** (-1.5)
+
+        return curvature
 
     def copy(self) -> Self:
         """Copy the current ellipse object
@@ -330,11 +357,11 @@ class Ellipse(ContinuousGeometryEntity):
             semi_major_axis=self.semi_major_axis,
             n_points_polygonal_approx=self.n_points_polygonal_approx,
         )
-    
+
     def enclosing_oriented_bbox(self):
         """
         Enclosing oriented bounding box.
-        Manage the case where the ellipse is a circle and return the enclosing 
+        Manage the case where the ellipse is a circle and return the enclosing
         axis-aligned bounding box in that case.
 
         Returns:

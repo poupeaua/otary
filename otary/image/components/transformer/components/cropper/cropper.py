@@ -12,7 +12,7 @@ from numpy.typing import NDArray
 import otary.geometry as geo
 from otary.image.base import BaseImage
 
-if TYPE_CHECKING: # pragma: no cover
+if TYPE_CHECKING:  # pragma: no cover
     from otary.image import Image
 
 

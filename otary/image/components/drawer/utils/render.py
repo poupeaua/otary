@@ -55,14 +55,16 @@ class PointsRender(GeometryRender):
 
 
 @dataclass
-class EllipseRender(GeometryRender):
+class EllipsesRender(GeometryRender):
     """Render for Ellipse objects"""
 
+    is_filled: bool = False
+    is_draw_focis_enabled: bool = False
     is_draw_center_point_enabled: bool = False
 
 
 @dataclass
-class CirclesRender(EllipseRender):
+class CirclesRender(EllipsesRender):
     """Render for Circle objects"""
 
 

@@ -7,6 +7,7 @@ import pytest
 
 from otary.geometry.discrete.linear.linear_spline import LinearSpline
 
+
 class TestLinearSplineInit:
 
     def test_init(self):
@@ -82,4 +83,3 @@ class TestLinearSplineMidpoint:
         points = np.array([[1, 2], [1, 2], [1, 2]])
         ls = LinearSpline(points=points)
         np.testing.assert_allclose(ls.midpoint, [1, 2])
-

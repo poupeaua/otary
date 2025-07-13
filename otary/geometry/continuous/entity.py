@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 
 import cv2
 import numpy as np
+from numpy.typing import NDArray
 
 from otary.geometry.entity import GeometryEntity
 from otary.geometry import Polygon, Rectangle
@@ -58,8 +59,11 @@ class ContinuousGeometryEntity(GeometryEntity, ABC):
 
     @property
     def polyaprox(self) -> Polygon:
-        """Generate a polygonal approximation of the continuous geometry entity
-        No setter is defined for this property as it is a read-only property.
+        """Generate a polygonal approximation of the continuous geometry entity.
+
+        Beware: No setter is defined for this property as it is a read-only property.
+        You can update the polygonal approximation using the method named
+        `update_polyapprox`.
 
         Returns:
             Polygon: polygonal approximation of the continuous geometry entity
@@ -77,6 +81,17 @@ class ContinuousGeometryEntity(GeometryEntity, ABC):
 
         Returns:
             Polygon: polygonal approximation of the continuous geometry entity
+        """
+
+    @abstractmethod
+    def curvature(self, point: NDArray) -> float:
+        """Curvature at the point defined as parameter
+
+        Args:
+            point (NDArray): input point.
+
+        Returns:
+            float: _description_
         """
 
     @property

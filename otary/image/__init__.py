@@ -5,6 +5,7 @@ Init file for image module to facilitate importation
 __all__ = [
     "PointsRender",
     "CirclesRender",
+    "EllipsesRender",
     "PolygonsRender",
     "SegmentsRender",
     "LinearSplinesRender",
@@ -16,6 +17,7 @@ __all__ = [
 from otary.image.components.drawer.utils.render import (
     PointsRender,
     CirclesRender,
+    EllipsesRender,
     PolygonsRender,
     SegmentsRender,
     LinearSplinesRender,

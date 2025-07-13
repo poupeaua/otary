@@ -10,7 +10,6 @@ from numpy.typing import NDArray
 
 from shapely import Polygon as SPolygon, LinearRing
 
-from otary.geometry.discrete.shape.rectangle import Rectangle
 from otary.geometry.utils.tools import rotate_2d_points
 from otary.geometry.continuous.entity import ContinuousGeometryEntity
 from otary.geometry import Ellipse, Polygon
@@ -152,7 +151,7 @@ class Circle(Ellipse):
             NDArray: 2D point
         """
         return self.center[1] - self.radius
-    
+
     @property
     def is_circle(self) -> bool:
         """Check if the circle is a circle

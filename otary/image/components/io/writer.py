@@ -15,7 +15,7 @@ class WriterImage:
         self,
         title: Optional[str] = None,
         figsize: tuple[float, float] = (8.0, 6.0),
-        color_conversion: int = cv2.COLOR_BGR2RGB,
+        color_conversion: Optional[int] = cv2.COLOR_BGR2RGB,
         save_filepath: Optional[str] = None,
     ) -> None:
         """Show the image

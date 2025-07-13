@@ -996,17 +996,19 @@ class TestPolygonStrRepr:
         assert r.startswith("Polygon(")
         assert "start=[0, 0]" in r
         assert "end=[0, 1]" in r
-        
+
 
 class TestPolygonToImageCropReferential:
-        
+
     def test_to_image_crop_referential_basic(self):
         # Main polygon in image referential
         poly_main = Polygon([[10, 10], [20, 10], [20, 20], [10, 20]])
         # Other polygon (same shape, different position)
         poly_other = Polygon([[2, 2], [8, 2], [8, 8], [2, 8]])
         # Crop rectangle in image referential
-        crop = Rectangle.from_topleft_bottomright(topleft=[0, 0], bottomright=[10, 10], is_cast_int=True)
+        crop = Rectangle.from_topleft_bottomright(
+            topleft=[0, 0], bottomright=[10, 10], is_cast_int=True
+        )
         # image_crop_shape is None (should default to crop size)
         result = poly_main.to_image_crop_referential(poly_other, crop)
         assert isinstance(result, Polygon)
@@ -1016,15 +1018,21 @@ class TestPolygonToImageCropReferential:
     def test_to_image_crop_referential_with_image_crop_shape(self):
         poly_main = Polygon([[10, 10], [20, 10], [20, 20], [10, 20]])
         poly_other = Polygon([[2, 2], [8, 2], [8, 8], [2, 8]])
-        crop = Rectangle.from_topleft_bottomright(topleft=[0, 0], bottomright=[10, 10], is_cast_int=True)
+        crop = Rectangle.from_topleft_bottomright(
+            topleft=[0, 0], bottomright=[10, 10], is_cast_int=True
+        )
         image_crop_shape = (100, 200)
-        result = poly_main.to_image_crop_referential(poly_other, crop, image_crop_shape=image_crop_shape)
+        result = poly_main.to_image_crop_referential(
+            poly_other, crop, image_crop_shape=image_crop_shape
+        )
         assert isinstance(result, Polygon)
         assert result.asarray.shape == (4, 2)
 
     def test_to_image_crop_referential_assertion_fails(self):
         poly_main = Polygon([[10, 10], [20, 10], [20, 20], [10, 20]])
         poly_other = Polygon([[2, 2], [8, 2], [8, 8], [2, 8]])
-        crop = Rectangle.from_topleft_bottomright(topleft=[0, 0], bottomright=[5, 5], is_cast_int=True)
+        crop = Rectangle.from_topleft_bottomright(
+            topleft=[0, 0], bottomright=[5, 5], is_cast_int=True
+        )
         with pytest.raises(ValueError):
             poly_main.to_image_crop_referential(poly_other, crop)

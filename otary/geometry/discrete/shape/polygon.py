@@ -20,7 +20,7 @@ from otary.geometry.discrete.entity import DiscreteGeometryEntity
 from otary.geometry import Segment, Vector, LinearSpline
 from otary.geometry.utils.tools import get_shared_point_indices
 
-if TYPE_CHECKING: # pragma: no cover
+if TYPE_CHECKING:  # pragma: no cover
     from otary.geometry.discrete.shape.rectangle import Rectangle
 
 
@@ -570,7 +570,7 @@ class Polygon(DiscreteGeometryEntity):
             dist_along_edge_pct (float): distance along the edge to place the point
             dist_from_edge (float): distance outward from the edge
             is_outward (bool, optional): True if the normal points to the outside of
-                the polygon. False if the normal points to the inside of the polygon. 
+                the polygon. False if the normal points to the inside of the polygon.
                 Defaults to True.
 
         Returns:
@@ -584,10 +584,12 @@ class Polygon(DiscreteGeometryEntity):
         )
         next_ix = (prev_ix + 1) % len(self)
 
-        is_interpolated_pt_existing_edge = np.array_equal(pt_interpolated, self.asarray[prev_ix]) or np.array_equal(pt_interpolated, self.asarray[next_ix])
+        is_interpolated_pt_existing_edge = np.array_equal(
+            pt_interpolated, self.asarray[prev_ix]
+        ) or np.array_equal(pt_interpolated, self.asarray[next_ix])
         if is_interpolated_pt_existing_edge:
             raise ValueError(
-                "Interpolated point for normal computation is an existing vertice " \
+                "Interpolated point for normal computation is an existing vertice "
                 "along polygon. Please choose another dist_along_edge_pct parameter."
             )
 

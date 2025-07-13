@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 from otary.geometry.discrete.point import Point
 
+
 class TestPointSetArray:
     def test_asarray_getter_returns_correct_value(self):
         arr = np.array([1.0, 2.0])
