@@ -19,4 +19,8 @@ Below is a list of available modules and their functionalities:
 ::: otary.image.components.drawer.drawer
 ::: otary.image.components.io.reader
 ::: otary.image.components.io.writer
-::: otary.image.components.transformer.transformer
+::: otary.image.components.transformer.components.cropper.cropper
+::: otary.image.components.transformer.components.binarizer.binarizer
+::: otary.image.components.transformer.components.geometrizer.geometrizer
+::: otary.image.components.transformer.components.morphologyzer.morphologyzer
+

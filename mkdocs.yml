@@ -54,7 +54,7 @@ nav:
     - index.md
     - Getting Started: getting_started.md
     - Installation: installation.md
-    - Concepts: concepts.md
+    - Examples: examples.md
 
   - API:
       - reference/index.md

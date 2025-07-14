@@ -332,7 +332,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         # pylint: disable=import-outside-toplevel
         from otary.geometry import Rectangle  # delayed import to avoid circular import
 
-        rect = cv2.minAreaRect(self.asarray)
+        rect = cv2.minAreaRect(self.asarray.astype(np.float32))
         bbox = cv2.boxPoints(rect)
         return Rectangle(bbox)
 
@@ -346,7 +346,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         # pylint: disable=import-outside-toplevel
         from otary.geometry import Polygon  # delayed import to avoid circular import
 
-        convexhull = np.squeeze(cv2.convexHull(self.asarray))
+        convexhull = np.squeeze(cv2.convexHull(self.asarray.astype(np.float32)))
         return Polygon(convexhull)
 
     def distances_vertices_to_point(self, point: NDArray) -> NDArray:

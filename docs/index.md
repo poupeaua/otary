@@ -46,9 +46,9 @@ Read an image from a pdf, crop a part of it given by a topleft point plus the wi
     ```Python
     import otary as ot
 
-    ellipse = ot.Ellipse(foci1=[10, 10], foci2=[50, 50], semi_major_axis=50)
-
     im = ot.Image.from_pdf(filepath="path/to/you/file.pdf", page_nb=0)
+
+    ellipse = ot.Ellipse(foci1=[10, 10], foci2=[50, 50], semi_major_axis=50)
 
     im = (
         im.crop_from_topleft(topleft=[200, 100], width=100, height=100)
