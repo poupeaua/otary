@@ -16,7 +16,6 @@ The `image` module is built around the following core components:
 Below is a list of available modules and their functionalities:
 
 ::: otary.image.base
-::: otary.image.image
 ::: otary.image.components.drawer.drawer
 ::: otary.image.components.io.reader
 ::: otary.image.components.io.writer

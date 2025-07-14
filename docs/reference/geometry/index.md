@@ -13,9 +13,16 @@ The `geometry` module is organized into two main categories:
 
 Below is a list of available modules and their functionalities:
 
+### Base Geometry
+
+::: otary.geometry.entity
+
 ### Continuous Geometry
 
 ::: otary.geometry.continuous.entity
+
+#### Shape 
+
 ::: otary.geometry.continuous.shape.circle
 ::: otary.geometry.continuous.shape.ellipse
 
@@ -23,10 +30,15 @@ Below is a list of available modules and their functionalities:
 
 ::: otary.geometry.discrete.entity
 ::: otary.geometry.discrete.point
+
+#### Shape
+
+::: otary.geometry.discrete.shape.polygon
+::: otary.geometry.discrete.shape.rectangle
+::: otary.geometry.discrete.shape.triangle
+
+#### Linear
 ::: otary.geometry.discrete.linear.segment
 ::: otary.geometry.discrete.linear.linear_spline
 ::: otary.geometry.discrete.linear.directed.vector
 ::: otary.geometry.discrete.linear.directed.vectorized_linear_spline
-::: otary.geometry.discrete.shape.polygon
-::: otary.geometry.discrete.shape.rectangle
-::: otary.geometry.discrete.shape.triangle

@@ -1,25 +1,149 @@
+<p align="center">
+  <a href="">
+    <img src="img/logo-withname-bg-transparent.png" alt="Otary">
+</a>
+</p>
+
+<p align="center">
+    <em>Otary library, readable, easy to use, fast to develop, performant</em>
+</p>
+
 # Welcome to Otary
 
-Otary is a powerful Python library for advanced image and geometry manipulation.
+Otary is a powerful Python library for advanced image and 2D geometry manipulation.
 
-## Core Concepts
+## Features
 
-Otary is built upon two core modules, each designed with a distinct architectural pattern to provide flexibility and power.
+The main features of Otary are:
 
-### Image: A Composition-Based Approach
+- **Readability**: designed to be easy to read and understand, making it suitable for beginners and experienced developers alike.
 
-The `image` module is designed following a **composition over inheritance** principle. This allows you to build complex image processing pipelines by combining smaller, independent, and reusable components. Instead of inheriting properties from a monolithic class, you can dynamically assemble functionality, leading to a more flexible and maintainable codebase.
+- **Flexibility**: provides a flexible and extensible architecture, allowing developers to customize and extend its functionality as needed.
 
-For example, an image object can be composed of a `Reader` to load data, a `Transformer` to apply modifications, and a `Drawer` to add overlays, all working together seamlessly.
+- **Performance**: optimized for speed and efficiency, making it suitable for high-performance applications. It is built on top of [NumPy](https://numpy.org) and [OpenCV](https://opencv.org), which are known for their speed and performance.
 
-### Geometry: An Inheritance-Based Structure
+- **Interactiveness**: designed to be interactive and user-friendly, making it suitable for interactive applications like Jupyter notebooks and web applications.
 
-The `geometry` module uses a more traditional **inheritance** model. It provides a clear and hierarchical structure for geometric entities. Base classes define common behaviors, and specialized subclasses inherit and extend this functionality. This approach is ideal for creating a well-defined and logical classification of shapes and geometric objects.
+## Example
 
-## Getting Started
+Let me illustrate the usage of Otary with a simple example. Imagine you need to:
 
-To start using Otary, simply install it via pip:
+1. read an image from a pdf file
+2. crop a part of it
+3. rotate the cropped image
+4. add a threshold of type sauvola
+5. draw a ellipse on it
+6. show the image
 
-```bash
-pip install otary
+Try it out yourself on your favorite LLM (like [ChatGPT](https://chatgpt.com/)) by copying the query:
+
+```text
+Read an image from a pdf, crop a part of it given by a topleft point plus the width and the height of crop bbox, then rotate the cropped image, apply a threshold on the image. Finally draw a ellipse on it and show the image.
 ```
+
+=== "Otary"
+
+    ```Python
+    import otary as ot
+
+    ellipse = ot.Ellipse(foci1=[10, 10], foci2=[50, 50], semi_major_axis=50)
+
+    im = ot.Image.from_pdf(filepath="path/to/you/file.pdf", page_nb=0)
+
+    im = (
+        im.crop_from_topleft(topleft=[200, 100], width=100, height=100)
+        .rotate(angle=90, is_degree=True, is_clockwise=False)
+        .threshold_simple(thresh=200)
+        .draw_ellipses(
+            ellipses=[ellipse], 
+            render=ot.EllipsesRender(is_draw_focis_enabled=True)
+        )
+    )
+
+    im.show()
+    ```
+
+=== "Other libraries"
+
+    ```Python
+    import fitz  # PyMuPDF
+    import cv2
+    import numpy as np
+
+    def process_pdf_crop_rotate_threshold_draw(
+        pdf_path,
+        page_number,
+        topleft_x,
+        topleft_y,
+        width,
+        height,
+        rotation=cv2.ROTATE_90_CLOCKWISE
+    ):
+        # Load PDF and render page
+        doc = fitz.open(pdf_path)
+        page = doc[page_number]
+        pix = page.get_pixmap(dpi=300)
+        img = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, pix.n)
+
+        if pix.n == 4:
+            img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
+
+        gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+
+        # Crop ROI
+        cropped = gray[topleft_y:topleft_y+height, topleft_x:topleft_x+width]
+
+        # Rotate cropped image
+        rotated = cv2.rotate(cropped, rotation)
+
+        # Apply threshold (Otsu)
+        _, thresh = cv2.threshold(rotated, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+        # Draw ellipse on the thresholded image
+        center = (thresh.shape[1] // 2, thresh.shape[0] // 2)
+        axes = (thresh.shape[1] // 4, thresh.shape[0] // 4)
+        cv2.ellipse(thresh, center, axes, angle=0, startAngle=0, endAngle=360, color=128, thickness=2)
+
+        # Show the final image
+        cv2.imshow("Processed Image", thresh)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+        # Optionally save
+        cv2.imwrite("final_output.png", thresh)
+
+        return thresh
+
+    # Example usage:
+    if __name__ == "__main__":
+        process_pdf_crop_rotate_threshold_draw(
+            pdf_path="example.pdf",
+            page_number=0,
+            topleft_x=100,
+            topleft_y=200,
+            width=300,
+            height=400
+        )
+    ```
+
+Otary makes it really readable and easy to use. As you can see:
+
+- Otary makes the code much more **readable**
+- Otary makes the code much more **interactive**
+- Otary makes **libraries management easier** by only using one library and not depending on mulitple like Pillow, OpenCV, Scikit-Image, PyMuPDF etc.
+
+!!! tip "Enhanced Interactiveness"
+
+    In a Jupyter notebook, you can just copy and paste the code and run it. It's that simple! Plus you can easily test and iterate on transformations by simply commenting part of the code as you need it.
+
+    ```python
+    im = (
+        im.crop_from_topleft(topleft=[200, 100], width=100, height=100)
+        # .rotate(angle=90, is_degree=True, is_clockwise=False)
+        # .threshold_simple(thresh=200)
+        .draw_ellipses(ellipses=[ellipse], render=ot.EllipsesRender(is_draw_focis_enabled=True))
+    )
+    ```
+
+
+

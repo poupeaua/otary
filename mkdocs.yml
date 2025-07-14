@@ -1,15 +1,108 @@
 site_name: Otary
 theme:
   name: material
+  favicon: img/favicon.ico
+  palette:
+    - media: '(prefers-color-scheme: light)'
+      scheme: default
+      primary: white
+      accent: amber
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: '(prefers-color-scheme: dark)'
+      scheme: slate
+      primary: black
+      accent: amber
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
   features:
+    - content.code.annotate
     - content.code.copy
+    - content.footnote.tooltips
+    - content.tabs.link
+    - content.tooltips
+    - navigation.footer
+    - navigation.indexes
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
+    - navigation.path
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+  icon:
+    repo: fontawesome/brands/github-alt
+  logo: img/logo-bg-transparent.png
+  favicon: img/logo-bg-transparent.png
+  language: en
+repo_name: poupeaua/otary
+repo_url: https://github.com/poupeaua/otary
 
 plugins:
   - search
   - mkdocstrings
 
 nav:
-  - Home: index.md
-  - API Reference:
-      - Image: reference/image.md
-      - Geometry: reference/geometry.md
+  - Home: 
+    - index.md
+    - Getting Started: getting_started.md
+    - Installation: installation.md
+    - Concepts: concepts.md
+
+  - API:
+      - reference/index.md
+      - Image:
+        - reference/image/index.md
+        - I/O: reference/image/io.md
+        - Properties: reference/image/properties.md
+        - Conversion: reference/image/conversion.md
+        - Transformers:
+          - Cropping: reference/image/transformers/cropping.md
+          - Geometry: reference/image/transformers/geometry.md
+          - Morphology: reference/image/transformers/morphology.md
+          - Binarization & Thresholding: reference/image/transformers/thresholding.md
+          - Scoring: reference/image/transformers/scoring.md
+
+        - Drawer: 
+          - Drawing: reference/image/drawer/drawing.md
+          - Renderers: reference/image/drawer/renderers.md
+        
+      - Geometry: 
+        - reference/geometry/index.md
+        - Discrete:
+          - reference/geometry/discrete/point.md
+          - Shape:
+            - Polygon: reference/geometry/discrete/shape/polygon.md
+            - Rectangle: reference/geometry/discrete/shape/rectangle.md
+            - Triangle: reference/geometry/discrete/shape/triangle.md
+          - Linear:
+            - Segment: reference/geometry/discrete/linear/segment.md
+            - Linear Spline: reference/geometry/discrete/linear/linear_spline.md
+            - Directed:
+              - Vector: reference/geometry/discrete/linear/directed/vector.md
+              - Vectorized Linear Spline: reference/geometry/discrete/linear/directed/vectorized_linear_spline.md
+       
+        - Continuous:
+          - Circle: reference/geometry/continuous/circle.md
+          - Ellipse: reference/geometry/continuous/ellipse.md
+
+  - About: about.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
