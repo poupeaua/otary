@@ -29,6 +29,9 @@ black = "^24.4.2"
 pre-commit = "^3.7.1"
 
 [tool.poetry.group.docs.dependencies]
+mkdocs = "^1.6.1"
+mkdocstrings = {extras = ["python"], version = "^0.29.1"}
+mkdocs-material = "^9.6.15"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

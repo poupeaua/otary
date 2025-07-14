@@ -1,0 +1,15 @@
+site_name: Otary
+theme:
+  name: material
+  features:
+    - content.code.copy
+
+plugins:
+  - search
+  - mkdocstrings
+
+nav:
+  - Home: index.md
+  - API Reference:
+      - Image: reference/image.md
+      - Geometry: reference/geometry.md
