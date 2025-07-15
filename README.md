@@ -9,17 +9,13 @@
 </p>
 
 <p align="center">
-<a href="https://pypi.org/project/otary" target="_blank">
-    <img src="https://img.shields.io/pypi/v/otary?color=blue&label=pypi" alt="Package version">
-</a>
-<a href="https://pypi.org/project/otary" target="_blank">
-    <img src="https://img.shields.io/pypi/pyversions/otary?color=blue&label=python" alt="License">
-</a>
-<a href="https://pypi.org/project/otary" target="_blank">
-    <img src="https://img.shields.io/badge/license-GPL--3.0-8A2BE2" alt="License">
-</a>
+<a href="https://github.com/poupeaua/otary/actions/workflows/test.yaml" > <img src="https://github.com/poupeaua/otary/actions/workflows/test.yaml/badge.svg"/></a>
+<a href="https://codecov.io/github/poupeaua/otary" > <img src="https://codecov.io/github/poupeaua/otary/graph/badge.svg?token=LE040UGFZU"/></a>
+<a href="https://alexandrepoupeau.com/otary/" > <img src="https://github.com/poupeaua/otary/actions/workflows/docs.yaml/badge.svg"/></a>
+<a href="https://pypi.org/project/otary" target="_blank"> <img src="https://img.shields.io/pypi/v/otary?color=blue&label=pypi" alt="Package version"></a>
+<a href="https://pypi.org/project/otary" target="_blank"><img src="https://img.shields.io/pypi/pyversions/otary?color=blue&label=python" alt="License"></a>
+<a href="https://pypi.org/project/otary" target="_blank"><img src="https://img.shields.io/badge/license-GPL--3.0-8A2BE2" alt="License"></a>
 <a href="https://github.com/poupeaua/otary"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
-
 </p>
 
 # Welcome to Otary

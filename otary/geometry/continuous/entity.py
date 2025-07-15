@@ -31,7 +31,7 @@ class ContinuousGeometryEntity(GeometryEntity, ABC):
                 Defaults to DEFAULT_N_POINTS_POLYGONAL_APPROX.
         """
         self._n_points_polygonal_approx = n_points_polygonal_approx
-        self._polyapprox = None  # type: ignore
+        # self._polyapprox = is defined in subclasses
 
     # --------------------------------- PROPERTIES ------------------------------------
 
@@ -137,6 +137,7 @@ class ContinuousGeometryEntity(GeometryEntity, ABC):
 
     def update_polyapprox(self) -> None:
         """Update the polygonal approximation of the continuous geometry entity"""
+        # pylint: disable=attribute-defined-outside-init
         self._polyapprox = self.polygonal_approx(
             n_points=self.n_points_polygonal_approx, is_cast_int=False
         )
