@@ -1,6 +1,6 @@
 # Installation
 
-Otary is available on [PyPI](https://pypi.org/project/otary/). 
+Otary is available on [PyPI](https://pypi.org/project/otary/).
 
 Always make sure you are in a virtual environment before installing.
 

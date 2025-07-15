@@ -57,7 +57,7 @@ Read an image from a pdf, crop a part of it given by a topleft point plus the wi
         .rotate(angle=90, is_degree=True, is_clockwise=False)
         .threshold_simple(thresh=200)
         .draw_ellipses(
-            ellipses=[ellipse], 
+            ellipses=[ellipse],
             render=ot.EllipsesRender(is_draw_focis_enabled=True)
         )
     )
@@ -128,8 +128,6 @@ Read an image from a pdf, crop a part of it given by a topleft point plus the wi
         )
     ```
 
-Otary makes it really readable and easy to use. As you can see:
-
 - Otary makes the code much more **readable**
 - Otary makes the code much more **interactive**
 - Otary makes **libraries management easier** by only using one library and not depending on mulitple like Pillow, OpenCV, Scikit-Image, PyMuPDF etc.
@@ -144,11 +142,8 @@ Otary makes it really readable and easy to use. As you can see:
         # .rotate(angle=90, is_degree=True, is_clockwise=False)
         # .threshold_simple(thresh=200)
         .draw_ellipses(
-            ellipses=[ellipse], 
+            ellipses=[ellipse],
             render=ot.EllipsesRender(is_draw_focis_enabled=True)
         )
     )
     ```
-
-
-

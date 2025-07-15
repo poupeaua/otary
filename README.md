@@ -42,7 +42,7 @@ The main features of Otary are:
 
 ## Installation
 
-Otary is available on [PyPI](https://pypi.org/project/otary/). You can install it with: 
+Otary is available on [PyPI](https://pypi.org/project/otary/). You can install it with:
 
 ```bash
 pip install otary
@@ -80,15 +80,13 @@ im = (
     .rotate(angle=90, is_degree=True, is_clockwise=False)
     .threshold_simple(thresh=200)
     .draw_ellipses(
-        ellipses=[ellipse], 
+        ellipses=[ellipse],
         render=ot.EllipsesRender(is_draw_focis_enabled=True)
     )
 )
 
 im.show()
 ```
-
-Otary makes it really readable and easy to use. As you can see:
 
 - Otary makes the code much more **readable**
 - Otary makes the code much more **interactive**
@@ -103,11 +101,8 @@ im = (
     # .rotate(angle=90, is_degree=True, is_clockwise=False)
     # .threshold_simple(thresh=200)
     .draw_ellipses(
-        ellipses=[ellipse], 
+        ellipses=[ellipse],
         render=ot.EllipsesRender(is_draw_focis_enabled=True)
     )
 )
 ```
-
-
-

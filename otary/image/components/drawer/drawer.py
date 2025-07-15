@@ -82,7 +82,7 @@ class DrawerImage:
         im_array = self._pre_draw(n_objects=len(ellipses), render=render)
         for ellipse, color in zip(ellipses, render.colors):
             axes = (int(ellipse.semi_major_axis), int(ellipse.semi_minor_axis))
-            cv2.ellipse( # type: ignore[call-overload]
+            cv2.ellipse(  # type: ignore[call-overload]
                 img=im_array,
                 center=ellipse.centroid.astype(int),
                 axes=axes,
@@ -94,7 +94,7 @@ class DrawerImage:
                 lineType=render.line_type,
             )
             if render.is_draw_center_point_enabled:
-                cv2.circle( # type: ignore[call-overload]
+                cv2.circle(  # type: ignore[call-overload]
                     img=im_array,
                     center=ellipse.centroid.astype(int),
                     radius=1,
@@ -104,7 +104,7 @@ class DrawerImage:
                 )
             if render.is_draw_focis_enabled:
                 for foci in [ellipse.foci1, ellipse.foci2]:
-                    cv2.circle( # type: ignore[call-overload]
+                    cv2.circle(  # type: ignore[call-overload]
                         img=im_array,
                         center=foci.astype(int),
                         radius=1,
