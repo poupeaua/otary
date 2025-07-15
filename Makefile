@@ -54,7 +54,7 @@ test-unit:
 		--junitxml=junit/test-unit-results.xml \
 		--cov=otary --cov-report=xml --cov-report=html tests/unit/
 
-check: check-pylint check-ruff check-mypy
+check: check-pylint check-ruff check-mypy check-black
 
 check-pylint:
 	@echo "\n------------------------------"
@@ -74,14 +74,25 @@ check-mypy:
 	@echo "----------------------------"
 	@mypy otary/
 
+check-black:
+	@echo "\n----------------------------"
+	@echo "Checking code quality - Black"
+	@echo "----------------------------"
+	@black otary/ --check
+
 # -------------------------------------- DOCS -----------------------------------------
 
-docs:
-	@echo "\n------------------------"
-	@echo "Generating documentation"
-	@echo "------------------------"
-	sphinx-apidoc -o docs/source/api/ otary/
-	sphinx-build -M html docs/source/ docs/build/
+docs-serve:
+	@echo "\n------------------"
+	@echo "Serve documentation"
+	@echo "-------------------"
+	poetry run mkdocs serve
+
+docs-deploy:
+	@echo "\n-------------------"
+	@echo "Deploy documentation"
+	@echo "--------------------"
+	poetry run mkdocs gh-deploy
 
 # -------------------------------------- VENV ------------------------------------------
 

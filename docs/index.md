@@ -26,6 +26,8 @@ The main features of Otary are:
 
 - **Flexibility**: provides a flexible and extensible architecture, allowing developers to customize and extend its functionality as needed.
 
+- **Pythonic**: designed to be Pythonic and easy to use, making it suitable for Python developers. 
+
 ## Example
 
 Let me illustrate the usage of Otary with a simple example. Imagine you need to:
@@ -130,7 +132,7 @@ Read an image from a pdf, crop a part of it given by a topleft point plus the wi
 
 - Otary makes the code much more **readable**
 - Otary makes the code much more **interactive**
-- Otary makes **libraries management easier** by only using one library and not depending on mulitple like Pillow, OpenCV, Scikit-Image, PyMuPDF etc.
+- Otary makes **libraries management easier** by only using one library and not depending on multiple libraries like Pillow, OpenCV, Scikit-Image, PyMuPDF etc.
 
 !!! tip "Enhanced Interactiveness"
 

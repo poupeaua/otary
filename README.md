@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-    <em>Otary library, readable, easy to use, fast to develop, performant</em>
+    <em>Otary library, readable, fast, unified, interactive, flexible, pythonic</em>
 </p>
 
 <p align="center">
@@ -39,6 +39,8 @@ The main features of Otary are:
 - **Interactiveness**: designed to be interactive and user-friendly, making it suitable for interactive applications like Jupyter notebooks.
 
 - **Flexibility**: provides a flexible and extensible architecture, allowing developers to customize and extend its functionality as needed.
+
+- **Pythonic**: designed to be Pythonic and easy to use, making it suitable for Python developers. 
 
 ## Installation
 
@@ -90,7 +92,7 @@ im.show()
 
 - Otary makes the code much more **readable**
 - Otary makes the code much more **interactive**
-- Otary makes **libraries management easier** by only using one library and not depending on mulitple like Pillow, OpenCV, Scikit-Image, PyMuPDF etc.
+- Otary makes **libraries management easier** by only using one library and not depending on multiple libraries like Pillow, OpenCV, Scikit-Image, PyMuPDF etc.
 
 
 In a Jupyter notebook, you can easily test and iterate on transformations by simply commenting part of the code as you need it.

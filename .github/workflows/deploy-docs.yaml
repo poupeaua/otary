@@ -1,0 +1,43 @@
+name: Deploy Docs
+
+on:
+  push:
+    branches:
+      - master
+      - dev # for test for the moment
+
+permissions:
+  contents: read
+
+jobs:
+  docs:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
+      - uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: Gr1N/setup-poetry@v8
+        with:
+          poetry-version: "2.1.3"
+
+      - name: 🚀 Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          poetry config virtualenvs.create false
+          poetry install --only docs
+
+      - name: ✅ Deploy Docs on gh-pages
+        run: |
+          make docs-deploy
