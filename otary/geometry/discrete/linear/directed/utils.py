@@ -1,45 +1,62 @@
-"""
-
-"""
+""" """
 
 from operator import itemgetter
 
 import numpy as np
 import pint
 
+
 def setup_registry(reg):
     """Set up a given registry with MetPy's default tweaks and settings."""
     reg.autoconvert_offset_to_baseunit = True
 
     # Define commonly encountered units not defined by pint
-    reg.define('degrees_north = degree = degrees_N = degreesN = degree_north = degree_N '
-               '= degreeN')
-    reg.define('degrees_east = degree = degrees_E = degreesE = degree_east = degree_E '
-               '= degreeE')
+    reg.define(
+        "degrees_north = degree = degrees_N = degreesN = degree_north = degree_N "
+        "= degreeN"
+    )
+    reg.define(
+        "degrees_east = degree = degrees_E = degreesE = degree_east = degree_E "
+        "= degreeE"
+    )
     # Enable pint's built-in matplotlib support
     reg.setup_matplotlib()
 
     return reg
 
+
 # Make our modifications using pint's application registry--which allows us to better
 # interoperate with other libraries using Pint.
 units = setup_registry(pint.get_application_registry())
 
-UND = 'UND'
-UND_ANGLE = -999.
+UND = "UND"
+UND_ANGLE = -999.0
 DIR_STRS = [
-    'N', 'NNE', 'NE', 'ENE',
-    'E', 'ESE', 'SE', 'SSE',
-    'S', 'SSW', 'SW', 'WSW',
-    'W', 'WNW', 'NW', 'NNW',
-    UND
+    "N",
+    "NNE",
+    "NE",
+    "ENE",
+    "E",
+    "ESE",
+    "SE",
+    "SSE",
+    "S",
+    "SSW",
+    "SW",
+    "WSW",
+    "W",
+    "WNW",
+    "NW",
+    "NNW",
+    UND,
 ]  # note the order matters!
 
-MAX_DEGREE_ANGLE = units.Quantity(360, 'degree')
-BASE_DEGREE_MULTIPLIER = units.Quantity(22.5, 'degree')
+MAX_DEGREE_ANGLE = units.Quantity(360, "degree")
+BASE_DEGREE_MULTIPLIER = units.Quantity(22.5, "degree")
 
 DIR_DICT = {dir_str: i * BASE_DEGREE_MULTIPLIER for i, dir_str in enumerate(DIR_STRS)}
-DIR_DICT[UND] = units.Quantity(np.nan, 'degree')
+DIR_DICT[UND] = units.Quantity(np.nan, "degree")
+
 
 def angle_to_direction(input_angle, full=False, level=3):
     """Convert the meteorological angle to directional text.
@@ -75,7 +92,7 @@ def angle_to_direction(input_angle, full=False, level=3):
     except AttributeError:  # no units associated
         origin_units = units.degree
 
-    if not hasattr(input_angle, '__len__') or isinstance(input_angle, str):
+    if not hasattr(input_angle, "__len__") or isinstance(input_angle, str):
         input_angle = [input_angle]
         scalar = True
     else:
@@ -98,14 +115,14 @@ def angle_to_direction(input_angle, full=False, level=3):
     elif level == 1:
         nskip = 4
     else:
-        err_msg = 'Level of complexity cannot be less than 1 or greater than 3!'
+        err_msg = "Level of complexity cannot be less than 1 or greater than 3!"
         raise ValueError(err_msg)
 
     angle_dict = {
         i * BASE_DEGREE_MULTIPLIER.m * nskip: dir_str
         for i, dir_str in enumerate(DIR_STRS[::nskip])
     }
-    angle_dict[MAX_DEGREE_ANGLE.m] = 'N'  # handle edge case of 360.
+    angle_dict[MAX_DEGREE_ANGLE.m] = "N"  # handle edge case of 360.
     angle_dict[UND_ANGLE] = UND
 
     # round to the nearest angles for dict lookup
@@ -127,9 +144,9 @@ def angle_to_direction(input_angle, full=False, level=3):
         round_angles = round_angles.flatten()
     dir_str_arr = itemgetter(*round_angles)(angle_dict)  # returns str or tuple
     if full:
-        dir_str_arr = ','.join(dir_str_arr)
+        dir_str_arr = ",".join(dir_str_arr)
         dir_str_arr = _unabbreviate_direction(dir_str_arr)
-        dir_str_arr = dir_str_arr.split(',')
+        dir_str_arr = dir_str_arr.split(",")
         if scalar:
             return dir_str_arr[0]
         else:
@@ -143,12 +160,12 @@ def angle_to_direction(input_angle, full=False, level=3):
 
 def _unabbreviate_direction(abb_dir_str):
     """Convert abbreviated directions to non-abbreviated direction."""
-    return (abb_dir_str
-            .upper()
-            .replace(UND, 'Undefined ')
-            .replace('N', 'North ')
-            .replace('E', 'East ')
-            .replace('S', 'South ')
-            .replace('W', 'West ')
-            .replace(' ,', ',')
-            ).strip()
+    return (
+        abb_dir_str.upper()
+        .replace(UND, "Undefined ")
+        .replace("N", "North ")
+        .replace("E", "East ")
+        .replace("S", "South ")
+        .replace("W", "West ")
+        .replace(" ,", ",")
+    ).strip()

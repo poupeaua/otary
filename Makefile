@@ -92,7 +92,7 @@ docs-deploy:
 	@echo "\n-------------------"
 	@echo "Deploy documentation"
 	@echo "--------------------"
-	poetry run mkdocs gh-deploy
+	poetry run mkdocs gh-deploy --force
 
 # -------------------------------------- VENV ------------------------------------------
 
