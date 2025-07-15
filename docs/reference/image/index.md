@@ -23,4 +23,3 @@ Below is a list of available modules and their functionalities:
 ::: otary.image.components.transformer.components.binarizer.binarizer
 ::: otary.image.components.transformer.components.geometrizer.geometrizer
 ::: otary.image.components.transformer.components.morphologyzer.morphologyzer
-

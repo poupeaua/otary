@@ -21,7 +21,7 @@ Below is a list of available modules and their functionalities:
 
 ::: otary.geometry.continuous.entity
 
-#### Shape 
+#### Shape
 
 ::: otary.geometry.continuous.shape.circle
 ::: otary.geometry.continuous.shape.ellipse

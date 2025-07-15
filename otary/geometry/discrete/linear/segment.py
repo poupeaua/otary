@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import math
 import itertools
-from typing import Self
+from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import NDArray
@@ -14,6 +14,14 @@ from sympy.geometry import Line
 
 from otary.geometry.utils.constants import DEFAULT_MARGIN_ANGLE_ERROR
 from otary.geometry.discrete.linear.entity import LinearEntity
+
+if TYPE_CHECKING:  # pragma: no cover
+    from typing_extensions import Self
+else:  # pragma: no cover
+    try:
+        from typing import Self
+    except ImportError:  # make Self available in Python <= 3.10
+        from typing_extensions import Self
 
 
 class Segment(LinearEntity):

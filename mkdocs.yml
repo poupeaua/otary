@@ -1,7 +1,6 @@
 site_name: Otary
 theme:
   name: material
-  favicon: img/favicon.ico
   palette:
     - media: '(prefers-color-scheme: light)'
       scheme: default
@@ -50,7 +49,7 @@ plugins:
   - mkdocstrings
 
 nav:
-  - Home: 
+  - Home:
     - index.md
     - Getting Started: getting_started.md
     - Installation: installation.md
@@ -70,11 +69,11 @@ nav:
           - Binarization & Thresholding: reference/image/transformers/thresholding.md
           - Scoring: reference/image/transformers/scoring.md
 
-        - Drawer: 
+        - Drawer:
           - Drawing: reference/image/drawer/drawing.md
           - Renderers: reference/image/drawer/renderers.md
-        
-      - Geometry: 
+
+      - Geometry:
         - reference/geometry/index.md
         - Discrete:
           - reference/geometry/discrete/point.md
@@ -88,7 +87,7 @@ nav:
             - Directed:
               - Vector: reference/geometry/discrete/linear/directed/vector.md
               - Vectorized Linear Spline: reference/geometry/discrete/linear/directed/vectorized_linear_spline.md
-       
+
         - Continuous:
           - Circle: reference/geometry/continuous/circle.md
           - Ellipse: reference/geometry/continuous/ellipse.md

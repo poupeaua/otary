@@ -2,8 +2,10 @@
 Circle Geometric Object
 """
 
-from typing import Self, Optional
+from __future__ import annotations
+
 import math
+from typing import Optional, TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import NDArray
@@ -15,6 +17,14 @@ from otary.geometry.continuous.entity import ContinuousGeometryEntity
 from otary.geometry import Ellipse, Polygon
 from otary.utils.tools import assert_transform_shift_vector
 
+if TYPE_CHECKING:  # pragma: no cover
+    from typing_extensions import Self
+else:  # pragma: no cover
+    try:
+        from typing import Self
+    except ImportError:  # make Self available in Python <= 3.10
+        from typing_extensions import Self
+
 
 class Circle(Ellipse):
     """Circle geometrical object"""
@@ -23,7 +33,7 @@ class Circle(Ellipse):
         self,
         center: NDArray | list,
         radius: float,
-        n_points_polygonal_approx: int = ContinuousGeometryEntity.DEFAULT_N_POINTS_POLYGONAL_APPROX,
+        n_points_polygonal_approx: int = ContinuousGeometryEntity.DEFAULT_N_POLY_APPROX,
     ):
         """Initialize a Circle geometrical object
 
@@ -174,9 +184,12 @@ class Circle(Ellipse):
 
         Args:
             angle (float): angle by which to rotate the circle
-            is_degree (bool, optional): whether the angle is in degrees. Defaults to False.
-            is_clockwise (bool, optional): whether the rotation is clockwise. Defaults to True.
-            pivot (Optional[NDArray], optional): pivot point around which to rotate. Defaults to None.
+            is_degree (bool, optional): whether the angle is in degrees.
+                Defaults to False.
+            is_clockwise (bool, optional): whether the rotation is clockwise.
+                Defaults to True.
+            pivot (Optional[NDArray], optional): pivot point around which to rotate.
+                Defaults to None.
 
         Returns:
             Self: rotated circle object

@@ -4,7 +4,8 @@ DiscreteGeometryEntity module class
 
 from __future__ import annotations
 
-from typing import Optional, Self, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
+
 import copy
 from abc import ABC, abstractmethod
 
@@ -20,11 +21,19 @@ from otary.geometry.entity import GeometryEntity
 from otary.utils.tools import assert_transform_shift_vector
 
 if TYPE_CHECKING:  # pragma: no cover
+    from typing_extensions import Self
     from otary.geometry import Polygon, Rectangle, Segment
+else:  # pragma: no cover
+    try:
+        from typing import Self
+    except ImportError:  # make Self available in Python <= 3.10
+        from typing_extensions import Self
 
 
 class DiscreteGeometryEntity(GeometryEntity, ABC):
     """GeometryEntity class which is the abstract base class for all geometry classes"""
+
+    # pylint: disable=too-many-public-methods
 
     def __init__(self, points, is_cast_int: bool = False) -> None:
         _arr = (

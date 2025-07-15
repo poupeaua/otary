@@ -5,21 +5,17 @@
 </p>
 
 <p align="center">
-    <em>Otary library, readable, easy to use, fast to develop, performant</em>
+    <em>Otary library, readable, fast, unified, interactive, flexible, pythonic</em>
 </p>
 
 <p align="center">
-<a href="https://pypi.org/project/otary" target="_blank">
-    <img src="https://img.shields.io/pypi/v/otary?color=blue&label=pypi" alt="Package version">
-</a>
-<a href="https://pypi.org/project/otary" target="_blank">
-    <img src="https://img.shields.io/pypi/pyversions/otary?color=blue&label=python" alt="License">
-</a>
-<a href="https://pypi.org/project/otary" target="_blank">
-    <img src="https://img.shields.io/github/license/poupeaua/otary?color=8A2BE2&label=license" alt="License">
-</a>
+<a href="https://github.com/poupeaua/otary/actions/workflows/test.yaml" > <img src="https://github.com/poupeaua/otary/actions/workflows/test.yaml/badge.svg"/></a>
+<a href="https://codecov.io/github/poupeaua/otary" > <img src="https://codecov.io/github/poupeaua/otary/graph/badge.svg?token=LE040UGFZU"/></a>
+<a href="https://alexandrepoupeau.com/otary/" > <img src="https://github.com/poupeaua/otary/actions/workflows/docs.yaml/badge.svg"/></a>
+<a href="https://pypi.org/project/otary" target="_blank"> <img src="https://img.shields.io/pypi/v/otary?color=blue&label=pypi" alt="Package version"></a>
+<a href="https://pypi.org/project/otary" target="_blank"><img src="https://img.shields.io/pypi/pyversions/otary?color=blue&label=python" alt="License"></a>
+<a href="https://pypi.org/project/otary" target="_blank"><img src="https://img.shields.io/badge/license-GPL--3.0-8A2BE2" alt="License"></a>
 <a href="https://github.com/poupeaua/otary"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
-
 </p>
 
 # Welcome to Otary
@@ -40,9 +36,11 @@ The main features of Otary are:
 
 - **Flexibility**: provides a flexible and extensible architecture, allowing developers to customize and extend its functionality as needed.
 
+- **Pythonic**: designed to be Pythonic and easy to use, making it suitable for Python developers.
+
 ## Installation
 
-Otary is available on [PyPI](https://pypi.org/project/otary/). You can install it with: 
+Otary is available on [PyPI](https://pypi.org/project/otary/). You can install it with:
 
 ```bash
 pip install otary
@@ -80,7 +78,7 @@ im = (
     .rotate(angle=90, is_degree=True, is_clockwise=False)
     .threshold_simple(thresh=200)
     .draw_ellipses(
-        ellipses=[ellipse], 
+        ellipses=[ellipse],
         render=ot.EllipsesRender(is_draw_focis_enabled=True)
     )
 )
@@ -88,11 +86,9 @@ im = (
 im.show()
 ```
 
-Otary makes it really readable and easy to use. As you can see:
-
 - Otary makes the code much more **readable**
 - Otary makes the code much more **interactive**
-- Otary makes **libraries management easier** by only using one library and not depending on mulitple like Pillow, OpenCV, Scikit-Image, PyMuPDF etc.
+- Otary makes **libraries management easier** by only using one library and not depending on multiple libraries like Pillow, OpenCV, Scikit-Image, PyMuPDF etc.
 
 
 In a Jupyter notebook, you can easily test and iterate on transformations by simply commenting part of the code as you need it.
@@ -103,11 +99,8 @@ im = (
     # .rotate(angle=90, is_degree=True, is_clockwise=False)
     # .threshold_simple(thresh=200)
     .draw_ellipses(
-        ellipses=[ellipse], 
+        ellipses=[ellipse],
         render=ot.EllipsesRender(is_draw_focis_enabled=True)
     )
 )
 ```
-
-
-

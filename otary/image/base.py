@@ -6,12 +6,20 @@ It only contains very low-level, basic and generic image methods.
 from __future__ import annotations
 
 import io
-from typing import Self
+from typing import TYPE_CHECKING
 
 import cv2
 import numpy as np
 from numpy.typing import NDArray
 from PIL import Image as ImagePIL
+
+if TYPE_CHECKING:  # pragma: no cover
+    from typing_extensions import Self
+else:  # pragma: no cover
+    try:
+        from typing import Self
+    except ImportError:  # make Self available in Python <= 3.10
+        from typing_extensions import Self
 
 
 class BaseImage:

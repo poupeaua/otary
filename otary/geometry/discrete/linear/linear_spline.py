@@ -2,6 +2,8 @@
 Curve class useful to describe any kind of curves
 """
 
+from __future__ import annotations
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -82,7 +84,7 @@ class LinearSpline(LinearEntity):
         Returns:
             tuple[NDArray, int]: Interpolated point [x, y] and previous index in path.
         """
-        if not (0 <= pct_dist <= 1):
+        if not 0 <= pct_dist <= 1:
             raise ValueError("pct_dist must be in [0, 1]")
 
         if self.length == 0 or pct_dist == 0:

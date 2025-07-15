@@ -17,6 +17,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class CropperImage:
+    """CropperImage class"""
 
     def __init__(self, base: BaseImage) -> None:
         self.base = base
@@ -175,6 +176,7 @@ class CropperImage:
             # without the user doing image.copy().crop()
             # which would be much more expensive if the image is large
             # this is why the output of the methods is Optional[Image] not None
+            # pylint: disable=import-outside-toplevel
             from otary.image import Image
 
             return Image(image=array_crop)

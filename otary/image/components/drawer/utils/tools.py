@@ -3,6 +3,8 @@ Image tools module.
 It contains all the utility common functions used by the Image class
 """
 
+from __future__ import annotations
+
 from typing import Any, Sequence
 
 import numpy as np

@@ -2,6 +2,8 @@
 Triangle class module
 """
 
+from __future__ import annotations
+
 import numpy as np
 
 from otary.geometry import Polygon

@@ -50,7 +50,7 @@ class ReaderImage:
                 Defaults to False.
 
         Returns:
-            Self: Image object
+            NDArray: numpy array
         """
         arr = np.asarray(cv2.imread(filepath, 1 - int(as_grayscale)))
         original_height, original_width = arr.shape[:2]

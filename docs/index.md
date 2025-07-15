@@ -8,6 +8,16 @@
     <em>Otary library, readable, easy to use, fast to develop, performant</em>
 </p>
 
+<p align="center">
+<a href="https://github.com/poupeaua/otary/actions/workflows/test.yaml" > <img src="https://github.com/poupeaua/otary/actions/workflows/test.yaml/badge.svg"/></a>
+<a href="https://codecov.io/github/poupeaua/otary" > <img src="https://codecov.io/github/poupeaua/otary/graph/badge.svg?token=LE040UGFZU"/></a>
+<a href="https://alexandrepoupeau.com/otary/" > <img src="https://github.com/poupeaua/otary/actions/workflows/docs.yaml/badge.svg"/></a>
+<a href="https://pypi.org/project/otary" target="_blank"> <img src="https://img.shields.io/pypi/v/otary?color=blue&label=pypi" alt="Package version"></a>
+<a href="https://pypi.org/project/otary" target="_blank"><img src="https://img.shields.io/pypi/pyversions/otary?color=blue&label=python" alt="License"></a>
+<a href="https://pypi.org/project/otary" target="_blank"><img src="https://img.shields.io/badge/license-GPL--3.0-8A2BE2" alt="License"></a>
+<a href="https://github.com/poupeaua/otary"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
+</p>
+
 # Welcome to Otary
 
 Otary is a powerful Python library for advanced image and 2D geometry manipulation.
@@ -25,6 +35,8 @@ The main features of Otary are:
 - **Interactiveness**: designed to be interactive and user-friendly, making it suitable for interactive applications like Jupyter notebooks.
 
 - **Flexibility**: provides a flexible and extensible architecture, allowing developers to customize and extend its functionality as needed.
+
+- **Pythonic**: designed to be Pythonic and easy to use, making it suitable for Python developers.
 
 ## Example
 
@@ -57,7 +69,7 @@ Read an image from a pdf, crop a part of it given by a topleft point plus the wi
         .rotate(angle=90, is_degree=True, is_clockwise=False)
         .threshold_simple(thresh=200)
         .draw_ellipses(
-            ellipses=[ellipse], 
+            ellipses=[ellipse],
             render=ot.EllipsesRender(is_draw_focis_enabled=True)
         )
     )
@@ -128,11 +140,9 @@ Read an image from a pdf, crop a part of it given by a topleft point plus the wi
         )
     ```
 
-Otary makes it really readable and easy to use. As you can see:
-
 - Otary makes the code much more **readable**
 - Otary makes the code much more **interactive**
-- Otary makes **libraries management easier** by only using one library and not depending on mulitple like Pillow, OpenCV, Scikit-Image, PyMuPDF etc.
+- Otary makes **libraries management easier** by only using one library and not depending on multiple libraries like Pillow, OpenCV, Scikit-Image, PyMuPDF etc.
 
 !!! tip "Enhanced Interactiveness"
 
@@ -144,11 +154,8 @@ Otary makes it really readable and easy to use. As you can see:
         # .rotate(angle=90, is_degree=True, is_clockwise=False)
         # .threshold_simple(thresh=200)
         .draw_ellipses(
-            ellipses=[ellipse], 
+            ellipses=[ellipse],
             render=ot.EllipsesRender(is_draw_focis_enabled=True)
         )
     )
     ```
-
-
-

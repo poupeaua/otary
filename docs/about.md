@@ -1,6 +1,6 @@
 # About
 
-Otary aims to be a **complete unifying library** for image and geometry processing tasks. 
+Otary aims to be a **complete unifying library** for image and geometry processing tasks.
 
 You can always use the specific libraries if you need a more low-level control over the image processing pipeline.
 
@@ -19,6 +19,6 @@ Once installed and imported, Otary makes your coding journey easier and faster t
 
 A short-term goal would be to reduce the number of libraries Otary depends on to make the package more lightweight and more independant.
 
-## History 
+## History
 
 Otary was at the beginning only a part of a larger project in a private repository in 2023. I decided to make it public and open source in July 2025.

@@ -12,7 +12,7 @@ the other classes not a "is-a" relationship.
 
 from __future__ import annotations
 
-from typing import Self, Optional, Literal, Sequence
+from typing import Optional, Literal, Sequence, TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import NDArray
@@ -45,6 +45,14 @@ from otary.image.components.drawer import (
     PolygonsRender,
     OcrSingleOutputRender,
 )
+
+if TYPE_CHECKING:  # pragma: no cover
+    from typing_extensions import Self
+else:  # pragma: no cover
+    try:
+        from typing import Self
+    except ImportError:  # make Self available in Python <= 3.10
+        from typing_extensions import Self
 
 ScoreDistanceFromCenterMethods = Literal["linear", "gaussian"]
 
