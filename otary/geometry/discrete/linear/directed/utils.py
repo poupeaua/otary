@@ -1,4 +1,6 @@
-""" """
+"""
+Utils for the directed
+"""
 
 from operator import itemgetter
 
@@ -101,7 +103,7 @@ def angle_to_direction(input_angle, full=False, level=3):
     np_input_angle = np.array(input_angle).astype(float)
     origshape = np_input_angle.shape
     ndarray = len(origshape) > 1
-    # clean any numeric strings, negatives, and None does not handle strings with alphabet
+    # clean any numeric strings negatives and None does not handle strings with alphabet
     input_angle = units.Quantity(np_input_angle, origin_units)
     input_angle[input_angle < 0] = np.nan
 
@@ -143,19 +145,18 @@ def angle_to_direction(input_angle, full=False, level=3):
     if ndarray:
         round_angles = round_angles.flatten()
     dir_str_arr = itemgetter(*round_angles)(angle_dict)  # returns str or tuple
+
     if full:
         dir_str_arr = ",".join(dir_str_arr)
         dir_str_arr = _unabbreviate_direction(dir_str_arr)
         dir_str_arr = dir_str_arr.split(",")
         if scalar:
             return dir_str_arr[0]
-        else:
-            return np.array(dir_str_arr).reshape(origshape)
-    else:
-        if scalar:
-            return dir_str_arr
-        else:
-            return np.array(dir_str_arr).reshape(origshape)
+        return np.array(dir_str_arr).reshape(origshape)
+
+    if scalar:
+        return dir_str_arr
+    return np.array(dir_str_arr).reshape(origshape)
 
 
 def _unabbreviate_direction(abb_dir_str):

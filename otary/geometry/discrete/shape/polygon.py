@@ -6,15 +6,6 @@ from __future__ import annotations
 
 import copy
 from typing import Optional, Sequence, TYPE_CHECKING
-
-if TYPE_CHECKING:  # pragma: no cover
-    from typing_extensions import Self
-else:  # pragma: no cover
-    try:
-        from typing import Self
-    except ImportError:  # make Self available in Python <= 3.10
-        from typing_extensions import Self
-
 import logging
 
 import cv2
@@ -30,11 +21,19 @@ from otary.geometry import Segment, Vector, LinearSpline
 from otary.geometry.utils.tools import get_shared_point_indices
 
 if TYPE_CHECKING:  # pragma: no cover
+    from typing_extensions import Self
     from otary.geometry.discrete.shape.rectangle import Rectangle
+else:  # pragma: no cover
+    try:
+        from typing import Self
+    except ImportError:  # make Self available in Python <= 3.10
+        from typing_extensions import Self
 
 
 class Polygon(DiscreteGeometryEntity):
     """Polygon class which defines a polygon object which means any closed-shape"""
+
+    # pylint: disable=too-many-public-methods
 
     def __init__(self, points: NDArray | list, is_cast_int: bool = False) -> None:
         if len(points) <= 2:
@@ -100,7 +99,9 @@ class Polygon(DiscreteGeometryEntity):
             )
             if not cond_first_pt_is_equal_prev_entity_last_pt:
                 raise ValueError(
-                    f"The first point of entity {i} ({linear_entity.points[0]}) is not equal to the last point of entity {i-1} ({linear_entities[i-1].points[-1]})"
+                    f"The first point of entity {i} ({linear_entity.points[0]}) "
+                    f"is not equal to the last point of entity {i-1} "
+                    f"({linear_entities[i-1].points[-1]})"
                 )
             pts_except_last = linear_entity.points[:-1, :]
             points.append(pts_except_last)
@@ -156,8 +157,8 @@ class Polygon(DiscreteGeometryEntity):
         Returns:
             (Polygon): a Polygon object
         """
-        # pylint: disable=too-many-positional-arguments,too-many-arguments
         # pylint: disable=too-many-locals
+        # pylint: disable=too-many-positional-arguments, too-many-arguments
         lines = np.asarray(lines)
         Segment.assert_list_of_lines(lines=lines)
 
@@ -517,7 +518,7 @@ class Polygon(DiscreteGeometryEntity):
         Returns:
             NDArray: Interpolated point [x, y]
         """
-        if not (0 <= pct_dist <= 1):
+        if not 0 <= pct_dist <= 1:
             raise ValueError("pct_dist must be in [0, 1]")
 
         if start_index < 0:
@@ -585,7 +586,9 @@ class Polygon(DiscreteGeometryEntity):
         Returns:
             NDArray: 2D point as array
         """
-        if not (0.0 <= dist_along_edge_pct <= 1.0):
+        # pylint: disable=too-many-locals
+        # pylint: disable=too-many-arguments, too-many-positional-arguments,
+        if not 0.0 <= dist_along_edge_pct <= 1.0:
             raise ValueError("dist_along_edge_pct must be in [0, 1]")
 
         pt_interpolated, prev_ix = self.find_interpolated_point_and_prev_ix(

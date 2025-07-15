@@ -2,9 +2,10 @@
 Geometry Transformer component
 """
 
+from typing import Sequence
+
 import numpy as np
 from numpy.typing import NDArray
-from typing import Sequence
 import cv2
 import scipy.ndimage
 
@@ -14,6 +15,7 @@ from otary.utils.tools import assert_transform_shift_vector
 
 
 class GeometrizerImage:
+    """GeometrizerImage class"""
 
     def __init__(self, base: BaseImage) -> None:
         self.base = base
@@ -121,13 +123,14 @@ class GeometrizerImage:
                     f"The border_fill_value {border_fill_value_scalar} is not a valid "
                     "value. It must be a single integer when fast mode is off"
                 )
-            return self.__rotate_exact(
+            self.__rotate_exact(
                 angle=angle,
                 is_degree=is_degree,
                 is_clockwise=is_clockwise,
                 reshape=reshape,
                 border_fill_value=border_fill_value_scalar,
             )
+            return None
 
         if not is_degree:
             angle = np.rad2deg(angle)
@@ -160,6 +163,7 @@ class GeometrizerImage:
             borderMode=cv2.BORDER_CONSTANT,
             borderValue=fill_value,
         )  # type: ignore[call-overload]
+        return None
 
     def center_to_point(self, point: NDArray) -> NDArray:
         """Shift the image so that the input point ends up in the middle of the

@@ -60,7 +60,8 @@ def get_shared_point_indices(
     method: str = "close",
     cond: str = "any",
 ) -> NDArray:
-    """Find indices of points in `points_to_check` that are within or beyond a specified distance from any point in `checkpoints`.
+    """Find indices of points in `points_to_check` that are within or beyond a
+    specified distance from any point in `checkpoints`.
 
     Args:
         points_to_check (NDArray): An array of points to check, of shape (N, D).

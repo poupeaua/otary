@@ -20,11 +20,9 @@ class ContinuousGeometryEntity(GeometryEntity, ABC):
     continuous or smooth geometry objects like circles, ellipse, etc...
     """
 
-    DEFAULT_N_POINTS_POLYGONAL_APPROX = 1000
+    DEFAULT_N_POLY_APPROX = 1000  # number of pts to use in polygonal approximation
 
-    def __init__(
-        self, n_points_polygonal_approx: int = DEFAULT_N_POINTS_POLYGONAL_APPROX
-    ):
+    def __init__(self, n_points_polygonal_approx: int = DEFAULT_N_POLY_APPROX):
         """Initialize a ContinuousGeometryEntity object
 
         Args:
@@ -33,6 +31,7 @@ class ContinuousGeometryEntity(GeometryEntity, ABC):
                 Defaults to DEFAULT_N_POINTS_POLYGONAL_APPROX.
         """
         self._n_points_polygonal_approx = n_points_polygonal_approx
+        self._polyapprox = None  # type: ignore
 
     # --------------------------------- PROPERTIES ------------------------------------
 

@@ -16,7 +16,7 @@
     <img src="https://img.shields.io/pypi/pyversions/otary?color=blue&label=python" alt="License">
 </a>
 <a href="https://pypi.org/project/otary" target="_blank">
-    <img src="https://img.shields.io/github/license/poupeaua/otary?color=8A2BE2&label=license" alt="License">
+    <img src="https://img.shields.io/badge/license-GPL--3.0-8A2BE2" alt="License">
 </a>
 <a href="https://github.com/poupeaua/otary"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 

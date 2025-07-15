@@ -59,6 +59,7 @@ class MorphologyzerImage:
         )
 
         if copy:
+            # pylint: disable=import-outside-toplevel
             from otary.image import Image
 
             return Image(image=result)

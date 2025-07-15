@@ -7,15 +7,8 @@ from __future__ import annotations
 
 from typing import Optional, TYPE_CHECKING
 
-if TYPE_CHECKING:  # pragma: no cover
-    from typing_extensions import Self
-else:  # pragma: no cover
-    try:
-        from typing import Self
-    except ImportError:  # make Self available in Python <= 3.10
-        from typing_extensions import Self
-
 from abc import ABC, abstractmethod
+
 from shapely import (
     GeometryCollection,
     MultiPoint,
@@ -23,12 +16,17 @@ from shapely import (
     LineString,
     MultiLineString,
 )
-
 import numpy as np
 from numpy.typing import NDArray
 
 if TYPE_CHECKING:  # pragma: no cover
+    from typing_extensions import Self
     from otary.geometry import Polygon, Rectangle
+else:  # pragma: no cover
+    try:
+        from typing import Self
+    except ImportError:  # make Self available in Python <= 3.10
+        from typing_extensions import Self
 
 
 class GeometryEntity(ABC):

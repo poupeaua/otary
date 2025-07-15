@@ -1,3 +1,7 @@
+"""
+WriterImage module
+"""
+
 from typing import Optional
 
 import cv2
@@ -7,6 +11,7 @@ from otary.image.base import BaseImage
 
 
 class WriterImage:
+    """WriterImage class that provide methods to save and show the image"""
 
     def __init__(self, base: BaseImage) -> None:
         self.base = base

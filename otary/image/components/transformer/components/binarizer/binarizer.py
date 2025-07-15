@@ -20,6 +20,7 @@ BinarizationMethods = Literal[
 
 
 class BinarizerImage:
+    """BinarizerImage class"""
 
     def __init__(self, base: BaseImage) -> None:
         self.base = base

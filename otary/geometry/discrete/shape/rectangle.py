@@ -7,6 +7,12 @@ from __future__ import annotations
 
 from typing import Optional, TYPE_CHECKING
 
+import numpy as np
+from numpy.typing import NDArray
+import pymupdf
+
+from otary.geometry import Polygon, Segment, Vector
+
 if TYPE_CHECKING:  # pragma: no cover
     from typing_extensions import Self
 else:  # pragma: no cover
@@ -14,12 +20,6 @@ else:  # pragma: no cover
         from typing import Self
     except ImportError:  # make Self available in Python <= 3.10
         from typing_extensions import Self
-
-import numpy as np
-from numpy.typing import NDArray
-import pymupdf
-
-from otary.geometry import Polygon, Segment, Vector
 
 
 class Rectangle(Polygon):
@@ -320,8 +320,7 @@ class Rectangle(Polygon):
         """
         if self.is_clockwise(is_y_axis_down=True):
             return self.asarray[(topleft_index + 1) % len(self)]
-        else:
-            return self.asarray[topleft_index - 1]
+        return self.asarray[topleft_index - 1]
 
     def _bottomleft_vertice_from_topleft(self, topleft_index: int) -> NDArray:
         """Get the bottom-left vertice from the topleft vertice
@@ -334,8 +333,7 @@ class Rectangle(Polygon):
         """
         if self.is_clockwise(is_y_axis_down=True):
             return self.asarray[topleft_index - 1]
-        else:
-            return self.asarray[(topleft_index + 1) % len(self)]
+        return self.asarray[(topleft_index + 1) % len(self)]
 
     def _bottomright_vertice_from_topleft(self, topleft_index: int) -> NDArray:
         """Get the bottom-right vertice from the topleft vertice

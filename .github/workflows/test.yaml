@@ -119,3 +119,9 @@ jobs:
           name: coverage-${{ matrix.python-version }}
           path: coverage
           include-hidden-files: true
+
+      - name: Upload Coverage
+        if: ${{ matrix.python-version == '3.13' }}
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
