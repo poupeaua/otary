@@ -9,16 +9,17 @@ readme = "README.md"
 package-mode = true
 
 [tool.poetry.dependencies]
-python = "^3.11.2"
-metpy = "^1.6.2"
+python = "^3.10"
 opencv-python = "^4.10.0.84"
 setuptools = "^70.0.0"
 sympy = "^1.12"
 shapely = "^2.0.4"
 pymupdf = "^1.24.12"
+pint = "^0.24.4"
+matplotlib = "^3.10.3"
+scikit-image = "^0.25.2"
 
-[tool.poetry.group.dev.dependencies]
-ipykernel = "^6.29.4"
+[tool.poetry.group.test.dependencies]
 pytest-cov = "^5.0.0"
 pytest-mock = "^3.14.1"
 mypy = "^1.10.0"
@@ -27,6 +28,9 @@ pylint-exit = "^1.2.0"
 ruff = "^0.4.4"
 black = "^24.4.2"
 pre-commit = "^3.7.1"
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.4"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs = "^1.6.1"

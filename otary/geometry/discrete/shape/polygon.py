@@ -5,7 +5,16 @@ Polygon class to handle complexity with polygon calculation
 from __future__ import annotations
 
 import copy
-from typing import Optional, Self, Sequence, TYPE_CHECKING
+from typing import Optional, Sequence, TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover
+    from typing_extensions import Self
+else:  # pragma: no cover
+    try:
+        from typing import Self
+    except ImportError:  # make Self available in Python <= 3.10
+        from typing_extensions import Self
+
 import logging
 
 import cv2

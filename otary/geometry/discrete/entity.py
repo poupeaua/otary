@@ -4,7 +4,16 @@ DiscreteGeometryEntity module class
 
 from __future__ import annotations
 
-from typing import Optional, Self, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover
+    from typing_extensions import Self
+else:  # pragma: no cover
+    try:
+        from typing import Self
+    except ImportError:  # make Self available in Python <= 3.10
+        from typing_extensions import Self
+
 import copy
 from abc import ABC, abstractmethod
 

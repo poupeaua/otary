@@ -169,7 +169,7 @@ class GeometrizerImage:
             point (NDArray): point as (2,) shape numpy array
 
         Returns:
-            (tuple[Self, NDArray]): Self, translation Vector
+            NDArray: translation Vector
         """
         shift_vector = self.base.center - point
         self.shift(shift=shift_vector)
@@ -183,7 +183,7 @@ class GeometrizerImage:
             segment (NDArray): segment as numpy array of shape (2, 2)
 
         Returns:
-            (tuple[Self, NDArray]): Self, vector_shift
+            NDArray: vector_shift
         """
         return self.center_to_point(point=geo.Segment(segment).centroid)
 

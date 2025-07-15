@@ -40,7 +40,7 @@ The main features of Otary are:
 
 - **Flexibility**: provides a flexible and extensible architecture, allowing developers to customize and extend its functionality as needed.
 
-- **Pythonic**: designed to be Pythonic and easy to use, making it suitable for Python developers. 
+- **Pythonic**: designed to be Pythonic and easy to use, making it suitable for Python developers.
 
 ## Installation
 

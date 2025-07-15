@@ -7,7 +7,7 @@ on:
       - dev # for test for the moment
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   docs:

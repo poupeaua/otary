@@ -49,14 +49,14 @@ class TestTransformerImageShiftMethods:
         img = Image.from_fillvalue(shape=(5, 5), value=0)
         img.asarray[0, 0] = val
         img.center_to_point(point=[0, 0])
-        assert img.asarray[*img.center] == val
+        assert img.asarray[img.center[0], img.center[1]] == val
 
     def test_center_to_segment(self):
         val = 87
         img = Image.from_fillvalue(shape=(5, 5), value=0)
         img.asarray[2, 2] = val
         img.center_to_segment(segment=[[0, 0], [4, 4]])
-        assert img.asarray[*img.center] == val
+        assert img.asarray[img.center[0], img.center[1]] == val
 
 
 class TestTransformerImageRotateMethods:

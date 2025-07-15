@@ -2,6 +2,8 @@
 Curve class useful to describe any kind of curves
 """
 
+from __future__ import annotations
+
 import numpy as np
 from numpy.typing import NDArray
 
