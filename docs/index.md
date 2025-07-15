@@ -18,11 +18,13 @@ The main features of Otary are:
 
 - **Readability**: designed to be easy to read and understand, making it suitable for beginners and experienced developers alike.
 
-- **Flexibility**: provides a flexible and extensible architecture, allowing developers to customize and extend its functionality as needed.
-
 - **Performance**: optimized for speed and efficiency, making it suitable for high-performance applications. It is built on top of [NumPy](https://numpy.org) and [OpenCV](https://opencv.org), which are known for their speed and performance.
 
-- **Interactiveness**: designed to be interactive and user-friendly, making it suitable for interactive applications like Jupyter notebooks and web applications.
+- **Unification**: Otary unifies multiple libraries into a single, unified library, making it easier to use without the need to switch between multiple libraries. Spend less time learning different APIs and reading multiple documentations.
+
+- **Interactiveness**: designed to be interactive and user-friendly, making it suitable for interactive applications like Jupyter notebooks.
+
+- **Flexibility**: provides a flexible and extensible architecture, allowing developers to customize and extend its functionality as needed.
 
 ## Example
 
@@ -31,7 +33,7 @@ Let me illustrate the usage of Otary with a simple example. Imagine you need to:
 1. read an image from a pdf file
 2. crop a part of it
 3. rotate the cropped image
-4. add a threshold of type sauvola
+4. apply a threshold
 5. draw a ellipse on it
 6. show the image
 
@@ -134,14 +136,17 @@ Otary makes it really readable and easy to use. As you can see:
 
 !!! tip "Enhanced Interactiveness"
 
-    In a Jupyter notebook, you can just copy and paste the code and run it. It's that simple! Plus you can easily test and iterate on transformations by simply commenting part of the code as you need it.
+    In a Jupyter notebook, you can easily test and iterate on transformations by simply commenting part of the code as you need it.
 
     ```python
     im = (
         im.crop_from_topleft(topleft=[200, 100], width=100, height=100)
         # .rotate(angle=90, is_degree=True, is_clockwise=False)
         # .threshold_simple(thresh=200)
-        .draw_ellipses(ellipses=[ellipse], render=ot.EllipsesRender(is_draw_focis_enabled=True))
+        .draw_ellipses(
+            ellipses=[ellipse], 
+            render=ot.EllipsesRender(is_draw_focis_enabled=True)
+        )
     )
     ```
 

@@ -34,4 +34,3 @@ im.show()
 ```
 
 ![alt text](img/getting-started1.png)
-
