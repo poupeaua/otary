@@ -426,15 +426,15 @@ class Rectangle(Polygon):
     def __str__(self) -> str:
         return (  # pylint: disable=duplicate-code
             self.__class__.__name__
-            + "(pt0="
+            + "(["
             + self.asarray[0].tolist().__str__()
-            + ", pt1="
+            + ", "
             + self.asarray[1].tolist().__str__()
-            + ", pt2="
+            + ", "
             + self.asarray[2].tolist().__str__()
-            + ", pt3="
+            + ", "
             + self.asarray[3].tolist().__str__()
-            + ")"
+            + "])"
         )
 
     def __repr__(self) -> str:

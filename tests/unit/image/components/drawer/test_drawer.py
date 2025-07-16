@@ -60,6 +60,24 @@ class TestDrawerColors:
             polygons=[cnt], render=PolygonsRender(default_color=["pi$?7_="])
         )
 
+    def test_draw_default_color_hard_case(self):
+        poly = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]]) * 200
+        poly1 = Polygon([[2, 2], [3, 2], [3, 3], [2, 3]]) * 100
+
+        Image.from_fillvalue(shape=(500, 500, 3), value=0).draw_polygons(
+            [poly, poly1],
+            render=PolygonsRender(colors=["red", "fe&&_?"], default_color="blue"),
+        )
+
+    def test_draw_default_color_hard_case2(self):
+        poly = Polygon([[0, 0], [1, 0], [1, 1], [0, 1]]) * 200
+        poly1 = Polygon([[2, 2], [3, 2], [3, 3], [2, 3]]) * 100
+
+        Image.from_fillvalue(shape=(500, 500, 3), value=0).draw_polygons(
+            [poly, poly1],
+            render=PolygonsRender(colors=["red", "fe&&_?"], default_color="fe?&99"),
+        )
+
 
 class TestDrawerPointsImage:
 

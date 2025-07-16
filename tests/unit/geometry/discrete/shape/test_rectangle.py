@@ -10,6 +10,17 @@ import pytest
 import pymupdf
 
 
+class TestRectangleStr:
+
+    def test_str(self):
+        rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
+        assert str(rect) == "Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])"
+
+    def test_repr(self):
+        rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
+        assert repr(rect) == "Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])"
+
+
 class TestRectangleCreation:
     def test_create_rectangle_unit(self):
         rect = Rectangle.unit()

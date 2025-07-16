@@ -4,11 +4,25 @@ Unit Tests for the generic image methods
 
 import os
 
+from unittest import mock
 import pytest
 import numpy as np
 
 from otary.geometry import Polygon, Segment, LinearSpline, Rectangle
 from otary.image import Image, PolygonsRender, SegmentsRender, LinearSplinesRender
+
+
+class TestImageStr:
+
+    def test_str(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=255)
+        assert "Image(" in str(img)
+
+    @mock.patch("otary.image.components.io.writer.plt")
+    def test_repr(self, mock_plt):
+        """mock prevent opening of plot in local dev"""
+        img = Image.from_fillvalue(shape=(5, 5), value=255)
+        assert repr(img) == ""
 
 
 class TestImageIOU:
