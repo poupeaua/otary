@@ -191,6 +191,15 @@ class Image:
         return self.base.height
 
     @property
+    def channels(self) -> int:
+        """Number of channels in the image
+
+        Returns:
+            int: number of channels
+        """
+        return self.base.channels
+
+    @property
     def center(self) -> NDArray[np.int16]:
         """Center point of the image.
 
@@ -210,15 +219,6 @@ class Image:
             int: image area
         """
         return self.base.area
-
-    @property
-    def channels(self) -> int:
-        """Number of channels in the image
-
-        Returns:
-            int: number of channels
-        """
-        return self.base.channels
 
     @property
     def shape_array(self) -> tuple[int, int, int]:
@@ -1760,3 +1760,30 @@ class Image:
             )
 
         raise ValueError(f"Unknown method {method}")
+
+    def __str__(self) -> str:
+        """String representation of the image
+
+        Returns:
+            str: string
+        """
+        return (
+            self.__class__.__name__
+            + "(height="
+            + str(self.height)
+            + ", width="
+            + str(self.width)
+            + ", n_channels="
+            + str(self.channels)
+            + ")"
+        )
+
+    def __repr__(self) -> str:
+        """Make the library more interactive for Jupyter notebooks
+        by displaying the image when the user put the object at the end of cell.
+
+        Returns:
+            str: nothing
+        """
+        self.show()
+        return ""
