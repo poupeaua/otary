@@ -127,23 +127,23 @@ class TestImageShape:
     def test_shape_colorscale(self):
         img = Image.from_fillvalue(shape=(10, 20, 3), value=128)
         # shape property should return (width, height, channels)
-        assert img.shape == (20, 10, 3)
+        assert img.shape_xy == (20, 10, 3)
 
     def test_shape_grayscale(self):
         img = Image.from_fillvalue(shape=(15, 25), value=128)
         # shape property should return (width, height, channels)
         # For grayscale, channels should be 1
-        assert img.shape == (25, 15, 1)
+        assert img.shape_xy == (25, 15, 1)
 
     def test_shape_after_colorscale_conversion(self):
         img = Image.from_fillvalue(shape=(8, 12), value=128)
         img.as_colorscale()
-        assert img.shape == (12, 8, 3)
+        assert img.shape_xy == (12, 8, 3)
 
     def test_shape_after_grayscale_conversion(self):
         img = Image.from_fillvalue(shape=(8, 12, 3), value=128)
         img.as_grayscale()
-        assert img.shape == (12, 8, 1)
+        assert img.shape_xy == (12, 8, 1)
 
 
 class TestImageWidth:

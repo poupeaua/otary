@@ -1,5 +1,7 @@
 """
-Utils for the directed
+Utils for the analysis of directed lines
+Code directly extracted from MetPy
+https://unidata.github.io/MetPy/latest/api/generated/metpy.calc.angle_to_direction.html#metpy.calc.angle_to_direction # pylint: disable=line-too-long
 """
 
 from operator import itemgetter

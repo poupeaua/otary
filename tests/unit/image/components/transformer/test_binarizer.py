@@ -57,6 +57,11 @@ class TestTransformerThresholdNiblack:
         img.threshold_niblack()
         assert np.all((img.asarray == 0) | (img.asarray == 255))
 
+    def test_threshold_niblack_window_size_even(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=127)
+        img.threshold_niblack(window_size=10)
+        assert np.all((img.asarray == 0) | (img.asarray == 255))
+
     def test_threshold_niblack_low_values(self):
         img = Image.from_fillvalue(shape=(5, 5), value=55)
         img.asarray[2, 2] = 200

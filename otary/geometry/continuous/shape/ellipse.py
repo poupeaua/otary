@@ -274,13 +274,13 @@ class Ellipse(ContinuousGeometryEntity):
                 * (1 + (3 * self.h) / (10 + math.sqrt(4 - 3 * self.h)))
             )
 
-        sum = 1  # pre-calculated term n=0 equal 1
+        _sum = 1  # pre-calculated term n=0 equal 1
         for n in range(1, n_terms):  # goes from term n=1 to n=(n_terms-1)
-            sum += (((1 / ((2 * n - 1) * (4**n))) * math.comb(2 * n, n)) ** 2) * (
+            _sum += (((1 / ((2 * n - 1) * (4**n))) * math.comb(2 * n, n)) ** 2) * (
                 self.h**n
             )
 
-        return math.pi * (self.semi_major_axis + self.semi_minor_axis) * sum
+        return math.pi * (self.semi_major_axis + self.semi_minor_axis) * _sum
 
     def polygonal_approx(self, n_points: int, is_cast_int: bool = False) -> Polygon:
         """Generate apolygonal approximation of the ellipse.

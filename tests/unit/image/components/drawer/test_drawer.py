@@ -16,6 +16,51 @@ from otary.image import (
 )
 
 
+class TestDrawerColors:
+
+    def test_draw_colors_as_tuple(self):
+        points = np.array([[0, 0], [1, 1], [2, 3]])
+        cnt = Polygon(points=points)
+        Image.from_fillvalue(shape=(5, 5, 3), value=0).draw_polygons(
+            polygons=[cnt], render=PolygonsRender(colors=[(0, 0, 0)])
+        )
+
+    def test_draw_colors_as_tuple_bad(self):
+        points = np.array([[0, 0], [1, 1], [2, 3]])
+        cnt = Polygon(points=points)
+        Image.from_fillvalue(shape=(5, 5, 3), value=0).draw_polygons(
+            polygons=[cnt], render=PolygonsRender(colors=[(0, -1, 300)])
+        )
+
+    def test_draw_colors_as_str(self):
+        points = np.array([[0, 0], [1, 1], [2, 3]])
+        cnt = Polygon(points=points)
+        Image.from_fillvalue(shape=(5, 5, 3), value=0).draw_polygons(
+            polygons=[cnt], render=PolygonsRender(colors=["blue"])
+        )
+
+    def test_draw_colors_as_str_bad(self):
+        points = np.array([[0, 0], [1, 1], [2, 3]])
+        cnt = Polygon(points=points)
+        Image.from_fillvalue(shape=(5, 5, 3), value=0).draw_polygons(
+            polygons=[cnt], render=PolygonsRender(colors=["pi$?7_="])
+        )
+
+    def test_draw_default_color_as_str(self):
+        points = np.array([[0, 0], [1, 1], [2, 3]])
+        cnt = Polygon(points=points)
+        Image.from_fillvalue(shape=(5, 5, 3), value=0).draw_polygons(
+            polygons=[cnt], render=PolygonsRender(default_color=["blue"])
+        )
+
+    def test_draw_default_color_as_str_bad(self):
+        points = np.array([[0, 0], [1, 1], [2, 3]])
+        cnt = Polygon(points=points)
+        Image.from_fillvalue(shape=(5, 5, 3), value=0).draw_polygons(
+            polygons=[cnt], render=PolygonsRender(default_color=["pi$?7_="])
+        )
+
+
 class TestDrawerPointsImage:
 
     def test_draw_points(self):

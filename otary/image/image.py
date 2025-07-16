@@ -230,13 +230,13 @@ class Image:
         return self.base.shape_array
 
     @property
-    def shape(self) -> tuple[int, int, int]:
+    def shape_xy(self) -> tuple[int, int, int]:
         """Returns the array shape value (width, height, channel)
 
         Returns:
             tuple[int]: image shape
         """
-        return self.base.shape
+        return self.base.shape_xy
 
     @property
     def is_gray(self) -> bool:

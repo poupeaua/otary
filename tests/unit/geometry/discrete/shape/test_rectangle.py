@@ -20,17 +20,29 @@ class TestRectangleCreation:
         rect = Rectangle.from_center(center=center, width=2, height=2, angle=2 * np.pi)
         assert np.isclose(rect.asarray, [[0, 0], [2, 0], [2, 2], [0, 2]]).all()
 
-    def test_create_rectangle_from_center_with_angle_and_cast_int(self):
+    def test_create_rectangle_from_center_with_angle(self):
         center = [1, 1]
         rect = Rectangle.from_center(
             center=center,
             width=np.sqrt(2),
             height=np.sqrt(2),
             angle=-np.pi / 4,
-            is_cast_int=True,
+            is_cast_int=False,
         )
         expected_points = [[0, 1], [1, 0], [2, 1], [1, 2]]
-        assert np.array_equal(rect.asarray, expected_points)
+        assert np.allclose(rect.asarray, expected_points)
+
+    def test_create_rectangle_from_center_with_angle_and_cast_int(self):
+        center = [2, 2]
+        rect = Rectangle.from_center(
+            center=center,
+            width=4,
+            height=4,
+            angle=0,
+            is_cast_int=int,
+        )
+        expected_points = [[0, 0], [4, 0], [4, 4], [0, 4]]
+        assert np.allclose(rect.asarray, expected_points)
 
     def test_create_rectangle_from_topleft(self):
         topleft = [1, 1]

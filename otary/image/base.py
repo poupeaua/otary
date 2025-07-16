@@ -84,8 +84,9 @@ class BaseImage:
         return self.asarray.shape
 
     @property
-    def shape(self) -> tuple:
-        """Returns the array shape value (width, height, channel)
+    def shape_xy(self) -> tuple:
+        """Returns the array shape value (width, height, channel).
+        Use this if you consider the image as pixels in a X-Y 2D coordinate system.
 
         Returns:
             tuple[int]: image shape

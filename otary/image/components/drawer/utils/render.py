@@ -7,7 +7,7 @@ from abc import ABC
 
 import cv2
 
-from otary.image.components.drawer.utils.tools import is_color_tuple
+from otary.image.components.drawer.utils.tools import is_color_tuple, color_str_to_tuple
 
 DEFAULT_RENDER_THICKNESS = 3
 DEFAULT_RENDER_COLOR = (0, 0, 255)
@@ -19,8 +19,8 @@ class Render(ABC):
 
     thickness: int = DEFAULT_RENDER_THICKNESS
     line_type: int = cv2.LINE_AA
-    default_color: tuple[int, int, int] = DEFAULT_RENDER_COLOR
-    colors: list[tuple[int, int, int]] = field(default_factory=list)
+    default_color: tuple[int, int, int] | str = DEFAULT_RENDER_COLOR
+    colors: list[tuple[int, int, int] | str] = field(default_factory=list)
 
     def adjust_colors_length(self, n: int) -> None:
         """Correct the color parameter in case the objects has not the same length
@@ -34,12 +34,35 @@ class Render(ABC):
             n_missing = n - len(self.colors)
             self.colors = self.colors + [self.default_color for _ in range(n_missing)]
 
-    def __post_init__(self):
-        """DrawingRender post-initialization method"""
-        # check that the colors parameter is conform
-        for i, color in enumerate(self.colors):
-            if not is_color_tuple(color):
-                self.colors[i] = self.default_color
+    @property
+    def default_color_processed(self) -> tuple[int, int, int]:
+        """DrawingRender default_color property"""
+        if isinstance(self.default_color, str):
+            default_color = color_str_to_tuple(self.default_color)
+            if default_color is None:
+                return DEFAULT_RENDER_COLOR
+            return default_color
+
+        if is_color_tuple(self.default_color):
+            return self.default_color
+        return DEFAULT_RENDER_COLOR
+
+    @property
+    def colors_processed(self) -> list[tuple[int, int, int]]:
+        """DrawingRender colors_processed method"""
+        colors_processed: list[tuple[int, int, int]] = []
+        for color in self.colors:
+            if isinstance(color, str):
+                tmp_color = color_str_to_tuple(color)
+                if tmp_color is None:
+                    colors_processed.append(self.default_color_processed)
+                else:
+                    colors_processed.append(tmp_color)
+            elif is_color_tuple(color):
+                colors_processed.append(color)
+            else:
+                colors_processed.append(self.default_color_processed)
+        return colors_processed
 
 
 @dataclass

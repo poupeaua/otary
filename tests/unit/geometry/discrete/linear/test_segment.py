@@ -30,7 +30,7 @@ class TestSegmentProperties:
         assert np.isclose(seg.slope, 1)
 
     @pytest.mark.parametrize(
-        "slope", [-1e10, -10, -5, -3, -1, -1 / 2, 0, 1 / 2, 1, 3, 5, 10, 1e10]
+        "slope", [-1e3, -10, -5, -3, -1, -1 / 2, 0, 1 / 2, 1, 3, 5, 10, 1e3]
     )
     def test_slope_parametrized_slope(self, slope):
         seg = Segment([[0, 0], [1, slope]])

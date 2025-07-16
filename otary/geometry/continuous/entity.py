@@ -152,6 +152,8 @@ class ContinuousGeometryEntity(GeometryEntity, ABC):
         topleft_x, topleft_y, width, height = cv2.boundingRect(
             array=self.polyaprox.asarray.astype(np.float32)
         )
+
+        # pylint: disable=duplicate-code
         bbox = np.array(
             [
                 [topleft_x, topleft_y],
