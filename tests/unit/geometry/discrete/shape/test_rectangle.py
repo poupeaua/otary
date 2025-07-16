@@ -44,15 +44,15 @@ class TestRectangleCreation:
         assert np.allclose(rect.asarray, expected_points)
 
     def test_create_rectangle_from_center_with_angle_and_cast_int(self):
-        center = [2, 2]
+        center = [10, 10]
         rect = Rectangle.from_center(
             center=center,
-            width=4,
-            height=4,
-            angle=0,
+            width=10,
+            height=10,
+            angle=np.pi / 2,
             is_cast_int=int,
         )
-        expected_points = [[0, 0], [4, 0], [4, 4], [0, 4]]
+        expected_points = [[15, 5], [15, 15], [5, 15], [5, 5]]
         assert np.allclose(rect.asarray, expected_points)
 
     def test_create_rectangle_from_topleft(self):

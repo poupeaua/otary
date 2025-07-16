@@ -6,6 +6,7 @@ import pytest
 
 from otary.geometry.discrete.shape.triangle import Triangle
 
+
 class TestTriangleStr:
 
     def test_str(self):
@@ -26,4 +27,3 @@ class TestInitTriangle:
     def test_init_less_than_three(self):
         with pytest.raises(ValueError):
             Triangle([[0, 0], [2, 0]])
-        

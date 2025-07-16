@@ -42,6 +42,16 @@ init-install:
 	@poetry install
 	@echo -e Done
 
+# -------------------------------------- DEV ------------------------------------------
+
+full-check: precommit check test
+
+precommit:
+	@echo "\n----------------"
+	@echo "Running Pre-Commit"
+	@echo "----------------"
+	@pre-commit run --all-files
+
 # -------------------------------------- TEST -----------------------------------------
 
 test: test-unit
