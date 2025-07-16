@@ -230,7 +230,7 @@ class Polygon(DiscreteGeometryEntity):
 
             i += 1
 
-        cnt = Polygon.from_lines(np.array(list_build_cnt))
+        cnt = Polygon.from_lines(np.array(list_build_cnt, dtype=np.int32))
         return cnt
 
     # --------------------------------- PROPERTIES ------------------------------------
@@ -258,7 +258,10 @@ class Polygon(DiscreteGeometryEntity):
     @property
     def centroid(self) -> NDArray:
         """Compute the centroid point which can be seen as the center of gravity
-        or center of mass of the shape
+        or center of mass of the shape.
+
+        Beware: if the shape is degenerate, the centroid will be undefined.
+        In that case, the mean of the points is returned.
 
         Returns:
             NDArray: centroid point
@@ -908,23 +911,3 @@ class Polygon(DiscreteGeometryEntity):
         distances = np.linalg.norm(points_diff, axis=1)
         max_distance = np.max(distances)
         return max_distance <= dist_margin_error
-
-    def __str__(self) -> str:
-        return (
-            self.__class__.__name__
-            + "(start="
-            + self.asarray[0].tolist().__str__()
-            + ", end="
-            + self.asarray[-1].tolist().__str__()
-            + ")"
-        )
-
-    def __repr__(self) -> str:
-        return (
-            self.__class__.__name__
-            + "(start="
-            + self.asarray[0].tolist().__str__()
-            + ", end="
-            + self.asarray[-1].tolist().__str__()
-            + ")"
-        )

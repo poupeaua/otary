@@ -5,11 +5,32 @@ It contains all the utility common functions used by the Image class
 
 from __future__ import annotations
 
-from typing import Any, Sequence
+from typing import Any, Sequence, Optional
 
 import numpy as np
+from matplotlib import colors
 
 import otary.geometry as geo
+
+
+def color_str_to_tuple(
+    color_str: str, is_bgr: bool = True
+) -> Optional[tuple[int, int, int]]:
+    """Convert a color string to a tuple
+
+    Args:
+        color (str): color string
+
+    Returns:
+        Optional[tuple]: color tuple or None if not possible
+    """
+    try:
+        color_tuple = tuple(np.array(colors.to_rgb(color_str)) * 255)
+        if is_bgr:
+            color_tuple = color_tuple[::-1]
+    except ValueError:
+        color_tuple = None
+    return color_tuple
 
 
 def is_color_tuple(color: Any) -> bool:
@@ -54,7 +75,7 @@ def cast_geometry_to_array(objects: Sequence | np.ndarray, _type: Any) -> list:
         _type (Any): type to transform into array
     """
     if _type in [geo.Point, geo.Segment, geo.Vector, geo.Polygon, geo.LinearSpline]:
-        objects = [np.round(s.asarray).astype(np.int32) for s in objects]
+        objects = [s.asarray.astype(np.int32) for s in objects]
     else:
         raise RuntimeError(f"The type {_type} is unexpected.")
     return objects

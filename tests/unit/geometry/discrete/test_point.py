@@ -8,6 +8,24 @@ from otary.geometry.discrete.point import Point
 from shapely.geometry import Point as SPoint
 
 
+class TestPointStr:
+
+    def test_str_method(self):
+        arr = np.array([1, 2])
+        p = Point(arr)
+        assert str(p) == "Point([1, 2])"
+
+    def test_str_method2(self):
+        arr = np.array([1, 2.9])
+        p = Point(arr)
+        assert "Point(" in str(p)
+
+    def test_repr_method(self):
+        arr = np.array([1, 2])
+        p = Point(arr)
+        assert repr(p) == "Point([1, 2])"
+
+
 class TestPointSetArray:
     def test_asarray_getter_returns_correct_value(self):
         arr = np.array([1.0, 2.0])

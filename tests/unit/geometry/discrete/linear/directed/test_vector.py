@@ -57,3 +57,21 @@ class TestVectorCardinal:
         assert (
             Vector([[0, 0], [-1, -1]]).cardinal_direction(full=False, level=2) == "NW"
         )
+
+    def test_cardinal_direction_full_N(self):
+        assert (
+            Vector([[0, 0], [0, -1]]).cardinal_direction(full=True, level=2) == "North"
+        )
+
+    def test_cardinal_direction_full_E(self):
+        assert Vector([[0, 0], [1, 0]]).cardinal_direction(full=True, level=2) == "East"
+
+    def test_cardinal_direction_full_S(self):
+        assert (
+            Vector([[0, 0], [0, 1]]).cardinal_direction(full=True, level=2) == "South"
+        )
+
+    def test_cardinal_direction_full_W(self):
+        assert (
+            Vector([[0, 0], [-1, 0]]).cardinal_direction(full=True, level=2) == "West"
+        )

@@ -85,23 +85,3 @@ class LinearEntity(DiscreteGeometryEntity, ABC):
         Returns:
             NDArray: 2D point
         """
-
-    def __str__(self) -> str:
-        return (
-            self.__class__.__name__
-            + "(start="
-            + self.asarray[0].tolist().__str__()
-            + ", end="
-            + self.asarray[-1].tolist().__str__()
-            + ")"
-        )
-
-    def __repr__(self) -> str:
-        return (
-            self.__class__.__name__
-            + "(start="
-            + self.asarray[0].tolist().__str__()
-            + ", end="
-            + self.asarray[-1].tolist().__str__()
-            + ")"
-        )

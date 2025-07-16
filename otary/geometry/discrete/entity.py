@@ -35,14 +35,29 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
 
     # pylint: disable=too-many-public-methods
 
-    def __init__(self, points, is_cast_int: bool = False) -> None:
-        _arr = (
-            np.asarray(points)
-            if not is_cast_int
-            else np.round(np.asarray(points)).astype(np.int32)
-        )
+    def __init__(self, points: NDArray | list, is_cast_int: bool = False) -> None:
+        _arr = self._init_array(points, is_cast_int)
         self.points = copy.deepcopy(_arr)
         self.is_cast_int = is_cast_int
+
+    def _init_array(self, points: NDArray | list, is_cast_int: bool = False) -> NDArray:
+        """Initialize the array given the points.
+
+        Args:
+            points (NDArray | list): input points
+            is_cast_int (bool, optional): whether to cast points to int.
+                Defaults to False.
+
+        Returns:
+            NDArray: array describing the input points
+        """
+        tmp = np.asarray(points)
+        is_all_elements_are_integer = np.all(np.equal(tmp, tmp.astype(int)))
+        if is_cast_int or is_all_elements_are_integer:
+            _arr = tmp.astype(np.int32)
+        else:
+            _arr = tmp.astype(np.float32)
+        return _arr
 
     # --------------------------------- PROPERTIES ------------------------------------
 
@@ -321,6 +336,8 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         topleft_x, topleft_y, width, height = cv2.boundingRect(
             array=self.asarray.astype(np.float32)
         )
+
+        # pylint: disable=duplicate-code
         bbox = np.array(
             [
                 [topleft_x, topleft_y],
@@ -514,7 +531,14 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         return self.points[index]
 
     def __str__(self) -> str:
-        return self.__class__.__name__ + "(" + self.asarray.tolist().__str__() + ")"
+        return (
+            self.__class__.__name__
+            + "(start="
+            + self.asarray[0].tolist().__str__()
+            + ", end="
+            + self.asarray[-1].tolist().__str__()
+            + ")"
+        )
 
     def __repr__(self) -> str:
-        return self.__class__.__name__ + "(" + self.asarray.tolist().__repr__() + ")"
+        return str(self)

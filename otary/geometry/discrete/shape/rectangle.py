@@ -106,7 +106,7 @@ class Rectangle(Polygon):
         if angle != 0:
             rect = rect.rotate(angle=angle)
             if is_cast_int:
-                rect.asarray = np.round(rect.asarray).astype(int)
+                rect.asarray = rect.asarray.astype(int)
 
         return rect
 
@@ -422,3 +422,20 @@ class Rectangle(Polygon):
             topleft_index=topleft_index, vertice="topright"
         )
         return Vector([self[topleft_index], rect_topright_vertice])
+
+    def __str__(self) -> str:
+        return (  # pylint: disable=duplicate-code
+            self.__class__.__name__
+            + "(["
+            + self.asarray[0].tolist().__str__()
+            + ", "
+            + self.asarray[1].tolist().__str__()
+            + ", "
+            + self.asarray[2].tolist().__str__()
+            + ", "
+            + self.asarray[3].tolist().__str__()
+            + "])"
+        )
+
+    def __repr__(self) -> str:
+        return str(self)

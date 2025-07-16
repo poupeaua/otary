@@ -8,6 +8,36 @@ import numpy as np
 from otary.geometry import Polygon, Segment, Rectangle
 
 
+class TestEntityInit:
+
+    def test_init_all_points_are_float(self):
+        points = [[0.0, 0.0], [0.0, 1.1], [1.4, 1.6], [1.9, 0.9]]
+        rect = Rectangle(points)
+        print(rect.asarray)
+        assert np.array_equal(rect.asarray, np.array(points, dtype=np.float32))
+
+    def test_init_all_points_are_int(self):
+        points = [[0, 0], [0, 1], [1, 1], [1, 0]]
+        rect = Rectangle(points)
+        assert np.array_equal(rect.asarray, np.array(points, dtype=np.int32))
+
+    def test_init_points_mix_int_float(self):
+        points = [[0.0, 0.0], [0.0, 1.1], [1, 1], [1, 0]]
+        rect = Rectangle(points)
+        assert np.array_equal(rect.asarray, np.array(points, dtype=np.float32))
+
+    def test_init_points_all_float_casted_to_int(self):
+        points = [[0.0, 0.0], [0.0, 1.1], [1.4, 1.6], [1.9, 0.9]]
+        rect = Rectangle(points, is_cast_int=True)
+        print(rect.asarray)
+        assert np.array_equal(rect.asarray, np.array(points, dtype=np.int32))
+
+    def test_init_points_mix_int_float_cast_to_int(self):
+        points = [[0, 0.9], [5, 5], [1, 2.555], [1.2, 0]]
+        rect = Rectangle(points, is_cast_int=True)
+        assert np.array_equal(rect.asarray, np.array(points, dtype=np.int32))
+
+
 class TestEntityBasics:
     def test_perimeter(self):
         rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])

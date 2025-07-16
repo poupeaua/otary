@@ -48,10 +48,10 @@ class DrawerImage:
             render (CirclesRender): circle renderer
         """
         im_array = self._pre_draw(n_objects=len(circles), render=render)
-        for circle, color in zip(circles, render.colors):
+        for circle, color in zip(circles, render.colors_processed):
             cv2.circle(  # type: ignore[call-overload]
                 img=im_array,
-                center=np.round(circle.center).astype(int),
+                center=circle.center.astype(int),
                 radius=int(circle.radius),
                 color=color,
                 thickness=render.thickness if not render.is_filled else -1,
@@ -60,7 +60,7 @@ class DrawerImage:
             if render.is_draw_center_point_enabled:
                 cv2.circle(  # type: ignore[call-overload]
                     img=im_array,
-                    center=np.round(circle.center).astype(int),
+                    center=circle.center.astype(int),
                     radius=1,
                     color=color,
                     thickness=render.thickness,
@@ -80,7 +80,7 @@ class DrawerImage:
             render (EllipseRender): renderer (uses EllipseRender for color/thickness)
         """
         im_array = self._pre_draw(n_objects=len(ellipses), render=render)
-        for ellipse, color in zip(ellipses, render.colors):
+        for ellipse, color in zip(ellipses, render.colors_processed):
             axes = (int(ellipse.semi_major_axis), int(ellipse.semi_minor_axis))
             cv2.ellipse(  # type: ignore[call-overload]
                 img=im_array,
@@ -128,7 +128,7 @@ class DrawerImage:
         """
         _points = prep_obj_draw(objects=points, _type=geo.Point)
         im_array = self._pre_draw(n_objects=len(_points), render=render)
-        for point, color in zip(_points, render.colors):
+        for point, color in zip(_points, render.colors_processed):
             cv2.circle(
                 img=im_array,
                 center=point,
@@ -155,7 +155,7 @@ class DrawerImage:
         _segments = prep_obj_draw(objects=segments, _type=geo.Segment)
         im_array = self._pre_draw(n_objects=len(segments), render=render)
         if render.as_vectors:
-            for segment, color in zip(_segments, render.colors):
+            for segment, color in zip(_segments, render.colors_processed):
                 cv2.arrowedLine(
                     img=im_array,
                     pt1=segment[0],
@@ -166,7 +166,7 @@ class DrawerImage:
                     tipLength=render.tip_length / geo.Segment(segment).length,
                 )
         else:
-            for segment, color in zip(_segments, render.colors):
+            for segment, color in zip(_segments, render.colors_processed):
                 cv2.line(
                     img=im_array,
                     pt1=segment[0],
@@ -191,7 +191,7 @@ class DrawerImage:
         """
         _splines = prep_obj_draw(objects=splines, _type=geo.LinearSpline)
         im_array = self._pre_draw(n_objects=len(_splines), render=render)
-        for spline, color in zip(_splines, render.colors):
+        for spline, color in zip(_splines, render.colors_processed):
 
             if render.as_vectors:
                 cv2.polylines(
@@ -237,7 +237,7 @@ class DrawerImage:
         """
         _polygons = prep_obj_draw(objects=polygons, _type=geo.Polygon)
         im_array = self._pre_draw(n_objects=len(_polygons), render=render)
-        for polygon, color in zip(_polygons, render.colors):
+        for polygon, color in zip(_polygons, render.colors_processed):
             if render.is_filled:
                 cv2.fillPoly(
                     img=im_array,
@@ -270,7 +270,7 @@ class DrawerImage:
             render (OcrSingleOutputRender): OcrSingleOutputRender object
         """
         im_array = self._pre_draw(n_objects=len(ocr_outputs), render=render)
-        for ocrso, color in zip(ocr_outputs, render.colors):
+        for ocrso, color in zip(ocr_outputs, render.colors_processed):
             if not isinstance(ocrso, OcrSingleOutput) or ocrso.bbox is None:
                 # warnings.warn(
                 #     f"Object {ocrso} is not an OcrSingleOutput or has no bbox. "
