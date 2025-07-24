@@ -10,7 +10,7 @@ import cv2
 from otary.image.components.drawer.utils.tools import is_color_tuple, color_str_to_tuple
 
 DEFAULT_RENDER_THICKNESS = 3
-DEFAULT_RENDER_COLOR = (0, 0, 255)
+DEFAULT_RENDER_COLOR = (0, 0, 255) # Default color is red in BGR format
 
 
 @dataclass(kw_only=True)
