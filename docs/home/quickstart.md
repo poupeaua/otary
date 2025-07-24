@@ -32,9 +32,9 @@ polygon.rotate(angle=15, is_clockwise=True, is_degree=True)
 
 # draw the polygon on the image
 im.draw_polygons(
-    polygons=[polygon], 
+    polygons=[polygon],
     render=ot.PolygonsRender(
-        is_filled=True, 
+        is_filled=True,
         default_color="blue"
     )
 )
@@ -49,4 +49,4 @@ the full power of Otary.
 
 ## Go further
 
-You can explore more  
+You can explore more

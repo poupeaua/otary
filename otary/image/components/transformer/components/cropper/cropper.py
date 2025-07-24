@@ -278,17 +278,17 @@ class CropperImage:
         Crops the image using the bounding box defined by a polygon.
 
         Args:
-            polygon (geo.Polygon): The polygon whose bounding box will be used for 
+            polygon (geo.Polygon): The polygon whose bounding box will be used for
                 cropping.
-            copy (bool, optional): If True, returns a copy of the cropped image. 
+            copy (bool, optional): If True, returns a copy of the cropped image.
                 Defaults to False.
-            clip (bool, optional): If True, clips the crop region to the image 
+            clip (bool, optional): If True, clips the crop region to the image
                 boundaries. Defaults to True.
-            pad (bool, optional): If True, pads the cropped region if it extends beyond 
+            pad (bool, optional): If True, pads the cropped region if it extends beyond
                 the image boundaries. Defaults to False.
-            extra_border_size (int, optional): Additional border size to add around the 
+            extra_border_size (int, optional): Additional border size to add around the
                 cropped region. Defaults to 0.
-            pad_value (int, optional): Value to use for padding if pad is True. 
+            pad_value (int, optional): Value to use for padding if pad is True.
                 Defaults to 0.
 
         Returns:
@@ -320,17 +320,17 @@ class CropperImage:
         Crops the image using the bounding box defined by a linear spline.
 
         Args:
-            spline (geo.LinearSpline): The linear spline object defining the crop 
+            spline (geo.LinearSpline): The linear spline object defining the crop
                 region.
-            copy (bool, optional): If True, returns a copy of the cropped image. 
+            copy (bool, optional): If True, returns a copy of the cropped image.
                 Defaults to False.
-            clip (bool, optional): If True, clips the crop region to the image 
+            clip (bool, optional): If True, clips the crop region to the image
                 boundaries. Defaults to True.
-            pad (bool, optional): If True, pads the cropped region if it extends beyond 
+            pad (bool, optional): If True, pads the cropped region if it extends beyond
                 the image boundaries. Defaults to False.
             extra_border_size (int, optional): Additional border size to add around the
                 cropped region. Defaults to 0.
-            pad_value (int, optional): Value to use for padding if pad is True. 
+            pad_value (int, optional): Value to use for padding if pad is True.
                 Defaults to 0.
 
         Returns:

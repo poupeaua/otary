@@ -9,8 +9,7 @@ from otary.geometry import LinearSpline, Vector
 
 
 class VectorizedLinearSpline(LinearSpline, DirectedLinearEntity):
-    """VectorizedLinearSpline class
-    """
+    """VectorizedLinearSpline class"""
 
     def __init__(self, points, is_cast_int=False):
         super().__init__(points, is_cast_int)

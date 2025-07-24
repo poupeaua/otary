@@ -25,4 +25,4 @@ The `image` module is built around the following components:
 - **[Transformers](transformers):** Allows you to apply various transformations to the image, such as resizing, cropping, and color adjustments
 - **[Drawer](drawer):** Provides methods for drawing shapes and text on the image.
 
-Behind the scene the components all use a base image class. 
+Behind the scene the components all use a base image class.

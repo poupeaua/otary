@@ -13,7 +13,7 @@ im = ot.Image.from_file(filepath="path/to/file/image")
 circle = ot.Circle(center=[100, 100], radius=50)
 
 im.draw_circles(
-    circles=[circle], 
+    circles=[circle],
     render=ot.CirclesRender(thickness=5, default_color="red")
 )
 ```

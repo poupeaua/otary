@@ -1,6 +1,6 @@
 # Properties
 
-Properties are the essential attributes of an image. 
+Properties are the essential attributes of an image.
 They provide basic information about the image, such as its dimensions, shape, etc.
 
 Here is for example a python sample code to get the width of the image:
