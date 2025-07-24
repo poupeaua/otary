@@ -11,7 +11,7 @@ from otary.geometry.discrete.linear.entity import LinearEntity
 
 
 class LinearSpline(LinearEntity):
-    """Curve class"""
+    """LinearSpline class"""
 
     def __init__(self, points: NDArray | list, is_cast_int: bool = False) -> None:
         if len(points) < 2:

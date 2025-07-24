@@ -32,7 +32,7 @@ The main features of Otary are:
 
 - **Performance**: optimized for speed and efficiency, making it suitable for high-performance applications. It is built on top of [NumPy](https://numpy.org) and [OpenCV](https://opencv.org), which are known for their speed and performance.
 
-- **Unification**: Otary unifies multiple libraries into a single, unified library, making it easier to use without the need to switch between multiple libraries. Spend less time learning different APIs and reading multiple documentations.
+- **Unification**: Otary brings together several libraries into one cohesive solution, simplifying usage by eliminating the need to switch between multiple libraries.
 
 - **Interactiveness**: designed to be interactive and user-friendly, making it suitable for interactive applications like Jupyter notebooks.
 
@@ -53,59 +53,50 @@ pip install otary
 Let me illustrate the usage of Otary with a simple example. Imagine you need to:
 
 1. read an image from a pdf file
-2. crop a part of it
-3. rotate the cropped image
-4. apply athreshold
-5. draw a ellipse on it
+2. draw an ellipse on it
+3. crop a part of the image
+4. rotate the cropped image
+5. apply a threshold
 6. show the image
 
-Try it out yourself on your favorite LLM (like [ChatGPT](https://chatgpt.com/)) by copying the query:
+In order to compare the use of Otary versus other libraries, I will use the same example but with different libraries. Try it yourself on your favorite LLM (like [ChatGPT](https://chatgpt.com/)) by copying the query:
 
 ```text
-Read an image from a pdf, crop a part of it given by a topleft point plus the width and the height of crop bounding box, then rotate the cropped image, apply a threshold on the image. Finally draw a ellipse on it and show the image.
+Generate a python code to read an image from a pdf, draw an ellipse on it, crop a part of the image, rotate the cropped image, apply a threshold on the image.
 ```
 
 Using Otary you can do it with few lines of code:
 
-
 ```python
 import otary as ot
 
-im = ot.Image.from_pdf(filepath="path/to/you/file.pdf", page_nb=0)
+im = ot.Image.from_pdf("path/to/your/file.pdf", page_nb=0)
 
-ellipse = ot.Ellipse(foci1=[10, 10], foci2=[50, 50], semi_major_axis=50)
+ellipse = ot.Ellipse(foci1=[100, 100], foci2=[400, 400], semi_major_axis=250)
 
 im = (
-    im.crop_from_topleft(topleft=[200, 100], width=100, height=100)
-    .rotate(angle=90, is_degree=True, is_clockwise=False)
+    im.draw_ellipses([ellipse])
+    .crop(x0=50, y0=50, x1=450, y1=450)
+    .rotate(angle=90, is_degree=True)
     .threshold_simple(thresh=200)
-    .draw_ellipses(
-        ellipses=[ellipse],
-        render=ot.EllipsesRender(
-            is_draw_focis_enabled=True,
-            default_color="red"
-        )
-    )
 )
 
 im.show()
 ```
 
-- Otary makes the code much more **readable**
-- Otary makes the code much more **interactive**
-- Otary makes **libraries management easier** by only using one library and not depending on multiple libraries like Pillow, OpenCV, Scikit-Image, PyMuPDF etc.
+Using Otary makes the code:
 
+- Much more **readable** and hence maintainable
+- Much more **interactive**
+- Much simpler, simplifying **libraries management** by only using one library and not manipulating multiple libraries like Pillow, OpenCV, Scikit-Image, PyMuPDF etc.
 
 In a Jupyter notebook, you can easily test and iterate on transformations by simply commenting part of the code as you need it.
 
 ```python
 im = (
-    im.crop_from_topleft(topleft=[200, 100], width=100, height=100)
-    # .rotate(angle=90, is_degree=True, is_clockwise=False)
-    # .threshold_simple(thresh=200)
-    .draw_ellipses(
-        ellipses=[ellipse],
-        render=ot.EllipsesRender(is_draw_focis_enabled=True)
-    )
+    im.draw_ellipses([ellipse])
+    # .crop(x0=50, y0=50, x1=450, y1=450)
+    # .rotate(angle=90, is_degree=True)
+    .threshold_simple(thresh=200)
 )
 ```

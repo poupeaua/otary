@@ -1424,7 +1424,7 @@ class Image:
         resize_factor: float = 1.0,
     ) -> list[float]:
         """Compute the contains score in [0, 1] for each individual segment.
-        This method can be better than :func:`~Image.score_contains_polygons()` in some
+        This method can be better than score_contains_polygons in some
         cases.
         It provides a score for each single segments. This way it is better to
         identify which segments specifically are contained in the image or not.

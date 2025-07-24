@@ -41,58 +41,88 @@ theme:
   logo: img/logo-bg-transparent.png
   favicon: img/logo-bg-transparent.png
   language: en
+
 repo_name: poupeaua/otary
 repo_url: https://github.com/poupeaua/otary
 
 plugins:
   - search
-  - mkdocstrings
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
 
 nav:
   - Home:
-    - index.md
-    - Getting Started: getting_started.md
-    - Installation: installation.md
-    - Examples: examples.md
+    - home/index.md
+    - Quickstart: home/quickstart.md
+    - Installation: home/installation.md
+    - PyPI Releases: https://pypi.org/project/otary
 
   - API:
-      - reference/index.md
-      - Image:
-        - reference/image/index.md
-        - I/O: reference/image/io.md
-        - Properties: reference/image/properties.md
-        - Conversion: reference/image/conversion.md
+      - api/index.md
+      - Image: # -------------------------------- IMAGE -------------------------------
+        - api/image/index.md
+
+        - I/O:
+          - api/image/io/index.md
+          - Reader: api/image/io/reader.md
+          - Writer: api/image/io/writer.md
+
+        - Properties: api/image/properties.md
+        - Conversion: api/image/conversion.md
+
         - Transformers:
-          - Cropping: reference/image/transformers/cropping.md
-          - Geometry: reference/image/transformers/geometry.md
-          - Morphology: reference/image/transformers/morphology.md
-          - Binarization & Thresholding: reference/image/transformers/thresholding.md
-          - Scoring: reference/image/transformers/scoring.md
+          - api/image/transformers/index.md
+          - Cropping: api/image/transformers/cropping.md
+          - Geometry: api/image/transformers/geometry.md
+          - Morphology: api/image/transformers/morphology.md
+          - Binarization & Thresholding: api/image/transformers/thresholding.md
+          - Scoring: api/image/transformers/scoring.md
 
         - Drawer:
-          - Drawing: reference/image/drawer/drawing.md
-          - Renderers: reference/image/drawer/renderers.md
+          - api/image/drawer/index.md
+          - Drawing: api/image/drawer/drawing.md
+          - Renderers: api/image/drawer/renderers.md
 
-      - Geometry:
-        - reference/geometry/index.md
+      - Geometry: # ---------------------------- GEOMETRY -----------------------------
+        - api/geometry/index.md
+
         - Discrete:
-          - reference/geometry/discrete/point.md
+          - api/geometry/discrete/point.md
+
           - Shape:
-            - Polygon: reference/geometry/discrete/shape/polygon.md
-            - Rectangle: reference/geometry/discrete/shape/rectangle.md
-            - Triangle: reference/geometry/discrete/shape/triangle.md
+            - Polygon: api/geometry/discrete/shape/polygon.md
+            - Rectangle: api/geometry/discrete/shape/rectangle.md
+            - Triangle: api/geometry/discrete/shape/triangle.md
+
           - Linear:
-            - Segment: reference/geometry/discrete/linear/segment.md
-            - Linear Spline: reference/geometry/discrete/linear/linear_spline.md
+            - Segment: api/geometry/discrete/linear/segment.md
+            - Linear Spline: api/geometry/discrete/linear/linear_spline.md
+
             - Directed:
-              - Vector: reference/geometry/discrete/linear/directed/vector.md
-              - Vectorized Linear Spline: reference/geometry/discrete/linear/directed/vectorized_linear_spline.md
+              - Vector: api/geometry/discrete/linear/directed/vector.md
+              - Vectorized Linear Spline: api/geometry/discrete/linear/directed/vectorized_linear_spline.md
 
         - Continuous:
-          - Circle: reference/geometry/continuous/circle.md
-          - Ellipse: reference/geometry/continuous/ellipse.md
+          - Circle: api/geometry/continuous/circle.md
+          - Ellipse: api/geometry/continuous/ellipse.md
 
-  - About: about.md
+  - Learn:
+    - learn/index.md
+
+  - About: 
+    - about/index.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/poupeaua/otary
+      name: GitHub
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/otary
+      name: PyPI
 
 markdown_extensions:
   - admonition

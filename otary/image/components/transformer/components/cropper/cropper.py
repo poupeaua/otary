@@ -274,7 +274,26 @@ class CropperImage:
         extra_border_size: int = 0,
         pad_value: int = 0,
     ) -> Optional[Image]:
-        """Crop the image from a polygon"""
+        """
+        Crops the image using the bounding box defined by a polygon.
+
+        Args:
+            polygon (geo.Polygon): The polygon whose bounding box will be used for 
+                cropping.
+            copy (bool, optional): If True, returns a copy of the cropped image. 
+                Defaults to False.
+            clip (bool, optional): If True, clips the crop region to the image 
+                boundaries. Defaults to True.
+            pad (bool, optional): If True, pads the cropped region if it extends beyond 
+                the image boundaries. Defaults to False.
+            extra_border_size (int, optional): Additional border size to add around the 
+                cropped region. Defaults to 0.
+            pad_value (int, optional): Value to use for padding if pad is True. 
+                Defaults to 0.
+
+        Returns:
+            Optional[Image]: The cropped image
+        """
         # pylint: disable=too-many-arguments, too-many-positional-arguments
         return self.crop(
             x0=int(polygon.xmin),
@@ -297,7 +316,26 @@ class CropperImage:
         extra_border_size: int = 0,
         pad_value: int = 0,
     ) -> Optional[Image]:
-        """Crop the image from a linear spline"""
+        """
+        Crops the image using the bounding box defined by a linear spline.
+
+        Args:
+            spline (geo.LinearSpline): The linear spline object defining the crop 
+                region.
+            copy (bool, optional): If True, returns a copy of the cropped image. 
+                Defaults to False.
+            clip (bool, optional): If True, clips the crop region to the image 
+                boundaries. Defaults to True.
+            pad (bool, optional): If True, pads the cropped region if it extends beyond 
+                the image boundaries. Defaults to False.
+            extra_border_size (int, optional): Additional border size to add around the
+                cropped region. Defaults to 0.
+            pad_value (int, optional): Value to use for padding if pad is True. 
+                Defaults to 0.
+
+        Returns:
+            Optional[Image]: The cropped image
+        """
         # pylint: disable=too-many-arguments, too-many-positional-arguments
         return self.crop(
             x0=int(spline.xmin),

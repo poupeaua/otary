@@ -9,12 +9,7 @@ from otary.geometry import LinearSpline, Vector
 
 
 class VectorizedLinearSpline(LinearSpline, DirectedLinearEntity):
-    """VectorizedLinearSpline class:
-
-    - it IS a linear spline
-    - it HAS a vector since a vector IS a segment and however the curve CANNOT be
-        a segment. The vector is thus an attribute in this class.
-        The vector does inherit from Vector class.
+    """VectorizedLinearSpline class
     """
 
     def __init__(self, points, is_cast_int=False):
