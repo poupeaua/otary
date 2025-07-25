@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-    <em>Otary library, readable, fast, unified, interactive, flexible, pythonic</em>
+    <em>Otary library. Shape your images. Image your shapes.</em>
 </p>
 
 <p align="center">
@@ -28,17 +28,15 @@ Otary is a powerful Python library for advanced image and 2D geometry manipulati
 
 The main features of Otary are:
 
-- **Readability**: designed to be easy to read and understand, making it suitable for beginners and experienced developers alike.
+- **Unification**: Otary offers a cohesive solution for image and geometry manipulation, letting you work seamlessly without switching tools.
+
+- **Readability**: Self-explanatory by design. Otary’s clean, readable code eliminates the need for comments, making it easy for beginners to learn and for experts to build efficiently.
 
 - **Performance**: optimized for speed and efficiency, making it suitable for high-performance applications. It is built on top of [NumPy](https://numpy.org) and [OpenCV](https://opencv.org), which are known for their speed and performance.
 
-- **Unification**: Otary brings together several libraries into one cohesive solution, simplifying usage by eliminating the need to switch between multiple libraries.
-
-- **Interactiveness**: designed to be interactive and user-friendly, making it suitable for interactive applications like Jupyter notebooks.
+- **Interactivity**: designed to be Interactive and user-friendly, ideal for [Jupyter notebooks](https://jupyter.org) and live exploration.
 
 - **Flexibility**: provides a flexible and extensible architecture, allowing developers to customize and extend its functionality as needed.
-
-- **Pythonic**: designed to be Pythonic and easy to use, making it suitable for Python developers.
 
 ## Installation
 
@@ -89,6 +87,8 @@ Using Otary makes the code:
 - Much more **readable** and hence maintainable
 - Much more **interactive**
 - Much simpler, simplifying **libraries management** by only using one library and not manipulating multiple libraries like Pillow, OpenCV, Scikit-Image, PyMuPDF etc.
+
+## Enhanced Interactivity
 
 In a Jupyter notebook, you can easily test and iterate on transformations by simply commenting part of the code as you need it.
 

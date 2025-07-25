@@ -70,7 +70,7 @@ check-pylint:
 	@echo "\n------------------------------"
 	@echo "Checking code quality - Pylint"
 	@echo "------------------------------"
-	@pylint otary/ --fail-under=9.5
+	@pylint otary/ --fail-under=10
 
 check-ruff:
 	@echo "\n----------------------------"

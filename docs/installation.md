@@ -2,7 +2,7 @@
 
 Otary is available on [PyPI](https://pypi.org/project/otary/).
 
-Always make sure you are in a virtual environment before installing.
+Always make sure you are in a [virtual environment](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/) before installing.
 
 ```bash
 pip install otary

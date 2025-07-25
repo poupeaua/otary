@@ -1,3 +1,3 @@
 # Learn
 
-Tutorials are coming !
+Tutorials coming soon !

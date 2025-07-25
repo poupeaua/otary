@@ -47,6 +47,8 @@ im.show()
 You can play around with this code in a script or a Jupyter notebook to explore to
 the full power of Otary.
 
-## Go further
+## Going further
 
-You can explore more
+You can explore more examples, tutorials and advanced functionalities in the [Learn](../learn/) section.
+
+You can also jump to the [API Reference](../api/) to look for specific methods and classes or to get a deeper understanding of the library.

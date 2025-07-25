@@ -55,9 +55,10 @@ plugins:
 
 nav:
   - Home:
-    - home/index.md
-    - Quickstart: home/quickstart.md
-    - Installation: home/installation.md
+    - index.md
+    - Why Otary?: why.md
+    - Quickstart: quickstart.md
+    - Installation: installation.md
     - PyPI Releases: https://pypi.org/project/otary
 
   - API:
@@ -113,7 +114,9 @@ nav:
     - learn/index.md
 
   - About:
-    - about/index.md
+    - about/history.md    
+    - Contributing: about/contributing.md
+    - License: about/license.md
 
 extra:
   social:
