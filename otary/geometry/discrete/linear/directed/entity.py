@@ -86,6 +86,4 @@ class DirectedLinearEntity(LinearEntity):
         Returns:
             str: _description_
         """
-        return angle_to_direction(
-            input_angle=self.cardinal_degree, full=full, level=level
-        )
+        return angle_to_direction(angle=self.cardinal_degree, full=full, level=level)

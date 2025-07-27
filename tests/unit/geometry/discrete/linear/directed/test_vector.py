@@ -3,6 +3,7 @@ Test Vector class util
 """
 
 import numpy as np
+import pytest
 
 from otary.geometry import Vector
 
@@ -31,6 +32,26 @@ class TestVectorCardinal:
 
     def test_cardinal_degree_315(self):
         assert np.isclose(Vector([[0, 0], [-1, -1]]).cardinal_degree, 315)
+
+    def test_cardinal_direction_invalid_zero(self):
+        with pytest.raises(ValueError):
+            Vector([[0, 0], [0, -1]]).cardinal_direction(full=False, level=0)
+
+    def test_cardinal_direction_invalid_four(self):
+        with pytest.raises(ValueError):
+            Vector([[0, 0], [0, -1]]).cardinal_direction(full=False, level=4)
+
+    def test_cardinal_direction_N_lvl1(self):
+        assert Vector([[0, 0], [0, -1]]).cardinal_direction(full=False, level=1) == "N"
+
+    def test_cardinal_direction_E_lvl1(self):
+        assert Vector([[0, 0], [1, 0]]).cardinal_direction(full=False, level=1) == "E"
+
+    def test_cardinal_direction_S_lvl1(self):
+        assert Vector([[0, 0], [0, 1]]).cardinal_direction(full=False, level=1) == "S"
+
+    def test_cardinal_direction_W_lvl1(self):
+        assert Vector([[0, 0], [-1, 0]]).cardinal_direction(full=False, level=1) == "W"
 
     def test_cardinal_direction_N(self):
         assert Vector([[0, 0], [0, -1]]).cardinal_direction(full=False, level=2) == "N"
