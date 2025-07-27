@@ -8,7 +8,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from otary.geometry.discrete.linear.entity import LinearEntity
-from otary.geometry.discrete.linear.directed.utils import angle_to_direction
+from otary.geometry.discrete.linear.directed.utils.direction import angle_to_direction
 
 
 class DirectedLinearEntity(LinearEntity):
