@@ -1,7 +1,7 @@
 [project]
 name = "otary"
 version = "0.2.0"
-description = "Image and 2D Geometry library for easy and fast image manipulation"
+description = "Otary is a powerful Python library for advanced image and 2D geometry manipulation."
 authors = [
     {name="Alexandre Poupeau", email="alexandre.poupeau.contact@gmail.com"}
 ]

@@ -6,7 +6,7 @@
 
 Otary is a unified library for image and geometry processing, enabling easy manipulation and interaction between images and geometric objects without the need to use multiple libraries.
 
-If you are tired of switching between [Numpy](https://numpy.org/), [OpenCV](https://opencv.org/), 
+If you’ve ever found yourself juggling tools like [Numpy](https://numpy.org/), [OpenCV](https://opencv.org/), 
 [Shapely](https://shapely.readthedocs.io/), [PyMuPDF](https://pymupdf.readthedocs.io/) or fitz,
 [Matplotlib](https://matplotlib.org/), [Pillow](https://pillow.readthedocs.io/), 
 [Scikit-Image](https://scikit-image.org/), [Sympy](https://sympy.org/), [pdf2image](https://pypi.org/project/pdf2image/), etc... you are not alone.
