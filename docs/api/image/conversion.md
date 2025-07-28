@@ -1,4 +1,16 @@
-## Conversion Methods
+# Conversion Methods
+
+Conversion is the process of converting an image to something else, which can be anything.
+
+For example, here is an example to convert an image to grayscale:
+
+```python
+import otary as ot
+
+im = ot.Image.from_file(filepath="path/to/file/image")
+
+im.as_grayscale()
+```
 
 ::: otary.image.image.Image
     options:

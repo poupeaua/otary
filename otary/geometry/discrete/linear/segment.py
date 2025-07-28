@@ -25,7 +25,7 @@ else:  # pragma: no cover
 
 
 class Segment(LinearEntity):
-    """Segment Class to manipulate easily segments objects"""
+    """Segment class"""
 
     def __init__(self, points: NDArray | list, is_cast_int: bool = False) -> None:
         assert len(points) == 2

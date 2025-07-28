@@ -1,4 +1,4 @@
-## Analysis & Scoring Methods
+# Scoring Methods
 
 ::: otary.image.image.Image
     options:

@@ -47,9 +47,9 @@ init-install:
 full-check: precommit check test
 
 precommit:
-	@echo "\n----------------"
+	@echo "\n------------------"
 	@echo "Running Pre-Commit"
-	@echo "----------------"
+	@echo "------------------"
 	@pre-commit run --all-files
 
 # -------------------------------------- TEST -----------------------------------------
@@ -70,7 +70,7 @@ check-pylint:
 	@echo "\n------------------------------"
 	@echo "Checking code quality - Pylint"
 	@echo "------------------------------"
-	@pylint otary/ --fail-under=9.5
+	@pylint otary/ --fail-under=10
 
 check-ruff:
 	@echo "\n----------------------------"

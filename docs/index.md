@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-    <em>Otary library, readable, fast, unified, interactive, flexible, pythonic</em>
+    <em>Otary library, shape your images, image your shapes.</em>
 </p>
 
 <p align="center">
@@ -22,61 +22,55 @@
 
 # Welcome to Otary
 
-Otary is a powerful Python library for advanced image and 2D geometry manipulation.
+Otary — elegant, readable, and powerful image and 2D geometry Python library.
 
 ## Features
 
 The main features of Otary are:
 
-- **Readability**: designed to be easy to read and understand, making it suitable for beginners and experienced developers alike.
+- **Unification**: Otary offers a cohesive solution for image and geometry manipulation, letting you work seamlessly without switching tools.
+
+- **Readability**: Self-explanatory by design. Otary’s clean, readable code eliminates the need for comments, making it easy for beginners to learn and for experts to build efficiently.
 
 - **Performance**: optimized for speed and efficiency, making it suitable for high-performance applications. It is built on top of [NumPy](https://numpy.org) and [OpenCV](https://opencv.org), which are known for their speed and performance.
 
-- **Unification**: Otary unifies multiple libraries into a single, unified library, making it easier to use without the need to switch between multiple libraries. Spend less time learning different APIs and reading multiple documentations.
-
-- **Interactiveness**: designed to be interactive and user-friendly, making it suitable for interactive applications like Jupyter notebooks.
+- **Interactivity**: designed to be Interactive and user-friendly, ideal for [Jupyter notebooks](https://jupyter.org) and live exploration.
 
 - **Flexibility**: provides a flexible and extensible architecture, allowing developers to customize and extend its functionality as needed.
-
-- **Pythonic**: designed to be Pythonic and easy to use, making it suitable for Python developers.
 
 ## Example
 
 Let me illustrate the usage of Otary with a simple example. Imagine you need to:
 
 1. read an image from a pdf file
-2. crop a part of it
-3. rotate the cropped image
-4. apply a threshold
-5. draw a ellipse on it
+2. draw an ellipse on it
+3. crop a part of the image
+4. rotate the cropped image
+5. apply a threshold
 6. show the image
 
-Try it out yourself on your favorite LLM (like [ChatGPT](https://chatgpt.com/)) by copying the query:
+In order to compare the use of Otary versus other libraries, I will use the same example but with different libraries. Try it yourself on your favorite LLM (like [ChatGPT](https://chatgpt.com/)) by copying the query:
 
 ```text
-Read an image from a pdf, crop a part of it given by a topleft point plus the width and the height of crop bbox, then rotate the cropped image, apply a threshold on the image. Finally draw a ellipse on it and show the image.
+Generate a python code to read an image from a pdf, draw an ellipse on it, crop a part of the image, rotate the cropped image, apply a threshold on the image.
 ```
+
+Using Otary you can do it with few lines of code:
 
 === "Otary"
 
     ```Python
     import otary as ot
 
-    im = ot.Image.from_pdf(filepath="path/to/you/file.pdf", page_nb=0)
+    im = ot.Image.from_pdf("path/to/your/file.pdf", page_nb=0)
 
-    ellipse = ot.Ellipse(foci1=[10, 10], foci2=[50, 50], semi_major_axis=50)
+    ellipse = ot.Ellipse(foci1=[100, 100], foci2=[400, 400], semi_major_axis=250)
 
     im = (
-        im.crop_from_topleft(topleft=[200, 100], width=100, height=100)
-        .rotate(angle=90, is_degree=True, is_clockwise=False)
+        im.draw_ellipses([ellipse])
+        .crop(x0=50, y0=50, x1=450, y1=450)
+        .rotate(angle=90, is_degree=True)
         .threshold_simple(thresh=200)
-        .draw_ellipses(
-            ellipses=[ellipse],
-            render=ot.EllipsesRender(
-                is_draw_focis_enabled=True,
-                default_color="red"
-            )
-        )
     )
 
     im.show()
@@ -85,82 +79,106 @@ Read an image from a pdf, crop a part of it given by a topleft point plus the wi
 === "Other libraries"
 
     ```Python
+    """
+    Providing the input to ChatGPT gives the following code
+    """
     import fitz  # PyMuPDF
-    import cv2
     import numpy as np
+    import cv2
 
-    def process_pdf_crop_rotate_threshold_draw(
-        pdf_path,
-        page_number,
-        topleft_x,
-        topleft_y,
-        width,
-        height,
-        rotation=cv2.ROTATE_90_CLOCKWISE
-    ):
-        # Load PDF and render page
+    def read_image_from_pdf(pdf_path, page_number=0, dpi=300):
+        """Extracts the specified page as an image from a PDF."""
         doc = fitz.open(pdf_path)
         page = doc[page_number]
-        pix = page.get_pixmap(dpi=300)
+        mat = fitz.Matrix(dpi / 72, dpi / 72)  # scale to DPI
+        pix = page.get_pixmap(matrix=mat)
         img = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, pix.n)
+        if img.shape[2] == 4:
+            img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+        return img
 
-        if pix.n == 4:
-            img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
+    def draw_ellipse(img, center, axes, angle=0, color=(0, 255, 0), thickness=2):
+        """Draws an ellipse on the image."""
+        return cv2.ellipse(img.copy(), center, axes, angle, 0, 360, color, thickness)
 
-        gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    def crop_image(img, top_left, bottom_right):
+        """Crops the image using top-left and bottom-right coordinates."""
+        x1, y1 = top_left
+        x2, y2 = bottom_right
+        return img[y1:y2, x1:x2]
 
-        # Crop ROI
-        cropped = gray[topleft_y:topleft_y+height, topleft_x:topleft_x+width]
+    def rotate_image(img, angle):
+        """Rotates the image around its center by the given angle."""
+        (h, w) = img.shape[:2]
+        center = (w // 2, h // 2)
+        M = cv2.getRotationMatrix2D(center, angle, 1.0)
+        rotated = cv2.warpAffine(img, M, (w, h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+        return rotated
 
-        # Rotate cropped image
-        rotated = cv2.rotate(cropped, rotation)
+    def apply_threshold(img, thresh_value=127):
+        """Applies a binary threshold on the grayscale version of the image."""
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        _, thresh = cv2.threshold(gray, thresh_value, 255, cv2.THRESH_BINARY)
+        return thresh
 
-        # Apply threshold (Otsu)
-        _, thresh = cv2.threshold(rotated, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    def main():
+        pdf_path = "your_file.pdf"
 
-        # Draw ellipse on the thresholded image
-        center = (thresh.shape[1] // 2, thresh.shape[0] // 2)
-        axes = (thresh.shape[1] // 4, thresh.shape[0] // 4)
-        cv2.ellipse(thresh, center, axes, angle=0, startAngle=0, endAngle=360, color=128, thickness=2)
+        # Step 1: Read image from PDF
+        img = read_image_from_pdf(pdf_path)
 
-        # Show the final image
-        cv2.imshow("Processed Image", thresh)
+        # Step 2: Draw an ellipse on the image
+        h, w = img.shape[:2]
+        center = (w // 2, h // 2)
+        axes = (w // 4, h // 6)
+        img_with_ellipse = draw_ellipse(img, center, axes, angle=30, color=(0, 0, 255), thickness=3)
+
+        # Step 3: Crop a part of the image
+        cropped_img = crop_image(img_with_ellipse, (100, 100), (500, 500))
+
+        # Step 4: Rotate the cropped image
+        rotated_img = rotate_image(cropped_img, angle=45)
+
+        # Step 5: Apply threshold
+        thresholded_img = apply_threshold(rotated_img, thresh_value=150)
+
+        # Display results
+        cv2.imshow("Ellipse Image", img_with_ellipse)
+        cv2.imshow("Cropped Image", cropped_img)
+        cv2.imshow("Rotated Image", rotated_img)
+        cv2.imshow("Thresholded Image", thresholded_img)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-        # Optionally save
-        cv2.imwrite("final_output.png", thresh)
+        # Optionally save results
+        cv2.imwrite("ellipse_image.jpg", img_with_ellipse)
+        cv2.imwrite("cropped_image.jpg", cropped_img)
+        cv2.imwrite("rotated_image.jpg", rotated_img)
+        cv2.imwrite("thresholded_image.jpg", thresholded_img)
 
-        return thresh
-
-    # Example usage:
     if __name__ == "__main__":
-        process_pdf_crop_rotate_threshold_draw(
-            pdf_path="example.pdf",
-            page_number=0,
-            topleft_x=100,
-            topleft_y=200,
-            width=300,
-            height=400
-        )
+        main()
     ```
 
-- Otary makes the code much more **readable**
-- Otary makes the code much more **interactive**
-- Otary makes **libraries management easier** by only using one library and not depending on multiple libraries like Pillow, OpenCV, Scikit-Image, PyMuPDF etc.
+ChatGPT proposes to re-invent the wheel.
 
-!!! tip "Enhanced Interactiveness"
+Using Otary makes the code:
+
+- Much more **readable** and hence maintainable
+- Much more **interactive**
+- Much simpler, simplifying **libraries management** by only using one library and not manipulating multiple libraries like Pillow, OpenCV, Scikit-Image, PyMuPDF etc.
+
+## Enhanced Interactivity
+
+!!! tip "Enhanced Interactivity"
 
     In a Jupyter notebook, you can easily test and iterate on transformations by simply commenting part of the code as you need it.
 
     ```python
     im = (
-        im.crop_from_topleft(topleft=[200, 100], width=100, height=100)
-        # .rotate(angle=90, is_degree=True, is_clockwise=False)
-        # .threshold_simple(thresh=200)
-        .draw_ellipses(
-            ellipses=[ellipse],
-            render=ot.EllipsesRender(is_draw_focis_enabled=True)
-        )
+        im.draw_ellipses([ellipse])
+        # .crop(x0=50, y0=50, x1=450, y1=450)
+        # .rotate(angle=90, is_degree=True)
+        .threshold_simple(thresh=200)
     )
     ```

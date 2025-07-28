@@ -1,6 +1,6 @@
 # custom
-.tmp/
-./data/
+tmp/
+data/
 .credentials/
 junit/
 .vscode

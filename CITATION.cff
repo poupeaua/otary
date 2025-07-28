@@ -1,0 +1,23 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Otary
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Alexandre
+    family-names: Poupeau
+    email: alexandre.poupeau.contact@gmail.com
+repository-code: 'https://github.com/poupeaua/otary'
+url: 'https://alexandrepoupeau.com/otary/'
+abstract: >-
+  Otary — elegant, readable, and powerful image and 2D
+  geometry Python library.
+keywords:
+  - otary
+  - image processing
+  - geometry processing
+license: BSD-3-Clause

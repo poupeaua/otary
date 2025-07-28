@@ -1424,7 +1424,7 @@ class Image:
         resize_factor: float = 1.0,
     ) -> list[float]:
         """Compute the contains score in [0, 1] for each individual segment.
-        This method can be better than :func:`~Image.score_contains_polygons()` in some
+        This method can be better than score_contains_polygons in some
         cases.
         It provides a score for each single segments. This way it is better to
         identify which segments specifically are contained in the image or not.
@@ -1513,7 +1513,7 @@ class Image:
         can control the sensitivity of the score.
 
         Args:
-            polygon (Polygon): Polygon object
+            polygons (Sequence[Polygon]): Polygon object
             dilate_kernel (tuple, optional): dilate kernel param. Defaults to (5, 5).
             dilate_iterations (int, optional): dilate iterations param. Defaults to 0.
             binarization_method (str, optional): binarization method. Here
@@ -1583,7 +1583,7 @@ class Image:
         It provides a score for each single linear spline.
 
         Args:
-            segments (NDArray | list[geo.Segment]): a list of segments
+            splines (Sequence[LinearSpline]): a list of linear splines objects
             dilate_kernel (tuple, optional): dilate kernel param. Defaults to (5, 5).
             dilate_iterations (int, optional): dilate iterations param. Defaults to 0.
             binarization_method (str, optional): binarization method. Here
