@@ -47,9 +47,9 @@ init-install:
 full-check: precommit check test
 
 precommit:
-	@echo "\n----------------"
+	@echo "\n------------------"
 	@echo "Running Pre-Commit"
-	@echo "----------------"
+	@echo "------------------"
 	@pre-commit run --all-files
 
 # -------------------------------------- TEST -----------------------------------------

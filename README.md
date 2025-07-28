@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-    <em>Otary library. Shape your images. Image your shapes.</em>
+    <em>Otary library, shape your images, image your shapes.</em>
 </p>
 
 <p align="center">
@@ -22,7 +22,7 @@
 
 # Welcome to Otary
 
-Otary is a powerful Python library for advanced image and 2D geometry manipulation.
+Otary — elegant, readable, and powerful image and 2D geometry Python library.
 
 ## Features
 

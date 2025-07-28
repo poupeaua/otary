@@ -1,7 +1,7 @@
 [project]
 name = "otary"
 version = "0.2.0"
-description = "Otary is a powerful Python library for advanced image and 2D geometry manipulation."
+description = "Otary — elegant, readable, and powerful image and 2D geometry Python library."
 authors = [
     {name="Alexandre Poupeau", email="alexandre.poupeau.contact@gmail.com"}
 ]
@@ -11,7 +11,6 @@ package-mode = true
 [tool.poetry.dependencies]
 python = "^3.10"
 opencv-python = "^4.10.0.84"
-setuptools = "^70.0.0"
 sympy = "^1.12"
 shapely = "^2.0.4"
 pymupdf = "^1.24.12"
@@ -29,6 +28,7 @@ black = "^24.4.2"
 pre-commit = "^3.7.1"
 
 [tool.poetry.group.dev.dependencies]
+setuptools = "^70.0.0"
 ipykernel = "^6.29.4"
 
 [tool.poetry.group.docs.dependencies]

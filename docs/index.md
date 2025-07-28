@@ -22,7 +22,7 @@
 
 # Welcome to Otary
 
-Otary is a powerful Python library for advanced image and 2D geometry manipulation.
+Otary — elegant, readable, and powerful image and 2D geometry Python library.
 
 ## Features
 
