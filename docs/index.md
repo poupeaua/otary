@@ -16,7 +16,7 @@
 <a href="https://alexandrepoupeau.com/otary/" > <img src="https://github.com/poupeaua/otary/actions/workflows/docs.yaml/badge.svg?branch=master"/></a>
 <a href="https://pypi.org/project/otary" target="_blank"> <img src="https://img.shields.io/pypi/v/otary?color=blue&label=pypi" alt="Package version"></a>
 <a href="https://pypi.org/project/otary" target="_blank"><img src="https://img.shields.io/pypi/pyversions/otary?color=blue&label=python" alt="License"></a>
-<a href="https://github.com/poupeaua/otary/tree/master?tab=GPL-3.0-1-ov-file" target="_blank"><img src="https://img.shields.io/github/license/poupeaua/otary?color=8A2BE2&label=license" alt="License"></a>
+<a href="https://github.com/poupeaua/otary/blob/master/LICENSE" target="_blank"><img src="https://img.shields.io/github/license/poupeaua/otary?color=8A2BE2" alt="License"></a>
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 </p>
 
