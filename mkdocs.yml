@@ -47,6 +47,8 @@ repo_url: https://github.com/poupeaua/otary
 
 plugins:
   - search
+  - autorefs:
+      resolve_closest: true
   - mkdocstrings:
       handlers:
         python:
@@ -74,13 +76,16 @@ nav:
         - Properties: api/image/properties.md
         - Conversion: api/image/conversion.md
 
+        - Analysis:
+          - api/image/analysis/index.md
+          - Scoring: api/image/analysis/scoring.md
+
         - Transformers:
           - api/image/transformers/index.md
           - Cropping: api/image/transformers/cropping.md
           - Geometry: api/image/transformers/geometry.md
           - Morphology: api/image/transformers/morphology.md
           - Binarization & Thresholding: api/image/transformers/thresholding.md
-          - Scoring: api/image/transformers/scoring.md
 
         - Drawer:
           - api/image/drawer/index.md

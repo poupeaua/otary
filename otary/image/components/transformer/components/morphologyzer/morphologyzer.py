@@ -220,8 +220,8 @@ class MorphologyzerImage:
         """Add a border to the image.
 
         Args:
-            thickness (int): border thickness.
-            color (int, optional): border color. Defaults to 0.
+            size (int): border thickness in all directions (top, bottom, left, right).
+            fill_value (int, optional): border color as filled value. Defaults to 0.
         """
         size = int(size)
         self.base.asarray = cv2.copyMakeBorder(

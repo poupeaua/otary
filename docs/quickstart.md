@@ -49,6 +49,6 @@ the full power of Otary.
 
 ## Going further
 
-You can explore more examples, tutorials and advanced functionalities in the [Learn](../learn/) section.
+You can explore more examples, tutorials and advanced functionalities in the [Learn](learn/index.md) section.
 
-You can also jump to the [API Reference](../api/) to look for specific methods and classes or to get a deeper understanding of the library.
+You can also jump to the [API Reference](api/index.md) to look for specific methods and classes or to get a deeper understanding of the library.

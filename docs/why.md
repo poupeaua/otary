@@ -50,4 +50,4 @@ Otary is designed to be Interactive and user-friendly, ideal for [Jupyter notebo
 
 Otary provides a flexible and extensible architecture, allowing developers to customize and extend its functionality as needed.
 
-If you are a Python developer, interested by Otary and want to contribute, feel free to bring your ideas to life! Check the [Contributing](../about/contributing) section for more details.
+If you are a Python developer, interested by Otary and want to contribute, feel free to bring your ideas to life! Check the [Contributing](about/contributing.md) section for more details.

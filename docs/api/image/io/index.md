@@ -16,5 +16,5 @@ im.save(save_filepath="path/to/file/image")
 
 ## Components
 
-- **[Reader](reader):** Responsible for reading image data from various sources.
-- **[Writer](writer):** Allows you to write image data to various destinations.
+- **[Reader](reader.md):** Responsible for reading image data from various sources.
+- **[Writer](writer.md):** Allows you to write image data to various destinations.

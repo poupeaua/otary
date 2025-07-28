@@ -25,7 +25,7 @@ class GeometrizerImage:
 
         Args:
             shift (NDArray): Vector for translation
-            border_fill_value (int | tuple[int, int, int], optional): value to fill the
+            fill_value (int | tuple[int, int, int], optional): value to fill the
                 border of the image after the rotation in case reshape is True.
                 Can be a tuple of 3 integers for RGB image or a single integer for
                 grayscale image. Defaults to (0.0,) which is black.
@@ -109,7 +109,7 @@ class GeometrizerImage:
                 If True, the complete image is preserved hence the width and height
                 of the rotated image are different than in the original image.
                 Defaults to True.
-            border_fill_value (Sequence[float], optional): value to
+            fill_value (Sequence[float], optional): value to
                 fill the border of the image after the rotation in case reshape is True.
                 Can be a tuple of 3 integers for RGB image or a single integer for
                 grayscale image. Defaults to (0.0,) which is black.
@@ -117,10 +117,10 @@ class GeometrizerImage:
         # pylint: disable=too-many-arguments, too-many-positional-arguments
         # pylint: disable=too-many-locals
         if not fast:  # using scipy rotate which is slower than cv2
-            border_fill_value_scalar = fill_value[0]
-            if not isinstance(border_fill_value_scalar, float):
+            fill_value_scalar = fill_value[0]
+            if not isinstance(fill_value_scalar, float):
                 raise ValueError(
-                    f"The border_fill_value {border_fill_value_scalar} is not a valid "
+                    f"The fill_value {fill_value_scalar} is not a valid "
                     "value. It must be a single integer when fast mode is off"
                 )
             self.__rotate_exact(
@@ -128,7 +128,7 @@ class GeometrizerImage:
                 is_degree=is_degree,
                 is_clockwise=is_clockwise,
                 reshape=reshape,
-                border_fill_value=border_fill_value_scalar,
+                border_fill_value=fill_value_scalar,
             )
             return None
 

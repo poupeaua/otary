@@ -8,18 +8,18 @@ The `geometry` module is organized into two main categories `discrete` and `cont
 Each category contains other sub-categories like shape, linear, etc.
 
 - **Discrete:** Represents geometric entities that are defined by a finite set of points:
-    - **[Point](discrete/point)**
-    - **[Segment](discrete/linear/segment)**
-    - **[Linear Spline](discrete/linear/linear_spline)**
-    - **[Vector](discrete/linear/directed/vector)**
-    - **[Vectorized Linear Spline](discrete/linear/directed/vectorized_linear_spline)**
-    - **[Polygon](discrete/shape/polygon)**
-    - **[Rectangle](discrete/shape/rectangle)**
-    - **[Triangle](discrete/shape/triangle)**
+    - **[Point](discrete/point.md)**
+    - **[Segment](discrete/linear/segment.md)**
+    - **[Linear Spline](discrete/linear/linear_spline.md)**
+    - **[Vector](discrete/linear/directed/vector.md)**
+    - **[Vectorized Linear Spline](discrete/linear/directed/vectorized_linear_spline.md)**
+    - **[Polygon](discrete/shape/polygon.md)**
+    - **[Rectangle](discrete/shape/rectangle.md)**
+    - **[Triangle](discrete/shape/triangle.md)**
 
 - **Continuous:** Represents geometric entities that are defined by continuous mathematical functions:
-    - **[Circle](continuous/circle)**
-    - **[Ellipse](continuous/ellipse)**
+    - **[Circle](continuous/circle.md)**
+    - **[Ellipse](continuous/ellipse.md)**
 
 ## Available Modules
 

@@ -22,5 +22,5 @@ im.draw_circles(
 
 The drawer module is divided into two parts:
 
-- **[Drawing](drawing):** provides methods to draw on images
-- **[Renderers](renderers):**  used to define the style of the objects to be drawn
+- **[Drawing](drawing.md):** provides methods to draw on images
+- **[Renderers](renderers.md):**  used to define the style of the objects to be drawn

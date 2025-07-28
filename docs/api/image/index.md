@@ -21,8 +21,9 @@ im.show()
 
 The `image` module is built around the following components:
 
-- **[I/O](io):** Responsible for reading and writing image data.
-- **[Transformers](transformers):** Allows you to apply various transformations to the image, such as resizing, cropping, and color adjustments
-- **[Drawer](drawer):** Provides methods for drawing shapes and text on the image.
+- **[I/O](io/index.md):** Responsible for reading and writing image data.
+- **[Analysis](analysis/index.md):** Perform image analysis tasks
+- **[Transformers](transformers/index.md):** Allows you to apply various transformations to the image, such as resizing, cropping, and color adjustments
+- **[Drawer](drawer/index.md):** Provides methods for drawing shapes and text on the image.
 
 Behind the scene the components all use a base image class.

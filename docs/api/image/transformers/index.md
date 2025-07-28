@@ -20,11 +20,10 @@ Otary gives you the choice between being more explicit or more synthetic in your
 
 Here are the different specialized components that can be used to transform images:
 
-- **[Cropping](cropping):** cropping methods
-- **[Geometry](geometry):** geometric operations
-- **[Morphology](morphology):** morphological operations
-- **[Binarization & Thresholding](thresholding):** binarization and thresholding
-- **[Scoring](scoring):** scoring operations such as iou (intersection over union)
+- **[Cropping](cropping.md):** cropping methods
+- **[Geometry](geometry.md):** geometric operations
+- **[Morphology](morphology.md):** morphological operations
+- **[Binarization & Thresholding](thresholding.md):** binarization and thresholding
 
 ## The `copy` parameter
 

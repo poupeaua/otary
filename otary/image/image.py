@@ -1513,7 +1513,7 @@ class Image:
         can control the sensitivity of the score.
 
         Args:
-            polygon (Polygon): Polygon object
+            polygons (Sequence[Polygon]): Polygon object
             dilate_kernel (tuple, optional): dilate kernel param. Defaults to (5, 5).
             dilate_iterations (int, optional): dilate iterations param. Defaults to 0.
             binarization_method (str, optional): binarization method. Here
@@ -1583,7 +1583,7 @@ class Image:
         It provides a score for each single linear spline.
 
         Args:
-            segments (NDArray | list[geo.Segment]): a list of segments
+            splines (Sequence[LinearSpline]): a list of linear splines objects
             dilate_kernel (tuple, optional): dilate kernel param. Defaults to (5, 5).
             dilate_iterations (int, optional): dilate iterations param. Defaults to 0.
             binarization_method (str, optional): binarization method. Here

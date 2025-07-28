@@ -14,7 +14,7 @@ from shapely import Polygon as SPolygon, LinearRing
 
 from otary.geometry.utils.tools import rotate_2d_points
 from otary.geometry.continuous.entity import ContinuousGeometryEntity
-from otary.geometry import Polygon, Segment
+from otary.geometry import Polygon, Segment, Rectangle
 from otary.utils.tools import assert_transform_shift_vector
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -374,7 +374,7 @@ class Ellipse(ContinuousGeometryEntity):
             n_points_polygonal_approx=self.n_points_polygonal_approx,
         )
 
-    def enclosing_oriented_bbox(self):
+    def enclosing_oriented_bbox(self) -> Rectangle:
         """
         Enclosing oriented bounding box.
         Manage the case where the ellipse is a circle and return the enclosing

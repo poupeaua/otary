@@ -333,7 +333,7 @@ class Polygon(DiscreteGeometryEntity):
         a square.
 
         Args:
-            margin_area_error (float, optional): area error. Defaults to 25.
+            margin_dist_error_pct (float, optional): area error. Defaults to 25.
 
         Returns:
             bool: True if the polygon describes a rectangle or square.
@@ -446,7 +446,7 @@ class Polygon(DiscreteGeometryEntity):
 
         Args:
             points (NDArray): list of 2D points
-            margin_dist_error (float): mininum distance to consider two points as
+            max_distance (float): maximum distance to consider two points as
                 close enough to be considered as the same points
 
         Returns:
@@ -512,8 +512,8 @@ class Polygon(DiscreteGeometryEntity):
         start at this index position.
 
         Parameters:
-            start_idx (int): Index of the start point in the contour
-            end_idx (int): Index of the end point in the contour
+            start_index (int): Index of the start point in the contour
+            end_index (int): Index of the end point in the contour
             pct_dist (float): Value in [0, 1], 0 returns start, 1 returns end.
                 Any value in [0, 1] returns a point between start and end that is
                 pct_dist along the path.
@@ -553,8 +553,8 @@ class Polygon(DiscreteGeometryEntity):
         start at this index position.
 
         Parameters:
-            start_idx (int): Index of the start point in the contour
-            end_idx (int): Index of the end point in the contour
+            start_index (int): Index of the start point in the contour
+            end_index (int): Index of the end point in the contour
             pct_dist (float): Value in [0, 1], 0 returns start, 1 returns end.
                 Any value in [0, 1] returns a point between start and end that is
                 pct_dist along the path.
@@ -741,7 +741,7 @@ class Polygon(DiscreteGeometryEntity):
         the reference point.
 
         Args:
-            reference_point (NDArray): point that is taken as a reference in the
+            point (NDArray): point that is taken as a reference in the
                 space to find the one in the Polygon list of points that is the
                 closest to this reference point. Default to origin point [0, 0].
 
@@ -842,7 +842,7 @@ class Polygon(DiscreteGeometryEntity):
 
         Args:
             other (Polygon): other Polygon in the image referential
-            crop_rect (Rectangle): crop rectangle in the image referential
+            crop (Rectangle): crop rectangle in the image referential
             image_crop_shape (tuple[int, int], optionla): [width, height] of the crop
                 image. If None, the shape is assumed to be directly the crop shape.
 
