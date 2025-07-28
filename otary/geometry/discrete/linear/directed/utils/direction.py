@@ -43,7 +43,7 @@ def angle_to_direction(angle: float, full: bool = False, level: int = 3) -> str:
             (3 = N/NNE/NE/ENE/E... 2 = N/NE/E/SE... 1 = N/E/S/W)
 
     Returns
-    direction (str): The directional text
+        direction (str): The directional text
 
     Examples
     --------
