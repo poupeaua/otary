@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-    <em>Otary library. Shape your images. Image your shapes.</em>
+    <em>Otary library, shape your images, image your shapes.</em>
 </p>
 
 <p align="center">
