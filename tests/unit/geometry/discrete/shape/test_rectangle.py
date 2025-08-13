@@ -61,20 +61,33 @@ class TestRectangleCreation:
         assert np.isclose(rect.asarray, [[1, 1], [3, 1], [3, 3], [1, 3]]).all()
 
 
-class TestRectangleProperties:
+class TestRectangleAxixAligned:
     def test_is_axis_aligned_true(self):
         # Axis-aligned rectangle
         rect = Rectangle.from_topleft(topleft=[0, 0], width=2, height=4)
-        assert rect.is_axis_aligned is True
+        assert rect.is_axis_aligned == True
 
     def test_is_axis_aligned_false(self):
         # Non-axis-aligned rectangle (rotated)
         rect = Rectangle.from_center(center=[0, 0], width=2, height=4, angle=np.pi / 4)
-        assert rect.is_axis_aligned is False
+        assert rect.is_axis_aligned == False
 
     def test_is_axis_aligned_self_intersected(self):
         rect = Rectangle([[0, 0], [1, 1], [1, 0], [0, 1]])
-        assert rect.is_axis_aligned is False
+        assert rect.is_axis_aligned == False
+
+    def test_is_axis_aligned_approx_true(self):
+        # Axis-aligned rectangle with approximate check
+        rect = Rectangle.from_topleft(topleft=[0, 0], width=2, height=4)
+        assert rect.is_axis_aligned_approx() == True
+
+    def test_is_axis_aligned_approx_false(self):
+        # Non-axis-aligned rectangle with approximate check
+        rect = Rectangle.from_center(center=[0, 0], width=2, height=4, angle=np.pi / 4)
+        assert rect.is_axis_aligned_approx() == False
+
+
+class TestRectanglePyMuRect:
 
     def test_as_pymupdf_rect_axis_aligned(self):
         # Create an axis-aligned rectangle

@@ -172,9 +172,13 @@ class Rectangle(Polygon):
             is_cast_int=is_cast_int,
         )
 
-    @property
-    def is_axis_aligned(self) -> bool:
+    def is_axis_aligned_approx(self, side_degree_precision: int = 3) -> bool:
         """Check if the rectangle is axis-aligned
+
+        Args:
+            side_degree_precision (int, optional): precision for the slope angle.
+                This define the number of decimals for the angle calculation of both 
+                the longside and shortside angle. Defaults to 3.
 
         Returns:
             bool: True if the rectangle is axis-aligned, False otherwise
@@ -182,14 +186,32 @@ class Rectangle(Polygon):
         if self.is_self_intersected:
             return False
 
-        precision = 3
         longside_cond = bool(
-            (round(self.longside_slope_angle(degree=True), precision) + 90) % 90 == 0
+            (round(self.longside_slope_angle(degree=True), side_degree_precision) + 90) % 90 == 0
         )
         shortside_cond = bool(
-            (round(self.shortside_slope_angle(degree=True), precision) + 90) % 90 == 0
+            (round(self.shortside_slope_angle(degree=True), side_degree_precision) + 90) % 90 == 0
         )
         return longside_cond and shortside_cond
+    
+    @property
+    def is_axis_aligned(self) -> bool:
+        """Check if the rectangle is exactly axis-aligned.
+        If you wish to check if a rectangle is only approximately axis-aligned,
+        use the `is_axis_aligned_approx` method.
+
+        Returns:
+            bool: True if the rectangle is exactly axis-aligned, False otherwise
+        """
+        if self.is_self_intersected:
+            return False
+
+        cond0 = self.points[0][1] == self.points[1][1]  # top left y == top right y
+        cond1 = self.points[1][0] == self.points[2][0]  # top right x == bottom right x
+        cond2 = self.points[2][1] == self.points[3][1]  # bottom right y == bott left y
+        cond3 = self.points[3][0] == self.points[0][0]  # bottom left x == top left x
+        return cond0 and cond1 and cond2 and cond3
+
 
     @property
     def as_pymupdf_rect(self) -> pymupdf.Rect:

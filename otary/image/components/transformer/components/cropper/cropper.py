@@ -375,7 +375,7 @@ class CropperImage:
             Optional[Image]: cropped image if copy=True else None
         """
         # pylint: disable=too-many-arguments, too-many-positional-arguments
-        assert bbox.is_axis_aligned
+        assert bbox.is_axis_aligned_approx
         topleft = np.asarray([bbox.xmin, bbox.ymin])
         height = int(bbox.ymax - bbox.ymin + 1)
         width = int(bbox.xmax - bbox.xmin + 1)
