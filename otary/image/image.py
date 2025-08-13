@@ -781,14 +781,14 @@ class Image:
         return out if out is not None and copy else self
 
     def crop_from_axis_aligned_bbox(
-        self, bbox: geo.Rectangle, copy: bool = False, **kwargs
+        self, bbox: geo.AxisAlignedRectangle, copy: bool = False, **kwargs
     ) -> Image | Self:
         """Crop the image from an Axis-Aligned Bounding Box (AABB).
         Inclusive crops which means that the cropped image will have
         width and height equal to the width and height of the AABB.
 
         Args:
-            bbox (geo.Rectangle): axis-aligned bounding box
+            bbox (geo.AxisAlignedRectangle): axis-aligned rectangle bounding box
             clip (bool, optional): whether to clip or not. Defaults to True.
             pad (bool, optional): whether to pad or not. Defaults to False.
             copy (bool, optional): whether to copy or not. Defaults to False.
@@ -799,7 +799,7 @@ class Image:
         Returns:
             Image | Self: new cropped image if copy=True else the current image cropped
         """
-        out = self.transformer.cropper.crop_from_axis_aligned_bbox(
+        out = self.transformer.cropper.crop_from_axis_aligned_rectangle(
             bbox=bbox, copy=copy, **kwargs
         )
         return out if out is not None and copy else self

@@ -177,7 +177,7 @@ class Rectangle(Polygon):
 
         Args:
             side_degree_precision (int, optional): precision for the slope angle.
-                This define the number of decimals for the angle calculation of both 
+                This define the number of decimals for the angle calculation of both
                 the longside and shortside angle. Defaults to 3.
 
         Returns:
@@ -187,13 +187,17 @@ class Rectangle(Polygon):
             return False
 
         longside_cond = bool(
-            (round(self.longside_slope_angle(degree=True), side_degree_precision) + 90) % 90 == 0
+            (round(self.longside_slope_angle(degree=True), side_degree_precision) + 90)
+            % 90
+            == 0
         )
         shortside_cond = bool(
-            (round(self.shortside_slope_angle(degree=True), side_degree_precision) + 90) % 90 == 0
+            (round(self.shortside_slope_angle(degree=True), side_degree_precision) + 90)
+            % 90
+            == 0
         )
         return longside_cond and shortside_cond
-    
+
     @property
     def is_axis_aligned(self) -> bool:
         """Check if the rectangle is exactly axis-aligned.
@@ -211,7 +215,6 @@ class Rectangle(Polygon):
         cond2 = self.points[2][1] == self.points[3][1]  # bottom right y == bott left y
         cond3 = self.points[3][0] == self.points[0][0]  # bottom left x == top left x
         return cond0 and cond1 and cond2 and cond3
-
 
     @property
     def as_pymupdf_rect(self) -> pymupdf.Rect:

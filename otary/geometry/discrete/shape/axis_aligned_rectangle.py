@@ -6,10 +6,11 @@ from numpy.typing import NDArray
 
 from otary.geometry.discrete.shape.rectangle import Rectangle
 
+
 class AxisAlignedRectangle(Rectangle):
     """
     Axis Aligned Rectangle class that inherits from Rectangle.
-    It defines a rectangle that is axis-aligned, meaning its sides are parallel 
+    It defines a rectangle that is axis-aligned, meaning its sides are parallel
     to the X and Y axes.
     """
 

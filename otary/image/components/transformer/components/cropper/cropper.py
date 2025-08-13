@@ -349,9 +349,9 @@ class CropperImage:
             pad_value=pad_value,
         )
 
-    def crop_from_axis_aligned_bbox(
+    def crop_from_axis_aligned_rectangle(
         self,
-        bbox: geo.Rectangle,
+        bbox: geo.AxisAlignedRectangle,
         clip: bool = True,
         pad: bool = False,
         copy: bool = False,
@@ -363,7 +363,7 @@ class CropperImage:
         width and height equal to the width and height of the AABB.
 
         Args:
-            bbox (geo.Rectangle): axis-aligned bounding box
+            bbox (geo.AxisAlignedRectangle): axis-aligned rectangle bounding box
             clip (bool, optional): whether to clip or not. Defaults to True.
             pad (bool, optional): whether to pad or not. Defaults to False.
             copy (bool, optional): whether to copy or not. Defaults to False.
@@ -375,7 +375,6 @@ class CropperImage:
             Optional[Image]: cropped image if copy=True else None
         """
         # pylint: disable=too-many-arguments, too-many-positional-arguments
-        assert bbox.is_axis_aligned_approx
         topleft = np.asarray([bbox.xmin, bbox.ymin])
         height = int(bbox.ymax - bbox.ymin + 1)
         width = int(bbox.xmax - bbox.xmin + 1)
