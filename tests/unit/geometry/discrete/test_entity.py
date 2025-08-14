@@ -12,7 +12,7 @@ class TestEntityInit:
 
     def test_init_all_points_are_float(self):
         points = [[0.0, 0.0], [0.0, 1.1], [1.4, 1.6], [1.9, 0.9]]
-        rect = Rectangle(points)
+        rect = Polygon(points)
         print(rect.asarray)
         assert np.array_equal(rect.asarray, np.array(points, dtype=np.float32))
 
@@ -23,24 +23,24 @@ class TestEntityInit:
 
     def test_init_points_mix_int_float(self):
         points = [[0.0, 0.0], [0.0, 1.1], [1, 1], [1, 0]]
-        rect = Rectangle(points)
+        rect = Polygon(points)
         assert np.array_equal(rect.asarray, np.array(points, dtype=np.float32))
 
     def test_init_points_all_float_casted_to_int(self):
         points = [[0.0, 0.0], [0.0, 1.1], [1.4, 1.6], [1.9, 0.9]]
-        rect = Rectangle(points, is_cast_int=True)
+        rect = Polygon(points, is_cast_int=True)
         print(rect.asarray)
         assert np.array_equal(rect.asarray, np.array(points, dtype=np.int32))
 
     def test_init_points_mix_int_float_cast_to_int(self):
         points = [[0, 0.9], [5, 5], [1, 2.555], [1.2, 0]]
-        rect = Rectangle(points, is_cast_int=True)
+        rect = Polygon(points, is_cast_int=True)
         assert np.array_equal(rect.asarray, np.array(points, dtype=np.int32))
 
 
 class TestEntityBasics:
     def test_perimeter(self):
-        rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
+        rect = Polygon([[0, 0], [0, 1], [1, 1], [1, 0]])
         assert rect.perimeter == 4
 
     def test_xmax(self):
@@ -60,67 +60,67 @@ class TestEntityBasics:
         assert rect.ymin == 0
 
     def test_eq_true(self):
-        rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
-        rect2 = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
+        rect = Polygon([[0, 0], [0, 1], [1, 1], [1, 0]])
+        rect2 = Polygon([[0, 0], [0, 1], [1, 1], [1, 0]])
         assert rect == rect2
 
     def test_eq_false(self):
-        rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
-        rect2 = Rectangle([[0, 1], [0, 1], [1, 1], [1, 0]])
+        rect = Polygon([[0, 0], [0, 1], [1, 1], [1, 0]])
+        rect2 = Polygon([[0, 1], [0, 1], [1, 1], [1, 0]])
         assert not (rect == rect2)
 
     def test_eq_error(self):
-        rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
+        rect = Polygon([[0, 0], [0, 1], [1, 1], [1, 0]])
         rect2 = "mystr"
         assert rect != rect2
 
     def test_add_float(self):
-        rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
+        rect = Polygon([[0, 0], [0, 1], [1, 1], [1, 0]])
         rect = rect + 1
         assert np.array_equal(rect.asarray, np.array([[1, 1], [1, 2], [2, 2], [2, 1]]))
 
     def test_add_array(self):
-        rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
+        rect = Polygon([[0, 0], [0, 1], [1, 1], [1, 0]])
         rect = rect + np.array([-1, 1])
         assert np.array_equal(
             rect.asarray, np.array([[-1, 1], [-1, 2], [0, 2], [0, 1]])
         )
 
     def test_sub_float(self):
-        rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
+        rect = Polygon([[0, 0], [0, 1], [1, 1], [1, 0]])
         rect = rect - 1
         assert np.array_equal(
             rect.asarray, np.array([[-1, -1], [-1, 0], [0, 0], [0, -1]])
         )
 
     def test_sub_array(self):
-        rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
+        rect = Polygon([[0, 0], [0, 1], [1, 1], [1, 0]])
         rect = rect - np.array([1, -1])
         assert np.array_equal(
             rect.asarray, np.array([[-1, 1], [-1, 2], [0, 2], [0, 1]])
         )
 
     def test_mul_float(self):
-        rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
+        rect = Polygon([[0, 0], [0, 1], [1, 1], [1, 0]])
         rect = rect * 2
         assert np.array_equal(rect.asarray, np.array([[0, 0], [0, 2], [2, 2], [2, 0]]))
 
     def test_mul_array(self):
-        rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
+        rect = Polygon([[0, 0], [0, 1], [1, 1], [1, 0]])
         rect = rect * np.array([2, -2])
         assert np.array_equal(
             rect.asarray, np.array([[0, 0], [0, -2], [2, -2], [2, 0]])
         )
 
     def test_div_float(self):
-        rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]])
+        rect = Polygon([[0, 0], [0, 1], [1, 1], [1, 0]])
         rect = rect / 2.0
         assert np.array_equal(
             rect.asarray, np.array([[0, 0], [0, 1 / 2], [1 / 2, 1 / 2], [1 / 2, 0]])
         )
 
     def test_div_array(self):
-        rect = Rectangle([[0, 0], [0, 1], [1, 1], [1, 0]], is_cast_int=False)
+        rect = Polygon([[0, 0], [0, 1], [1, 1], [1, 0]], is_cast_int=False)
         rect = rect / np.array([2, -2])
         assert np.array_equal(
             rect.asarray, np.array([[0, 0], [0, -1 / 2], [1 / 2, -1 / 2], [1 / 2, 0]])
@@ -356,24 +356,24 @@ class TestEntityClamp:
         assert np.array_equal(rect.asarray, np.array([[0, 0], [0, 2], [2, 2], [2, 0]]))
 
     def test_clamp_exceeding_bounds(self):
-        rect = Rectangle([[-1, -1], [0, 3], [3, 3], [3, -1]])
+        rect = Polygon([[-1, -1], [0, 3], [3, 3], [3, -1]])
         rect.clamp(xmin=0, xmax=2, ymin=0, ymax=2)
         assert np.array_equal(rect.asarray, np.array([[0, 0], [0, 2], [2, 2], [2, 0]]))
 
     def test_clamp_negative_bounds(self):
-        rect = Rectangle([[-3, -3], [-1, -1], [1, 1], [3, 3]])
+        rect = Polygon([[-3, -3], [-1, -1], [1, 1], [3, 3]])
         rect.clamp(xmin=-2, xmax=2, ymin=-2, ymax=2)
         assert np.array_equal(
             rect.asarray, np.array([[-2, -2], [-1, -1], [1, 1], [2, 2]])
         )
 
     def test_clamp_no_clipping(self):
-        rect = Rectangle([[0, 0], [1, 1], [2, 2], [3, 3]])
+        rect = Polygon([[0, 0], [1, 1], [2, 2], [3, 3]])
         rect.clamp(xmin=-10, xmax=10, ymin=-10, ymax=10)
         assert np.array_equal(rect.asarray, np.array([[0, 0], [1, 1], [2, 2], [3, 3]]))
 
     def test_clamp_single_axis_clipping(self):
-        rect = Rectangle([[0, 0], [1, 1], [2, 2], [3, 3]])
+        rect = Polygon([[0, 0], [1, 1], [2, 2], [3, 3]])
         rect.clamp(xmin=1, xmax=2)
         assert np.array_equal(rect.asarray, np.array([[1, 0], [1, 1], [2, 2], [2, 3]]))
 

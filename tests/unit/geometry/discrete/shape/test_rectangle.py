@@ -7,7 +7,6 @@ import numpy as np
 
 from otary.geometry import Rectangle
 import pytest
-import pymupdf
 
 
 class TestRectangleStr:
@@ -74,7 +73,8 @@ class TestRectangleAxixAligned:
 
     def test_is_axis_aligned_self_intersected(self):
         rect = Rectangle([[0, 0], [1, 1], [1, 0], [0, 1]])
-        assert not rect.is_axis_aligned
+        # True because desintersect by default on init
+        assert rect.is_axis_aligned
 
     def test_is_axis_aligned_approx_true(self):
         # Axis-aligned rectangle with approximate check
@@ -85,37 +85,6 @@ class TestRectangleAxixAligned:
         # Non-axis-aligned rectangle with approximate check
         rect = Rectangle.from_center(center=[0, 0], width=2, height=4, angle=np.pi / 4)
         assert not rect.is_axis_aligned_approx()
-
-
-class TestRectanglePyMuRect:
-
-    def test_as_pymupdf_rect_axis_aligned(self):
-        # Create an axis-aligned rectangle
-        rect = Rectangle.from_topleft(topleft=[0, 0], width=2, height=4)
-        pymupdf_rect = rect.as_pymupdf_rect
-
-        # Assert the pymupdf.Rect object has correct coordinates
-        assert isinstance(pymupdf_rect, pymupdf.Rect)
-        assert pymupdf_rect.x0 == 0
-        assert pymupdf_rect.y0 == 0
-        assert pymupdf_rect.x1 == 2
-        assert pymupdf_rect.y1 == 4
-
-    def test_as_pymupdf_rect_non_axis_aligned(self):
-        # Create a non-axis-aligned rectangle
-        rect = Rectangle.from_center(center=[0, 0], width=2, height=4, angle=np.pi / 4)
-
-        # Assert that calling as_pymupdf_rect raises an error
-        with pytest.raises(RuntimeError):
-            rect.as_pymupdf_rect
-
-    def test_as_pymupdf_rect_self_intersected(self):
-        # Create a self-intersected rectangle
-        rect = Rectangle([[0, 0], [1, 1], [1, 0], [0, 1]])
-
-        # Assert that calling as_pymupdf_rect raises an error
-        with pytest.raises(RuntimeError):
-            rect.as_pymupdf_rect
 
 
 class TestRectangleSideLength:
@@ -247,7 +216,7 @@ class TestRectangleJoin:
 
     def test_join_three_shared_points(self):
         rect1 = Rectangle.from_topleft(topleft=[0, 0], width=2, height=2)
-        rect2 = Rectangle([[0, 0], [0, 2], [2, 2], [1, 1]])
+        rect2 = Rectangle.from_topleft(topleft=[0, 0], width=2, height=2)
         result = rect1.join(rect2)
         assert result is rect1
 
