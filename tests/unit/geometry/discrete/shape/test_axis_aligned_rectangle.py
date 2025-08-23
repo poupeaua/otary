@@ -5,7 +5,7 @@ Tests for the AxisAlignedRectangle class
 import pymupdf
 import pytest
 
-from otary.geometry import AxisAlignedRectangle
+from otary.geometry import AxisAlignedRectangle, Rectangle
 
 
 class TestAxisAlignedRectangleCreation:
@@ -45,16 +45,11 @@ class TestAxisAlignedRectangleCreation:
     def test_create_non_axis_aligned_rectangle_raises(self):
         # Attempt to create a non-axis-aligned rectangle
         with pytest.raises(ValueError):
-            AxisAlignedRectangle(
-                points=[[0, 0], [2, 1], [3, 3], [1, 2]]
+            rect = Rectangle.from_center(center=[2, 5], width=6, height=10).rotate(
+                angle=30
             )
+            AxisAlignedRectangle.from_rectangle(rectangle=rect)
 
-    def test_create_non_axis_aligned_rectangle_raises2(self):
-        # Attempt to create a non-axis-aligned rectangle
-        with pytest.raises(ValueError):
-            AxisAlignedRectangle(
-                points=[[0, 0], [5, 0], [5, 10], [-1, 10]]
-            )
 
 class TestAxisAlignedRectangleProperties:
 
@@ -79,10 +74,13 @@ class TestAxisAlignedRectangleProperties:
         # Create an axis-aligned rectangle
         width = 3
         height = 5
-        rect = AxisAlignedRectangle.from_topleft(topleft=[0, 0], width=width, height=height)
+        rect = AxisAlignedRectangle.from_topleft(
+            topleft=[0, 0], width=width, height=height
+        )
 
         # Assert the perimeter property is correct
         assert rect.perimeter == 2 * (width + height)
+
 
 class TestAxisAlignedRectanglePyMuRect:
 
@@ -98,6 +96,7 @@ class TestAxisAlignedRectanglePyMuRect:
         assert pymupdf_rect.x1 == 2
         assert pymupdf_rect.y1 == 4
 
+
 class TestAxisAlignedRectangleShift:
 
     def test_shift_base(self):
@@ -112,6 +111,7 @@ class TestAxisAlignedRectangleShift:
         assert rect.ymin == 4
         assert rect.xmax == 6
         assert rect.ymax == 6
+
 
 class TestAxisAlignedRectangleRotated90:
 
@@ -142,3 +142,27 @@ class TestAxisAlignedRectangleRotated90:
         # assert first point is top-left and points are ordered clockwise
         assert (rect_rot.asarray[0] == [1.5, 0.5]).all()
         assert rect_rot.is_clockwise(is_y_axis_down=True)
+
+
+class TestAxisAlignedRectangleRotateTransform:
+
+    def test_rotate_transform_base(self):
+        # Create an axis-aligned rectangle
+        rect = AxisAlignedRectangle.from_topleft(topleft=[1, 1], width=3, height=2)
+
+        # Rotate the rectangle by 45 degrees
+        rect_rot = rect.rotate_transform(angle=45)
+
+        assert not rect_rot.is_axis_aligned
+        assert not isinstance(rect_rot, AxisAlignedRectangle)
+
+
+class TestAxisAlignedRectangleRotate:
+
+    def test_rotate_raises(self):
+        # Create an axis-aligned rectangle
+        rect = AxisAlignedRectangle.from_topleft(topleft=[1, 1], width=3, height=2)
+
+        # Attempt to rotate the rectangle by 45 degrees
+        with pytest.raises(TypeError):
+            rect.rotate(angle=45)

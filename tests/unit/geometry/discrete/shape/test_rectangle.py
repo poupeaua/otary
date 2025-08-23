@@ -27,7 +27,9 @@ class TestRectangleCreation:
 
     def test_create_rectangle_from_center(self):
         center = [1, 1]
-        rect = Rectangle.from_center(center=center, width=2, height=2, angle=2 * np.pi)
+        rect = Rectangle.from_center(center=center, width=2, height=2).rotate(
+            angle=2 * np.pi
+        )
         assert np.isclose(rect.asarray, [[0, 0], [2, 0], [2, 2], [0, 2]]).all()
 
     def test_create_rectangle_from_center_with_angle(self):
@@ -36,21 +38,16 @@ class TestRectangleCreation:
             center=center,
             width=np.sqrt(2),
             height=np.sqrt(2),
-            angle=-np.pi / 4,
             is_cast_int=False,
-        )
+        ).rotate(angle=-np.pi / 4)
         expected_points = [[0, 1], [1, 0], [2, 1], [1, 2]]
         assert np.allclose(rect.asarray, expected_points)
 
     def test_create_rectangle_from_center_with_angle_and_cast_int(self):
         center = [10, 10]
         rect = Rectangle.from_center(
-            center=center,
-            width=10,
-            height=10,
-            angle=np.pi / 2,
-            is_cast_int=int,
-        )
+            center=center, width=10, height=10, is_cast_int=int
+        ).rotate(angle=np.pi / 2)
         expected_points = [[15, 5], [15, 15], [5, 15], [5, 5]]
         assert np.allclose(rect.asarray, expected_points)
 
@@ -68,7 +65,9 @@ class TestRectangleAxixAligned:
 
     def test_is_axis_aligned_false(self):
         # Non-axis-aligned rectangle (rotated)
-        rect = Rectangle.from_center(center=[0, 0], width=2, height=4, angle=np.pi / 4)
+        rect = Rectangle.from_center(center=[0, 0], width=2, height=4).rotate(
+            angle=np.pi / 4
+        )
         assert not rect.is_axis_aligned
 
     def test_is_axis_aligned_self_intersected(self):
@@ -83,7 +82,9 @@ class TestRectangleAxixAligned:
 
     def test_is_axis_aligned_approx_false(self):
         # Non-axis-aligned rectangle with approximate check
-        rect = Rectangle.from_center(center=[0, 0], width=2, height=4, angle=np.pi / 4)
+        rect = Rectangle.from_center(center=[0, 0], width=2, height=4).rotate(
+            angle=np.pi / 4
+        )
         assert not rect.is_axis_aligned_approx()
 
 
@@ -106,7 +107,9 @@ class TestRectangleSideLength:
 
     def test_longside_length_rotated_rectangle(self):
         # Rotated rectangle
-        rect = Rectangle.from_center(center=[0, 0], width=4, height=2, angle=np.pi / 4)
+        rect = Rectangle.from_center(center=[0, 0], width=4, height=2).rotate(
+            angle=np.pi / 4
+        )
         assert np.isclose(rect.longside_length, 4)
 
     def test_shortside_length_horizontal_rectangle(self):
@@ -126,7 +129,9 @@ class TestRectangleSideLength:
 
     def test_shortside_length_rotated_rectangle(self):
         # Rotated rectangle
-        rect = Rectangle.from_center(center=[0, 0], width=4, height=2, angle=np.pi / 4)
+        rect = Rectangle.from_center(center=[0, 0], width=4, height=2).rotate(
+            angle=np.pi / 4
+        )
         assert np.isclose(rect.shortside_length, 2)
 
 
@@ -177,7 +182,9 @@ class TestRectangleDesintersect:
         assert np.array_equal(rect.asarray, expected_points)
 
     def test_desintersect_rotated_rectangle(self):
-        rec = Rectangle.from_center(center=[0, 0], width=4, height=2, angle=-0.92729)
+        rec = Rectangle.from_center(center=[0, 0], width=4, height=2).rotate(
+            angle=-0.92729
+        )
         tmp = copy.deepcopy(rec.asarray[1])
         tmp2 = copy.deepcopy(rec.asarray[2])
         rec.asarray[1] = tmp2
