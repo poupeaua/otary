@@ -95,6 +95,7 @@ class TestCircleIsCircle:
 class TestCircleEnclosingOBB:
 
     def test_enclosing_obb(self):
+        # ensure that in circle case returns the enclosing AABB
         circle = Circle(center=[0, 0], radius=100)
         bbox = circle.enclosing_oriented_bbox()
         expected_points = circle.enclosing_axis_aligned_bbox().asarray

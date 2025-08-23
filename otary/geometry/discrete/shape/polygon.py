@@ -866,9 +866,7 @@ class Polygon(DiscreteGeometryEntity):
         aabb_main = self.enclosing_axis_aligned_bbox()
         contour_main_shifted_normalized = self.copy().shift(
             vector=-np.asarray([self.xmin, self.ymin])
-        ) / np.array(
-            [aabb_main.get_width_from_topleft(0), aabb_main.get_height_from_topleft(0)]
-        )
+        ) / np.array([aabb_main.width, aabb_main.height])
 
         # AABB of the polygon in the crop referential
         aabb_crop = other.enclosing_axis_aligned_bbox()

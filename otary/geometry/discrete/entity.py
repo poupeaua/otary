@@ -22,7 +22,7 @@ from otary.utils.tools import assert_transform_shift_vector
 
 if TYPE_CHECKING:  # pragma: no cover
     from typing_extensions import Self
-    from otary.geometry import Polygon, Rectangle, Segment
+    from otary.geometry import Polygon, Rectangle, AxisAlignedRectangle, Segment
 else:  # pragma: no cover
     try:
         from typing import Self
@@ -317,7 +317,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         """
         return type(self)(points=self.asarray.copy(), is_cast_int=self.is_cast_int)
 
-    def enclosing_axis_aligned_bbox(self) -> Rectangle:
+    def enclosing_axis_aligned_bbox(self) -> AxisAlignedRectangle:
         """Compute the smallest area enclosing Axis-Aligned Bounding Box (AABB)
         See: https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html
 
@@ -331,22 +331,17 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
             Rectangle: Rectangle object
         """
         # pylint: disable=import-outside-toplevel
-        from otary.geometry import Rectangle  # delayed import to avoid circular import
+        from otary.geometry import (
+            AxisAlignedRectangle,
+        )  # delayed import to avoid circular import
 
         topleft_x, topleft_y, width, height = cv2.boundingRect(
             array=self.asarray.astype(np.float32)
         )
-
-        # pylint: disable=duplicate-code
-        bbox = np.array(
-            [
-                [topleft_x, topleft_y],
-                [topleft_x + width, topleft_y],
-                [topleft_x + width, topleft_y + height],
-                [topleft_x, topleft_y + height],
-            ]
+        topleft = np.array([topleft_x, topleft_y])
+        return AxisAlignedRectangle.from_topleft(
+            topleft=topleft, width=width, height=height
         )
-        return Rectangle(bbox)
 
     def enclosing_oriented_bbox(self) -> Rectangle:
         """Compute the smallest area enclosing Oriented Bounding Box (OBB)

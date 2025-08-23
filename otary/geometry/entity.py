@@ -21,7 +21,7 @@ from numpy.typing import NDArray
 
 if TYPE_CHECKING:  # pragma: no cover
     from typing_extensions import Self
-    from otary.geometry import Polygon, Rectangle
+    from otary.geometry import Polygon, Rectangle, AxisAlignedRectangle
 else:  # pragma: no cover
     try:
         from typing import Self
@@ -207,12 +207,12 @@ class GeometryEntity(ABC):
         return np.array([])
 
     @abstractmethod
-    def enclosing_axis_aligned_bbox(self) -> Rectangle:
+    def enclosing_axis_aligned_bbox(self) -> AxisAlignedRectangle:
         """Compute the smallest area enclosing Axis-Aligned Bounding Box (AABB)
         See: https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html
 
         Returns:
-            Rectangle: Rectangle object
+            AxisAlignedRectangle: AxisAlignedRectangle object
         """
 
     @abstractmethod

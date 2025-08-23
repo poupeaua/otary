@@ -11,7 +11,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from otary.geometry.entity import GeometryEntity
-from otary.geometry import Polygon, Rectangle
+from otary.geometry import Polygon, Rectangle, AxisAlignedRectangle
 
 
 class ContinuousGeometryEntity(GeometryEntity, ABC):
@@ -142,27 +142,20 @@ class ContinuousGeometryEntity(GeometryEntity, ABC):
             n_points=self.n_points_polygonal_approx, is_cast_int=False
         )
 
-    def enclosing_axis_aligned_bbox(self) -> Rectangle:
+    def enclosing_axis_aligned_bbox(self) -> AxisAlignedRectangle:
         """Compute the smallest area enclosing Axis-Aligned Bounding Box (AABB)
         See: https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html
 
         Returns:
-            Rectangle: Rectangle object
+            AxisAlignedRectangle: AxisAlignedRectangle object
         """
         topleft_x, topleft_y, width, height = cv2.boundingRect(
             array=self.polyaprox.asarray.astype(np.float32)
         )
-
-        # pylint: disable=duplicate-code
-        bbox = np.array(
-            [
-                [topleft_x, topleft_y],
-                [topleft_x + width, topleft_y],
-                [topleft_x + width, topleft_y + height],
-                [topleft_x, topleft_y + height],
-            ]
+        topleft = np.array([topleft_x, topleft_y])
+        return AxisAlignedRectangle.from_topleft(
+            topleft=topleft, width=width, height=height
         )
-        return Rectangle(bbox)
 
     def enclosing_oriented_bbox(self) -> Rectangle:
         """Compute the smallest area enclosing Oriented Bounding Box (OBB)
