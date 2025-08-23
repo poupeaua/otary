@@ -78,11 +78,9 @@ class Rectangle(Polygon):
         center: NDArray,
         width: float,
         height: float,
-        angle: float = 0.0,
         is_cast_int: bool = False,
     ) -> Rectangle:
-        # pylint: disable=too-many-arguments, too-many-positional-arguments
-        """Create a Rectangle object using the center point, width, height and angle.
+        """Create a Rectangle object using the center point, width, height.
 
         Convention to create the rectangle is:
             index 0: top left point
@@ -94,8 +92,6 @@ class Rectangle(Polygon):
             center (NDArray): center point of the rectangle
             width (float): width of the rectangle
             height (float): height of the rectangle
-            angle (float, optional): radian rotation angle for the rectangle.
-                Defaults to 0.
             is_cast_int (bool, optional): cast the points coordinates to int
 
         Returns:
@@ -118,14 +114,7 @@ class Rectangle(Polygon):
             ]
         )
 
-        rect = Rectangle(points=points, is_cast_int=is_cast_int)
-
-        if angle != 0:
-            rect = rect.rotate(angle=angle)
-            if is_cast_int:
-                rect.asarray = rect.asarray.astype(int)
-
-        return rect
+        return Rectangle(points=points, is_cast_int=is_cast_int)
 
     @classmethod
     def from_topleft_bottomright(

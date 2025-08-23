@@ -9,6 +9,7 @@ import pymupdf
 from numpy.typing import NDArray
 
 from otary.geometry.discrete.shape.rectangle import Rectangle
+from otary.geometry.utils.tools import rotate_2d_points
 
 
 class AxisAlignedRectangle(Rectangle):
@@ -16,7 +17,7 @@ class AxisAlignedRectangle(Rectangle):
     Axis Aligned Rectangle class that inherits from Rectangle.
     It defines a rectangle that is axis-aligned, meaning:
      - its sides are parallel to the X and Y axes
-     - the first point is the top-left point
+     - the first point is the top-left point (considering the y-axis pointing downwards)
      - the points are ordered clockwise
     """
 
@@ -25,7 +26,7 @@ class AxisAlignedRectangle(Rectangle):
 
         if not self.is_axis_aligned:
             raise ValueError(
-                "Trying to create an AxisAlignedRectangle from a non-axis-aligned " \
+                "Trying to create an AxisAlignedRectangle from a non-axis-aligned "
                 "rectangle. Please check the input points."
             )
 
@@ -44,7 +45,11 @@ class AxisAlignedRectangle(Rectangle):
 
     @classmethod
     def from_center(
-        cls, center: NDArray, width: float, height: float, is_cast_int=False
+        cls,
+        center: NDArray,
+        width: float,
+        height: float,
+        is_cast_int: bool = False,
     ) -> AxisAlignedRectangle:
         """Create an AxisAlignedRectangle from a center point
 
@@ -58,9 +63,9 @@ class AxisAlignedRectangle(Rectangle):
             AxisAlignedRectangle: new AxisAlignedRectangle object
         """
         return cls.from_rectangle(
-            super().from_center(center, width, height, angle=0, is_cast_int=is_cast_int)
+            super().from_center(center, width, height, is_cast_int=is_cast_int)
         )
-    
+
     @property
     def height(self) -> float:
         """Get the height of the AxisAlignedRectangle
@@ -69,7 +74,7 @@ class AxisAlignedRectangle(Rectangle):
             float: height of the rectangle
         """
         return self.ymax - self.ymin
-    
+
     @property
     def width(self) -> float:
         """Get the width of the AxisAlignedRectangle
@@ -78,7 +83,7 @@ class AxisAlignedRectangle(Rectangle):
             float: width of the rectangle
         """
         return self.xmax - self.xmin
-    
+
     @property
     def area(self) -> float:
         """Get the area of the AxisAlignedRectangle
@@ -87,7 +92,7 @@ class AxisAlignedRectangle(Rectangle):
             float: area of the rectangle
         """
         return self.width * self.height
-    
+
     @property
     def perimeter(self) -> float:
         """Get the perimeter of the AxisAlignedRectangle
@@ -108,7 +113,7 @@ class AxisAlignedRectangle(Rectangle):
             pymupdf.Rect: pymupdf axis-aligned Rect object
         """
         return pymupdf.Rect(x0=self.xmin, y0=self.ymin, x1=self.xmax, y1=self.ymax)
-    
+
     @property
     def rotated90(self) -> AxisAlignedRectangle:
         """Get the unique other related AxisAlignedRectangle that is the same one
@@ -127,8 +132,17 @@ class AxisAlignedRectangle(Rectangle):
         is_degree: bool = False,
         is_clockwise: bool = True,
         pivot: Optional[NDArray] = None,
+    ):
+        raise TypeError("AxisAlignedRectangle does not support arbitrary rotation.")
+
+    def rotate_transform(
+        self,
+        angle: float,
+        is_degree: bool = False,
+        is_clockwise: bool = True,
+        pivot: Optional[NDArray] = None,
     ) -> Rectangle:
-        """Rotate the AxisAlignedRectangle.
+        """Rotate the AxisAlignedRectangle and transform it into a Rectangle.
         The result is a Rectangle object since the result is not
         guaranteed to be axis-aligned anymore.
 
@@ -144,9 +158,31 @@ class AxisAlignedRectangle(Rectangle):
 
         Returns:
             Rectangle: object resulting from the rotation
-        """
-        super().rotate(
-            angle=angle, is_degree=is_degree, is_clockwise=is_clockwise, pivot=pivot
-        )
 
-        return Rectangle(points=self.points)
+        Examples:
+            The rotate method does not modify the original AxisAlignedRectangle object:
+            >>> rect = ot.AxisAlignedRectangle(points=[[0, 0], [4, 0], [4, 3], [0, 3]])
+            >>> rot_rect = rect.rotate(angle=45, is_degree=True)
+            >>> rot_rect.asarray
+            array([[ 1.6464466 , -0.9748737 ],
+                   [ 4.4748735 ,  1.8535534 ],
+                   [ 2.3535533 ,  3.9748738 ],
+                   [-0.47487372,  1.1464466 ]], dtype=float32)
+            >>> rect
+            array([[0, 0],
+                   [4, 0],
+                   [4, 3],
+                   [0, 3]], dtype=int32)
+        """
+        # pylint: disable=R0801
+        if pivot is None:
+            pivot = self.centroid
+
+        rot_points = rotate_2d_points(
+            points=self.points,
+            angle=angle,
+            pivot=pivot,
+            is_degree=is_degree,
+            is_clockwise=is_clockwise,
+        )
+        return Rectangle(points=rot_points)
