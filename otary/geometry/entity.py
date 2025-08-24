@@ -215,6 +215,14 @@ class GeometryEntity(ABC):
             AxisAlignedRectangle: AxisAlignedRectangle object
         """
 
+    def aabb(self) -> AxisAlignedRectangle:
+        """Alias for `enclosing_axis_aligned_bbox` method
+
+        Returns:
+            AxisAlignedRectangle: AxisAlignedRectangle object
+        """
+        return self.enclosing_axis_aligned_bbox()
+
     @abstractmethod
     def enclosing_oriented_bbox(self) -> Rectangle:
         """Compute the smallest area enclosing Oriented Bounding Box (OBB)
@@ -223,6 +231,14 @@ class GeometryEntity(ABC):
         Returns:
             Rectangle: Rectangle object
         """
+
+    def obb(self) -> Rectangle:
+        """Alias for `enclosing_oriented_bbox` method
+
+        Returns:
+            Rectangle: Rectangle object
+        """
+        return self.enclosing_oriented_bbox()
 
     @abstractmethod
     def enclosing_convex_hull(self) -> Polygon:
