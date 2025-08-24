@@ -51,7 +51,7 @@ pip install otary
 Let me illustrate the usage of Otary with a simple example. Imagine you need to:
 
 1. read an image from a pdf file
-2. draw an ellipse on it
+2. draw an rectangle on it, shift and rotate the rectangle
 3. crop a part of the image
 4. rotate the cropped image
 5. apply a threshold
@@ -60,7 +60,7 @@ Let me illustrate the usage of Otary with a simple example. Imagine you need to:
 In order to compare the use of Otary versus other libraries, I will use the same example but with different libraries. Try it yourself on your favorite LLM (like [ChatGPT](https://chatgpt.com/)) by copying the query:
 
 ```text
-Generate a python code to read an image from a pdf, draw an ellipse on it, crop a part of the image, rotate the cropped image, apply a threshold on the image.
+Generate a python code to read an image from a pdf, draw an rectangle on it, shift and rotate the rectangle, crop a part of the image, rotate the cropped image, apply a threshold on the image.
 ```
 
 Using Otary you can do it with few lines of code:
@@ -68,12 +68,13 @@ Using Otary you can do it with few lines of code:
 ```python
 import otary as ot
 
-im = ot.Image.from_pdf("path/to/your/file.pdf", page_nb=0)
+im = ot.Image.from_pdf("path/to/you/file.pdf", page_nb=0)
 
-ellipse = ot.Ellipse(foci1=[100, 100], foci2=[400, 400], semi_major_axis=250)
+rectangle = ot.Rectangle([[1, 1], [4, 1], [4, 4], [1, 4]]) * 100
+rectangle.shift([50, 50]).rotate(angle=30, is_degree=True)
 
 im = (
-    im.draw_ellipses([ellipse])
+    im.draw_polygons([rectangle])
     .crop(x0=50, y0=50, x1=450, y1=450)
     .rotate(angle=90, is_degree=True)
     .threshold_simple(thresh=200)
@@ -84,7 +85,7 @@ im.show()
 
 Using Otary makes the code:
 
-- Much more **readable** and hence maintainable
+- Much more **readable** and hence **maintainable**
 - Much more **interactive**
 - Much simpler, simplifying **libraries management** by only using one library and not manipulating multiple libraries like Pillow, OpenCV, Scikit-Image, PyMuPDF etc.
 
@@ -94,7 +95,7 @@ In a Jupyter notebook, you can easily test and iterate on transformations by sim
 
 ```python
 im = (
-    im.draw_ellipses([ellipse])
+    im.draw_polygons([rectangle])
     # .crop(x0=50, y0=50, x1=450, y1=450)
     # .rotate(angle=90, is_degree=True)
     .threshold_simple(thresh=200)

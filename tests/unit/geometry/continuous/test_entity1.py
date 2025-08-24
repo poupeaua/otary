@@ -3,7 +3,7 @@ Tests for the ContinuousGeometryEntity class
 """
 
 import numpy as np
-from otary.geometry import Rectangle, Circle, Ellipse
+from otary.geometry import AxisAlignedRectangle, Circle, Ellipse
 
 
 class TestContinuousGeometryEntityBase:
@@ -49,7 +49,7 @@ class TestContinuousGeometryEntityEnclosingAABB:
     def test_enclosing_axis_aligned_bbox_is_rectangle_instance(self):
         entity = Circle(center=[0, 0], radius=1, n_points_polygonal_approx=50)
         bbox = entity.enclosing_axis_aligned_bbox()
-        assert isinstance(bbox, Rectangle)
+        assert isinstance(bbox, AxisAlignedRectangle)
 
     def test_enclosing_axis_aligned_bbox_for_centered_circle(self):
         # Circle at (0,0) with radius 2

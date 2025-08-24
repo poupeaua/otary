@@ -9,9 +9,8 @@ from typing import Optional, TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import NDArray
-import pymupdf
 
-from otary.geometry import Polygon, Segment, Vector
+from otary.geometry import Polygon, Vector
 
 if TYPE_CHECKING:  # pragma: no cover
     from typing_extensions import Self
@@ -29,16 +28,22 @@ class Rectangle(Polygon):
         self,
         points: NDArray | list,
         is_cast_int: bool = False,
-        desintersect: bool = False,
+        regularity_margin_error: float = 1e-2,
+        desintersect: bool = True,
     ) -> None:
-        """Create a Rectangle object
+        """Create a Rectangle object.
 
         Args:
             points (NDArray | list): 2D points that define the rectangle
             is_cast_int (bool, optional): cast points to int. Defaults to False.
+            regularity_margin_error (float, optional): defines the allowed margin
+                distance error when checking if the points form a rectangle or not
+                on initialization.
             desintersect (bool, optional): whether to desintersect the rectangle or not.
                 Can be useful if the input points are in a random order and
-                self-intersection is possible. Defaults to False.
+                self-intersection is possible. In any case, if you try to instantiate
+                a self-intersected rectangle a ValueError will be raised.
+                Defaults to True.
         """
         if len(points) != 4:
             raise ValueError("Cannot create a Rectangle since it must have 4 points")
@@ -46,6 +51,19 @@ class Rectangle(Polygon):
 
         if desintersect:
             self.desintersect()
+
+        if self.is_self_intersected:
+            raise ValueError(
+                "The points form a self-intersected geometric object which is not "
+                f"allowed for a {self.__class__.__name__}"
+            )
+
+        if not self.is_regular(margin_dist_error_pct=regularity_margin_error):
+            raise ValueError(
+                "Try to create a Rectangle object but the coordinates "
+                "do not form a valid Rectangle. Please check your input coordinates, "
+                "the regularity_margin_error and the desintersect parameters."
+            )
 
     @classmethod
     def unit(cls) -> Rectangle:
@@ -62,11 +80,9 @@ class Rectangle(Polygon):
         center: NDArray,
         width: float,
         height: float,
-        angle: float = 0.0,
         is_cast_int: bool = False,
     ) -> Rectangle:
-        # pylint: disable=too-many-arguments, too-many-positional-arguments
-        """Create a Rectangle object using the center point, width, height and angle.
+        """Create a Rectangle object using the center point, width, height.
 
         Convention to create the rectangle is:
             index 0: top left point
@@ -78,8 +94,7 @@ class Rectangle(Polygon):
             center (NDArray): center point of the rectangle
             width (float): width of the rectangle
             height (float): height of the rectangle
-            angle (float, optional): radian rotation angle for the rectangle.
-                Defaults to 0.
+            is_cast_int (bool, optional): cast the points coordinates to int
 
         Returns:
             Rectangle: Rectangle object
@@ -101,14 +116,7 @@ class Rectangle(Polygon):
             ]
         )
 
-        rect = Rectangle(points=points, is_cast_int=is_cast_int)
-
-        if angle != 0:
-            rect = rect.rotate(angle=angle)
-            if is_cast_int:
-                rect.asarray = rect.asarray.astype(int)
-
-        return rect
+        return Rectangle(points=points, is_cast_int=is_cast_int)
 
     @classmethod
     def from_topleft_bottomright(
@@ -116,7 +124,7 @@ class Rectangle(Polygon):
         topleft: NDArray,
         bottomright: NDArray,
         is_cast_int: bool = False,
-    ) -> Rectangle:
+    ) -> Self:
         """Create a Rectangle object using the top left and bottom right points.
 
         Convention to create the rectangle is:
@@ -146,7 +154,7 @@ class Rectangle(Polygon):
         width: float,
         height: float,
         is_cast_int: bool = False,
-    ) -> Rectangle:
+    ) -> Self:
         """Create a Rectangle object using the top left point, width, height and angle.
 
         Convention to create the rectangle is:
@@ -173,40 +181,58 @@ class Rectangle(Polygon):
         )
 
     @property
-    def is_axis_aligned(self) -> bool:
+    def is_square(self) -> bool:
+        """Whether the rectangle is a square or not
+
+        Returns:
+            bool: True if the Rectangle is a Square
+        """
+        if self.shortside_length == self.longside_length:
+            return True
+
+        return False
+
+    def is_axis_aligned_approx(self, precision: int = 3) -> bool:
         """Check if the rectangle is axis-aligned
+
+        Args:
+            precision (int, optional): precision for the slope angle.
+                This define the number of decimals to consider for the angle
+                calculation of both the longside and shortside angle. Defaults to 3.
 
         Returns:
             bool: True if the rectangle is axis-aligned, False otherwise
         """
-        if self.is_self_intersected:
-            return False
 
-        precision = 3
-        longside_cond = bool(
-            (round(self.longside_slope_angle(degree=True), precision) + 90) % 90 == 0
+        def is_mult_of_90_approx(x, precision: int) -> bool:
+            return bool(round((x + 90 * 100), precision) % 90 == 0)
+
+        longside_cond = is_mult_of_90_approx(
+            self.longside_slope_angle(degree=True), precision=precision
         )
-        shortside_cond = bool(
-            (round(self.shortside_slope_angle(degree=True), precision) + 90) % 90 == 0
+        shortside_cond = is_mult_of_90_approx(
+            self.shortside_slope_angle(degree=True), precision=precision
         )
         return longside_cond and shortside_cond
 
     @property
-    def as_pymupdf_rect(self) -> pymupdf.Rect:
-        """Get the pymupdf representation of the given Rectangle.
-        Beware a pymupdf can only be straight or axis-aligned.
-
-        See: https://pymupdf.readthedocs.io/en/latest/rect.html
+    def is_axis_aligned(self) -> bool:
+        """Check if the rectangle is exactly axis-aligned.
+        If you wish to check if a rectangle is only approximately axis-aligned,
+        use the `is_axis_aligned_approx` method.
 
         Returns:
-            pymupdf.Rect: pymupdf axis-aligned Rect object
+            bool: True if the rectangle is exactly axis-aligned, False otherwise
         """
-        if not self.is_axis_aligned:
-            raise RuntimeError(
-                "The rectangle is not axis-aligned, thus it cannot be converted to a "
-                "pymupdf Rect object."
-            )
-        return pymupdf.Rect(x0=self.xmin, y0=self.ymin, x1=self.xmax, y1=self.ymax)
+        if self.points[0][1] != self.points[1][1]:  # top left y == top right y
+            return False
+        if self.points[1][0] != self.points[2][0]:  # top right x == bottom right x
+            return False
+        if self.points[2][1] != self.points[3][1]:  # bottom right y == bottom left y
+            return False
+        if self.points[3][0] != self.points[0][0]:  # bottom left x == top left x
+            return False
+        return True
 
     @property
     def longside_length(self) -> float:
@@ -215,8 +241,8 @@ class Rectangle(Polygon):
         Returns:
             float: the biggest side length
         """
-        seg1 = Segment(points=[self.points[0], self.points[1]])
-        seg2 = Segment(points=[self.points[1], self.points[2]])
+        seg1 = self.segments[0]
+        seg2 = self.segments[1]
         return seg1.length if seg1.length > seg2.length else seg2.length
 
     @property
@@ -224,10 +250,10 @@ class Rectangle(Polygon):
         """Compute the smallest side of the rectangle
 
         Returns:
-            float: the smallest side length
+            Segment: Longest side of the Rectangle as a Segment object
         """
-        seg1 = Segment(points=[self.points[0], self.points[1]])
-        seg2 = Segment(points=[self.points[1], self.points[2]])
+        seg1 = self.segments[0]
+        seg2 = self.segments[1]
         return seg2.length if seg1.length > seg2.length else seg1.length
 
     def longside_slope_angle(
@@ -238,8 +264,8 @@ class Rectangle(Polygon):
         Returns:
             float: the biggest slope
         """
-        seg1 = Segment(points=[self.points[0], self.points[1]])
-        seg2 = Segment(points=[self.points[1], self.points[2]])
+        seg1 = self.segments[0]
+        seg2 = self.segments[1]
         seg_bigside = seg1 if seg1.length > seg2.length else seg2
         return seg_bigside.slope_angle(degree=degree, is_y_axis_down=is_y_axis_down)
 
@@ -251,8 +277,8 @@ class Rectangle(Polygon):
         Returns:
             float: the smallest slope
         """
-        seg1 = Segment(points=[self.points[0], self.points[1]])
-        seg2 = Segment(points=[self.points[1], self.points[2]])
+        seg1 = self.segments[0]
+        seg2 = self.segments[1]
         seg_smallside = seg2 if seg1.length > seg2.length else seg1
         return seg_smallside.slope_angle(degree=degree, is_y_axis_down=is_y_axis_down)
 

@@ -386,8 +386,8 @@ class Ellipse(ContinuousGeometryEntity):
         if self.is_circle:
             # In a circle the enclosing oriented bounding box could be in any
             # direction. Thus we return the enclosing axis-aligned bounding box
-            # by default.
-            return self.enclosing_axis_aligned_bbox()
+            # by default as a Rectangle object
+            return Rectangle(self.enclosing_axis_aligned_bbox().asarray)
         return super().enclosing_oriented_bbox()
 
     def __str__(self) -> str:

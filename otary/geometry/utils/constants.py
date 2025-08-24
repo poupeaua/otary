@@ -2,6 +2,6 @@
 Geometric Constants
 """
 
-import numpy as np
+import math
 
-DEFAULT_MARGIN_ANGLE_ERROR = np.pi / 50
+DEFAULT_MARGIN_ANGLE_ERROR = math.pi / 50

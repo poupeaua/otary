@@ -38,9 +38,11 @@ class BinarizerImage:
 
     def threshold_adaptative(self) -> None:
         """Apply adaptive thresholding.
+        This is a local thresholding method that computes the threshold for a pixel
+        based on a small region around it.
 
-        A median blur is applied before for better thresholding results.
-        See https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html.
+        A gaussian blur is applied before for better thresholding results.
+        See why in https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html.
 
         As the input image must be a grayscale before applying any thresholding
         methods we convert the image to grayscale.
@@ -58,9 +60,15 @@ class BinarizerImage:
 
     def threshold_otsu(self) -> None:
         """Apply Ostu thresholding.
+        This is a global thresholding method that automatically determines
+        an optimal threshold value from the image histogram.
 
-        A gaussian blur is applied before for better thresholding results.
-        See https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html.
+        Comes from the article "A Threshold Selection Method from Gray-Level
+        Histograms" by Nobuyuki Otsu, 31 January 1979. Link to article:
+        https://ieeexplore.ieee.org/document/4310076
+
+        Consider applying a gaussian blur before for better thresholding results.
+        See why in https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html.
 
         As the input image must be a grayscale before applying any thresholding
         methods we convert the image to grayscale.
@@ -75,6 +83,13 @@ class BinarizerImage:
         self, window_size: int = 15, k: float = 0.2, r: float = 128.0
     ) -> None:
         """Apply Sauvola thresholding.
+        This is a local thresholding method that computes the threshold for a pixel
+        based on a small region around it.
+
+        Comes from the article "Adaptive Document Image Binarization" by
+        J. Sauvola and M. Pietikainen. Link to article:
+        https://www.researchgate.net/publication/3710586_Adaptive_Document_Binarization
+
         See https://scikit-image.org/docs/stable/auto_examples/segmentation/\
                 plot_niblack_sauvola.html.
 
@@ -95,6 +110,9 @@ class BinarizerImage:
 
     def threshold_niblack(self, window_size: int = 15, k: float = 0.2) -> None:
         """Apply Niblack thresholding.
+        This is a local thresholding method that computes the threshold for a pixel
+        based on a small region around it.
+
         See https://scikit-image.org/docs/stable/auto_examples/segmentation/\
                 plot_niblack_sauvola.html
 
