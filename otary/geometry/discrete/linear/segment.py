@@ -108,8 +108,8 @@ class Segment(LinearEntity):
 
         Angle Difference = |theta_0 - theta_1| mod pi
         Because always returns positive results due to the modulo we took into account
-        the special case where angle difference = np.pi - epsilon ~ 3.139,
-        this implies also two parralel lines.
+        the special case where angle difference = pi - epsilon ~ 3.139,
+        this implies also two parallel lines.
 
         Args:
             segment (np.array): segment of shape (2, 2)
@@ -120,11 +120,11 @@ class Segment(LinearEntity):
             bool: whether we qualify the lines as parallel or not
         """
         angle_difference = np.mod(
-            np.abs(self.slope_angle() - segment.slope_angle()), np.pi
+            np.abs(self.slope_angle() - segment.slope_angle()), math.pi
         )
         test = bool(
             angle_difference < margin_error_angle
-            or np.abs(angle_difference - np.pi) < margin_error_angle
+            or np.abs(angle_difference - math.pi) < margin_error_angle
         )
         return test
 

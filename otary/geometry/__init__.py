@@ -12,6 +12,7 @@ __all__ = [
     "Polygon",
     "Triangle",
     "Rectangle",
+    "AxisAlignedRectangle",
     "Ellipse",
     "Circle",
 ]
@@ -28,5 +29,6 @@ from otary.geometry.discrete.linear.directed.vectorized_linear_spline import (
 from otary.geometry.discrete.shape.polygon import Polygon
 from otary.geometry.discrete.shape.triangle import Triangle
 from otary.geometry.discrete.shape.rectangle import Rectangle
+from otary.geometry.discrete.shape.axis_aligned_rectangle import AxisAlignedRectangle
 from otary.geometry.continuous.shape.ellipse import Ellipse
 from otary.geometry.continuous.shape.circle import Circle

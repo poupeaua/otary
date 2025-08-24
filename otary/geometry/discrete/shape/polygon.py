@@ -328,12 +328,14 @@ class Polygon(DiscreteGeometryEntity):
 
     # ------------------------------- CLASSIC METHODS ----------------------------------
 
-    def is_regular(self, margin_dist_error_pct: float = 0.01) -> bool:
+    def is_regular(self, margin_dist_error_pct: float = 1e-2) -> bool:
         """Identifies whether the polygon is regular, this means is rectangular or is
         a square.
 
         Args:
-            margin_dist_error_pct (float, optional): area error. Defaults to 25.
+            margin_dist_error_pct (float, optional): margin for a distance error.
+                The percentage is multiplied by the square root of the product of
+                the diagonals. Defaults to 1e-2.
 
         Returns:
             bool: True if the polygon describes a rectangle or square.
@@ -864,9 +866,7 @@ class Polygon(DiscreteGeometryEntity):
         aabb_main = self.enclosing_axis_aligned_bbox()
         contour_main_shifted_normalized = self.copy().shift(
             vector=-np.asarray([self.xmin, self.ymin])
-        ) / np.array(
-            [aabb_main.get_width_from_topleft(0), aabb_main.get_height_from_topleft(0)]
-        )
+        ) / np.array([aabb_main.width, aabb_main.height])
 
         # AABB of the polygon in the crop referential
         aabb_crop = other.enclosing_axis_aligned_bbox()
