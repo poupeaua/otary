@@ -39,7 +39,7 @@ Otary is designed to be Interactive and user-friendly, ideal for [Jupyter notebo
 
     ```python
     im = (
-        im.draw_ellipses([ellipse])
+        im.draw_polygons([rectangle])
         # .crop(x0=50, y0=50, x1=450, y1=450)
         # .rotate(angle=90, is_degree=True)
         .threshold_simple(thresh=200)
