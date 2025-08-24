@@ -56,6 +56,43 @@ class TestRectangleCreation:
         rect = Rectangle.from_topleft(topleft=topleft, width=2, height=2)
         assert np.isclose(rect.asarray, [[1, 1], [3, 1], [3, 3], [1, 3]]).all()
 
+    def test_create_rectangle_with_more_than_4_points(self):
+        points = [[0, 0], [0, 1], [1, 1], [1, 0], [0.5, 0.5]]
+        with pytest.raises(ValueError):
+            Rectangle(points)
+
+    def test_create_rectangle_with_less_than_4_points(self):
+        points = [[0, 0], [0, 1], [1, 1]]
+        with pytest.raises(ValueError):
+            Rectangle(points)
+
+    def test_create_rectangle_self_intersected(self):
+        # even if you choose desintersect=False, a ValueError is raised
+        # because a self-intersected rectangle cannot exist
+        points = [[0, 0], [1, 1], [1, 0], [0, 1]]
+        with pytest.raises(ValueError):
+            Rectangle(points, desintersect=False)
+
+    def test_create_rectangle_not_regular(self):
+        points = [[0, 0], [100, 0], [100, 100], [0, 105]]
+        with pytest.raises(ValueError):
+            Rectangle(points)
+
+    def test_create_rectangle_valid_irregular(self):
+        points = [[0, 0], [100, 0], [100, 100], [0, 101]]
+        Rectangle(points, regularity_margin_error=1e-2)
+
+
+class TestRectangleIsSquare:
+
+    def test_is_square_true(self):
+        rect = Rectangle.from_topleft(topleft=[0, 0], width=2, height=2)
+        assert rect.is_square
+
+    def test_is_square_false(self):
+        rect = Rectangle.from_topleft(topleft=[0, 0], width=2, height=4)
+        assert not rect.is_square
+
 
 class TestRectangleAxixAligned:
     def test_is_axis_aligned_true(self):
@@ -68,6 +105,30 @@ class TestRectangleAxixAligned:
         rect = Rectangle.from_center(center=[0, 0], width=2, height=4).rotate(
             angle=np.pi / 4
         )
+        assert not rect.is_axis_aligned
+
+    def test_is_axis_aligned_second_point_y_cause_false(self):
+        rect = Rectangle([[0, 0], [100, 1], [100, 100], [0, 100]])
+        assert not rect.is_axis_aligned
+
+    def test_is_axis_aligned_second_point_x_cause_false(self):
+        rect = Rectangle([[0, 0], [101, 0], [100, 100], [0, 100]])
+        assert not rect.is_axis_aligned
+
+    def test_is_axis_aligned_third_point_y_cause_false(self):
+        rect = Rectangle([[0, 0], [100, 0], [100, 101], [0, 100]])
+        assert not rect.is_axis_aligned
+
+    def test_is_axis_aligned_third_point_x_cause_false(self):
+        rect = Rectangle([[0, 0], [100, 0], [101, 100], [0, 100]])
+        assert not rect.is_axis_aligned
+
+    def test_is_axis_aligned_fourth_point_y_cause_false(self):
+        rect = Rectangle([[0, 0], [100, 0], [100, 100], [0, 101]])
+        assert not rect.is_axis_aligned
+
+    def test_is_axis_aligned_fourth_point_x_cause_false(self):
+        rect = Rectangle([[0, 0], [100, 0], [100, 100], [1, 100]])
         assert not rect.is_axis_aligned
 
     def test_is_axis_aligned_self_intersected(self):
@@ -249,6 +310,12 @@ class TestRectangleJoin:
 
 
 class TestRectangleGetVerticeFromTopleft:
+
+    def test_get_bottomright_vertice_from_topleft(self):
+        rect = Rectangle.from_topleft(topleft=[0, 0], width=4, height=2)
+        topleft_index = 0
+        vertice = rect.get_vertice_from_topleft(topleft_index, "bottomright")
+        assert np.array_equal(vertice, [4, 2])
 
     def test_invalid_vertice_parameter(self):
         rect = Rectangle.from_topleft(topleft=[0, 0], width=4, height=2)
