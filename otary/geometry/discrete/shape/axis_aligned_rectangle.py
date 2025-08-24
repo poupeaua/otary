@@ -133,6 +133,9 @@ class AxisAlignedRectangle(Rectangle):
         is_clockwise: bool = True,
         pivot: Optional[NDArray] = None,
     ):
+        """The in-place rotate method is not supported for AxisAlignedRectangle.
+        Use the rotate_transform method instead.
+        """
         raise TypeError("AxisAlignedRectangle does not support arbitrary rotation.")
 
     def rotate_transform(
