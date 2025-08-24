@@ -5,7 +5,9 @@ File containing tests for the VectorizedLinearSpline class.
 import numpy as np
 import pytest
 
-from otary.geometry.discrete.linear.directed.vectorized_linear_spline import VectorizedLinearSpline
+from otary.geometry.discrete.linear.directed.vectorized_linear_spline import (
+    VectorizedLinearSpline,
+)
 
 
 class TestVectorizedLinearSplineInit:
@@ -20,6 +22,7 @@ class TestVectorizedLinearSplineInit:
         with pytest.raises(ValueError):
             VectorizedLinearSpline(points=points)
 
+
 class TestVectorizedLinearSplineIsSimpleVector:
 
     def test_is_simple_vector_false(self):
@@ -31,6 +34,7 @@ class TestVectorizedLinearSplineIsSimpleVector:
         points = np.array([[0, 0], [1, 0]])
         vls = VectorizedLinearSpline(points=points)
         assert vls.is_simple_vector
+
 
 class TestVectorizedLinearSplineCardinalDegree:
 
@@ -47,4 +51,4 @@ class TestVectorizedLinearSplineCardinalDegree:
     def test_cardinal_degree_two_points(self):
         points = np.array([[0, 0], [100, 100]])
         vls = VectorizedLinearSpline(points=points)
-        assert round(vls.cardinal_degree + 90*10, 3) % 45 == 0
+        assert round(vls.cardinal_degree + 90 * 10, 3) % 45 == 0
