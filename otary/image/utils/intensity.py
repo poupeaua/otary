@@ -23,11 +23,6 @@ def intensity_local(
     This function makes the whole computation using the integral image low-level method.
     This way one can really understand how the intensity calculation is done.
 
-    Plus this method offers the following advantage over the box filter from OpenCV:
-    - no clipping of values in [0, 255] in the non-normalized case. Can be
-        useful for some applications.
-
-
     Args:
         img (NDArray): input image
         window_size (int, optional): window size. Defaults to 15.
@@ -42,7 +37,11 @@ def intensity_local(
     w = check_transform_window_size(img=img, window_size=window_size)
 
     im = img.astype(np.float32)
-    img_withborders = cv2.copyMakeBorder(im, 1, 1, 1, 1, borderType=border_type)
+
+    half_w = w // 2
+    img_withborders = cv2.copyMakeBorder(
+        im, half_w, half_w, half_w, half_w, borderType=border_type
+    )
 
     _img = cv2.integral(img_withborders, sdepth=cv2.CV_32F)
 
