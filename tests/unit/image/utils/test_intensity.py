@@ -14,8 +14,8 @@ class TestIntensityUtils:
         im = np.random.randint(0, 256, size=(100, 100), dtype=np.uint8)
 
         assert np.array_equal(
-            intensity_local(im, window_size=15, cast_int=True),
-            intensity_local_v2(im, window_size=15, cast_int=True),
+            intensity_local(im, window_size=15, cast_uint8=True),
+            intensity_local_v2(im, window_size=15, cast_uint8=True),
         )
 
     def test_intensity_v1_equal_v2_float(self):
@@ -23,8 +23,8 @@ class TestIntensityUtils:
         im = np.random.randint(0, 256, size=(100, 100), dtype=np.uint8)
 
         assert np.allclose(
-            intensity_local(im, window_size=15, cast_int=False),
-            intensity_local_v2(im, window_size=15, cast_int=False),
+            intensity_local(im, window_size=15, cast_uint8=False),
+            intensity_local_v2(im, window_size=15, cast_uint8=False),
         )
 
     def test_intensity_v1_equal_v2_float_non_normalized(self):
@@ -32,6 +32,6 @@ class TestIntensityUtils:
         im = np.random.randint(0, 256, size=(100, 100), dtype=np.uint8)
 
         assert np.array_equal(
-            intensity_local(im, window_size=15, cast_int=False, normalize=False),
-            intensity_local_v2(im, window_size=15, cast_int=False, normalize=False),
+            intensity_local(im, window_size=15, cast_uint8=False, normalize=False),
+            intensity_local_v2(im, window_size=15, cast_uint8=False, normalize=False),
         )

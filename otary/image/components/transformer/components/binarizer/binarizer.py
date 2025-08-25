@@ -59,7 +59,7 @@ class BinarizerImage:
         self.base.asarray = binary
 
     def threshold_otsu(self) -> None:
-        """Apply Ostu thresholding.
+        """Apply Otsu thresholding.
         This is a global thresholding method that automatically determines
         an optimal threshold value from the image histogram.
 
