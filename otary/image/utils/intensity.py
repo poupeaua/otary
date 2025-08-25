@@ -130,6 +130,7 @@ def max_local(
 
     return img_max
 
+
 def min_local(
     img: NDArray,
     window_size: int = 15,
@@ -159,7 +160,7 @@ def min_local(
         borderType=border_type,
     )
 
-    if cast_uint8:    
+    if cast_uint8:
         img_min = np.clip(np.round(img_min), 0, 255).astype(np.uint8)
 
     return img_min

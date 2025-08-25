@@ -84,7 +84,15 @@ def threshold_niblack_like(
 
     return thresh, img_thresholded
 
-def threshold_isauvola(img: NDArray, window_size: int = 15, k: float = 0.5, r: float = 128.0, contrast_window_size: int = 3, opening_k_size: float = 0) -> tuple[NDArray, NDArray[np.uint8]]:
+
+def threshold_isauvola(
+    img: NDArray,
+    window_size: int = 15,
+    k: float = 0.5,
+    r: float = 128.0,
+    contrast_window_size: int = 3,
+    opening_k_size: float = 0,
+) -> NDArray[np.uint8]:
 
     def contrast(img: NDArray, window_size: int, eps: float = 1e-9):
         min_ = min_local(img=img, window_size=window_size)
@@ -93,18 +101,18 @@ def threshold_isauvola(img: NDArray, window_size: int = 15, k: float = 0.5, r: f
 
     cont = contrast(img, window_size=contrast_window_size)
 
-    _, cont = cv2.threshold(
-        cont, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
-    )
+    _, cont = cv2.threshold(cont, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
     if opening_k_size > 0:
         raise NotImplementedError("Opening is not implemented yet")
 
-    _, sauvola = threshold_niblack_like(img=cont, method="sauvola", window_size=window_size, k=k, r=r)
+    _, sauvola = threshold_niblack_like(
+        img=cont, method="sauvola", window_size=window_size, k=k, r=r
+    )
 
-    _, labels = cv2.connectedComponents(255-sauvola, connectivity=8)
+    _, labels = cv2.connectedComponents(255 - sauvola, connectivity=8)
     labels_to_keep = set(np.unique((cont == 255) * labels))
-    labels_to_keep = list(labels_to_keep - {0})
-    mask = np.isin(labels, labels_to_keep)
-    bin_isauvola = 255 - (255-sauvola) * mask
+    labels_to_keep_list = list(labels_to_keep - {0})
+    mask = np.isin(labels, labels_to_keep_list)
+    bin_isauvola = 255 - (255 - sauvola) * mask
     return bin_isauvola
