@@ -18,7 +18,7 @@ from otary.geometry.entity import GeometryEntity
 from otary.geometry.discrete.linear.entity import LinearEntity
 from otary.geometry.discrete.entity import DiscreteGeometryEntity
 from otary.geometry import Segment, Vector, LinearSpline
-from otary.geometry.utils.tools import get_shared_point_indices
+from otary.geometry.utils.tools import assert_list_of_lines, get_shared_point_indices
 
 if TYPE_CHECKING:  # pragma: no cover
     from typing_extensions import Self
@@ -160,7 +160,7 @@ class Polygon(DiscreteGeometryEntity):
         # pylint: disable=too-many-locals
         # pylint: disable=too-many-positional-arguments, too-many-arguments
         lines = np.asarray(lines)
-        Segment.assert_list_of_lines(lines=lines)
+        assert_list_of_lines(lines=lines)
 
         def debug_visualize(seg: NDArray):  # pragma: no cover
             if is_debug_enabled and img is not None:
