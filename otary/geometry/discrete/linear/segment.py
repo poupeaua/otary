@@ -7,10 +7,10 @@ from __future__ import annotations
 import math
 import itertools
 from typing import TYPE_CHECKING
+import warnings
 
 import numpy as np
 from numpy.typing import NDArray
-from sympy.geometry import Line
 
 from otary.geometry.utils.constants import DEFAULT_MARGIN_ANGLE_ERROR
 from otary.geometry.discrete.linear.entity import LinearEntity
@@ -52,17 +52,34 @@ class Segment(LinearEntity):
         return self.centroid
 
     @property
+    def direction_vector(self) -> NDArray:
+        """Returns the direction vector of the segment from point 1 to point 2
+
+        Returns:
+            NDArray: direction vector of shape (2,)
+        """
+        return self.points[1] - self.points[0]
+
+    @property
     def slope(self) -> float:
         """Returns the segment slope in the classical XY coordinates referential
+
+        Can return inf if you have a really specific vertical line of the form:
+
+        >>> seg = ot.Segment([[1e-9, 0], [0, 1]])
+        >>> seg.slope
+        inf
 
         Returns:
             float: segment slope value
         """
         p1, p2 = self.points[0], self.points[1]
-        try:
-            slope = (p2[1] - p1[1]) / (p2[0] - p1[0] + 1e-9)
-        except ZeroDivisionError:
-            slope = np.inf
+        with warnings.catch_warnings():
+            warnings.filterwarnings("error", category=RuntimeWarning)
+            try:
+                slope = (p2[1] - p1[1]) / (p2[0] - p1[0] + 1e-9)
+            except RuntimeWarning:  # Now this is raised as an exception
+                slope = np.inf
         return slope
 
     @property
@@ -73,19 +90,6 @@ class Segment(LinearEntity):
             float: segment slope value
         """
         return -self.slope
-
-    @staticmethod
-    def assert_list_of_lines(lines: NDArray) -> None:
-        """Check that the lines argument is really a list of lines
-
-        Args:
-            lines (NDArray): a expected list of lines
-        """
-        if lines.shape[1:] != (2, 2):
-            raise ValueError(
-                "The input segments argument has not the expected shape. "
-                f"Input shape {lines.shape[1:]}, expected shape (2, 2)."
-            )
 
     def slope_angle(self, degree: bool = False, is_y_axis_down: bool = False) -> float:
         """Calculate the slope angle of a single line in the cartesian space
@@ -102,7 +106,7 @@ class Segment(LinearEntity):
         return angle
 
     def is_parallel(
-        self, segment: Segment, margin_error_angle: float = DEFAULT_MARGIN_ANGLE_ERROR
+        self, other: Segment, margin_error_angle: float = DEFAULT_MARGIN_ANGLE_ERROR
     ) -> bool:
         """Check if two lines are parallel by calculating the slope of the two lines
 
@@ -119,14 +123,21 @@ class Segment(LinearEntity):
         Returns:
             bool: whether we qualify the lines as parallel or not
         """
-        angle_difference = np.mod(
-            np.abs(self.slope_angle() - segment.slope_angle()), math.pi
-        )
-        test = bool(
-            angle_difference < margin_error_angle
-            or np.abs(angle_difference - math.pi) < margin_error_angle
-        )
-        return test
+        if margin_error_angle == 0:
+            # no margin of error, strict equality
+            M = np.array([self.direction_vector, -other.direction_vector]).T  # (2,2)
+            # Check if matrix is singular (parallel lines)
+            cond = np.linalg.det(M) == 0
+        else:
+            # with margin of error, we use angle difference
+            angle_difference = np.mod(
+                np.abs(self.slope_angle() - other.slope_angle()), math.pi
+            )
+            cond = bool(
+                angle_difference <= margin_error_angle
+                or np.abs(angle_difference - math.pi) <= margin_error_angle
+            )
+        return cond
 
     @staticmethod
     def is_points_collinear(
@@ -161,7 +172,7 @@ class Segment(LinearEntity):
 
         segment1, segment2 = Segment([p1, p2]), Segment([p1, p3])
         return segment1.is_parallel(
-            segment=segment2, margin_error_angle=margin_error_angle
+            other=segment2, margin_error_angle=margin_error_angle
         )
 
     def is_point_collinear(
@@ -191,13 +202,14 @@ class Segment(LinearEntity):
     ) -> bool:
         """Verify whether two segments on the plane are collinear or not.
         This means that they are parallel and have at least three points in common.
+
         We needed to make all the combination verification in order to proove cause we
         could end up with two points very very close by and it would end up not
         providing the expected result. Consider the following example:
 
-        segment1 = Segment([[339, 615], [564, 650]])
-        segment2 = Segment([[340, 614], [611, 657]])
-        segment1.is_collinear(segment2)
+        >>> segment1 = Segment([[339, 615], [564, 650]])
+        >>> segment2 = Segment([[340, 614], [611, 657]])
+        >>> segment1.is_collinear(segment2)
         Angle difference: 0.9397169393235674 Margin: 0.06283185307179587
         False
 
@@ -227,7 +239,7 @@ class Segment(LinearEntity):
             )
 
         _is_parallel = self.is_parallel(
-            segment=segment, margin_error_angle=margin_error_angle
+            other=segment, margin_error_angle=margin_error_angle
         )
         _is_collinear = 1 in val_arr
         return bool(_is_parallel and _is_collinear)
@@ -245,11 +257,14 @@ class Segment(LinearEntity):
         Returns:
             NDArray: intersection point between the two lines
         """
-        if self.is_parallel(segment=other, margin_error_angle=0):
+        if self.is_parallel(other, margin_error_angle=0):
             return np.array([])
-        line0 = Line(self.asarray[0], self.asarray[1])
-        line1 = Line(other.asarray[0], other.asarray[1])
-        intersection = np.array(line0.intersection(line1)[0].evalf(n=7))
+
+        M = np.array([self.direction_vector, -other.direction_vector]).T  # shape (2,2)
+        b = other.asarray[0] - self.asarray[0]  # shape (2,)
+        solution, _ = np.linalg.solve(M, b)
+
+        intersection = self.asarray[0] + solution * self.direction_vector
         return intersection
 
     def normal(self) -> Self:

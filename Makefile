@@ -52,6 +52,12 @@ precommit:
 	@echo "------------------"
 	@pre-commit run --all-files
 
+show-dependencies:
+	@echo "\n--------------------"
+	@echo "Project Dependencies"
+	@echo "--------------------"
+	@poetry show --tree --only=main
+
 # -------------------------------------- TEST -----------------------------------------
 
 test: test-unit

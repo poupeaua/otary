@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import Any, Sequence, Optional
 
 import numpy as np
-from matplotlib import colors
+from PIL import ImageColor
 
 import otary.geometry as geo
 
@@ -25,7 +25,9 @@ def color_str_to_tuple(
         Optional[tuple]: color tuple or None if not possible
     """
     try:
-        color_tuple = tuple(np.array(colors.to_rgb(color_str)) * 255)
+        color_tuple = ImageColor.getrgb(color_str)
+        if len(color_tuple) != 3:
+            raise ValueError
         if is_bgr:
             color_tuple = color_tuple[::-1]
     except ValueError:

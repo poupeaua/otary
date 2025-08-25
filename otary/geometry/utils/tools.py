@@ -109,3 +109,16 @@ def get_shared_point_indices(
 
     # Get indices of valid rows
     return np.nonzero(valid_rows)[0].astype(int)
+
+
+def assert_list_of_lines(lines: NDArray) -> None:
+    """Check that the lines argument is really a list of lines
+
+    Args:
+        lines (NDArray): a expected list of lines
+    """
+    if lines.shape[1:] != (2, 2):
+        raise ValueError(
+            "The input segments argument has not the expected shape. "
+            f"Input shape {lines.shape[1:]}, expected shape (2, 2)."
+        )
