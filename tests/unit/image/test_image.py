@@ -7,7 +7,13 @@ import os
 import pytest
 import numpy as np
 
-from otary.geometry import Polygon, Segment, LinearSpline, Rectangle
+from otary.geometry import (
+    Polygon,
+    Segment,
+    LinearSpline,
+    Rectangle,
+    AxisAlignedRectangle,
+)
 from otary.image import Image, PolygonsRender, SegmentsRender, LinearSplinesRender
 
 
@@ -566,7 +572,7 @@ class TestImageCropHQFromAABBAndPDF:
 
     def test_crop_hq_from_aabb_and_pdf(self):
         # Prepare a rectangle to crop (arbitrary values within a typical A4 page)
-        bbox = Rectangle(points=[[50, 50], [100, 50], [100, 250], [50, 250]])
+        bbox = AxisAlignedRectangle(points=[[50, 50], [100, 50], [100, 250], [50, 250]])
         factor_scale = bbox.get_height_from_topleft(0) / bbox.get_width_from_topleft(0)
         pdf_path = "tests/data/test.pdf"
         # Ensure the test PDF exists
