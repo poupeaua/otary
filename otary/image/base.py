@@ -265,6 +265,23 @@ class BaseImage:
         self.asarray = cv2.cvtColor(self.asarray, cv2.COLOR_GRAY2BGR)
         return self
 
+    def as_reversed_color_channel(self) -> Self:
+        """Generate the image with reversed color channels.
+
+        If the image is in grayscale or does not have 3 channels, it is returned as is.
+
+        Since Otary uses OpenCV we use the convention BGR (OpenCV default).
+        Use this function to generate the image in RGB which is used in other
+        libraries like Pillow.
+
+        Returns:
+            Self: original image with reversed color channels
+        """
+        if self.is_gray or self.channels != 3:
+            return self
+        self.asarray = self.asarray[..., ::-1]
+        return self
+
     def as_filled(self, fill_value: int | np.ndarray = 255) -> Self:
         """Returns an entirely white image of the same size as the original.
         Can be useful to get an empty representation of the same image to paint

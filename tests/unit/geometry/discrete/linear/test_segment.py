@@ -40,6 +40,14 @@ class TestSegmentProperties:
         seg = Segment([[0, 0], [1, 1]])
         assert np.isclose(seg.slope_cv2, -1)
 
+    def test_slope_division_by_zero_error(self):
+        seg = Segment([[1e-9, 0], [0, 1]])
+        assert seg.slope == np.inf
+
+    def test_midpoint(self):
+        seg = Segment([[0, 0], [1, 1]])
+        assert np.equal(seg.midpoint, np.array([0.5, 0.5])).all()
+
 
 class TestSegmentSlopeCalculation:
     def test_compute_slope_angle_pos_xunit(self):
@@ -255,3 +263,36 @@ class TestSegmentNormal:
         orig_points_sorted = np.sort(seg.points, axis=0)
         normal2_points_sorted = np.sort(normal_of_normal.points, axis=0)
         assert np.allclose(orig_points_sorted, normal2_points_sorted)
+
+
+class TestSegmentIntersectionLine:
+
+    def test_intersection_basic(self):
+        seg1 = Segment([[0, 0], [1, 1]])
+        seg2 = Segment([[0, 1], [1, 0]])
+        intersection = seg1.intersection_line(seg2)
+        assert np.allclose(intersection, np.array([0.5, 0.5]))
+
+    def test_intersection_parallel(self):
+        seg1 = Segment([[0, 0], [1, 1]])
+        seg2 = Segment([[3, 0], [5, 2]])
+        intersection = seg1.intersection_line(seg2)
+        assert np.array_equal(intersection, np.array([]))
+
+    def test_intersection_collinear(self):
+        seg1 = Segment([[0, 0], [1, 1]])
+        seg2 = Segment([[5, 5], [10, 10]])
+        intersection = seg1.intersection_line(seg2)
+        assert np.array_equal(intersection, np.array([]))
+
+    def test_intersection_collinear_crossing(self):
+        seg1 = Segment([[0, 0], [5, 5]])
+        seg2 = Segment([[3, 3], [10, 10]])
+        intersection = seg1.intersection_line(seg2)
+        assert np.array_equal(intersection, np.array([]))
+
+    def test_intersection_close_to_parallel(self):
+        seg1 = Segment([[0, 0], [1, 1]])
+        seg2 = Segment([[3, 0], [1003.01, 1000]])
+        intersection = seg1.intersection_line(seg2)
+        assert len(intersection) == 2

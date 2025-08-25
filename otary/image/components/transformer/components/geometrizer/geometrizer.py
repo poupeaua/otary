@@ -7,7 +7,6 @@ from typing import Sequence
 import numpy as np
 from numpy.typing import NDArray
 import cv2
-import scipy.ndimage
 
 from otary.image.base import BaseImage
 import otary.geometry as geo
@@ -45,44 +44,6 @@ class GeometrizerImage:
             borderValue=fill_value,
         )  # type: ignore[call-overload]
 
-    def __rotate_exact(
-        self,
-        angle: float,
-        is_degree: bool = False,
-        is_clockwise: bool = True,
-        reshape: bool = True,
-        border_fill_value: float = 0.0,
-    ) -> None:
-        """Rotate the image by a given angle.
-        This method is more accurate than the rotate method but way slower
-        (about 10 times slower).
-
-        Args:
-            angle (float): angle to rotate the image
-            is_degree (bool, optional): whether the angle is in degree or not.
-                If not it is considered to be in radians.
-                Defaults to False which means radians.
-            is_clockwise (bool, optional): whether the rotation is clockwise or
-                counter-clockwise. Defaults to True.
-            reshape (bool, optional): scipy reshape option. Defaults to True.
-            border_fill_value (float, optional): value to fill the border of the image
-                after the rotation in case reshape is True. Can only be a single
-                integer. Does not support tuple of 3 integers for RGB image.
-                Defaults to 0.0 which is black.
-        """
-        # pylint: disable=too-many-arguments, too-many-positional-arguments
-        if not is_degree:
-            angle = np.rad2deg(angle)
-        if is_clockwise:
-            # by default scipy rotate is counter-clockwise
-            angle = -angle
-        self.base.asarray = scipy.ndimage.rotate(
-            input=self.base.asarray,
-            angle=angle,
-            reshape=reshape,
-            cval=border_fill_value,
-        )
-
     def rotate(
         self,
         angle: float,
@@ -90,7 +51,6 @@ class GeometrizerImage:
         is_clockwise: bool = True,
         reshape: bool = True,
         fill_value: Sequence[float] = (0.0,),
-        fast: bool = True,
     ) -> None:
         """Rotate the image by a given angle.
 
@@ -116,22 +76,6 @@ class GeometrizerImage:
         """
         # pylint: disable=too-many-arguments, too-many-positional-arguments
         # pylint: disable=too-many-locals
-        if not fast:  # using scipy rotate which is slower than cv2
-            fill_value_scalar = fill_value[0]
-            if not isinstance(fill_value_scalar, float):
-                raise ValueError(
-                    f"The fill_value {fill_value_scalar} is not a valid "
-                    "value. It must be a single integer when fast mode is off"
-                )
-            self.__rotate_exact(
-                angle=angle,
-                is_degree=is_degree,
-                is_clockwise=is_clockwise,
-                reshape=reshape,
-                border_fill_value=fill_value_scalar,
-            )
-            return None
-
         if not is_degree:
             angle = np.rad2deg(angle)
         if is_clockwise:
@@ -163,7 +107,6 @@ class GeometrizerImage:
             borderMode=cv2.BORDER_CONSTANT,
             borderValue=fill_value,
         )  # type: ignore[call-overload]
-        return None
 
     def center_to_point(self, point: NDArray) -> NDArray:
         """Shift the image so that the input point ends up in the middle of the

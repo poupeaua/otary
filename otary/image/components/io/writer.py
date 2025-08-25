@@ -2,10 +2,7 @@
 WriterImage module
 """
 
-from typing import Optional
-
-import cv2
-import matplotlib.pyplot as plt
+from PIL import Image as ImagePIL
 
 from otary.image.base import BaseImage
 
@@ -18,51 +15,42 @@ class WriterImage:
 
     def show(
         self,
-        title: Optional[str] = None,
-        figsize: tuple[float, float] = (8.0, 6.0),
-        color_conversion: Optional[int] = cv2.COLOR_BGR2RGB,
-        save_filepath: Optional[str] = None,
-    ) -> None:
+        figsize: tuple[float, float] = (-1, -1),
+        popup_window_display: bool = False,
+    ) -> ImagePIL.Image:
         """Show the image
 
         Args:
-            title (Optional[str], optional): title of the image. Defaults to None.
             figsize (tuple[float, float], optional): size of the figure.
-                Defaults to (8.0, 6.0).
-            color_conversion (int, optional): color conversion parameter.
-                Defaults to cv2.COLOR_BGR2RGB.
-            save_filepath (Optional[str], optional): save the image if needed.
-                Defaults to None.
+                Defaults to (-1, -1), meaning the original size of the image.
+            popup_window_display (bool, optional): whether to display the image in a
+                popup window. Defaults to False.
         """
-        # Converts from one colour space to the other. this is needed as RGB
-        # is not the default colour space for OpenCV
-        if color_conversion is not None:
-            im = cv2.cvtColor(self.base.asarray, color_conversion)
+        if figsize[0] <= 0 and figsize[1] <= 0:
+            figsize = (self.base.width, self.base.height)
         else:
-            im = self.base.asarray
+            if figsize[1] <= 0:
+                aspect_ratio = self.base.height / self.base.width
+                figsize = (figsize[0], figsize[0] * aspect_ratio)
 
-        plt.figure(figsize=figsize)
+            elif figsize[0] <= 0:
+                aspect_ratio = self.base.width / self.base.height
+                figsize = (figsize[1] * aspect_ratio, figsize[1])
 
-        # Show the image
-        plt.imshow(im)
+        figsize = (int(figsize[0]), int(figsize[1]))
 
-        # remove the axis / ticks for a clean looking image
-        plt.xticks([])
-        plt.yticks([])
+        self.base.as_reversed_color_channel()
+        im = self.base.as_pil().resize(size=figsize)
 
-        # if a title is provided, show it
-        if title is not None:
-            plt.title(title)
+        if popup_window_display:
+            im.show()
 
-        if save_filepath is not None:
-            plt.savefig(save_filepath)
+        return im
 
-        plt.show()
-
-    def save(self, save_filepath: str) -> None:
+    def save(self, fp: str) -> None:
         """Save the image in a local file
 
         Args:
-            save_filepath (str): path to the file
+            fp (str): fp stands for filepath which is the path to the file
         """
-        self.show(save_filepath=save_filepath)
+        self.base.as_reversed_color_channel().as_pil().save(fp)
