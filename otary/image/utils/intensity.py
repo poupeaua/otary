@@ -90,3 +90,36 @@ def intensity_local_v2(
     )
 
     return img_intensity
+
+
+def max_local(
+    img: NDArray,
+    window_size: int = 15,
+    border_type: int = cv2.BORDER_DEFAULT,
+    cast_int: bool = False,
+) -> NDArray:
+    """Compute the local maximum of the image.
+    The local maximum representation is the maximum pixel value in a
+    window of size (window_size, window_size) around each pixel.
+
+    Args:
+        img (NDArray): input image
+        window_size (int, optional): window size. Defaults to 15.
+        border_type (int, optional): border type to use for the integral image.
+            Defaults to cv2.BORDER_DEFAULT.
+
+    Returns:
+        NDArray: local maximum representation of the image
+    """
+    w = check_transform_window_size(img=img, window_size=window_size)
+
+    img_max = cv2.dilate(
+        img,
+        kernel=np.ones((w, w), dtype=np.uint8),
+        borderType=border_type,
+    )
+
+    if cast_int:
+        img_max = np.clip(np.round(img_max), 0, 255).astype(np.uint8)
+
+    return img_max

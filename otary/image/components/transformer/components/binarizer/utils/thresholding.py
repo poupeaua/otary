@@ -5,7 +5,7 @@ Thresholding techniques
 import numpy as np
 from numpy.typing import NDArray
 
-from otary.image.utils.intensity import intensity_local_v2
+from otary.image.utils.intensity import intensity_local_v2, max_local
 from otary.image.utils.tools import check_transform_window_size
 
 
@@ -64,6 +64,9 @@ def threshold_niblack_like(
     # compute the threshold matrix
     if method == "sauvola":
         thresh = mean * (1 + k * ((std / r) - 1))
+    elif method == "wan":
+        wan_mean = (max_local(img=img, window_size=window_size) + mean) / 2
+        thresh = wan_mean * (1 + k * ((std / r) - 1))
     elif method == "niblack":
         thresh = mean + k * std
     elif method == "wolf":
