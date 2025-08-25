@@ -1125,7 +1125,6 @@ class Image:
         is_clockwise: bool = True,
         reshape: bool = True,
         fill_value: Sequence[float] = (0.0,),
-        fast: bool = True,
     ) -> Self:
         """Rotate the image by a given angle.
 
@@ -1147,10 +1146,7 @@ class Image:
             fill_value (Sequence[float], optional): value to
                 fill the border of the image after the rotation in case reshape is True.
                 Can be a tuple of 3 integers for RGB image or a single integer for
-                grayscale image. Defaults to (0.0,) which is black.
-            fast: bool, optional: whether to use the fast rotation or not.
-                Defaults to True. False is much slower but more accurate using the
-                scipy.ndimage library.
+                grayscale image. Defaults to (0.0,) which is black
         """
         # pylint: disable=too-many-arguments, too-many-positional-arguments
         self.transformer.geometrizer.rotate(
@@ -1159,7 +1155,6 @@ class Image:
             is_clockwise=is_clockwise,
             reshape=reshape,
             fill_value=fill_value,
-            fast=fast,
         )
         return self
 

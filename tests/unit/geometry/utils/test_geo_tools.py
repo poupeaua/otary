@@ -6,8 +6,6 @@ import numpy as np
 import pytest
 
 from otary.geometry.utils.tools import assert_list_of_lines
-from otary.utils.tools import assert_transform_shift_vector
-from otary.utils.tools import assert_transform_shift_vector
 
 
 class TestAssertListOfLines:

@@ -87,14 +87,6 @@ class TestImageScoreDistanceFromCenter:
 
 class TestImageScoreContainsBase:
 
-    def test_score_contains(self):
-        img0 = Image.from_fillvalue(shape=(5, 5), value=255)
-        for x in range(2, 4):
-            for y in range(2, 4):
-                img0.asarray[x, y] = 0
-        img1 = img0.copy().rotate(angle=180, is_degree=True, reshape=False, fast=False)
-        assert img0.score_contains(img1) == 1 / 4
-
     def test_score_contains_zero(self):
         img0 = Image.from_fillvalue(shape=(5, 5), value=255)
         for x in range(3, 5):

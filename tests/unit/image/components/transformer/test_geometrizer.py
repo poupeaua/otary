@@ -61,16 +61,6 @@ class TestTransformerImageShiftMethods:
 
 class TestTransformerImageRotateMethods:
 
-    def test_rotate_180_slow(self):
-        img = Image.from_fillvalue(shape=(5, 5), value=0)
-        img.asarray[1, 2] = 1
-        img.asarray[1, 4] = 1
-        img.rotate(angle=180, is_degree=True, fast=False)
-        assert img.asarray[3, 0] == 1
-        assert img.asarray[1, 4] == 0
-        assert img.asarray[3, 2] == 1
-        assert img.asarray[1, 2] == 0
-
     def test_rotate_360(self):
         img = Image.from_fillvalue(shape=(5, 5), value=0)
         arr = img.asarray
