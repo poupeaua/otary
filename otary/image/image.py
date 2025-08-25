@@ -809,7 +809,7 @@ class Image:
 
     def crop_hq_from_aabb_and_pdf(
         self,
-        bbox: geo.Rectangle,
+        bbox: geo.AxisAlignedRectangle,
         pdf_filepath: str,
         page_nb: int = 0,
         as_grayscale: bool = False,
@@ -822,7 +822,7 @@ class Image:
         from the original pdf.
 
         Args:
-            bbox (geo.Rectangle): crop bounding box
+            bbox (geo.AxisAlignedRectangle): crop bounding box
             pdf_filepath (str): PDF filepath
             page_nb (int, optional): page to load in the PDF. The first page is 0.
                 Defaults to 0.
@@ -836,13 +836,7 @@ class Image:
         """
         # pylint: disable=too-many-arguments, too-many-positional-arguments
         # get the bbox normalized
-        bbox_normalized = bbox.copy().normalize(x=self.width, y=self.height)
-        clip_pct = pymupdf.Rect(
-            x0=bbox_normalized[0][0],
-            y0=bbox_normalized[0][1],
-            x1=bbox_normalized[2][0],
-            y1=bbox_normalized[2][1],
-        )
+        clip_pct = bbox.copy().normalize(x=self.width, y=self.height).as_pymupdf_rect
 
         # obtain the High Quality crop image by reading
         im_crop = Image.from_pdf(
