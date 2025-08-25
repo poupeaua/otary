@@ -12,7 +12,8 @@ the other classes not a "is-a" relationship.
 
 from __future__ import annotations
 
-from typing import Optional, Literal, Sequence, TYPE_CHECKING
+import io
+from typing import Any, Optional, Literal, Sequence, TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import NDArray
@@ -294,6 +295,16 @@ class Image:
         self.base.as_colorscale()
         return self
 
+    def as_reversed_color_channel(self) -> Self:
+        """Generate the image with the color channels reversed.
+        This is useful when we want to convert an image from BGR to RGB or vice versa.
+
+        Returns:
+            Self: original image with reversed color channels
+        """
+        self.base.as_reversed_color_channel()
+        return self
+
     def as_filled(self, fill_value: int | NDArray = 255) -> Self:
         """Returns an entirely white image of the same size as the original.
         Can be useful to get an empty representation of the same image to paint
@@ -406,37 +417,29 @@ class Image:
 
     # -------------------------------- WRITE METHODS ----------------------------------
 
-    def save(self, save_filepath: str) -> None:
+    def save(self, fp: str) -> None:
         """Save the image in a local file
 
         Args:
-            save_filepath (str): path to the file
+            fp (str): fp stands for filepath which is the path to the file
         """
-        self.writer.save(save_filepath=save_filepath)
+        self.writer.save(fp=fp)
 
     def show(
         self,
-        title: Optional[str] = None,
-        figsize: tuple[int, int] = (8, 6),
-        color_conversion: Optional[int] = cv2.COLOR_BGR2RGB,
-        save_filepath: Optional[str] = None,
-    ) -> None:
+        figsize: tuple[float, float] = (-1, -1),
+        popup_window_display: bool = False,
+    ) -> ImagePIL.Image:
         """Show the image
 
         Args:
-            title (Optional[str], optional): title of the image. Defaults to None.
             figsize (tuple[float, float], optional): size of the figure.
-                Defaults to (8.0, 6.0).
-            color_conversion (int, optional): color conversion parameter.
-                Defaults to cv2.COLOR_BGR2RGB.
-            save_filepath (Optional[str], optional): save the image if needed.
-                Defaults to None.
+                Defaults to (-1, -1), meaning the original size of the image.
+            popup_window_display (bool, optional): whether to display the image in a
+                popup window. Defaults to False.
         """
-        self.writer.show(
-            title=title,
-            figsize=figsize,
-            color_conversion=color_conversion,
-            save_filepath=save_filepath,
+        return self.writer.show(
+            figsize=figsize, popup_window_display=popup_window_display
         )
 
     # -------------------------------- DRAWER METHODS ---------------------------------
@@ -1773,12 +1776,38 @@ class Image:
             + ")"
         )
 
-    def __repr__(self) -> str:
-        """Make the library more interactive for Jupyter notebooks
-        by displaying the image when the user put the object at the end of cell.
+    def _repr_image(self, image_format: str, **kwargs: Any) -> Optional[bytes]:
+        """Helper function for iPython display hook.
+
+        Just reused the code from PIL library:
+        https://github.com/python-pillow/Pillow/blob/main/src/PIL/Image.py
+
+        Args:
+          image_format (str): Image format.
 
         Returns:
-            str: nothing
+            (bytes, optional): image as bytes, saved into the given format.
         """
-        self.show()
-        return ""
+        b = io.BytesIO()
+        try:
+            im = self.show()
+            im.save(b, image_format, **kwargs)
+        except Exception:  # pylint: disable=broad-except
+            return None
+        return b.getvalue()
+
+    def _repr_png_(self) -> Optional[bytes]:
+        """iPython display hook support for PNG format.
+
+        Returns:
+            (bytes, optional): PNG version of the image as bytes
+        """
+        return self._repr_image("PNG", compress_level=1)
+
+    def _repr_jpeg_(self) -> Optional[bytes]:
+        """iPython display hook support for JPEG format.
+
+        Returns:
+            (bytes, optional): JPEG version of the image as bytes
+        """
+        return self._repr_image("JPEG")

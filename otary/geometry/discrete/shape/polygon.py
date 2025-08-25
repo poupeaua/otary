@@ -9,7 +9,6 @@ from typing import Optional, Sequence, TYPE_CHECKING
 import logging
 
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import NDArray
 from shapely import LinearRing, Polygon as SPolygon
@@ -136,8 +135,6 @@ class Polygon(DiscreteGeometryEntity):
         max_dist_thresh: float = 50,
         max_iterations: int = 50,
         start_line_index: int = 0,
-        img: Optional[NDArray] = None,
-        is_debug_enabled: bool = False,
     ) -> Polygon:
         """Create a Polygon object from an unordered list of lines that approximate a
         closed-shape. They approximate in the sense that they do not necessarily
@@ -162,18 +159,6 @@ class Polygon(DiscreteGeometryEntity):
         lines = np.asarray(lines)
         assert_list_of_lines(lines=lines)
 
-        def debug_visualize(seg: NDArray):  # pragma: no cover
-            if is_debug_enabled and img is not None:
-                im = img.copy()
-                im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
-                im = cv2.line(
-                    img=im, pt1=seg[0], pt2=seg[1], color=(0, 250, 126), thickness=5
-                )
-                plt.imshow(im)
-                plt.xticks([])
-                plt.yticks([])
-                plt.show()
-
         _lines = copy.deepcopy(lines)
         list_build_cnt = []
         is_polygon_found = False
@@ -193,8 +178,6 @@ class Polygon(DiscreteGeometryEntity):
             dist_from_curpoint = np.linalg.norm(lines2points - curpoint, axis=1)
             idx_closest_points = np.nonzero(dist_from_curpoint < max_dist_thresh)[0]
 
-            debug_visualize(seg=curseg.asarray)
-
             if len(idx_closest_points) > 1:
                 # more than one point close to the current point - take the closest
                 idx_closest_points = np.array([np.argmin(dist_from_curpoint)])
@@ -202,7 +185,6 @@ class Polygon(DiscreteGeometryEntity):
                 # no point detected - can mean that the polygon is done or not
                 first_seg = Segment(list_build_cnt[0])
                 if np.linalg.norm(first_seg.asarray[0] - curpoint) < max_dist_thresh:
-                    # TODO sometimes multiples intersection example 7
                     intersect_point = curseg.intersection_line(first_seg)
                     list_build_cnt[-1][1] = intersect_point
                     list_build_cnt[0][0] = intersect_point
