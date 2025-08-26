@@ -7,7 +7,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from otary.image.utils.intensity import intensity_local_v2, max_local, min_local
-from otary.image.utils.tools import check_transform_window_size
+from otary.image.utils.tools import bwareaopen, check_transform_window_size
 
 
 def threshold_niblack_like(
@@ -62,17 +62,16 @@ def threshold_niblack_like(
     var = sqmean - mean**2
     std = np.sqrt(np.clip(var, 0, None))
 
-    # compute the threshold matrix
-    if method == "sauvola":
+    if method == "niblack":
+        thresh = mean + k * std
+    elif method == "sauvola":
         thresh = mean * (1 + k * ((std / r) - 1))
     elif method == "wan":
         wan_mean = (max_local(img=img, window_size=window_size) + mean) / 2
         thresh = wan_mean * (1 + k * ((std / r) - 1))
-    elif method == "niblack":
-        thresh = mean + k * std
     elif method == "wolf":
-        max_std = np.max([std, 1e-5])  # Avoid division by zero
-        min_img = np.min(img)
+        max_std = np.max([std, 1e-5])  # local & 1e-5 to avoid division by zero
+        min_img = np.min(img)  # global
         thresh = mean - k * (1 - (std / max_std)) * (mean - min_img)
     elif method == "nick":
         thresh = mean + k * np.sqrt(var + mean**2)
@@ -88,31 +87,78 @@ def threshold_niblack_like(
 def threshold_isauvola(
     img: NDArray,
     window_size: int = 15,
-    k: float = 0.5,
+    k: float = 0.01,
     r: float = 128.0,
+    connectivity: int = 8,
     contrast_window_size: int = 3,
-    opening_k_size: float = 0,
+    opening_n_min_pixels: int = 0,
+    opening_connectivity: int = 8,
 ) -> NDArray[np.uint8]:
+    """Implementation of the ISauvola thresholding method.
 
-    def contrast(img: NDArray, window_size: int, eps: float = 1e-9):
+    This is a local thresholding method that computes the threshold for a pixel
+    based on a small region around it.
+
+    Comes from the article:
+    https://www.researchgate.net/publication/304621554_ISauvola_Improved_Sauvola'\
+        s_Algorithm_for_Document_Image_Binarization
+
+    Args:
+        img (NDArray): input image
+        window_size (int, optional): Sauvola window size. Defaults to 15.
+        k (float, optional): Sauvola k factor. Defaults to 0.5.
+        r (float, optional): Sauvola r value. Defaults to 128.0.
+        connectivity (int, optional): ISauvola connectivity. Defaults to 8.
+        contrast_window_size (int, optional): ISauvola contrast window size.
+            Defaults to 3.
+        opening_n_min_pixels (float, optional): ISauvola opening n min pixels.
+            Defaults to 0.
+        opening_connectivity (int, optional): ISauvola opening connectivity.
+            Defaults to 8.
+
+    Returns:
+        NDArray[np.uint8]: ISauvola thresholded image
+    """
+    window_size = check_transform_window_size(img, window_size)
+    contrast_window_size = check_transform_window_size(img, contrast_window_size)
+
+    def contrast(img: np.ndarray, window_size: int, eps: float = 1e-9):
+        """ISauvola specific contrast"""
         min_ = min_local(img=img, window_size=window_size)
         max_ = max_local(img=img, window_size=window_size)
-        return (max_ - min_) / (max_ + min_ + eps)
+        contrast_ = (max_ - min_) / (max_ + min_ + eps) * 255
+        return contrast_.astype(np.uint8)
 
-    cont = contrast(img, window_size=contrast_window_size)
+    # step 1: Initialization step
+    # step 1.a: Contrast Image Construction
+    I_c = contrast(img=img, window_size=contrast_window_size)
 
-    _, cont = cv2.threshold(cont, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    # step 1.b: High Contrast Pixels Detection
+    _, I_c = cv2.threshold(I_c, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
-    if opening_k_size > 0:
-        raise NotImplementedError("Opening is not implemented yet")
+    # step 1.c: Opening operation
+    # is optional because it generally removes too much details
+    if opening_n_min_pixels > 0:
+        I_c = bwareaopen(
+            I_c, n_min_pixels=opening_n_min_pixels, connectivity=opening_connectivity
+        )
 
-    _, sauvola = threshold_niblack_like(
-        img=cont, method="sauvola", window_size=window_size, k=k, r=r
+    # step 2: Sauvola’s Binarization Step
+    _, I_s = threshold_niblack_like(
+        img=img, method="sauvola", window_size=window_size, k=k, r=r
     )
 
-    _, labels = cv2.connectedComponents(255 - sauvola, connectivity=8)
-    labels_to_keep = set(np.unique((cont == 255) * labels))
-    labels_to_keep_list = list(labels_to_keep - {0})
-    mask = np.isin(labels, labels_to_keep_list)
-    bin_isauvola = 255 - (255 - sauvola) * mask
-    return bin_isauvola
+    # reverse binarization I_s needed so that contrast and sauvola binarize both fit
+    I_s = 255 - I_s
+
+    # step 3: Sequential Combination
+    # for all pixels p in I_c:
+    # -- if I_c(p) == true:
+    # ---- detect the set of pixels overlapping with p in I_s
+    # the pixels overlapping (pixels in plural!) are connected components
+    _, cc_labels_matrix = cv2.connectedComponents(I_s, connectivity=connectivity)
+    overlapping_pixels = (I_c == 255) * cc_labels_matrix
+    cc_labels_with_overlap = list(set(np.unique(overlapping_pixels)) - {0})
+    mask = np.isin(element=cc_labels_matrix, test_elements=cc_labels_with_overlap) * 1
+
+    return 255 - (I_s * mask)
