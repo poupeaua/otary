@@ -570,73 +570,83 @@ class Image:
     def threshold_simple(self, thresh: int) -> Self:
         """Compute the image thesholded by a single value T.
         All pixels with value v <= T are turned black and those with value v > T are
-        turned white.
+        turned white. This is a global thresholding method.
 
         Args:
             thresh (int): value to separate the black from the white pixels.
-
-        Returns:
-            Image: new image thresholded with only two values 0 and 255.
         """
         self.transformer.binarizer.threshold_simple(thresh=thresh)
         return self
 
-    def threshold_adaptative(self) -> Self:
-        """Apply adaptive thresholding.
-
-        A median blur is applied before for better thresholding results.
-        See https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html.
-
-        As the input image must be a grayscale before applying any thresholding
-        methods we convert the image to grayscale.
-
-        Returns:
-            Self: image thresholded where its values are now pure 0 or 255
-        """
-        self.transformer.binarizer.threshold_adaptative()
-        return self
-
     def threshold_otsu(self) -> Self:
-        """Apply Ostu thresholding.
+        """Apply Otsu global thresholding.
+        This is a global thresholding method that automatically determines
+        an optimal threshold value from the image histogram.
 
-        A gaussian blur is applied before for better thresholding results.
-        See https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html.
+        Paper (1979):
+        https://ieeexplore.ieee.org/document/4310076
+
+        Consider applying a gaussian blur before for better thresholding results.
+        See why in https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html.
 
         As the input image must be a grayscale before applying any thresholding
         methods we convert the image to grayscale.
-
-        Returns:
-            Self: image thresholded where its values are now pure 0 or 255
         """
         self.transformer.binarizer.threshold_otsu()
         return self
 
-    def threshold_niblack(self, window_size: int = 15, k: float = 0.2) -> Self:
-        """Apply Niblack thresholding.
-        See https://scikit-image.org/docs/stable/auto_examples/segmentation/\
-                plot_niblack_sauvola.html
+    def threshold_adaptative(self, block_size: int = 11, constant: float = 2.0) -> Self:
+        """Apply adaptive local thresholding.
+        This is a local thresholding method that computes the threshold for a pixel
+        based on a small region around it.
+
+        A gaussian blur is applied before for better thresholding results.
+        See why in https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html.
 
         As the input image must be a grayscale before applying any thresholding
         methods we convert the image to grayscale.
+
+        Args:
+            block_size (int, optional): Size of a pixel neighborhood that is used to
+                calculate a threshold value for the pixel: 3, 5, 7, and so on.
+                Defaults to 11.
+            constant (int, optional): Constant subtracted from the mean or weighted
+                mean. Normally, it is positive but may be zero or negative as well.
+                Defaults to 2.
+        """
+        self.transformer.binarizer.threshold_adaptative(
+            block_size=block_size, constant=constant
+        )
+        return self
+
+    def threshold_niblack(self, window_size: int = 15, k: float = -0.2) -> Self:
+        """Apply Niblack local thresholding.
+
+        Book (1986):
+        "An Introduction to Digital Image Processing" by Wayne Niblack.
+
+        See https://scikit-image.org/docs/stable/auto_examples/segmentation/plot_niblack_sauvola.html # pylint: disable=line-too-long
 
         Args:
             window_size (int, optional): apply on the
                 image. Defaults to 15.
             k (float, optional): factor to apply to regulate the impact
-                of the std. Defaults to 0.2.
-
-        Returns:
-            Self: image thresholded where its values are now pure 0 or 255
+                of the std. Defaults to -0.2.
         """
         self.transformer.binarizer.threshold_niblack(window_size=window_size, k=k)
         return self
 
     def threshold_sauvola(
-        self, window_size: int = 15, k: float = 0.2, r: float = 128.0
+        self, window_size: int = 15, k: float = 0.5, r: float = 128.0
     ) -> Self:
-        """Apply Sauvola thresholding.
-        See https://scikit-image.org/docs/stable/auto_examples/segmentation/\
-                plot_niblack_sauvola.html.
+        """Apply Sauvola local thresholding.
+        This is a local thresholding method that computes the threshold for a pixel
+        based on a small region around it.
+
+        Paper (1997):
+        https://www.researchgate.net/publication/3710586_Adaptive_Document_Binarization
+
+        See https://scikit-image.org/docs/stable/auto_examples/segmentation/plot_niblack_sauvola.html # pylint: disable=line-too-long
 
         As the input image must be a grayscale before applying any thresholding
         methods we convert the image to grayscale.
@@ -645,13 +655,79 @@ class Image:
             window_size (int, optional): sauvola window size to apply on the
                 image. Defaults to 15.
             k (float, optional): sauvola k factor to apply to regulate the impact
-                of the std. Defaults to 0.2.
+                of the std. Defaults to 0.5.
             r (float, optional): sauvola r value. Defaults to 128.
-
-        Returns:
-            Self: image thresholded where its values are now pure 0 or 255
         """
         self.transformer.binarizer.threshold_sauvola(window_size=window_size, k=k, r=r)
+        return self
+
+    def threshold_wolf(self, window_size: int = 15, k: float = 0.5) -> Self:
+        """Apply Wolf local thresholding.
+
+        Paper (2003):
+        https://hal.science/hal-01504401v1
+
+        Args:
+            window_size (int, optional): apply on the
+                image. Defaults to 15.
+            k (float, optional): factor to apply to regulate the impact
+                of the std. Defaults to 0.5.
+        """
+        self.transformer.binarizer.threshold_wolf(window_size=window_size, k=k)
+        return self
+
+    def threshold_nick(self, window_size: int = 19, k: float = -0.1) -> Self:
+        """Apply Nick local thresholding.
+
+        Paper (2009):
+        https://www.researchgate.net/publication/221253803_Comparison_of_Niblack_\
+            inspired_Binarization_Methods_for_Ancient_Documents
+
+        The paper suggests to use a window size of 19 and a k factor in [-0.2, -0.1].
+
+        Args:
+            window_size (int, optional): apply on the
+                image. Defaults to 15.
+            k (float, optional): factor to apply to regulate the impact
+                of the std. Defaults to -0.1.
+        """
+        self.transformer.binarizer.threshold_nick(window_size=window_size, k=k)
+        return self
+
+    def threshold_isauvola(
+        self,
+        window_size: int = 15,
+        k: float = 0.01,
+        r: float = 128.0,
+        **kwargs,
+    ) -> Self:
+        """Apply ISauvola local thresholding.
+
+        Paper (2016):
+        https://www.researchgate.net/publication/304621554_ISauvola_Improved_Sauvola
+                s_Algorithm_for_Document_Image_Binarization
+        """
+        self.transformer.binarizer.threshold_isauvola(
+            window_size=window_size, k=k, r=r, **kwargs
+        )
+        return self
+
+    def threshold_wan(
+        self, window_size: int = 15, k: float = 0.5, r: float = 128.0
+    ) -> Self:
+        """Apply Wan local thresholding.
+
+        Paper (2018):
+        https://www.researchgate.net/publication/326026836_Binarization_of_Document_\
+            Image_Using_Optimum_Threshold_Modification
+
+        Args:
+            window_size (int, optional): apply on the
+                image. Defaults to 15.
+            k (float, optional): factor to apply to regulate the impact
+                of the std. Defaults to 0.5.
+        """
+        self.transformer.binarizer.threshold_wan(window_size=window_size, k=k, r=r)
         return self
 
     def binary(self, method: BinarizationMethods = "sauvola") -> NDArray:

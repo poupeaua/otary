@@ -32,7 +32,7 @@ class BinarizerImage:
     | Otsu      | 1979 | [A Threshold Selection Method from Gray-Level Histograms](https://ieeexplore.ieee.org/document/4310076)                                       |
     | Niblack   | 1986 | "An Introduction to Digital Image Processing" by Wayne Niblack                                                                                |
     | Sauvola   | 1997 | [Adaptive Document Binarization](https://www.researchgate.net/publication/3710586_Adaptive_Document_Binarization)                             |
-    | Wolf      | 2003 | [Wolf Binarization Paper](https://hal.science/hal-01504401v1)                                                                                 |
+    | Wolf      | 2003 | [Extraction and Recognition of Artificial Text in Multimedia Documents](https://hal.science/hal-01504401v1)                                                                                 |
     | Nick      | 2009 | [Comparison of Niblack inspired Binarization Methods for Ancient Documents](https://www.researchgate.net/publication/221253803_Comparison_of_Niblack_inspired_Binarization_Methods_for_Ancient_Documents) |
     | ISauvola  | 2016 | [ISauvola: Improved Sauvola’s Algorithm for Document Image Binarization](https://www.researchgate.net/publication/304621554_ISauvola_Improved_Sauvola) |
     | Wan       | 2018 | [Binarization of Document Image Using Optimum Threshold Modification](https://www.researchgate.net/publication/326026836_Binarization_of_Document_Image_Using_Optimum_Threshold_Modification) |
@@ -46,7 +46,7 @@ class BinarizerImage:
     def threshold_simple(self, thresh: int) -> None:
         """Compute the image thesholded by a single value T.
         All pixels with value v <= T are turned black and those with value v > T are
-        turned white. This is obviously a global thresholding method.
+        turned white. This is a global thresholding method.
 
         Args:
             thresh (int): value to separate the black from the white pixels.
