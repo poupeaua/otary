@@ -7,10 +7,10 @@ import numpy as np
 from numpy.typing import NDArray
 
 from otary.image.utils.intensity import (
-    intensity_local_v2, 
-    high_contrast_local, 
+    intensity_local_v2,
+    high_contrast_local,
     max_local,
-    sum_local
+    sum_local,
 )
 from otary.image.utils.tools import bwareaopen, check_transform_window_size
 
@@ -155,6 +155,7 @@ def threshold_isauvola(
 
     return 255 - (I_s * mask)  # reverse once again because we already reversed I_s
 
+
 def threshold_su(
     img: NDArray,
     window_size: int = 3,
@@ -168,7 +169,7 @@ def threshold_su(
     Args:
         img (NDArray): input grayscale image
         window_size (int, optional): window size for local computation. Defaults to 3.
-        n_min (int, optional): minimum number of high contrast pixels within the 
+        n_min (int, optional): minimum number of high contrast pixels within the
             neighborhood window. Defaults to -1 meaning that n_min = window_size.
 
     Returns:
@@ -179,12 +180,14 @@ def threshold_su(
 
     I_c = high_contrast_local(img=img, window_size=window_size)
 
-    N_e = sum_local(img=I_c, window_size=window_size) + 1e-9
+    # number of high contrast pixels
+    N_e = sum_local(img=I_c.astype(np.float32) / 255, window_size=window_size) + 1e-9
 
     tmp = (I_c == 255) * img
-    E_mean = sum_local(img=tmp, window_size=window_size) / N_e
+    img_sum = sum_local(img=tmp, window_size=window_size)
+    E_mean = img_sum / N_e
 
-    E_std = np.sqrt(sum_local(img=(tmp-E_mean)**2, window_size=window_size) / 2)
+    E_std = np.sqrt((img_sum - N_e * E_mean) ** 2 / 2)
 
     cond = (N_e >= n_min) & (img <= E_mean + E_std / 2)
     return np.where(cond, 0, 255).astype(np.uint8)

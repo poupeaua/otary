@@ -95,10 +95,9 @@ def intensity_local_v2(
 
     return img_intensity
 
+
 def sum_local(
-    img: NDArray,
-    window_size: int = 15,
-    border_type: int = cv2.BORDER_DEFAULT
+    img: NDArray, window_size: int = 15, border_type: int = cv2.BORDER_DEFAULT
 ) -> NDArray:
     """Compute the local sum of the image.
     The local sum representation is the sum of the pixel values in a
@@ -121,7 +120,13 @@ def sum_local(
     Returns:
         NDArray: local sum representation of the image
     """
-    return intensity_local_v2(img=img, window_size=window_size, border_type=border_type, normalize=False, cast_uint8=False)
+    return intensity_local_v2(
+        img=img,
+        window_size=window_size,
+        border_type=border_type,
+        normalize=False,
+        cast_uint8=False,
+    )
 
 
 def max_local(
@@ -206,7 +211,7 @@ def contrast_local(
     Args:
         img (NDArray): input grayscale image
         window_size (int): window size for local computations
-        eps (float, optional): epsilon value to avoid division by zero. 
+        eps (float, optional): epsilon value to avoid division by zero.
             Defaults to 1e-9.
 
     Returns:
@@ -234,6 +239,6 @@ def high_contrast_local(img: NDArray, window_size: int) -> NDArray[np.uint8]:
     Returns:
         NDArray[np.uint8]: high contrast representation of the image
     """
-    I_c = contrast_local(img=img, window_size=window_size)
-    _, I_c = cv2.threshold(I_c, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    return I_c
+    img_ = contrast_local(img=img, window_size=window_size)
+    _, img_otsu = cv2.threshold(img_, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    return img_otsu.astype(np.uint8)

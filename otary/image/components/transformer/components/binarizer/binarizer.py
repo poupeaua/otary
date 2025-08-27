@@ -199,9 +199,9 @@ class BinarizerImage:
         https://www.researchgate.net/publication/220933012
 
         Args:
-            window_size (int, optional): window size for high contrast image 
-                computation. Defaults to 3.            
-            n_min (int, optional): minimum number of high contrast pixels within the 
+            window_size (int, optional): window size for high contrast image
+                computation. Defaults to 3.
+            n_min (int, optional): minimum number of high contrast pixels within the
                 neighborhood window. Defaults to -1 meaning that n_min = window_size.
         """
         self.base.as_grayscale()

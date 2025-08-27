@@ -631,19 +631,19 @@ class Image:
     def threshold_niblack(self, window_size: int = 15, k: float = -0.2) -> Self:
         """Apply Niblack local thresholding.
 
-        Book (1986):
-        "An Introduction to Digital Image Processing" by Wayne Niblack.
+         Book (1986):
+         "An Introduction to Digital Image Processing" by Wayne Niblack.
 
-        See https://scikit-image.org/docs/stable/auto_examples/segmentation/plot_niblack_sauvola.html # pylint: disable=line-too-long
+         See https://scikit-image.org/docs/stable/auto_examples/segmentation/plot_niblack_sauvola.html # pylint: disable=line-too-long
 
-        Args:
-            window_size (int, optional): apply on the
-                image. Defaults to 15.
-            k (float, optional): factor to apply to regulate the impact
-                of the std. Defaults to -0.2.
+         Args:
+             window_size (int, optional): apply on the
+                 image. Defaults to 15.
+             k (float, optional): factor to apply to regulate the impact
+                 of the std. Defaults to -0.2.
 
-       Returns:
-            (Self): output thresholded image
+        Returns:
+             (Self): output thresholded image
         """
         self.transformer.binarizer.threshold_niblack(window_size=window_size, k=k)
         return self
@@ -652,26 +652,26 @@ class Image:
         self, window_size: int = 15, k: float = 0.5, r: float = 128.0
     ) -> Self:
         """Apply Sauvola local thresholding.
-        This is a local thresholding method that computes the threshold for a pixel
-        based on a small region around it.
+         This is a local thresholding method that computes the threshold for a pixel
+         based on a small region around it.
 
-        Paper (1997):
-        https://www.researchgate.net/publication/3710586
+         Paper (1997):
+         https://www.researchgate.net/publication/3710586
 
-        See https://scikit-image.org/docs/stable/auto_examples/segmentation/plot_niblack_sauvola.html # pylint: disable=line-too-long
+         See https://scikit-image.org/docs/stable/auto_examples/segmentation/plot_niblack_sauvola.html # pylint: disable=line-too-long
 
-        As the input image must be a grayscale before applying any thresholding
-        methods we convert the image to grayscale.
+         As the input image must be a grayscale before applying any thresholding
+         methods we convert the image to grayscale.
 
-        Args:
-            window_size (int, optional): sauvola window size to apply on the
-                image. Defaults to 15.
-            k (float, optional): sauvola k factor to apply to regulate the impact
-                of the std. Defaults to 0.5.
-            r (float, optional): sauvola r value. Defaults to 128.
+         Args:
+             window_size (int, optional): sauvola window size to apply on the
+                 image. Defaults to 15.
+             k (float, optional): sauvola k factor to apply to regulate the impact
+                 of the std. Defaults to 0.5.
+             r (float, optional): sauvola r value. Defaults to 128.
 
-       Returns:
-            (Self): output thresholded image
+        Returns:
+             (Self): output thresholded image
         """
         self.transformer.binarizer.threshold_sauvola(window_size=window_size, k=k, r=r)
         return self
@@ -679,17 +679,17 @@ class Image:
     def threshold_wolf(self, window_size: int = 15, k: float = 0.5) -> Self:
         """Apply Wolf local thresholding.
 
-        Paper (2003):
-        https://hal.science/hal-01504401v1
+         Paper (2003):
+         https://hal.science/hal-01504401v1
 
-        Args:
-            window_size (int, optional): apply on the
-                image. Defaults to 15.
-            k (float, optional): factor to apply to regulate the impact
-                of the std. Defaults to 0.5.
+         Args:
+             window_size (int, optional): apply on the
+                 image. Defaults to 15.
+             k (float, optional): factor to apply to regulate the impact
+                 of the std. Defaults to 0.5.
 
-       Returns:
-            (Self): output thresholded image
+        Returns:
+             (Self): output thresholded image
         """
         self.transformer.binarizer.threshold_wolf(window_size=window_size, k=k)
         return self
@@ -697,23 +697,23 @@ class Image:
     def threshold_nick(self, window_size: int = 19, k: float = -0.1) -> Self:
         """Apply Nick local thresholding.
 
-        Paper (2009):
-        https://www.researchgate.net/publication/221253803
+         Paper (2009):
+         https://www.researchgate.net/publication/221253803
 
-        The paper suggests to use a window size of 19 and a k factor in [-0.2, -0.1].
+         The paper suggests to use a window size of 19 and a k factor in [-0.2, -0.1].
 
-        Args:
-            window_size (int, optional): apply on the
-                image. Defaults to 15.
-            k (float, optional): factor to apply to regulate the impact
-                of the std. Defaults to -0.1.
-        
-       Returns:
-            (Self): output thresholded image
+         Args:
+             window_size (int, optional): apply on the
+                 image. Defaults to 15.
+             k (float, optional): factor to apply to regulate the impact
+                 of the std. Defaults to -0.1.
+
+        Returns:
+             (Self): output thresholded image
         """
         self.transformer.binarizer.threshold_nick(window_size=window_size, k=k)
         return self
-    
+
     def threshold_su(
         self,
         window_size: int = 3,
@@ -725,9 +725,9 @@ class Image:
         https://www.researchgate.net/publication/220933012
 
         Args:
-            window_size (int, optional): window size for high contrast image 
+            window_size (int, optional): window size for high contrast image
                 computation. Defaults to 3.
-            n_min (int, optional): minimum number of high contrast pixels within the 
+            n_min (int, optional): minimum number of high contrast pixels within the
                 neighborhood window. Defaults to -1 meaning that n_min = window_size.
 
         Returns:
@@ -748,26 +748,27 @@ class Image:
     ) -> Self:
         """Apply ISauvola local thresholding.
 
-        Paper (2016):
-        https://www.researchgate.net/publication/304621554
+         Paper (2016):
+         https://www.researchgate.net/publication/304621554
 
-        Args:
-            window_size (int, optional): apply on the
-                image. Defaults to 15.
-            k (float, optional): factor to apply to regulate the impact
-                of the std. Defaults to 0.01.
-            r (float, optional): factor to apply to regulate the impact
-                of the std. Defaults to 128.
-            connectivity (int, optional): connectivity to find the connected
-                components in the Sauvola thresholded image. Defaults to 8.
-            contrast_window_size (int, optional): contrast window size to apply on the
-                image. Defaults to 3.
-            opening_n_min_pixels (int, optional): opening n min pixels. Defaults to 0.
-            opening_connectivity (int, optional): opening connectivity. Defaults to 8.
+         Args:
+             window_size (int, optional): apply on the
+                 image. Defaults to 15.
+             k (float, optional): factor to apply to regulate the impact
+                 of the std. Defaults to 0.01.
+             r (float, optional): factor to apply to regulate the impact
+                 of the std. Defaults to 128.
+             connectivity (int, optional): connectivity to find the connected
+                 components in the Sauvola thresholded image. Defaults to 8.
+             contrast_window_size (int, optional): contrast window size to apply on the
+                 image. Defaults to 3.
+             opening_n_min_pixels (int, optional): opening n min pixels. Defaults to 0.
+             opening_connectivity (int, optional): opening connectivity. Defaults to 8.
 
-       Returns:
-            (Self): output thresholded image
+        Returns:
+             (Self): output thresholded image
         """
+        # pylint: disable=too-many-arguments, too-many-positional-arguments, R0801
         self.transformer.binarizer.threshold_isauvola(
             window_size=window_size,
             k=k,
