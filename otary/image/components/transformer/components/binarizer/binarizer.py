@@ -13,6 +13,7 @@ from otary.image.base import BaseImage
 from otary.image.components.transformer.components.binarizer.utils.thresholding import (
     threshold_isauvola,
     threshold_niblack_like,
+    threshold_su,
 )
 
 BinarizationMethods = Literal[
@@ -132,7 +133,7 @@ class BinarizerImage:
         based on a small region around it.
 
         Paper (1997):
-        https://www.researchgate.net/publication/3710586_Adaptive_Document_Binarization
+        https://www.researchgate.net/publication/3710586
 
         See https://scikit-image.org/docs/stable/auto_examples/segmentation/plot_niblack_sauvola.html.
 
@@ -172,8 +173,7 @@ class BinarizerImage:
         """Apply Nick local thresholding.
 
         Paper (2009):
-        https://www.researchgate.net/publication/221253803_Comparison_of_Niblack_\
-            inspired_Binarization_Methods_for_Ancient_Documents
+        https://www.researchgate.net/publication/221253803
 
         The paper suggests to use a window size of 19 and a k factor in [-0.2, -0.1].
 
@@ -188,6 +188,27 @@ class BinarizerImage:
             img=self.base.asarray, method="nick", window_size=window_size, k=k
         )[1]
 
+    def threshold_su(
+        self,
+        window_size: int = 3,
+        n_min: int = -1,
+    ) -> None:
+        """Compute the Su local thresholding.
+
+        Paper (2010):
+        https://www.researchgate.net/publication/220933012
+
+        Args:
+            window_size (int, optional): window size for high contrast image 
+                computation. Defaults to 3.            
+            n_min (int, optional): minimum number of high contrast pixels within the 
+                neighborhood window. Defaults to -1 meaning that n_min = window_size.
+        """
+        self.base.as_grayscale()
+        self.base.asarray = threshold_su(
+            img=self.base.asarray, window_size=window_size, n_min=n_min
+        )
+
     def threshold_isauvola(
         self,
         window_size: int = 15,
@@ -201,8 +222,23 @@ class BinarizerImage:
         """Apply ISauvola local thresholding.
 
         Paper (2016):
-        https://www.researchgate.net/publication/304621554_ISauvola_Improved_Sauvola
-                s_Algorithm_for_Document_Image_Binarization
+        https://www.researchgate.net/publication/304621554
+
+        Args:
+            window_size (int, optional): apply on the
+                image. Defaults to 15.
+            k (float, optional): factor to apply to regulate the impact
+                of the std. Defaults to 0.01.
+            r (float, optional): factor to apply to regulate the impact
+                of the std. Defaults to 128.
+            connectivity (int, optional): connectivity to apply on the
+                image. Defaults to 8.
+            contrast_window_size (int, optional): contrast window size to apply on the
+                image. Defaults to 3.
+            opening_n_min_pixels (int, optional): opening n min pixels to apply on the
+                image. Defaults to 0.
+            opening_connectivity (int, optional): opening connectivity to apply on the
+                image. Defaults to 8.
         """
         # pylint: disable=too-many-arguments, too-many-positional-arguments
         self.base.as_grayscale()
@@ -223,8 +259,7 @@ class BinarizerImage:
         """Apply Wan local thresholding.
 
         Paper (2018):
-        https://www.researchgate.net/publication/326026836_Binarization_of_Document_\
-            Image_Using_Optimum_Threshold_Modification
+        https://www.researchgate.net/publication/326026836
 
         Args:
             window_size (int, optional): apply on the

@@ -24,7 +24,7 @@ def intensity_local(
     This way one can really understand how the intensity calculation is done.
 
     Args:
-        img (NDArray): input image
+        img (NDArray): input grayscale image
         window_size (int, optional): window size. Defaults to 15.
         border_type (int, optional): border type to use for the integral image.
             Defaults to cv2.BORDER_DEFAULT.
@@ -73,7 +73,7 @@ def intensity_local_v2(
     We recommend this version unless you need the advantages of the first version.
 
     Args:
-        img (NDArray): input image
+        img (NDArray): input grayscale image
         window_size (int, optional): window size. Defaults to 15.
         border_type (int, optional): border type to use for the integral image.
             Defaults to cv2.BORDER_DEFAULT.
@@ -95,6 +95,34 @@ def intensity_local_v2(
 
     return img_intensity
 
+def sum_local(
+    img: NDArray,
+    window_size: int = 15,
+    border_type: int = cv2.BORDER_DEFAULT
+) -> NDArray:
+    """Compute the local sum of the image.
+    The local sum representation is the sum of the pixel values in a
+    window of size (window_size, window_size) around each pixel.
+
+    The result is not of dtype np.uint8 since the sum can exceed very quickly 255
+    for a single pixel zone.
+
+    This is essentially computing the intensity without normalizing over the
+    window area.
+
+    Args:
+        img (NDArray): input grayscale image
+        window_size (int, optional): window size. Defaults to 15.
+        border_type (int, optional): border type to use for the integral image.
+            Defaults to cv2.BORDER_DEFAULT.
+        cast_uint8 (bool, optional): whether to cast the intensity to integer.
+            Defaults to False.
+
+    Returns:
+        NDArray: local sum representation of the image
+    """
+    return intensity_local_v2(img=img, window_size=window_size, border_type=border_type, normalize=False, cast_uint8=False)
+
 
 def max_local(
     img: NDArray,
@@ -107,7 +135,7 @@ def max_local(
     window of size (window_size, window_size) around each pixel.
 
     Args:
-        img (NDArray): input image
+        img (NDArray): input grayscale image
         window_size (int, optional): window size. Defaults to 15.
         border_type (int, optional): border type to use for the integral image.
             Defaults to cv2.BORDER_DEFAULT.
@@ -127,6 +155,8 @@ def max_local(
 
     if cast_uint8:
         img_max = np.clip(np.round(img_max), 0, 255).astype(np.uint8)
+    else:
+        img_max = img_max.astype(np.float32)
 
     return img_max
 
@@ -142,7 +172,7 @@ def min_local(
     window of size (window_size, window_size) around each pixel.
 
     Args:
-        img (NDArray): input image
+        img (NDArray): input grayscale image
         window_size (int, optional): window size. Defaults to 15.
         border_type (int, optional): border type to use for the integral image.
             Defaults to cv2.BORDER_DEFAULT.
@@ -162,5 +192,48 @@ def min_local(
 
     if cast_uint8:
         img_min = np.clip(np.round(img_min), 0, 255).astype(np.uint8)
+    else:
+        img_min = img_min.astype(np.float32)
 
     return img_min
+
+
+def contrast_local(
+    img: NDArray, window_size: int, eps: float = 1e-9
+) -> NDArray[np.uint8]:
+    """Compute the contrast image
+
+    Args:
+        img (NDArray): input grayscale image
+        window_size (int): window size for local computations
+        eps (float, optional): epsilon value to avoid division by zero. 
+            Defaults to 1e-9.
+
+    Returns:
+        NDArray[np.uint8]: contrast representation of the image
+    """
+    min_ = min_local(img=img, window_size=window_size)
+    max_ = max_local(img=img, window_size=window_size)
+    contrast_ = (max_ - min_) / (max_ + min_ + eps) * 255
+    return contrast_.astype(np.uint8)
+
+
+def high_contrast_local(img: NDArray, window_size: int) -> NDArray[np.uint8]:
+    """Compute the high contrast image.
+
+    Simply performs in order the following operations:
+    - contrast local
+    - Otsu thresholding
+
+    Useful for several binarization methods like Su or ISauvola.
+
+    Args:
+        img (NDArray): input grayscale image
+        window_size (int): window size for local computations
+
+    Returns:
+        NDArray[np.uint8]: high contrast representation of the image
+    """
+    I_c = contrast_local(img=img, window_size=window_size)
+    _, I_c = cv2.threshold(I_c, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    return I_c

@@ -6,7 +6,12 @@ import cv2
 import numpy as np
 from numpy.typing import NDArray
 
-from otary.image.utils.intensity import intensity_local_v2, max_local, min_local
+from otary.image.utils.intensity import (
+    intensity_local_v2, 
+    high_contrast_local, 
+    max_local,
+    sum_local
+)
 from otary.image.utils.tools import bwareaopen, check_transform_window_size
 
 
@@ -33,10 +38,7 @@ def threshold_niblack_like(
     - Sauvola
     - Wolf
     - Nick
-
-    See https://scikit-image.org/docs/0.24.x/auto_examples/segmentation/\
-        plot_niblack_sauvola.html
-    for more information about those thresholding methods.
+    - WAN
 
     Originally, the sauvola thresholding was invented for text recognition like
     most of the niblack-like thresholding methods.
@@ -58,7 +60,7 @@ def threshold_niblack_like(
 
     # compute intensity representation of image
     mean = intensity_local_v2(img=img, window_size=window_size)
-    sqmean = intensity_local_v2(img=img**2, window_size=window_size, normalize=True)
+    sqmean = intensity_local_v2(img=img**2, window_size=window_size)
     var = sqmean - mean**2
     std = np.sqrt(np.clip(var, 0, None))
 
@@ -70,7 +72,9 @@ def threshold_niblack_like(
         wan_mean = (max_local(img=img, window_size=window_size) + mean) / 2
         thresh = wan_mean * (1 + k * ((std / r) - 1))
     elif method == "wolf":
-        max_std = np.max([std, 1e-5])  # local & 1e-5 to avoid division by zero
+        max_std = np.max(
+            [std, np.full_like(std, 1e-5)]
+        )  # local & 1e-5 to avoid division by zero
         min_img = np.min(img)  # global
         thresh = mean - k * (1 - (std / max_std)) * (mean - min_img)
     elif method == "nick":
@@ -100,8 +104,7 @@ def threshold_isauvola(
     based on a small region around it.
 
     Comes from the article:
-    https://www.researchgate.net/publication/304621554_ISauvola_Improved_Sauvola'\
-        s_Algorithm_for_Document_Image_Binarization
+    https://www.researchgate.net/publication/304621554
 
     Args:
         img (NDArray): input image
@@ -122,21 +125,10 @@ def threshold_isauvola(
     window_size = check_transform_window_size(img, window_size)
     contrast_window_size = check_transform_window_size(img, contrast_window_size)
 
-    def contrast(img: np.ndarray, window_size: int, eps: float = 1e-9):
-        """ISauvola specific contrast"""
-        min_ = min_local(img=img, window_size=window_size)
-        max_ = max_local(img=img, window_size=window_size)
-        contrast_ = (max_ - min_) / (max_ + min_ + eps) * 255
-        return contrast_.astype(np.uint8)
+    # step 1: Initialization step -> High Contrast Image Construction
+    I_c = high_contrast_local(img=img, window_size=contrast_window_size)
 
-    # step 1: Initialization step
-    # step 1.a: Contrast Image Construction
-    I_c = contrast(img=img, window_size=contrast_window_size)
-
-    # step 1.b: High Contrast Pixels Detection
-    _, I_c = cv2.threshold(I_c, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-
-    # step 1.c: Opening operation
+    # step 1.b: Opening operation
     # is optional because it generally removes too much details
     if opening_n_min_pixels > 0:
         I_c = bwareaopen(
@@ -148,7 +140,7 @@ def threshold_isauvola(
         img=img, method="sauvola", window_size=window_size, k=k, r=r
     )
 
-    # reverse binarization I_s needed so that contrast and sauvola binarize both fit
+    # reverse so that I_c and I_s both fit in terms of values 0 and 255
     I_s = 255 - I_s
 
     # step 3: Sequential Combination
@@ -159,6 +151,40 @@ def threshold_isauvola(
     _, cc_labels_matrix = cv2.connectedComponents(I_s, connectivity=connectivity)
     overlapping_pixels = (I_c == 255) * cc_labels_matrix
     cc_labels_with_overlap = list(set(np.unique(overlapping_pixels)) - {0})
-    mask = np.isin(element=cc_labels_matrix, test_elements=cc_labels_with_overlap) * 1
+    mask = np.isin(element=cc_labels_matrix, test_elements=cc_labels_with_overlap)
 
-    return 255 - (I_s * mask)
+    return 255 - (I_s * mask)  # reverse once again because we already reversed I_s
+
+def threshold_su(
+    img: NDArray,
+    window_size: int = 3,
+    n_min: int = -1,
+) -> NDArray[np.uint8]:
+    """Compute the Su local thresholding.
+
+    Paper (2010):
+    https://www.researchgate.net/publication/220933012
+
+    Args:
+        img (NDArray): input grayscale image
+        window_size (int, optional): window size for local computation. Defaults to 3.
+        n_min (int, optional): minimum number of high contrast pixels within the 
+            neighborhood window. Defaults to -1 meaning that n_min = window_size.
+
+    Returns:
+        NDArray[np.uint8]: output thresholded image
+    """
+    if n_min < 0:
+        n_min = window_size
+
+    I_c = high_contrast_local(img=img, window_size=window_size)
+
+    N_e = sum_local(img=I_c, window_size=window_size) + 1e-9
+
+    tmp = (I_c == 255) * img
+    E_mean = sum_local(img=tmp, window_size=window_size) / N_e
+
+    E_std = np.sqrt(sum_local(img=(tmp-E_mean)**2, window_size=window_size) / 2)
+
+    cond = (N_e >= n_min) & (img <= E_mean + E_std / 2)
+    return np.where(cond, 0, 255).astype(np.uint8)

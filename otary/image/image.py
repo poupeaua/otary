@@ -574,6 +574,9 @@ class Image:
 
         Args:
             thresh (int): value to separate the black from the white pixels.
+
+        Returns:
+            (Self): output thresholded image
         """
         self.transformer.binarizer.threshold_simple(thresh=thresh)
         return self
@@ -591,6 +594,9 @@ class Image:
 
         As the input image must be a grayscale before applying any thresholding
         methods we convert the image to grayscale.
+
+        Returns:
+            (Self): output thresholded image
         """
         self.transformer.binarizer.threshold_otsu()
         return self
@@ -613,6 +619,9 @@ class Image:
             constant (int, optional): Constant subtracted from the mean or weighted
                 mean. Normally, it is positive but may be zero or negative as well.
                 Defaults to 2.
+
+        Returns:
+            (Self): output thresholded image
         """
         self.transformer.binarizer.threshold_adaptative(
             block_size=block_size, constant=constant
@@ -632,6 +641,9 @@ class Image:
                 image. Defaults to 15.
             k (float, optional): factor to apply to regulate the impact
                 of the std. Defaults to -0.2.
+
+       Returns:
+            (Self): output thresholded image
         """
         self.transformer.binarizer.threshold_niblack(window_size=window_size, k=k)
         return self
@@ -644,7 +656,7 @@ class Image:
         based on a small region around it.
 
         Paper (1997):
-        https://www.researchgate.net/publication/3710586_Adaptive_Document_Binarization
+        https://www.researchgate.net/publication/3710586
 
         See https://scikit-image.org/docs/stable/auto_examples/segmentation/plot_niblack_sauvola.html # pylint: disable=line-too-long
 
@@ -657,6 +669,9 @@ class Image:
             k (float, optional): sauvola k factor to apply to regulate the impact
                 of the std. Defaults to 0.5.
             r (float, optional): sauvola r value. Defaults to 128.
+
+       Returns:
+            (Self): output thresholded image
         """
         self.transformer.binarizer.threshold_sauvola(window_size=window_size, k=k, r=r)
         return self
@@ -672,6 +687,9 @@ class Image:
                 image. Defaults to 15.
             k (float, optional): factor to apply to regulate the impact
                 of the std. Defaults to 0.5.
+
+       Returns:
+            (Self): output thresholded image
         """
         self.transformer.binarizer.threshold_wolf(window_size=window_size, k=k)
         return self
@@ -680,8 +698,7 @@ class Image:
         """Apply Nick local thresholding.
 
         Paper (2009):
-        https://www.researchgate.net/publication/221253803_Comparison_of_Niblack_\
-            inspired_Binarization_Methods_for_Ancient_Documents
+        https://www.researchgate.net/publication/221253803
 
         The paper suggests to use a window size of 19 and a k factor in [-0.2, -0.1].
 
@@ -690,8 +707,33 @@ class Image:
                 image. Defaults to 15.
             k (float, optional): factor to apply to regulate the impact
                 of the std. Defaults to -0.1.
+        
+       Returns:
+            (Self): output thresholded image
         """
         self.transformer.binarizer.threshold_nick(window_size=window_size, k=k)
+        return self
+    
+    def threshold_su(
+        self,
+        window_size: int = 3,
+        n_min: int = -1,
+    ) -> Self:
+        """Compute the Su local thresholding.
+
+        Paper (2010):
+        https://www.researchgate.net/publication/220933012
+
+        Args:
+            window_size (int, optional): window size for high contrast image 
+                computation. Defaults to 3.
+            n_min (int, optional): minimum number of high contrast pixels within the 
+                neighborhood window. Defaults to -1 meaning that n_min = window_size.
+
+        Returns:
+            (Self): output thresholded image
+        """
+        self.transformer.binarizer.threshold_su(window_size=window_size, n_min=n_min)
         return self
 
     def threshold_isauvola(
@@ -699,16 +741,41 @@ class Image:
         window_size: int = 15,
         k: float = 0.01,
         r: float = 128.0,
-        **kwargs,
+        connectivity: int = 8,
+        contrast_window_size: int = 3,
+        opening_n_min_pixels: int = 0,
+        opening_connectivity: int = 8,
     ) -> Self:
         """Apply ISauvola local thresholding.
 
         Paper (2016):
-        https://www.researchgate.net/publication/304621554_ISauvola_Improved_Sauvola
-                s_Algorithm_for_Document_Image_Binarization
+        https://www.researchgate.net/publication/304621554
+
+        Args:
+            window_size (int, optional): apply on the
+                image. Defaults to 15.
+            k (float, optional): factor to apply to regulate the impact
+                of the std. Defaults to 0.01.
+            r (float, optional): factor to apply to regulate the impact
+                of the std. Defaults to 128.
+            connectivity (int, optional): connectivity to find the connected
+                components in the Sauvola thresholded image. Defaults to 8.
+            contrast_window_size (int, optional): contrast window size to apply on the
+                image. Defaults to 3.
+            opening_n_min_pixels (int, optional): opening n min pixels. Defaults to 0.
+            opening_connectivity (int, optional): opening connectivity. Defaults to 8.
+
+       Returns:
+            (Self): output thresholded image
         """
         self.transformer.binarizer.threshold_isauvola(
-            window_size=window_size, k=k, r=r, **kwargs
+            window_size=window_size,
+            k=k,
+            r=r,
+            connectivity=connectivity,
+            contrast_window_size=contrast_window_size,
+            opening_n_min_pixels=opening_n_min_pixels,
+            opening_connectivity=opening_connectivity,
         )
         return self
 
@@ -718,14 +785,16 @@ class Image:
         """Apply Wan local thresholding.
 
         Paper (2018):
-        https://www.researchgate.net/publication/326026836_Binarization_of_Document_\
-            Image_Using_Optimum_Threshold_Modification
+        https://www.researchgate.net/publication/326026836
 
         Args:
             window_size (int, optional): apply on the
                 image. Defaults to 15.
             k (float, optional): factor to apply to regulate the impact
                 of the std. Defaults to 0.5.
+
+        Returns:
+            (Self): output thresholded image
         """
         self.transformer.binarizer.threshold_wan(window_size=window_size, k=k, r=r)
         return self
