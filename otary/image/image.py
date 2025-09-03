@@ -627,8 +627,13 @@ class Image:
             block_size=block_size, constant=constant
         )
         return self
-    
-    def threshold_bernsen(self, window_size: int = 75, contrast_limit: float = 25, threshold_global: int = 100) -> Self:
+
+    def threshold_bernsen(
+        self,
+        window_size: int = 75,
+        contrast_limit: float = 25,
+        threshold_global: int = 100,
+    ) -> Self:
         """Apply Bernsen local thresholding.
 
         Paper (1986):
@@ -638,13 +643,17 @@ class Image:
             img (NDArray): input image
             window_size (int, optional): window size for local computations.
                 Defaults to 75.
-            contrast_limit (float, optional): contrast limit. If the 
+            contrast_limit (float, optional): contrast limit. If the
                 contrast is higher than this value, the pixel is thresholded by the
                 bernsen threshold otherwise the global threshold is used.
                 Defaults to 25.
             threshold_global (int, optional): global threshold. Defaults to 100.
         """
-        self.transformer.binarizer.threshold_bernsen(window_size=window_size, contrast_limit=contrast_limit, threshold_global=threshold_global)
+        self.transformer.binarizer.threshold_bernsen(
+            window_size=window_size,
+            contrast_limit=contrast_limit,
+            threshold_global=threshold_global,
+        )
         return self
 
     def threshold_niblack(self, window_size: int = 15, k: float = -0.2) -> Self:
@@ -753,6 +762,21 @@ class Image:
             (Self): output thresholded image
         """
         self.transformer.binarizer.threshold_su(window_size=window_size, n_min=n_min)
+        return self
+
+    def threshold_singh(self, window_size: int = 15, k: float = 0.06) -> Self:
+        """Apply Singh local thresholding.
+
+        Paper (2010):
+        https://arxiv.org/pdf/1201.5227
+
+        Args:
+            window_size (int, optional): apply on the
+                image. Defaults to 15.
+            k (float, optional): factor to apply to regulate the impact
+                of the std. Defaults to 0.06.
+        """
+        self.transformer.binarizer.threshold_singh(window_size=window_size, k=k)
         return self
 
     def threshold_isauvola(

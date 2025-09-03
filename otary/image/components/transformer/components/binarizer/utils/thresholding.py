@@ -40,6 +40,7 @@ def threshold_niblack_like(
     - Wolf
     - Nick
     - WAN
+    - Singh
 
     Originally, the sauvola thresholding was invented for text recognition like
     most of the niblack-like thresholding methods.
@@ -80,6 +81,11 @@ def threshold_niblack_like(
         thresh = mean - k * (1 - (std / max_std)) * (mean - min_img)
     elif method == "nick":
         thresh = mean + k * np.sqrt(var + mean**2)
+    elif method == "singh":
+        # essentially this is Sauvola with an approximation to compute the
+        # local standard deviation to improve speed
+        std_local_approx = img - mean
+        thresh = mean * (1 + k * (std_local_approx / (1 - std_local_approx + 1e-9) - 1))
     else:
         raise ValueError(f"Unknown method {method} for threshold_niblack_like")
 
@@ -91,9 +97,9 @@ def threshold_niblack_like(
 
 def threshold_bernsen(
     img: NDArray,
-    window_size: int = 75, 
-    contrast_limit: float = 25, 
-    threshold_global: int = 100
+    window_size: int = 75,
+    contrast_limit: float = 25,
+    threshold_global: int = 100,
 ) -> NDArray[np.uint8]:
     """Implementation of the Bernsen thresholding method.
 
@@ -104,7 +110,7 @@ def threshold_bernsen(
         img (NDArray): input image
         window_size (int, optional): window size for local computations.
             Defaults to 75.
-        contrast_limit (float, optional): contrast limit. If the 
+        contrast_limit (float, optional): contrast limit. If the
             contrast is higher than this value, the pixel is thresholded by the
             bernsen threshold otherwise the global threshold is used.
             Defaults to 25.
@@ -121,7 +127,7 @@ def threshold_bernsen(
     threshold_local = np.where(
         bernsen_contrast > contrast_limit,
         bernsen_threshold,
-        threshold_global, # global threshold is broadcast
+        threshold_global,  # global threshold is broadcast
     )
 
     img_thresholded = (img > threshold_local).astype(np.uint8) * 255

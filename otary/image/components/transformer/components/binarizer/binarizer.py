@@ -109,7 +109,12 @@ class BinarizerImage:
             C=constant,
         )
 
-    def threshold_bernsen(self, window_size: int = 75, contrast_limit: float = 25, threshold_global: int = 100) -> None:
+    def threshold_bernsen(
+        self,
+        window_size: int = 75,
+        contrast_limit: float = 25,
+        threshold_global: int = 100,
+    ) -> None:
         """Apply Bernsen local thresholding.
 
         Paper (1986):
@@ -119,7 +124,7 @@ class BinarizerImage:
             img (NDArray): input image
             window_size (int, optional): window size for local computations.
                 Defaults to 75.
-            contrast_limit (float, optional): contrast limit. If the 
+            contrast_limit (float, optional): contrast limit. If the
                 contrast is higher than this value, the pixel is thresholded by the
                 bernsen threshold otherwise the global threshold is used.
                 Defaults to 25.
@@ -127,7 +132,10 @@ class BinarizerImage:
         """
         self.base.as_grayscale()
         self.base.asarray = threshold_bernsen(
-            img=self.base.asarray, window_size=window_size, contrast_limit=contrast_limit, threshold_global=threshold_global
+            img=self.base.asarray,
+            window_size=window_size,
+            contrast_limit=contrast_limit,
+            threshold_global=threshold_global,
         )
 
     def threshold_niblack(self, window_size: int = 15, k: float = -0.2) -> None:
@@ -232,6 +240,23 @@ class BinarizerImage:
         self.base.asarray = threshold_su(
             img=self.base.asarray, window_size=window_size, n_min=n_min
         )
+
+    def threshold_singh(self, window_size: int = 15, k: float = 0.06) -> None:
+        """Apply Singh local thresholding.
+
+        Paper (2010):
+        https://arxiv.org/pdf/1201.5227
+
+        Args:
+            window_size (int, optional): apply on the
+                image. Defaults to 15.
+            k (float, optional): factor to apply to regulate the impact
+                of the std. Defaults to 0.06.
+        """
+        self.base.as_grayscale()
+        self.base.asarray = threshold_niblack_like(
+            img=self.base.asarray, method="singh", window_size=window_size, k=k
+        )[1]
 
     def threshold_isauvola(
         self,
