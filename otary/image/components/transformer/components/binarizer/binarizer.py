@@ -11,6 +11,7 @@ from numpy.typing import NDArray
 from otary.image.base import BaseImage
 
 from otary.image.components.transformer.components.binarizer.utils.thresholding import (
+    threshold_bernsen,
     threshold_isauvola,
     threshold_niblack_like,
     threshold_su,
@@ -31,10 +32,12 @@ class BinarizerImage:
     |-----------|------|-----------------------------------------------------------------------------------------------------------------------------------------------|
     | Adaptative|  -   | [OpenCV Adaptive Thresholding Documentation](https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html)                                |
     | Otsu      | 1979 | [A Threshold Selection Method from Gray-Level Histograms](https://ieeexplore.ieee.org/document/4310076)                                       |
+    | Bernsen   | 1986 | "Dynamic thresholding of grey-level images" by Bernsen                                                                                                      |
     | Niblack   | 1986 | "An Introduction to Digital Image Processing" by Wayne Niblack                                                                                |
     | Sauvola   | 1997 | [Adaptive Document Binarization](https://www.researchgate.net/publication/3710586_Adaptive_Document_Binarization)                             |
     | Wolf      | 2003 | [Extraction and Recognition of Artificial Text in Multimedia Documents](https://hal.science/hal-01504401v1)                                                                                 |
     | Nick      | 2009 | [Comparison of Niblack inspired Binarization Methods for Ancient Documents](https://www.researchgate.net/publication/221253803_Comparison_of_Niblack_inspired_Binarization_Methods_for_Ancient_Documents) |
+    | Su        | 2010 | [Su Local Thresholding](https://www.researchgate.net/publication/220933012)                                                                    |
     | ISauvola  | 2016 | [ISauvola: Improved Sauvola’s Algorithm for Document Image Binarization](https://www.researchgate.net/publication/304621554_ISauvola_Improved_Sauvola) |
     | Wan       | 2018 | [Binarization of Document Image Using Optimum Threshold Modification](https://www.researchgate.net/publication/326026836_Binarization_of_Document_Image_Using_Optimum_Threshold_Modification) |
     """
@@ -104,6 +107,27 @@ class BinarizerImage:
             thresholdType=cv2.THRESH_BINARY,
             blockSize=block_size,
             C=constant,
+        )
+
+    def threshold_bernsen(self, window_size: int = 75, contrast_limit: float = 25, threshold_global: int = 100) -> None:
+        """Apply Bernsen local thresholding.
+
+        Paper (1986):
+        "Dynamic thresholding of grey-level images" by Bernsen.
+
+        Args:
+            img (NDArray): input image
+            window_size (int, optional): window size for local computations.
+                Defaults to 75.
+            contrast_limit (float, optional): contrast limit. If the 
+                contrast is higher than this value, the pixel is thresholded by the
+                bernsen threshold otherwise the global threshold is used.
+                Defaults to 25.
+            threshold_global (int, optional): global threshold. Defaults to 100.
+        """
+        self.base.as_grayscale()
+        self.base.asarray = threshold_bernsen(
+            img=self.base.asarray, window_size=window_size, contrast_limit=contrast_limit, threshold_global=threshold_global
         )
 
     def threshold_niblack(self, window_size: int = 15, k: float = -0.2) -> None:

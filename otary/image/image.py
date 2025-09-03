@@ -627,6 +627,25 @@ class Image:
             block_size=block_size, constant=constant
         )
         return self
+    
+    def threshold_bernsen(self, window_size: int = 75, contrast_limit: float = 25, threshold_global: int = 100) -> Self:
+        """Apply Bernsen local thresholding.
+
+        Paper (1986):
+        "Dynamic thresholding of grey-level images" by Bernsen.
+
+        Args:
+            img (NDArray): input image
+            window_size (int, optional): window size for local computations.
+                Defaults to 75.
+            contrast_limit (float, optional): contrast limit. If the 
+                contrast is higher than this value, the pixel is thresholded by the
+                bernsen threshold otherwise the global threshold is used.
+                Defaults to 25.
+            threshold_global (int, optional): global threshold. Defaults to 100.
+        """
+        self.transformer.binarizer.threshold_bernsen(window_size=window_size, contrast_limit=contrast_limit, threshold_global=threshold_global)
+        return self
 
     def threshold_niblack(self, window_size: int = 15, k: float = -0.2) -> Self:
         """Apply Niblack local thresholding.
