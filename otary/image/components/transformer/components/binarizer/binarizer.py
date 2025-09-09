@@ -2,7 +2,7 @@
 Binarizer component
 """
 
-from typing import Literal, get_args
+from typing import Literal, Optional, get_args
 
 import cv2
 import numpy as np
@@ -12,14 +12,23 @@ from otary.image.base import BaseImage
 
 from otary.image.components.transformer.components.binarizer.utils.thresholding import (
     threshold_bernsen,
+    threshold_gatos,
     threshold_isauvola,
     threshold_niblack_like,
     threshold_su,
 )
 
 BinarizationMethods = Literal[
-    "adaptative", "otsu", "bernsen", "niblack", "sauvola", "wolf", "nick", "su", 
-    "isauvola", "wan"
+    "adaptative",
+    "otsu",
+    "bernsen",
+    "niblack",
+    "sauvola",
+    "wolf",
+    "nick",
+    "su",
+    "isauvola",
+    "wan",
 ]
 
 
@@ -37,6 +46,7 @@ class BinarizerImage:
     | Niblack   | 1986 | "An Introduction to Digital Image Processing" by Wayne Niblack                                                                                |
     | Sauvola   | 1997 | [Adaptive Document Binarization](https://www.researchgate.net/publication/3710586_Adaptive_Document_Binarization)                             |
     | Wolf      | 2003 | [Extraction and Recognition of Artificial Text in Multimedia Documents](https://hal.science/hal-01504401v1)                                                                                 |
+    | Gatos     | 2005 | [Adaptive degraded document image binarization](https://users.iit.demokritos.gr/~bgat/PatRec2006.pdf) |
     | Nick      | 2009 | [Comparison of Niblack inspired Binarization Methods for Ancient Documents](https://www.researchgate.net/publication/221253803_Comparison_of_Niblack_inspired_Binarization_Methods_for_Ancient_Documents) |
     | Su        | 2010 | [Su Local Thresholding](https://www.researchgate.net/publication/220933012)                                                                    |
     | ISauvola  | 2016 | [ISauvola: Improved Sauvola’s Algorithm for Document Image Binarization](https://www.researchgate.net/publication/304621554_ISauvola_Improved_Sauvola) |
@@ -201,6 +211,44 @@ class BinarizerImage:
         self.base.asarray = threshold_niblack_like(
             img=self.base.asarray, method="wolf", window_size=window_size, k=k
         )[1]
+
+    def threshold_gatos(
+        self,
+        q: float = 0.6,
+        p1: float = 0.5,
+        p2: float = 0.8,
+        lh: Optional[float] = None,
+        upsampling: bool = False,
+        upsampling_factor: int = 2,
+    ) -> None:
+        """Apply Gatos local thresholding.
+
+        Paper (2005):
+        https://users.iit.demokritos.gr/~bgat/PatRec2006.pdf
+
+        Args:
+            q (float, optional): q gatos factor. Defaults to 0.6.
+            p1 (float, optional): p1 gatos factor. Defaults to 0.5.
+            p2 (float, optional): p2 gatos factor. Defaults to 0.8.
+            lh (Optional[float], optional): height of character.
+                Defaults to None, meaning it is computed automatically to be
+                a fraction of the image size.
+            upsampling (bool, optional): whether to apply gatos upsampling definition.
+                Defaults to False.
+            upsampling_factor (int, optional): gatos upsampling factor. Defaults to 2.
+        """
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
+        # pylint: disable=duplicate-code
+        self.base.as_grayscale()
+        self.base.asarray = threshold_gatos(
+            img=self.base.asarray,
+            q=q,
+            p1=p1,
+            p2=p2,
+            lh=lh,
+            upsampling=upsampling,
+            upsampling_factor=upsampling_factor,
+        )
 
     def threshold_nick(self, window_size: int = 19, k: float = -0.1) -> None:
         """Apply Nick local thresholding.

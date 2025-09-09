@@ -291,13 +291,15 @@ def wiener_filter(img: NDArray, window_size: int = 3) -> NDArray[np.uint8]:
     mean = mean_local(img=img, window_size=window_size)
     sqmean = mean_local(img=img**2, window_size=window_size)
     var = sqmean - mean**2
-    avg_var = mean_local(img=var, window_size=window_size) # mean of the variance
-    wiener = mean + (var-avg_var) * (img - mean) / (var + 1e-9)
+    avg_var = mean_local(img=var, window_size=window_size)  # mean of the variance
+    wiener = mean + (var - avg_var) * (img - mean) / (var + 1e-9)
     return wiener
 
 
-def windowed_mult(img1: NDArray, img2: NDArray, window_size: int) -> NDArray:
+def windowed_convsum(img1: NDArray, img2: NDArray, window_size: int) -> NDArray:
     """Compute the windowed multiplication of two images.
+    It is essentially computing the convolution sum of the two images over a
+    sliding window.
 
     Args:
         img1 (NDArray): first image
@@ -307,6 +309,6 @@ def windowed_mult(img1: NDArray, img2: NDArray, window_size: int) -> NDArray:
     Returns:
         NDArray: windowed multiplication of the two images
     """
-    prod = img1 * img2 # standard Hadamard multiplication
-    result = mean_local(img=prod, window_size=window_size)
+    prod = img1 * img2  # standard Hadamard multiplication
+    result = sum_local(img=prod, window_size=window_size)
     return result

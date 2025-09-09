@@ -14,7 +14,7 @@ from otary.image.utils.local import (
     min_local,
     sum_local,
     wiener_filter,
-    windowed_mult,
+    windowed_convsum,
 )
 from otary.image.utils.tools import bwareaopen, check_transform_window_size
 
@@ -250,48 +250,58 @@ def threshold_gatos(
     p2: float = 0.8,
     lh: Optional[float] = None,
     upsampling: bool = False,
-    upsampling_factor: int = 2
+    upsampling_factor: int = 2,
+    postprocess: bool = False,
 ) -> NDArray[np.uint8]:
-    """
+    """Apply Gatos local thresholding.
 
-    Important note: the S(x,y) in paper is in range [0, 1] and 1 corresponds to 
-    foreground (or close to 0 values) whereas 0 corresponds to background.
-    In this implementation we use the opposite values (0 -> foreground, 1 -> background)
-    So when in paper use (1-S) here use S.
+    Paper (2005):
+    https://users.iit.demokritos.gr/~bgat/PatRec2006.pdf
 
     Args:
-        img (NDArray): _description_
+        q (float, optional): q gatos factor. Defaults to 0.6.
+        p1 (float, optional): p1 gatos factor. Defaults to 0.5.
+        p2 (float, optional): p2 gatos factor. Defaults to 0.8.
+        lh (Optional[float], optional): height of character.
+            Defaults to None, meaning it is computed automatically to be
+            a fraction of the image size.
+        upsampling (bool, optional): whether to apply gatos upsampling definition.
+            Defaults to False.
+        upsampling_factor (int, optional): gatos upsampling factor. Defaults to 2.
 
     Returns:
-        NDArray[np.uint8]: _description_
+        NDArray[np.uint8]: thresholded image
     """
     if not (0 < q < 1) or not (0 < p1 < 1) or not (0 < p2 < 1):
         raise ValueError("q, p1 and p2 must be in range ]0, 1[")
-    
-    if lh is None: # guess the character height
+
+    if lh is None:  # guess the character height
         im_side = np.sqrt(img.shape[0] * img.shape[1])
         lh = im_side / 20
 
     # 1. Preprocessing I(x,y) from I_s(x,y) which is input image or source
-    I = wiener_filter(img=img, window_size=3)
+    I_ = wiener_filter(img=img, window_size=3)
 
     # 2. Sauvola thresholding S(x,y) with parameters from paper
-    S = threshold_niblack_like(img=I, method="sauvola", window_size=15, k=0.2)
-    S = S / 255 # important since in paper S(x,y) is in range [0, 1]
+    S = threshold_niblack_like(img=I_, method="sauvola", window_size=15, k=0.2)[1] / 255
+    # in paper S(x,y) is in range [0, 1]
 
     # 3. Background Surface Estimation - B(x,y)
-    bse = windowed_mult(img=I, img2=S, window_size=3) / (S + 1e-9)
+    w_bse = int(2 * lh)
+    bse = windowed_convsum(img1=I_, img2=S, window_size=w_bse) / (
+        sum_local(img=S, window_size=w_bse) + 1e-9
+    )
 
     B = np.where(
-        S == 0,
-        bse,
-        I,
+        S == 1,
+        I_,  # when is background
+        bse,  # when is foreground
     )
 
     # 4. Final Thresholding - T(x,y)
-    bg_img_diff = B - I
-    delta = np.sum(bg_img_diff) / np.sum(1 - S) # avg distance foreground background
-    b = np.sum(B * S) / np.sum(S) # avg background value
+    bg_img_diff = B - I_
+    delta = np.sum(bg_img_diff) / np.sum(1 - S)  # avg distance foreground background
+    b = np.sum(B * S) / np.sum(S)  # avg background value
 
     def sigmoid(x):
         return 1 / (1 + np.exp(-x))
@@ -319,7 +329,7 @@ def threshold_gatos(
                 f"The upsampling factor {upsampling_factor} must be an integer"
             )
         M = upsampling_factor
-        I_u = cv2.resize(I, None, fx=M, fy=M, interpolation=cv2.INTER_CUBIC)
+        I_u = cv2.resize(I_, None, fx=M, fy=M, interpolation=cv2.INTER_CUBIC)
         B_u = cv2.resize(B, None, fx=M, fy=M, interpolation=cv2.INTER_NEAREST)
         T = np.where(
             B_u - I_u > distance_gatos(B_u),
@@ -327,54 +337,30 @@ def threshold_gatos(
             1,
         )
 
-    # 6. post-processing
-    lh = 2
-    n = 0.15 * lh
-    ksh = 0.9 * n**2
-    ksw = 0.05 * n**2
-    ksw1 = 0.35 * n**2
-    dx = 0.25 * n
-    dy = 0.25 * n
+        # then downsampling to go back to the original size
+        T = cv2.resize(T, None, fx=1 / M, fy=1 / M, interpolation=cv2.INTER_NEAREST)
 
-    # 6.1. shrink thresholding - for each foreground pixel
-    Psh = sum_local(img=1-T, window_size=n)
-    shrink_condition = (T == 0) & (Psh > ksh)
-    T[shrink_condition] = 1  # set to background
+    if postprocess:
+        # 6. post-processing
+        n = int(0.15 * lh)
+        ksh = 0.9 * n**2
+        # ksw = 0.05 * n**2
+        ksw1 = 0.35 * n**2
+        # dx = 0.25 * n
+        # dy = 0.25 * n
 
-    # 6.2 swell filter - for each background pixel
-    h, w = T.shape
-    Y, X = np.mgrid[0:h, 0:w]  # coordinate grids
+        # 6.1. shrink thresholding for each foreground pixel check nb of background pixels
+        Psh = sum_local(img=T, window_size=n)
+        shrink_condition = (T == 0) & (Psh > ksh)
+        T[shrink_condition] = 1  # set to background
 
-    # Count foreground pixels in each window
-    Psw = sum_local(img=T, window_size=n)
+        # 6.2 swell filter - for each background pixel
+        # TODO
 
-    # Sum of x and y coordinates of foreground pixels in window
-    sumX = sum_local(img=X * T, window_size=n)
-    sumY = sum_local(img=Y * T, window_size=n)
+        # 6.3 swell filter for each background pixel check nb of foreground pixels
+        Psw1 = sum_local(img=1 - T, window_size=n)
+        swell2_cond = (T == 1) & (Psw1 > ksw1)
+        T[swell2_cond] = 0  # set to foreground
 
-    # Avoid division by zero
-    xa = np.zeros_like(sumX, dtype=np.float32)
-    ya = np.zeros_like(sumY, dtype=np.float32)
-    mask_valid = Psw > 0
-    xa[mask_valid] = sumX[mask_valid] / Psw[mask_valid]
-    ya[mask_valid] = sumY[mask_valid] / Psw[mask_valid]
-
-    # Conditions for swelling
-    cond = (
-        (T == 0) &  # only background pixels
-        (Psw > ksw) &
-        (np.abs(X - xa) < dx) &
-        (np.abs(Y - ya) < dy)
-    )
-
-    # Apply
-    T[cond] = 1
-
-    # 6.3 swell filter once again - for each background pixel
-    Psw1 = sum_local(img=T, window_size=n)
-    shrink_condition = (T == 0) & (Psw1 > ksw1)
-    T[shrink_condition] = 1  # set to background
-
-    return T
-
-
+    img_thresholded = T.astype(np.uint8) * 255
+    return img_thresholded

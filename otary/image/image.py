@@ -722,6 +722,46 @@ class Image:
         self.transformer.binarizer.threshold_wolf(window_size=window_size, k=k)
         return self
 
+    def threshold_gatos(
+        self,
+        q: float = 0.6,
+        p1: float = 0.5,
+        p2: float = 0.8,
+        lh: Optional[float] = None,
+        upsampling: bool = False,
+        upsampling_factor: int = 2,
+    ) -> Self:
+        """Apply Gatos local thresholding.
+
+        Paper (2005):
+        https://users.iit.demokritos.gr/~bgat/PatRec2006.pdf
+
+        Args:
+            q (float, optional): q gatos factor. Defaults to 0.6.
+            p1 (float, optional): p1 gatos factor. Defaults to 0.5.
+            p2 (float, optional): p2 gatos factor. Defaults to 0.8.
+            lh (Optional[float], optional): height of character.
+                Defaults to None, meaning it is computed automatically to be
+                a fraction of the image size.
+            upsampling (bool, optional): whether to apply gatos upsampling definition.
+                Defaults to False.
+            upsampling_factor (int, optional): gatos upsampling factor. Defaults to 2.
+
+        Returns:
+            Self: new thresholded image
+        """
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
+        # pylint: disable=duplicate-code
+        self.transformer.binarizer.threshold_gatos(
+            q=q,
+            p1=p1,
+            p2=p2,
+            lh=lh,
+            upsampling=upsampling,
+            upsampling_factor=upsampling_factor,
+        )
+        return self
+
     def threshold_nick(self, window_size: int = 19, k: float = -0.1) -> Self:
         """Apply Nick local thresholding.
 
