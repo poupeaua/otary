@@ -1,5 +1,7 @@
 """
-Efficient intensity transformations for images.
+Efficient local computations for images.
+Local computations are all kind of computations done using a local window kind
+of like convolution.
 """
 
 import cv2
@@ -94,6 +96,36 @@ def intensity_local_v2(
     )
 
     return img_intensity
+
+
+def mean_local(
+    img: NDArray, window_size: int = 15, border_type: int = cv2.BORDER_DEFAULT
+) -> NDArray:
+    """Compute the local mean of the image.
+    The local mean representation is the mean of the pixel values in a
+    window of size (window_size, window_size) around each pixel.
+
+    This is essentially computing the intensity without normalizing over the
+    window area.
+
+    Args:
+        img (NDArray): input grayscale image
+        window_size (int, optional): window size. Defaults to 15.
+        border_type (int, optional): border type to use for the integral image.
+            Defaults to cv2.BORDER_DEFAULT.
+        cast_uint8 (bool, optional): whether to cast the intensity to integer.
+            Defaults to False.
+
+    Returns:
+        NDArray: local sum representation of the image
+    """
+    return intensity_local_v2(
+        img=img,
+        window_size=window_size,
+        border_type=border_type,
+        normalize=True,
+        cast_uint8=False,
+    )
 
 
 def sum_local(
@@ -242,3 +274,39 @@ def high_contrast_local(img: NDArray, window_size: int) -> NDArray[np.uint8]:
     img_ = contrast_local(img=img, window_size=window_size)
     _, img_otsu = cv2.threshold(img_, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     return img_otsu.astype(np.uint8)
+
+
+def wiener_filter(img: NDArray, window_size: int = 3) -> NDArray[np.uint8]:
+    """Compute the Wiener filter from the Gatos paper.
+
+    https://users.iit.demokritos.gr/~bgat/PatRec2006.pdf
+
+    Args:
+        img (NDArray): input image
+        window_size (int): window size for local computations. Default to 3.
+
+    Returns:
+        NDArray[np.uint8]: image with Wiener filter applied
+    """
+    mean = mean_local(img=img, window_size=window_size)
+    sqmean = mean_local(img=img**2, window_size=window_size)
+    var = sqmean - mean**2
+    avg_var = mean_local(img=var, window_size=window_size) # mean of the variance
+    wiener = mean + (var-avg_var) * (img - mean) / (var + 1e-9)
+    return wiener
+
+
+def windowed_mult(img1: NDArray, img2: NDArray, window_size: int) -> NDArray:
+    """Compute the windowed multiplication of two images.
+
+    Args:
+        img1 (NDArray): first image
+        img2 (NDArray): second image
+        window_size (int): window size for local computations.
+
+    Returns:
+        NDArray: windowed multiplication of the two images
+    """
+    prod = img1 * img2 # standard Hadamard multiplication
+    result = mean_local(img=prod, window_size=window_size)
+    return result

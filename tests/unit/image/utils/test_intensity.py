@@ -4,7 +4,7 @@ Test suite for intensity utilities.
 
 import numpy as np
 
-from otary.image.utils.intensity import intensity_local, intensity_local_v2
+from otary.image.utils.local import intensity_local, intensity_local_v2
 
 
 class TestIntensityUtils:

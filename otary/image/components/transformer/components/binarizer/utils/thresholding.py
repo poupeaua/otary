@@ -2,16 +2,19 @@
 Thresholding techniques
 """
 
+from typing import Optional
 import cv2
 import numpy as np
 from numpy.typing import NDArray
 
-from otary.image.utils.intensity import (
-    intensity_local_v2,
+from otary.image.utils.local import (
     high_contrast_local,
     max_local,
+    mean_local,
     min_local,
     sum_local,
+    wiener_filter,
+    windowed_mult,
 )
 from otary.image.utils.tools import bwareaopen, check_transform_window_size
 
@@ -61,8 +64,8 @@ def threshold_niblack_like(
     img = img.astype(np.float32)
 
     # compute intensity representation of image
-    mean = intensity_local_v2(img=img, window_size=window_size)
-    sqmean = intensity_local_v2(img=img**2, window_size=window_size)
+    mean = mean_local(img=img, window_size=window_size)
+    sqmean = mean_local(img=img**2, window_size=window_size)
     var = sqmean - mean**2
     std = np.sqrt(np.clip(var, 0, None))
 
@@ -238,3 +241,140 @@ def threshold_su(
 
     cond = (N_e >= n_min) & (img <= E_mean + E_std / 2)
     return np.where(cond, 0, 255).astype(np.uint8)
+
+
+def threshold_gatos(
+    img: NDArray,
+    q: float = 0.6,
+    p1: float = 0.5,
+    p2: float = 0.8,
+    lh: Optional[float] = None,
+    upsampling: bool = False,
+    upsampling_factor: int = 2
+) -> NDArray[np.uint8]:
+    """
+
+    Important note: the S(x,y) in paper is in range [0, 1] and 1 corresponds to 
+    foreground (or close to 0 values) whereas 0 corresponds to background.
+    In this implementation we use the opposite values (0 -> foreground, 1 -> background)
+    So when in paper use (1-S) here use S.
+
+    Args:
+        img (NDArray): _description_
+
+    Returns:
+        NDArray[np.uint8]: _description_
+    """
+    if not (0 < q < 1) or not (0 < p1 < 1) or not (0 < p2 < 1):
+        raise ValueError("q, p1 and p2 must be in range ]0, 1[")
+    
+    if lh is None: # guess the character height
+        im_side = np.sqrt(img.shape[0] * img.shape[1])
+        lh = im_side / 20
+
+    # 1. Preprocessing I(x,y) from I_s(x,y) which is input image or source
+    I = wiener_filter(img=img, window_size=3)
+
+    # 2. Sauvola thresholding S(x,y) with parameters from paper
+    S = threshold_niblack_like(img=I, method="sauvola", window_size=15, k=0.2)
+    S = S / 255 # important since in paper S(x,y) is in range [0, 1]
+
+    # 3. Background Surface Estimation - B(x,y)
+    bse = windowed_mult(img=I, img2=S, window_size=3) / (S + 1e-9)
+
+    B = np.where(
+        S == 0,
+        bse,
+        I,
+    )
+
+    # 4. Final Thresholding - T(x,y)
+    bg_img_diff = B - I
+    delta = np.sum(bg_img_diff) / np.sum(1 - S) # avg distance foreground background
+    b = np.sum(B * S) / np.sum(S) # avg background value
+
+    def sigmoid(x):
+        return 1 / (1 + np.exp(-x))
+
+    def distance_gatos(img: NDArray):
+        x = 2 * (2 * img / b - (1 + p1)) / (1 - p1)
+        return q * delta * ((1 - p2) * sigmoid(x) + p2)
+
+    if not upsampling:
+        T = np.where(
+            bg_img_diff > distance_gatos(B),
+            0,
+            1,
+        )
+    else:
+        # 5. Optional Upsampling using bicubic interpolation
+        # using the bicubic interpolation to upsample the base image I(x,y)
+        # but using the nearest neighbour to replicate pixels in background B(x,y)
+        if upsampling_factor <= 0:
+            raise ValueError(
+                f"The upsampling factor {upsampling_factor} must be stricly positive"
+            )
+        if not isinstance(upsampling_factor, int):
+            raise ValueError(
+                f"The upsampling factor {upsampling_factor} must be an integer"
+            )
+        M = upsampling_factor
+        I_u = cv2.resize(I, None, fx=M, fy=M, interpolation=cv2.INTER_CUBIC)
+        B_u = cv2.resize(B, None, fx=M, fy=M, interpolation=cv2.INTER_NEAREST)
+        T = np.where(
+            B_u - I_u > distance_gatos(B_u),
+            0,
+            1,
+        )
+
+    # 6. post-processing
+    lh = 2
+    n = 0.15 * lh
+    ksh = 0.9 * n**2
+    ksw = 0.05 * n**2
+    ksw1 = 0.35 * n**2
+    dx = 0.25 * n
+    dy = 0.25 * n
+
+    # 6.1. shrink thresholding - for each foreground pixel
+    Psh = sum_local(img=1-T, window_size=n)
+    shrink_condition = (T == 0) & (Psh > ksh)
+    T[shrink_condition] = 1  # set to background
+
+    # 6.2 swell filter - for each background pixel
+    h, w = T.shape
+    Y, X = np.mgrid[0:h, 0:w]  # coordinate grids
+
+    # Count foreground pixels in each window
+    Psw = sum_local(img=T, window_size=n)
+
+    # Sum of x and y coordinates of foreground pixels in window
+    sumX = sum_local(img=X * T, window_size=n)
+    sumY = sum_local(img=Y * T, window_size=n)
+
+    # Avoid division by zero
+    xa = np.zeros_like(sumX, dtype=np.float32)
+    ya = np.zeros_like(sumY, dtype=np.float32)
+    mask_valid = Psw > 0
+    xa[mask_valid] = sumX[mask_valid] / Psw[mask_valid]
+    ya[mask_valid] = sumY[mask_valid] / Psw[mask_valid]
+
+    # Conditions for swelling
+    cond = (
+        (T == 0) &  # only background pixels
+        (Psw > ksw) &
+        (np.abs(X - xa) < dx) &
+        (np.abs(Y - ya) < dy)
+    )
+
+    # Apply
+    T[cond] = 1
+
+    # 6.3 swell filter once again - for each background pixel
+    Psw1 = sum_local(img=T, window_size=n)
+    shrink_condition = (T == 0) & (Psw1 > ksw1)
+    T[shrink_condition] = 1  # set to background
+
+    return T
+
+

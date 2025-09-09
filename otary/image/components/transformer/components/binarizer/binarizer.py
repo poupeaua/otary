@@ -18,7 +18,8 @@ from otary.image.components.transformer.components.binarizer.utils.thresholding 
 )
 
 BinarizationMethods = Literal[
-    "adaptative", "otsu", "niblack", "sauvola", "wolf", "nick", "isauvola", "wan"
+    "adaptative", "otsu", "bernsen", "niblack", "sauvola", "wolf", "nick", "su", 
+    "isauvola", "wan"
 ]
 
 
