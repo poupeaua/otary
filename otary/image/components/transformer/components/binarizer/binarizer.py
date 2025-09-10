@@ -12,6 +12,7 @@ from otary.image.base import BaseImage
 
 from otary.image.components.transformer.components.binarizer.utils.thresholding import (
     threshold_bernsen,
+    threshold_feng,
     threshold_gatos,
     threshold_isauvola,
     threshold_niblack_like,
@@ -46,6 +47,7 @@ class BinarizerImage:
     | Niblack   | 1986 | "An Introduction to Digital Image Processing" by Wayne Niblack                                                                                |
     | Sauvola   | 1997 | [Adaptive Document Binarization](https://www.researchgate.net/publication/3710586_Adaptive_Document_Binarization)                             |
     | Wolf      | 2003 | [Extraction and Recognition of Artificial Text in Multimedia Documents](https://hal.science/hal-01504401v1)                                                                                 |
+    | Feng      | 2004 | [Contrast adaptive binarization of low quality document images](https://www.jstage.jst.go.jp/article/elex/1/16/1_16_501/_pdf) |
     | Gatos     | 2005 | [Adaptive degraded document image binarization](https://users.iit.demokritos.gr/~bgat/PatRec2006.pdf) |
     | Nick      | 2009 | [Comparison of Niblack inspired Binarization Methods for Ancient Documents](https://www.researchgate.net/publication/221253803_Comparison_of_Niblack_inspired_Binarization_Methods_for_Ancient_Documents) |
     | Su        | 2010 | [Su Local Thresholding](https://www.researchgate.net/publication/220933012)                                                                    |
@@ -211,6 +213,40 @@ class BinarizerImage:
         self.base.asarray = threshold_niblack_like(
             img=self.base.asarray, method="wolf", window_size=window_size, k=k
         )[1]
+
+    def threshold_feng(
+        self,
+        w1: int = 19,
+        w2: int = 33,
+        alpha1: float = 0.12,
+        k1: float = 0.25,
+        k2: float = 0.04,
+        gamma: float = 2.0,
+    ) -> None:
+        """Implementation of the Feng thresholding method.
+
+        Paper (2004):
+        https://www.jstage.jst.go.jp/article/elex/1/16/1_16_501/_pdf
+
+        Args:
+            w1 (int, optional): primary window size. Defaults to 19.
+            w2 (int, optional): secondary window value. Defaults to 33.
+            alpha1 (float, optional): alpha1 value. Defaults to 0.12.
+            k1 (float, optional): k1 value. Defaults to 0.25.
+            k2 (float, optional): k2 value. Defaults to 0.04.
+            gamma (float, optional): gamma value. Defaults to 2.0.
+        """
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
+        self.base.as_grayscale()
+        self.base.asarray = threshold_feng(
+            img=self.base.asarray,
+            w1=w1,
+            w2=w2,
+            alpha1=alpha1,
+            k1=k1,
+            k2=k2,
+            gamma=gamma,
+        )
 
     def threshold_gatos(
         self,

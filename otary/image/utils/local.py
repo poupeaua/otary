@@ -128,6 +128,32 @@ def mean_local(
     )
 
 
+def variance_local(
+    img: NDArray, window_size: int = 15, border_type: int = cv2.BORDER_DEFAULT
+) -> NDArray:
+    """Compute the local variance of the image.
+    The local variance representation is the variance of the pixel values in a
+    window of size (window_size, window_size) around each pixel.
+
+    This is essentially computing the intensity without normalizing over the
+    window area.
+
+    Args:
+        img (NDArray): input grayscale image
+        window_size (int, optional): window size. Defaults to 15.
+        border_type (int, optional): border type to use for the integral image.
+            Defaults to cv2.BORDER_DEFAULT.
+        cast_uint8 (bool, optional): whether to cast the intensity to integer.
+            Defaults to False.
+
+    Returns:
+        NDArray: local sum representation of the image
+    """
+    mean = mean_local(img=img, window_size=window_size, border_type=border_type)
+    sqmean = mean_local(img=img**2, window_size=window_size, border_type=border_type)
+    return sqmean - mean**2
+
+
 def sum_local(
     img: NDArray, window_size: int = 15, border_type: int = cv2.BORDER_DEFAULT
 ) -> NDArray:

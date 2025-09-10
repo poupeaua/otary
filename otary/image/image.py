@@ -722,6 +722,34 @@ class Image:
         self.transformer.binarizer.threshold_wolf(window_size=window_size, k=k)
         return self
 
+    def threshold_feng(
+        self,
+        w1: int = 19,
+        w2: int = 33,
+        alpha1: float = 0.12,
+        k1: float = 0.25,
+        k2: float = 0.04,
+        gamma: float = 2.0,
+    ) -> Self:
+        """Implementation of the Feng thresholding method.
+
+        Paper (2004):
+        https://www.jstage.jst.go.jp/article/elex/1/16/1_16_501/_pdf
+
+        Args:
+            w1 (int, optional): primary window size. Defaults to 19.
+            w2 (int, optional): secondary window value. Defaults to 33.
+            alpha1 (float, optional): alpha1 value. Defaults to 0.12.
+            k1 (float, optional): k1 value. Defaults to 0.25.
+            k2 (float, optional): k2 value. Defaults to 0.04.
+            gamma (float, optional): gamma value. Defaults to 2.0.
+        """
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
+        self.transformer.binarizer.threshold_feng(
+            w1=w1, w2=w2, alpha1=alpha1, k1=k1, k2=k2, gamma=gamma
+        )
+        return self
+
     def threshold_gatos(
         self,
         q: float = 0.6,

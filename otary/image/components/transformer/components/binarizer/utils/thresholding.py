@@ -13,6 +13,7 @@ from otary.image.utils.local import (
     mean_local,
     min_local,
     sum_local,
+    variance_local,
     wiener_filter,
     windowed_convsum,
 )
@@ -83,7 +84,7 @@ def threshold_niblack_like(
         min_img = np.min(img)  # global
         thresh = mean - k * (1 - (std / max_std)) * (mean - min_img)
     elif method == "nick":
-        thresh = mean + k * np.sqrt(var + mean**2)
+        thresh = mean + k * np.sqrt(sqmean)  # sqmean = var + mean**2 = B + m^2
     elif method == "singh":
         # essentially this is Sauvola with an approximation to compute the
         # local standard deviation to improve speed
@@ -135,6 +136,63 @@ def threshold_bernsen(
 
     img_thresholded = (img > threshold_local).astype(np.uint8) * 255
 
+    return img_thresholded
+
+
+def threshold_feng(
+    img: NDArray,
+    w1: int = 19,
+    w2: int = 33,
+    alpha1: float = 0.12,
+    k1: float = 0.25,
+    k2: float = 0.04,
+    gamma: float = 2.0,
+) -> NDArray[np.uint8]:
+    """Implementation of the Feng thresholding method.
+
+    Paper (2004):
+    https://www.jstage.jst.go.jp/article/elex/1/16/1_16_501/_pdf
+
+    Args:
+        img (NDArray): input grayscale image
+        w1 (int, optional): primary window size. Defaults to 19.
+        w2 (int, optional): secondary window value. Defaults to 33.
+        alpha1 (float, optional): alpha1 value. Defaults to 0.12.
+        k1 (float, optional): k1 value. Defaults to 0.25.
+        k2 (float, optional): k2 value. Defaults to 0.04.
+        gamma (float, optional): gamma value. Defaults to 2.0.
+
+    Returns:
+        NDArray[np.uint8]: output thresholded image
+    """
+    # pylint: disable=too-many-arguments, too-many-positional-arguments
+    if not (0 < w1 < w2):
+        raise ValueError("Using Feng thresholding requires 0 < w1 < w2")
+
+    # mean local on primary window
+    m = mean_local(img=img, window_size=w1)
+
+    # min local on primary window
+    M = min_local(img=img, window_size=w1)
+
+    # std local on primary window
+    sqmean = mean_local(img=img**2, window_size=w1)
+    var = sqmean - m**2
+    s = np.sqrt(np.clip(var, 0, None))
+
+    # std in local secondary window
+    Rs = variance_local(img=img, window_size=w2)
+
+    # setup parameters
+    normalized_std = s / (Rs + 1e-9)
+    alpha2 = k1 * (normalized_std**gamma)
+    alpha3 = k2 * (normalized_std**gamma)
+
+    # compute threshold
+    T = (1 - alpha1) * m + alpha2 * normalized_std * (m - M) + alpha3 * M
+    T = np.clip(T, 0, 255)
+
+    img_thresholded = (img > T).astype(np.uint8) * 255
     return img_thresholded
 
 
