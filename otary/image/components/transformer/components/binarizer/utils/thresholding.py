@@ -243,6 +243,30 @@ def threshold_su(
     return np.where(cond, 0, 255).astype(np.uint8)
 
 
+def gatos_postprocess(T: NDArray, lh: float) -> NDArray:
+    n = int(0.15 * lh)
+    ksh = 0.9 * n**2
+    # ksw = 0.05 * n**2
+    ksw1 = 0.35 * n**2
+    # dx = 0.25 * n
+    # dy = 0.25 * n
+
+    # 6.1. shrink thresholding for each foreground pixel check nb of background pixels
+    Psh = sum_local(img=T, window_size=n)
+    shrink_condition = (T == 0) & (Psh > ksh)
+    T[shrink_condition] = 1  # set to background
+
+    # 6.2 swell filter - for each background pixel
+    # TODO
+
+    # 6.3 swell filter for each background pixel check nb of foreground pixels
+    Psw1 = sum_local(img=1 - T, window_size=n)
+    swell2_cond = (T == 1) & (Psw1 > ksw1)
+    T[swell2_cond] = 0  # set to foreground
+
+    return T
+
+
 def threshold_gatos(
     img: NDArray,
     q: float = 0.6,
@@ -340,27 +364,8 @@ def threshold_gatos(
         # then downsampling to go back to the original size
         T = cv2.resize(T, None, fx=1 / M, fy=1 / M, interpolation=cv2.INTER_NEAREST)
 
-    if postprocess:
-        # 6. post-processing
-        n = int(0.15 * lh)
-        ksh = 0.9 * n**2
-        # ksw = 0.05 * n**2
-        ksw1 = 0.35 * n**2
-        # dx = 0.25 * n
-        # dy = 0.25 * n
-
-        # 6.1. shrink thresholding for each foreground pixel check nb of background pixels
-        Psh = sum_local(img=T, window_size=n)
-        shrink_condition = (T == 0) & (Psh > ksh)
-        T[shrink_condition] = 1  # set to background
-
-        # 6.2 swell filter - for each background pixel
-        # TODO
-
-        # 6.3 swell filter for each background pixel check nb of foreground pixels
-        Psw1 = sum_local(img=1 - T, window_size=n)
-        swell2_cond = (T == 1) & (Psw1 > ksw1)
-        T[swell2_cond] = 0  # set to foreground
+    if postprocess:  # 6. post-processing
+        T = gatos_postprocess(T=T, lh=lh)
 
     img_thresholded = T.astype(np.uint8) * 255
     return img_thresholded
