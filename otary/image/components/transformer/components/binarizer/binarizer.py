@@ -27,8 +27,12 @@ BinarizationMethods = Literal[
     "niblack",
     "sauvola",
     "wolf",
+    "feng",
+    "gatos",
+    "bradley_roth",
     "nick",
     "su",
+    "phansalkar",
     "isauvola",
     "wan",
 ]
