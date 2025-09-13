@@ -790,6 +790,23 @@ class Image:
         )
         return self
 
+    def threshold_bradley_roth(self, window_size: int = 15, t: float = 0.15) -> Self:
+        """Implementation of the Bradley & Roth thresholding method.
+
+        Paper (2007):
+        https://www.researchgate.net/publication/220494200_Adaptive_Thresholding_using_the_Integral_Image
+
+        Args:
+            window_size (int, optional): window size for local computations.
+                Defaults to 15.
+            t (float, optional): t value in [0, 1]. Defaults to 0.15.
+
+        Returns:
+            NDArray[np.uint8]: output thresholded image
+        """
+        self.transformer.binarizer.threshold_bradley_roth(window_size=window_size, t=t)
+        return self
+
     def threshold_nick(self, window_size: int = 19, k: float = -0.1) -> Self:
         """Apply Nick local thresholding.
 
@@ -845,6 +862,29 @@ class Image:
                 of the std. Defaults to 0.06.
         """
         self.transformer.binarizer.threshold_singh(window_size=window_size, k=k)
+        return self
+
+    def threshold_phansalkar(
+        self, window_size: int = 40, k: float = 0.25, p: float = 3.0, q: float = 10.0
+    ) -> Self:
+        """Apply Phansalkar et al. local thresholding.
+
+        Paper (2011):
+        https://www.researchgate.net/publication/224226466
+
+        Args:
+            window_size (int, optional): apply on the
+                image. Defaults to 40.
+            k (float, optional): factor to apply to regulate the impact
+                of the std. Defaults to 0.25.
+            p (float, optional): Phansalkar parameter to regulate low contrast zones.
+                Defaults to 3.0.
+            q (float, optional): Phansalkar parameter to regulate low contrast zones.
+                Defaults to 10.0.
+        """
+        self.transformer.binarizer.threshold_phansalkar(
+            window_size=window_size, k=k, p=p, q=q
+        )
         return self
 
     def threshold_isauvola(

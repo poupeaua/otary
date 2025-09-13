@@ -12,6 +12,7 @@ from otary.image.base import BaseImage
 
 from otary.image.components.transformer.components.binarizer.utils.thresholding import (
     threshold_bernsen,
+    threshold_bradley_roth,
     threshold_feng,
     threshold_gatos,
     threshold_isauvola,
@@ -39,20 +40,22 @@ class BinarizerImage:
 
     It includes different binarization methods:
 
-    | Name      | Year | Paper                                                                                                                                         |
-    |-----------|------|-----------------------------------------------------------------------------------------------------------------------------------------------|
-    | Adaptative|  -   | [OpenCV Adaptive Thresholding Documentation](https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html)                                |
-    | Otsu      | 1979 | [A Threshold Selection Method from Gray-Level Histograms](https://ieeexplore.ieee.org/document/4310076)                                       |
-    | Bernsen   | 1986 | "Dynamic thresholding of grey-level images" by Bernsen                                                                                                      |
-    | Niblack   | 1986 | "An Introduction to Digital Image Processing" by Wayne Niblack                                                                                |
-    | Sauvola   | 1997 | [Adaptive Document Binarization](https://www.researchgate.net/publication/3710586_Adaptive_Document_Binarization)                             |
-    | Wolf      | 2003 | [Extraction and Recognition of Artificial Text in Multimedia Documents](https://hal.science/hal-01504401v1)                                                                                 |
-    | Feng      | 2004 | [Contrast adaptive binarization of low quality document images](https://www.jstage.jst.go.jp/article/elex/1/16/1_16_501/_pdf) |
-    | Gatos     | 2005 | [Adaptive degraded document image binarization](https://users.iit.demokritos.gr/~bgat/PatRec2006.pdf) |
-    | Nick      | 2009 | [Comparison of Niblack inspired Binarization Methods for Ancient Documents](https://www.researchgate.net/publication/221253803_Comparison_of_Niblack_inspired_Binarization_Methods_for_Ancient_Documents) |
-    | Su        | 2010 | [Su Local Thresholding](https://www.researchgate.net/publication/220933012)                                                                    |
-    | ISauvola  | 2016 | [ISauvola: Improved Sauvola’s Algorithm for Document Image Binarization](https://www.researchgate.net/publication/304621554_ISauvola_Improved_Sauvola) |
-    | Wan       | 2018 | [Binarization of Document Image Using Optimum Threshold Modification](https://www.researchgate.net/publication/326026836_Binarization_of_Document_Image_Using_Optimum_Threshold_Modification) |
+    | Name           | Year  | Reference / Paper                                                                                                                        |
+    |----------------|-------|-----------------------------------------------------------------------------------------------------------------------------------------|
+    | Adaptative     |   -   | [OpenCV Adaptive Thresholding Documentation](https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html)                          |
+    | Otsu           | 1979  | [A Threshold Selection Method from Gray-Level Histograms](https://ieeexplore.ieee.org/document/4310076)                                 |
+    | Bernsen        | 1986  | "Dynamic thresholding of grey-level images" by Bernsen                                                                                  |
+    | Niblack        | 1986  | "An Introduction to Digital Image Processing" by Wayne Niblack                                                                          |
+    | Sauvola        | 1997  | [Adaptive Document Binarization](https://www.researchgate.net/publication/3710586_Adaptive_Document_Binarization)                       |
+    | Wolf           | 2003  | [Extraction and Recognition of Artificial Text in Multimedia Documents](https://hal.science/hal-01504401v1)                             |
+    | Feng           | 2004  | [Contrast adaptive binarization of low quality document images](https://www.jstage.jst.go.jp/article/elex/1/16/1_16_501/_pdf)           |
+    | Gatos          | 2005  | [Adaptive degraded document image binarization](https://users.iit.demokritos.gr/~bgat/PatRec2006.pdf)                                   |
+    | Bradley & Roth | 2007  | [Adaptive Thresholding using the Integral Image](https://www.researchgate.net/publication/220494200_Adaptive_Thresholding_using_the_Integral_Image) |
+    | Nick           | 2009  | [Comparison of Niblack inspired Binarization Methods for Ancient Documents](https://www.researchgate.net/publication/221253803_Comparison_of_Niblack_inspired_Binarization_Methods_for_Ancient_Documents) |
+    | Su             | 2010  | [Su Local Thresholding](https://www.researchgate.net/publication/220933012)                                                            |
+    | Phansalkar     | 2011  | [Adaptive Local Thresholding for Detection of Nuclei in Diversely Stained Cytology Images](https://www.researchgate.net/publication/224226466)                        |
+    | ISauvola       | 2016  | [ISauvola: Improved Sauvola’s Algorithm for Document Image Binarization](https://www.researchgate.net/publication/304621554_ISauvola_Improved_Sauvola) |
+    | Wan            | 2018  | [Binarization of Document Image Using Optimum Threshold Modification](https://www.researchgate.net/publication/326026836_Binarization_of_Document_Image_Using_Optimum_Threshold_Modification) |
     """
 
     def __init__(self, base: BaseImage) -> None:
@@ -286,6 +289,25 @@ class BinarizerImage:
             upsampling_factor=upsampling_factor,
         )
 
+    def threshold_bradley_roth(self, window_size: int = 15, t: float = 0.15) -> None:
+        """Implementation of the Bradley & Roth thresholding method.
+
+        Paper (2007):
+        https://www.researchgate.net/publication/220494200_Adaptive_Thresholding_using_the_Integral_Image
+
+        Args:
+            window_size (int, optional): window size for local computations.
+                Defaults to 15.
+            t (float, optional): t value in [0, 1]. Defaults to 0.15.
+
+        Returns:
+            NDArray[np.uint8]: output thresholded image
+        """
+        self.base.as_grayscale()
+        self.base.asarray = threshold_bradley_roth(
+            img=self.base.asarray, window_size=window_size, t=t
+        )
+
     def threshold_nick(self, window_size: int = 19, k: float = -0.1) -> None:
         """Apply Nick local thresholding.
 
@@ -341,6 +363,34 @@ class BinarizerImage:
         self.base.as_grayscale()
         self.base.asarray = threshold_niblack_like(
             img=self.base.asarray, method="singh", window_size=window_size, k=k
+        )[1]
+
+    def threshold_phansalkar(
+        self, window_size: int = 40, k: float = 0.25, p: float = 3.0, q: float = 10.0
+    ) -> None:
+        """Apply Phansalkar et al. local thresholding.
+
+        Paper (2011):
+        https://www.researchgate.net/publication/224226466
+
+        Args:
+            window_size (int, optional): apply on the
+                image. Defaults to 40.
+            k (float, optional): factor to apply to regulate the impact
+                of the std. Defaults to 0.25.
+            p (float, optional): Phansalkar parameter to regulate low contrast zones.
+                Defaults to 3.0.
+            q (float, optional): Phansalkar parameter to regulate low contrast zones.
+                Defaults to 10.0.
+        """
+        self.base.as_grayscale()
+        self.base.asarray = threshold_niblack_like(
+            img=self.base.asarray,
+            method="phansalkar",
+            window_size=window_size,
+            k=k,
+            p=p,
+            q=q,
         )[1]
 
     def threshold_isauvola(

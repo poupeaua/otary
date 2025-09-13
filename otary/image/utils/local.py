@@ -149,6 +149,7 @@ def variance_local(
     Returns:
         NDArray: local sum representation of the image
     """
+    # this is a trick to compute the variance faster
     mean = mean_local(img=img, window_size=window_size, border_type=border_type)
     sqmean = mean_local(img=img**2, window_size=window_size, border_type=border_type)
     return sqmean - mean**2

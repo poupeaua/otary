@@ -26,6 +26,8 @@ def threshold_niblack_like(
     window_size: int = 15,
     k: float = 0.5,
     r: float = 128.0,
+    p: float = 3.0,
+    q: float = 10.0,
 ) -> tuple[NDArray, NDArray[np.uint8]]:
     """Fast implementation of the Niblack-like thresholdings.
     These thresholdings are similar so we just put them in the same utils function.
@@ -41,9 +43,10 @@ def threshold_niblack_like(
     It includes the following methods:
     - Niblack
     - Sauvola
+    - Phansalkar
+    - WAN
     - Wolf
     - Nick
-    - WAN
     - Singh
 
     Originally, the sauvola thresholding was invented for text recognition like
@@ -56,6 +59,10 @@ def threshold_niblack_like(
         window_size (int, optional): window size. Defaults to 15.
         k (float, optional): k factor. Defaults to 0.5.
         r (float, optional): r value used only in sauvola. Defaults to 128.0.
+        p (float, optional): p value used only in Phansalkar et al. method.
+            Defaults to 3.0.
+        q (float, optional): q value used only in Phansalkar et al. method.
+            Defaults to 10.0
 
     Returns:
         tuple[NDArray, NDArray[np.uint8]]: thresh and thresholded image
@@ -74,6 +81,8 @@ def threshold_niblack_like(
         thresh = mean + k * std
     elif method == "sauvola":
         thresh = mean * (1 + k * ((std / r) - 1))
+    elif method == "phansalkar":
+        thresh = mean * (1 + p * np.exp(-q * mean) + k * ((std / r) - 1))
     elif method == "wan":
         wan_mean = (max_local(img=img, window_size=window_size) + mean) / 2
         thresh = wan_mean * (1 + k * ((std / r) - 1))
@@ -426,4 +435,31 @@ def threshold_gatos(
         T = gatos_postprocess(T=T, lh=lh)
 
     img_thresholded = T.astype(np.uint8) * 255
+    return img_thresholded
+
+
+def threshold_bradley_roth(
+    img: NDArray, window_size: int = 15, t: float = 0.15
+) -> NDArray[np.uint8]:
+    """Implementation of the Bradley & Roth thresholding method.
+    This is actually a very easy thresholding method solely depending on the
+    local mean.
+
+    This is a local thresholding method that computes the threshold for a pixel
+    based on a small region around it.
+
+    Args:
+        img (NDArray): input image
+        window_size (int, optional): window size for local computations.
+            Defaults to 15.
+        t (float, optional): t value in [0, 1]. Defaults to 0.15.
+
+    Returns:
+        NDArray[np.uint8]: output thresholded image
+    """
+    if not (0 < t < 1):
+        raise ValueError("t must be in range ]0, 1[")
+
+    m = mean_local(img=img, window_size=window_size)
+    img_thresholded = (img > m * (1 - t)).astype(np.uint8) * 255
     return img_thresholded
