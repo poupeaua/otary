@@ -32,7 +32,7 @@ def bse_checks(img: NDArray, binary: NDArray) -> None:
             of only 0 or 255 divided by 255.
     """
     max_img, min_img = np.max(img), np.min(img)
-    if not (0 < max_img < 255) or not (0 < min_img < 255) or img.dtype != np.uint8:
+    if not (0 <= max_img <= 255) or not (0 <= min_img <= 255) or img.dtype != np.uint8:
         raise ValueError("Input image must be in [0, 255] and of type uint8")
 
     unique_bin = np.unique(binary)
@@ -55,6 +55,8 @@ def background_surface_estimation_gatos(
     local average around each pixels using only the values of the pixels that are
     1 (background). The pixels where the rough binarization is 1 (background) remain
     unchanged.
+
+    Here is the mathematical formula:
 
     $$
     B(x,y) = \left\{ \begin{array}{cl}
