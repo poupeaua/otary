@@ -7,6 +7,9 @@ import cv2
 import numpy as np
 from numpy.typing import NDArray
 
+from otary.image.utils.background_surface_estimation import (
+    background_surface_estimation_gatos,
+)
 from otary.image.utils.local import (
     high_contrast_local,
     max_local,
@@ -15,7 +18,6 @@ from otary.image.utils.local import (
     sum_local,
     variance_local,
     wiener_filter,
-    windowed_convsum,
 )
 from otary.image.utils.tools import bwareaopen, check_transform_window_size
 
@@ -379,15 +381,7 @@ def threshold_gatos(
 
     # 3. Background Surface Estimation - B(x,y)
     w_bse = int(2 * lh)
-    bse = windowed_convsum(img1=I_, img2=S, window_size=w_bse) / (
-        sum_local(img=S, window_size=w_bse) + 1e-9
-    )
-
-    B = np.where(
-        S == 1,
-        I_,  # when is background
-        bse,  # when is foreground
-    )
+    B = background_surface_estimation_gatos(img=I_, binary=S, window_size=w_bse)
 
     # 4. Final Thresholding - T(x,y)
     bg_img_diff = B - I_
