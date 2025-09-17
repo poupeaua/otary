@@ -60,7 +60,7 @@ Let me illustrate the usage of Otary with a simple example. Imagine you need to:
 In order to compare the use of Otary versus other libraries, I will use the same example but with different libraries. Try it yourself on your favorite LLM (like [ChatGPT](https://chatgpt.com/)) by copying the query:
 
 ```text
-Generate a python code to read an image from a pdf, draw an rectangle on it, shift and rotate the rectangle, crop a part of the image, rotate the cropped image, apply a threshold on the image.
+Generate a python code to read an image from a pdf, draw a rectangle on it, shift and rotate the rectangle, crop a part of the image, rotate the cropped image, apply a threshold on the image.
 ```
 
 Using Otary you can do it with few lines of code:
