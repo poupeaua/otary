@@ -339,3 +339,23 @@ def windowed_convsum(img1: NDArray, img2: NDArray, window_size: int) -> NDArray:
     prod = img1 * img2  # standard Hadamard multiplication
     result = sum_local(img=prod, window_size=window_size)
     return result
+
+
+def gradient_magnitude(img: NDArray, window_size: int = 3) -> NDArray:
+    """Compute the gradient magnitude of the image using Sobel operator.
+
+    Args:
+        img (NDArray): input grayscale image
+        window_size (int, optional): window size for local computations.
+            Defaults to 3.
+
+    Returns:
+        NDArray: gradient magnitude of the image
+    """
+    window_size = check_transform_window_size(img=img, window_size=window_size)
+
+    sobel_x = cv2.Sobel(img, cv2.CV_64F, 1, 0, ksize=window_size)
+    sobel_y = cv2.Sobel(img, cv2.CV_64F, 0, 1, ksize=window_size)
+    gm = np.sqrt(sobel_x**2 + sobel_y**2)
+    gm = np.clip(gm, 0, 255).astype(np.uint8)
+    return gm

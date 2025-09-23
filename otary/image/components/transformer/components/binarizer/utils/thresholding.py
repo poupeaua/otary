@@ -13,6 +13,7 @@ from otary.image.utils.background import (
 )
 from otary.image.utils.grid import grid_view, ungrid
 from otary.image.utils.local import (
+    gradient_magnitude,
     high_contrast_local,
     max_local,
     mean_local,
@@ -503,7 +504,7 @@ def threshold_adotsu(
     binary_bool = cv2.erode(binary, np.ones((3, 3)), iterations=4) / 255
 
     for i in range(n_steps):  # update the binarized image to a more accurate one
-        binary = adostu_single_step(
+        binary = adotsu_single_step(
             img=img, binary=binary_bool, grid_size=grid_size, k_sigma=k_sigma, eps=eps
         )
 
@@ -513,7 +514,7 @@ def threshold_adotsu(
     return binary
 
 
-def adostu_single_step(
+def adotsu_single_step(
     img: NDArray, binary: NDArray, grid_size: int, k_sigma: float, eps: float
 ) -> NDArray[np.uint8]:
     bse = background_surface_estimation_adotsu(
@@ -595,3 +596,27 @@ def otsu_grid_based(
     thresholds = sigma_b.argmax(axis=1).astype(np.uint8)
 
     return thresholds.reshape(nbh, nbw)
+
+
+def threshold_fair(
+    img: NDArray, k: float = 1.0, alpha: float = 0.5, window_size: int = 3
+):
+    """FAIR thresholding method.
+
+    Args:
+        img (NDArray): input image
+        k (float, optional): _description_. Defaults to 1.0.
+        alpha (float, optional): It defines the ratio to compute the lower threshold
+            in the 1st step of the S-FAIR step. It is generally in [0.3, 0.5].
+            Defaults to 0.4.
+    """
+    # Step 1 of S-FAIR - Text area detection
+    gm = gradient_magnitude(img=img, window_size=3)
+    T_o = cv2.threshold(gm, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[0]
+    T_u = k * T_o  # T_u stands for upper threshold
+    T_l = alpha * T_o  # T_l stands for lower threshold
+    im_edges = cv2.Canny(image=img, threshold1=T_l, threshold2=T_u)  # values 0 or 255
+
+    # Step 2 of S-FAIR - Model estimation around edges
+    # edges can be easily identified as they are 255 pixels in im_edges
+    return im_edges
