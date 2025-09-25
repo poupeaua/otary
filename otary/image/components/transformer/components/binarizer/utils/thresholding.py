@@ -3,6 +3,7 @@ Thresholding techniques
 """
 
 from typing import Optional
+
 import cv2
 import numpy as np
 from numpy.typing import NDArray
@@ -13,7 +14,6 @@ from otary.image.utils.background import (
 )
 from otary.image.utils.grid import grid_view, ungrid
 from otary.image.utils.local import (
-    gradient_magnitude,
     high_contrast_local,
     max_local,
     mean_local,
@@ -596,27 +596,3 @@ def otsu_grid_based(
     thresholds = sigma_b.argmax(axis=1).astype(np.uint8)
 
     return thresholds.reshape(nbh, nbw)
-
-
-def threshold_fair(
-    img: NDArray, k: float = 1.0, alpha: float = 0.5, window_size: int = 3
-):
-    """FAIR thresholding method.
-
-    Args:
-        img (NDArray): input image
-        k (float, optional): _description_. Defaults to 1.0.
-        alpha (float, optional): It defines the ratio to compute the lower threshold
-            in the 1st step of the S-FAIR step. It is generally in [0.3, 0.5].
-            Defaults to 0.4.
-    """
-    # Step 1 of S-FAIR - Text area detection
-    gm = gradient_magnitude(img=img, window_size=3)
-    T_o = cv2.threshold(gm, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[0]
-    T_u = k * T_o  # T_u stands for upper threshold
-    T_l = alpha * T_o  # T_l stands for lower threshold
-    im_edges = cv2.Canny(image=img, threshold1=T_l, threshold2=T_u)  # values 0 or 255
-
-    # Step 2 of S-FAIR - Model estimation around edges
-    # edges can be easily identified as they are 255 pixels in im_edges
-    return im_edges
