@@ -15,37 +15,25 @@ def gaussian_pdf(x, mu=0.0, var=1.0):
     )
 
 
-def responsability(x, mu_t, mu_b, var_t, var_b, omega):
+def responsibility(x, mu_t, mu_b, var_t, var_b, omega):
     p_t = omega * gaussian_pdf(x, mu=mu_t, var=var_t)
     p_b = (1 - omega) * gaussian_pdf(x, mu=mu_b, var=var_b)
     return p_t / (p_t + p_b + 1e-9)
 
 
 def expectation_maximization(
-    img: NDArray,
-    s: NDArray,
-    window_size: int = 51,
+    x: NDArray,
     rel_tol: float = 1e-2,
     max_iter: int = 100,
 ):
     """EM algorithm using both original image and edges image.
 
     Args:
-        x (NDArray): input image
-        s (NDArray): edges pixels coordinates
+        x (NDArray): input images
         rel_tol (float, optional): _description_. Defaults to 1e-3.
         max_iter (int, optional): _description_. Defaults to 100.
     """
-    n_edges = s.shape[0]
-
-    # get patches for vectorized computation - trick do padding to get all patches
-    # of same size even when the center of edge pixel is at border
-    pad = window_size // 2
-    x_pad = cv2.copyMakeBorder(img, pad, pad, pad, pad, borderType=cv2.BORDER_DEFAULT)
-    patches = np.lib.stride_tricks.sliding_window_view(
-        x=x_pad, window_shape=(window_size, window_size)
-    )
-    x = patches[s[:, 0], s[:, 1]]  # shape (n_edges, window_size, window_size)
+    n_edges = x.shape[0]
 
     # EM initialization - mu (mean), sigma (std), omega (mixing coefficient)
     mu_t: NDArray = np.min(x, axis=(1, 2))[:, np.newaxis, np.newaxis]
@@ -59,7 +47,7 @@ def expectation_maximization(
     i = 0
     while not is_converged and i < max_iter:
         # E-step
-        gamma = responsability(x, mu_t, mu_b, var_t, var_b, omega)
+        gamma = responsibility(x, mu_t, mu_b, var_t, var_b, omega)
 
         # M-step or classic MLE
         # parameters with underscore are the updated ones
@@ -100,19 +88,11 @@ def expectation_maximization(
         omega = 1 - omega
         gamma = 1 - gamma
 
-    return {
-        "x": x,
-        "mu_t": mu_t.squeeze(),
-        "mu_b": mu_b.squeeze(),
-        "var_t": var_t,
-        "var_b": var_b,
-        "omega": omega.squeeze(),
-        "gamma": gamma,
-    }
+    return gamma
 
 
 def threshold_fair(
-    img: NDArray, k: float = 1.0, alpha: float = 0.5, n: int = 51, max_iter: int = 10
+    img: NDArray, k: float = 1.0, alpha: float = 0.5, n: int = 75, max_iter: int = 10
 ):
     """FAIR thresholding method.
 
@@ -141,5 +121,26 @@ def threshold_fair(
 
     # Step 2 of S-FAIR - Model estimation around edges
     # edges can be easily identified as they are 255 pixels in im_edges
-    s = expectation_maximization(img=img, s=s[:10000], window_size=n, max_iter=max_iter)
-    return s
+    # get patches for vectorized computation - trick do padding to get all patches
+    # of same size even when the center of edge pixel is at border
+    pad = n // 2
+    img_pad = cv2.copyMakeBorder(img, pad, pad, pad, pad, borderType=cv2.BORDER_DEFAULT)
+    patches = np.lib.stride_tricks.sliding_window_view(x=img_pad, window_shape=(n, n))
+    x = patches[s[:, 0], s[:, 1]]  # shape (n_edges, n, n)
+    gamma = expectation_maximization(x=x, max_iter=max_iter)
+
+    # compute the mean responsability for each pixel
+    # to get a smoother result (as each pixel can be in multiple patches)
+    resp_sum = np.zeros_like(img_pad, dtype=np.float32)
+    resp_count = np.zeros_like(img_pad, dtype=np.float32)
+    for i, (r, c) in enumerate(s):
+        resp_sum[r : r + n, c : c + n] += gamma[i]
+        resp_count[r : r + n, c : c + n] += 1
+    resp_count[resp_count == 0] = 1.0  # avoid division by zero
+    gamma_tilde = resp_sum / resp_count  # average the responsibilities
+
+    # compute z_i = 1 if gamma_tilde > 0.5 else 0
+    z = np.where(gamma_tilde > 0.5, 1, 0).astype(np.uint8) * 255
+    z = z[pad:-pad, pad:-pad]  # remove padding to get back to original img size
+
+    return z
