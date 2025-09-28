@@ -1,5 +1,12 @@
 """
 FAIR thresholding method.
+
+Here is the citation for the original paper:
+Thibault Lelore, Frédéric Bouchara. FAIR: A Fast Algorithm for document Image
+Restoration.
+IEEE Transactions on Pattern Analysis and Machine Intelligence, 2013, 35 (8),
+pp.2039-2048.
+ff10.1109/TPAMI.2013.63ff. ffhal-01479805f
 """
 
 import cv2
@@ -161,14 +168,14 @@ def threshold_sfair(
     gamma_tilde = resp_sum / resp_count  # average the responsibilities
 
     # compute z_i = 1 if gamma_tilde > 0.5 else 0
-    z = np.where(gamma_tilde > 0.5, 1, 0)
+    z = np.where(gamma_tilde > 0.5, 1, 0).astype(np.float32)
     z[resp_sum == 0] = unknown_label
     z = z[pad:-pad, pad:-pad]  # remove padding to get back to original img size
 
     return z
 
 
-def dilate_binary_cross(mask: np.ndarray, distance: int = 1) -> np.ndarray:
+def dilate_binary_cross(mask: NDArray, distance: int = 1) -> NDArray:
     mask = (mask > 0).astype(np.uint8)
 
     # cross-shaped kernel (4-connectivity) - called diamond or D_5 in FAIR paper
@@ -179,10 +186,150 @@ def dilate_binary_cross(mask: np.ndarray, distance: int = 1) -> np.ndarray:
     return dilated
 
 
+def remove_stains(arr: NDArray, stain_max_pixels: int = 50) -> NDArray:
+    mask = (arr != 0.5).astype(np.uint8)
+    num_labels, labels = cv2.connectedComponents(mask, connectivity=8)
+
+    for i in range(1, num_labels):
+        component_mask = (labels == i).astype(np.uint8)
+
+        if np.sum(component_mask) >= stain_max_pixels:
+            continue  # skip large components
+
+        dilated = cv2.dilate(
+            src=component_mask, kernel=np.ones((3, 3), dtype=np.uint8), iterations=1
+        )
+        border = (dilated - component_mask).astype(bool)
+
+        # If all border pixels are 0.5 remove the stain
+        if np.all(arr[border] == 0.5):
+            arr[component_mask.astype(bool)] = 0.5
+
+    return arr
+
+
+def correct_misclassified_text_pixels(
+    img: NDArray,
+    I_m: NDArray,
+    n: int,
+    sfair_max_iter: int,
+    fair_max_iter: int,
+    unknown_label: float = 0.5,
+):
+    pad = n // 2
+    z_pti_prev = np.zeros_like(I_m)
+    for i in range(fair_max_iter):
+        z_ti = np.where(I_m == 1, 1, 0)
+        z_ui = np.where(I_m == unknown_label, 1, 0)
+        z_pti = np.where((z_ti) & (dilate_binary_cross(z_ui, distance=2)), 1, 0)
+
+        if i > 0 and np.array_equal(z_pti, z_pti_prev):
+            # no change in z_pti => convergence
+            break
+
+        z_pui = np.where((z_ui) & (dilate_binary_cross(z_ti, distance=2)), 1, 0)
+
+        # N_f(S) = N(S) INTERSECTION (Z_pti UNION Z_uti)
+        z_fs = img * (z_pti | z_pui)
+
+        s = np.column_stack(np.where(z_pti == 1))
+
+        img_pad = cv2.copyMakeBorder(
+            z_fs, pad, pad, pad, pad, borderType=cv2.BORDER_DEFAULT
+        )
+        patches = np.lib.stride_tricks.sliding_window_view(
+            x=img_pad, window_shape=(n, n)
+        )
+        x = patches[s[:, 0], s[:, 1]]  # shape (N, n, n)
+
+        # since EM is robust to identical values we can set element not in N(s) to some
+        # pre-existing value in the window
+        # we chose the max value which should be a random background pixel value
+        max_per_patch = x.max(axis=(1, 2), keepdims=True)
+        x = np.where(x != 0, x, max_per_patch)
+        gamma = expectation_maximization(x=x, max_iter=sfair_max_iter)
+        centers = gamma[:, pad, pad]
+        z = np.where(centers > 0.5, 1, 0)
+        I_m[s[:, 0], s[:, 1]] = z
+
+        z_pti_prev = z_pti.copy()
+
+    return I_m
+
+
+def final_labeling(
+    I_m: NDArray, unknown_label: float = 0.5, beta: float = 1.0
+) -> NDArray:
+
+    mask = (I_m == unknown_label).astype(np.uint8)
+    num_labels, labels = cv2.connectedComponents(mask, connectivity=8)
+
+    for i in range(1, num_labels):
+        component_mask = (labels == i).astype(np.uint8)
+        dilated = cv2.dilate(
+            src=component_mask, kernel=np.ones((3, 3), dtype=np.uint8), iterations=1
+        )
+        border = (dilated - component_mask).astype(bool)
+
+        n_text_pixels_border = np.sum(I_m[border] == 1)
+        n_background_pixels_border = np.sum(I_m[border] == 0)
+
+        value = 1 if n_text_pixels_border > beta * n_background_pixels_border else 0
+        I_m[component_mask.astype(bool)] = value
+
+    return I_m
+
+
 def threshold_fair(
-    img: NDArray, n: int = 15, max_iter: int = 100, em_thining_factor: float = 1.0
+    img: NDArray,
+    sfair_window_size: int = 5,
+    sfair_em_max_iter: int = 50,
+    sfair_em_thining_factor: float = 1.0,
+    sfair_alpha: float = 0.38,
+    stain_max_pixels: int = 50,
+    postprocess_enabled: bool = True,
+    postprocess_max_iter: int = 15,
+    postprocess_em_max_iter: int = 10,
+    postprocess_window_size: int = 75,
+    beta: float = 1.0,
 ):
     """FAIR thresholding method.
+
+    Two main configurations are interesting with this method:
+
+    >>> # For whole page document
+    >>> bin = threshold_fair(
+    >>>     img=im.asarray,
+    >>>     sfair_window_size=5,
+    >>>     sfair_em_max_iter=100,
+    >>>     sfair_em_thining_factor=1.0,
+    >>>     postprocess_em_max_iter=15,
+    >>>     postprocess_max_iter=10,
+    >>>     postprocess_window_size=75,
+    >>> )
+
+    >>> # High S-FAIR window size -> can detect very thin text components
+    >>> # is good for images with text already zoomed in (only a sentence for example)
+    >>> bin = threshold_fair(
+    >>>     img=im.asarray,
+    >>>     sfair_window_size=75,
+    >>>     sfair_em_max_iter=15,
+    >>>     sfair_em_thining_factor=1.0,
+    >>>     postprocess_em_max_iter=15,
+    >>>     postprocess_max_iter=10,
+    >>>     postprocess_window_size=35,
+    >>> )
+
+    >>> # Low S-FAIR window size -> insist on more local text contours
+    >>> bin = threshold_fair(
+    >>>     img=im.asarray,
+    >>>     sfair_window_size=15,
+    >>>     sfair_em_max_iter=25,
+    >>>     sfair_em_thining_factor=1.0,
+    >>>     postprocess_em_max_iter=15,
+    >>>     postprocess_max_iter=10,
+    >>>     postprocess_window_size=35,
+    >>> )
 
     Args:
         img (NDArray): input image
@@ -198,20 +345,20 @@ def threshold_fair(
     # Step 1 - Double Thresholding: compute S-FAIR twice with different k
     z1 = threshold_sfair(
         img=img,
-        k=1.44,
-        alpha=0.5,
-        n=n,
-        max_iter=max_iter,
-        em_thining_factor=em_thining_factor,
+        k=1.4,
+        alpha=sfair_alpha,
+        n=sfair_window_size,
+        max_iter=sfair_em_max_iter,
+        em_thining_factor=sfair_em_thining_factor,
         unknown_label=UNKNOWN_LABEL,
     )
     z2 = threshold_sfair(
         img=img,
-        k=1.6,
-        alpha=0.5,
-        n=n,
-        max_iter=max_iter,
-        em_thining_factor=em_thining_factor,
+        k=1.66,
+        alpha=sfair_alpha,
+        n=sfair_window_size,
+        max_iter=sfair_em_max_iter,
+        em_thining_factor=sfair_em_thining_factor,
         unknown_label=UNKNOWN_LABEL,
     )
 
@@ -220,20 +367,22 @@ def threshold_fair(
 
     # Step 3 - Post-Filtering process
     # Step 3.a. - remove stains connected components only surrounded by unknown pixels
-    # TODO
+    I_m = remove_stains(arr=I_m, stain_max_pixels=stain_max_pixels)
 
     # Step 3.b. - correct misclassified text pixels
-    z_ti = np.where(I_m == 0, 1, 0)
-    z_ui = np.where(I_m == UNKNOWN_LABEL, 1, 0)
-    z_pti = np.where((z_ti) & (dilate_binary_cross(z_ui, distance=2)), 1, 0)
-    z_uti = np.where((z_ui) & (dilate_binary_cross(z_ti, distance=2)), 1, 0)
-    if np.sum(z_pti) > np.sum(z_uti):
-        pass
-
-    # N_f(S) = N(S) INTERSECTION (Z_pti UNION Z_uti)
-    # since EM is robust to identical values we can set element not in N(s) to some
-    # pre-existing value in the window
+    if postprocess_enabled:
+        I_m = correct_misclassified_text_pixels(
+            img=img,
+            I_m=I_m,
+            n=postprocess_window_size,
+            sfair_max_iter=postprocess_em_max_iter,
+            fair_max_iter=postprocess_max_iter,
+            unknown_label=UNKNOWN_LABEL,
+        )
 
     # Step 4. - Final labeling
+    I_m = final_labeling(I_m=I_m, unknown_label=UNKNOWN_LABEL, beta=beta)
+
+    I_m = (1 - I_m).astype(np.uint8)  # reverse so that 0 is text and 1 is background
 
     return I_m
