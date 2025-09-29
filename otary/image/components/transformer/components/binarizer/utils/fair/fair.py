@@ -36,7 +36,11 @@ def threshold_fair(
     beta: float = 1.0,
 ) -> NDArray:
     """FAIR thresholding method.
-    It uses the Expectaion Maximization (EM) algorithm to cluster background and
+
+    Implementation comes from the following paper:
+    https://amu.hal.science/hal-01479805/document
+
+    It uses the Expectation Maximization (EM) algorithm to cluster background and
     foreground pixels around edge pixels by assuming that the distribution is
     a mixture of two gaussians. The computation is done in the 1D case thus only
     considering a input grayscale image as parameter img.
