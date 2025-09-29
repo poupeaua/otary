@@ -6,11 +6,11 @@ import cv2
 import numpy as np
 from numpy.typing import NDArray
 
-from otary.image.components.transformer.components.binarizer.utils.fair.constant import (
+from otary.image.components.transformer.components.binarizer.ops.fair.constant import (
     UNKNOWN_LABEL,
 )
 from otary.image.utils.local import gradient_magnitude
-from otary.image.components.transformer.components.binarizer.utils.fair.expectation_maximization import (
+from otary.image.components.transformer.components.binarizer.ops.fair.expectation_maximization import (
     expectation_maximization,
 )
 

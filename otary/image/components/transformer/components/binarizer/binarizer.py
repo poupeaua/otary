@@ -10,7 +10,7 @@ from numpy.typing import NDArray
 
 from otary.image.base import BaseImage
 
-from otary.image.components.transformer.components.binarizer.utils.thresholding import (
+from otary.image.components.transformer.components.binarizer.ops import (
     threshold_bernsen,
     threshold_bradley_roth,
     threshold_feng,
@@ -18,6 +18,8 @@ from otary.image.components.transformer.components.binarizer.utils.thresholding 
     threshold_isauvola,
     threshold_niblack_like,
     threshold_su,
+    threshold_adotsu,
+    threshold_fair,
 )
 
 BinarizationMethods = Literal[
@@ -33,6 +35,9 @@ BinarizationMethods = Literal[
     "nick",
     "su",
     "phansalkar",
+    "adotsu",
+    "singh",
+    "fair",
     "isauvola",
     "wan",
 ]
@@ -44,22 +49,25 @@ class BinarizerImage:
 
     It includes different binarization methods:
 
-    | Name           | Year  | Reference / Paper                                                                                                                        |
-    |----------------|-------|-----------------------------------------------------------------------------------------------------------------------------------------|
-    | Adaptative     |   -   | [OpenCV Adaptive Thresholding Documentation](https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html)                          |
-    | Otsu           | 1979  | [A Threshold Selection Method from Gray-Level Histograms](https://ieeexplore.ieee.org/document/4310076)                                 |
-    | Bernsen        | 1986  | "Dynamic thresholding of grey-level images" by Bernsen                                                                                  |
-    | Niblack        | 1986  | "An Introduction to Digital Image Processing" by Wayne Niblack                                                                          |
-    | Sauvola        | 1997  | [Adaptive Document Binarization](https://www.researchgate.net/publication/3710586_Adaptive_Document_Binarization)                       |
-    | Wolf           | 2003  | [Extraction and Recognition of Artificial Text in Multimedia Documents](https://hal.science/hal-01504401v1)                             |
-    | Feng           | 2004  | [Contrast adaptive binarization of low quality document images](https://www.jstage.jst.go.jp/article/elex/1/16/1_16_501/_pdf)           |
-    | Gatos          | 2005  | [Adaptive degraded document image binarization](https://users.iit.demokritos.gr/~bgat/PatRec2006.pdf)                                   |
-    | Bradley & Roth | 2007  | [Adaptive Thresholding using the Integral Image](https://www.researchgate.net/publication/220494200_Adaptive_Thresholding_using_the_Integral_Image) |
-    | Nick           | 2009  | [Comparison of Niblack inspired Binarization Methods for Ancient Documents](https://www.researchgate.net/publication/221253803_Comparison_of_Niblack_inspired_Binarization_Methods_for_Ancient_Documents) |
-    | Su             | 2010  | [Su Local Thresholding](https://www.researchgate.net/publication/220933012)                                                            |
-    | Phansalkar     | 2011  | [Adaptive Local Thresholding for Detection of Nuclei in Diversely Stained Cytology Images](https://www.researchgate.net/publication/224226466)                        |
-    | ISauvola       | 2016  | [ISauvola: Improved Sauvola’s Algorithm for Document Image Binarization](https://www.researchgate.net/publication/304621554_ISauvola_Improved_Sauvola) |
-    | Wan            | 2018  | [Binarization of Document Image Using Optimum Threshold Modification](https://www.researchgate.net/publication/326026836_Binarization_of_Document_Image_Using_Optimum_Threshold_Modification) |
+    | Name           | Year | Reference / Paper                                                                                                                        |
+    |----------------|------|------------------------------------------------------------------------------------------------------------------------------------------|
+    | Adaptative     |  -   | [OpenCV Adaptive Thresholding Documentation](https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html)                           |
+    | Otsu           | 1979 | [A Threshold Selection Method from Gray-Level Histograms](https://ieeexplore.ieee.org/document/4310076)                                  |
+    | Bernsen        | 1986 | "Dynamic thresholding of grey-level images" by Bernsen                                                                                   |
+    | Niblack        | 1986 | "An Introduction to Digital Image Processing" by Wayne Niblack                                                                           |
+    | Sauvola        | 1997 | [Adaptive Document Binarization](https://www.researchgate.net/publication/3710586_Adaptive_Document_Binarization)                        |
+    | Wolf           | 2003 | [Extraction and Recognition of Artificial Text in Multimedia Documents](https://hal.science/hal-01504401v1)                              |
+    | Feng           | 2004 | [Contrast adaptive binarization of low quality document images](https://www.jstage.jst.go.jp/article/elex/1/16/1_16_501/_pdf)            |
+    | Gatos          | 2005 | [Adaptive degraded document image binarization](https://users.iit.demokritos.gr/~bgat/PatRec2006.pdf)                                    |
+    | Bradley & Roth | 2007 | [Adaptive Thresholding using the Integral Image](https://www.researchgate.net/publication/220494200_Adaptive_Thresholding_using_the_Integral_Image) |
+    | Nick           | 2009 | [Comparison of Niblack inspired Binarization Methods for Ancient Documents](https://www.researchgate.net/publication/221253803)           |
+    | Su             | 2010 | [Su Local Thresholding](https://www.researchgate.net/publication/220933012)                                                             |
+    | Phansalkar     | 2011 | [Adaptive Local Thresholding for Detection of Nuclei in Diversely Stained Cytology Images](https://www.researchgate.net/publication/224226466) |
+    | Adotsu         | 2011 | [AdOtsu: An adaptive and parameterless generalization of Otsu’s method for document image binarization](https://www.researchgate.net/publication/220602345) |
+    | Singh          | 2012 | [A New Local Adaptive Thresholding Technique in Binarization](https://www.researchgate.net/publication/220485031)                        |
+    | FAIR           | 2013 | [FAIR: A Fast Algorithm for document Image Restoration](https://amu.hal.science/hal-01479805/document)                                   |
+    | ISauvola       | 2016 | [ISauvola: Improved Sauvola’s Algorithm for Document Image Binarization](https://www.researchgate.net/publication/304621554_ISauvola_Improved_Sauvola) |
+    | Wan            | 2018 | [Binarization of Document Image Using Optimum Threshold Modification](https://www.researchgate.net/publication/326026836)                 |
     """
 
     def __init__(self, base: BaseImage) -> None:
@@ -352,23 +360,6 @@ class BinarizerImage:
             img=self.base.asarray, window_size=window_size, n_min=n_min
         )
 
-    def threshold_singh(self, window_size: int = 15, k: float = 0.06) -> None:
-        """Apply Singh local thresholding.
-
-        Paper (2010):
-        https://arxiv.org/pdf/1201.5227
-
-        Args:
-            window_size (int, optional): apply on the
-                image. Defaults to 15.
-            k (float, optional): factor to apply to regulate the impact
-                of the std. Defaults to 0.06.
-        """
-        self.base.as_grayscale()
-        self.base.asarray = threshold_niblack_like(
-            img=self.base.asarray, method="singh", window_size=window_size, k=k
-        )[1]
-
     def threshold_phansalkar(
         self, window_size: int = 40, k: float = 0.25, p: float = 3.0, q: float = 10.0
     ) -> None:
@@ -396,6 +387,115 @@ class BinarizerImage:
             p=p,
             q=q,
         )[1]
+
+    def threshold_adotsu(
+        self, grid_size: int = 50, k_sigma: float = 1.6, n_steps: int = 2
+    ) -> None:
+        """Apply Adotsu local thresholding.
+
+        Paper (2011):
+        https://www.researchgate.net/publication/224226466
+
+        Args:
+            grid_size (int, optional): window size for local computations.
+                Defaults to 15.
+            k_sigma (float, optional): k_sigma value in [1, 2]. Defaults to 1.6.
+            n_steps (int, optional): number of iterations to update the binarization by
+                estimating a new background surface. Defaults to 2.
+        """
+        self.base.as_grayscale()
+        self.base.asarray = threshold_adotsu(
+            img=self.base.asarray, grid_size=grid_size, k_sigma=k_sigma, n_steps=n_steps
+        )
+
+    def threshold_singh(self, window_size: int = 15, k: float = 0.06) -> None:
+        """Apply Singh local thresholding.
+
+        Paper (2012):
+        https://www.researchgate.net/publication/220485031
+
+        Args:
+            window_size (int, optional): apply on the
+                image. Defaults to 15.
+            k (float, optional): factor to apply to regulate the impact
+                of the std. Defaults to 0.06.
+        """
+        self.base.as_grayscale()
+        self.base.asarray = threshold_niblack_like(
+            img=self.base.asarray, method="singh", window_size=window_size, k=k
+        )[1]
+
+    def threshold_fair(
+        self,
+        sfair_window_size: int = 5,
+        sfair_max_iter: int = 50,
+        sfair_thining: float = 1.0,
+        sfair_alpha: float = 0.38,
+        postprocess_stain_max_pixels: int = 50,
+        postprocess_misclass_txt: bool = True,
+        postprocess_max_iter: int = 15,
+        postprocess_em_max_iter: int = 10,
+        postprocess_window_size: int = 75,
+        postprocess_beta: float = 1.0,
+    ) -> None:
+        """Apply FAIR local thresholding.
+
+        Paper (2013):
+        https://amu.hal.science/hal-01479805/document
+
+        Args:
+            sfair_window_size (int, optional): window size for the EM algorithm and hence
+                to cluster background and foreground pixels around edge pixels.
+                This parameter is important as a higher value will make the method
+                more robust to noise but also more computationally expensive and slow.
+                Defaults to 5.
+            sfair_max_iter (int, optional): maximum number of iterations for the EM
+                algorithm within the S-FAIR step. Defaults to 50.
+            sfair_thining (float, optional): thining factor in [0, 1]. 0 means no thinning
+                which means that all edge pixels are processed. 1 means that only every
+                sfair_window_size // 2 edge pixels are processed which signicantly speeds
+                up the computation. Defaults to 1.0.
+            sfair_alpha (float, optional): It defines the ratio to compute the lower
+                threshold in the 1st step of the S-FAIR step. It is generally in [0.3, 0.5].
+                Defaults to 0.38.
+            stain_max_pixels (int, optional): maximum number of pixels for a stain to be
+                considered as an unknown connected component. Defaults to 50.
+            postprocess_misclass_txt (bool, optional): whether to perform the
+                post-processing correct_misclassified_text_pixels step. Defaults to True.
+            postprocess_max_iter (int, optional): maximum number of iterations for the
+                correct_misclassified_text_pixels step within the post-processing step.
+                Defaults to 15.
+            postprocess_em_max_iter (int, optional): maximum number of iterations for the
+                EM algorithm within the post-processing step. Defaults to 10.
+            postprocess_window_size (int, optional): window size for the EM algorithm and
+                hence to cluster background and foreground pixels around edge pixels.
+                This parameter is important as a higher value will make the method
+                more robust to noise but also more computationally expensive and slow.
+                Defaults to 75.
+            postprocess_beta (float, optional): factor to define if the unkown pixels
+                should be set as text or background. If beta is 1 then
+                unknown pixels are set to text if the number of surrounding text pixels
+                (N_t) is higher than the number of surrounding background pixels (N_b).
+                Simply N_t > N_b. Beta is the value to put more flexibility on the rule
+                and thus set unknown pixels to text if N_t > beta * N_b
+                Defaults to 1.0.
+        """
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
+        # pylint: disable=duplicate-code
+        self.base.as_grayscale()
+        self.base.asarray = threshold_fair(
+            img=self.base.asarray,
+            sfair_window_size=sfair_window_size,
+            sfair_max_iter=sfair_max_iter,
+            sfair_thining=sfair_thining,
+            sfair_alpha=sfair_alpha,
+            postprocess_stain_max_pixels=postprocess_stain_max_pixels,
+            postprocess_misclass_txt=postprocess_misclass_txt,
+            postprocess_max_iter=postprocess_max_iter,
+            postprocess_em_max_iter=postprocess_em_max_iter,
+            postprocess_window_size=postprocess_window_size,
+            postprocess_beta=postprocess_beta,
+        )
 
     def threshold_isauvola(
         self,

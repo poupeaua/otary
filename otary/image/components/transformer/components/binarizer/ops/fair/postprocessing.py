@@ -4,10 +4,10 @@ import numpy as np
 from numpy.typing import NDArray
 import cv2
 
-from otary.image.components.transformer.components.binarizer.utils.fair.expectation_maximization import (
+from otary.image.components.transformer.components.binarizer.ops.fair.expectation_maximization import (
     expectation_maximization,
 )
-from otary.image.components.transformer.components.binarizer.utils.fair.constant import (
+from otary.image.components.transformer.components.binarizer.ops.fair.constant import (
     UNKNOWN_LABEL,
 )
 

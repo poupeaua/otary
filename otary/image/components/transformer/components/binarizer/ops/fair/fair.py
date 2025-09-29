@@ -1,23 +1,24 @@
 """
-FAIR thresholding method.
-
-Here is the citation for the original paper:
+Official Citation:
 Thibault Lelore, Frédéric Bouchara. FAIR: A Fast Algorithm for document Image
 Restoration.
 IEEE Transactions on Pattern Analysis and Machine Intelligence, 2013, 35 (8),
 pp.2039-2048.
 ff10.1109/TPAMI.2013.63ff. ffhal-01479805f
+
+From:
+https://amu.hal.science/hal-01479805/document
 """
 
 import numpy as np
 from numpy.typing import NDArray
 
-from otary.image.components.transformer.components.binarizer.utils.fair.postprocessing import (
+from otary.image.components.transformer.components.binarizer.ops.fair.postprocessing import (
     correct_misclassified_text_pixels,
     final_labeling,
     remove_stains,
 )
-from otary.image.components.transformer.components.binarizer.utils.fair.sfair import (
+from otary.image.components.transformer.components.binarizer.ops.fair.sfair import (
     threshold_sfair,
 )
 
@@ -28,12 +29,12 @@ def threshold_fair(
     sfair_max_iter: int = 50,
     sfair_thining: float = 1.0,
     sfair_alpha: float = 0.38,
-    stain_max_pixels: int = 50,
-    postprocess_enabled: bool = True,
+    postprocess_stain_max_pixels: int = 50,
+    postprocess_misclass_txt: bool = True,
     postprocess_max_iter: int = 15,
     postprocess_em_max_iter: int = 10,
     postprocess_window_size: int = 75,
-    beta: float = 1.0,
+    postprocess_beta: float = 1.0,
 ) -> NDArray:
     """FAIR thresholding method.
 
@@ -99,10 +100,11 @@ def threshold_fair(
             Defaults to 0.38.
         stain_max_pixels (int, optional): maximum number of pixels for a stain to be
             considered as an unknown connected component. Defaults to 50.
-        postprocess_enabled (bool, optional): whether to perform the post-processing
-            step. Defaults to True.
-        postprocess_max_iter (int, optional): maximum number of iterations for the EM
-            algorithm within the post-processing step. Defaults to 15.
+        postprocess_misclass_txt (bool, optional): whether to perform the
+            post-processing correct_misclassified_text_pixels step. Defaults to True.
+        postprocess_max_iter (int, optional): maximum number of iterations for the
+                correct_misclassified_text_pixels step within the post-processing step.
+                Defaults to 15.
         postprocess_em_max_iter (int, optional): maximum number of iterations for the
             EM algorithm within the post-processing step. Defaults to 10.
         postprocess_window_size (int, optional): window size for the EM algorithm and
@@ -110,7 +112,7 @@ def threshold_fair(
             This parameter is important as a higher value will make the method
             more robust to noise but also more computationally expensive and slow.
             Defaults to 75.
-        beta (float, optional): factor to define if the unkown pixels
+        postprocess_beta (float, optional): factor to define if the unkown pixels
             should be set as text or background. If beta is 1 then
             unknown pixels are set to text if the number of surrounding text pixels
             (N_t) is higher than the number of surrounding background pixels (N_b).
@@ -144,10 +146,10 @@ def threshold_fair(
 
     # Step 3 - Post-Filtering process
     # Step 3.a. - remove stains connected components only surrounded by unknown pixels
-    I_m = remove_stains(arr=I_m, stain_max_pixels=stain_max_pixels)
+    I_m = remove_stains(arr=I_m, stain_max_pixels=postprocess_stain_max_pixels)
 
     # Step 3.b. - correct misclassified text pixels
-    if postprocess_enabled:
+    if postprocess_misclass_txt:
         I_m = correct_misclassified_text_pixels(
             I_m=I_m,
             img=img,
@@ -157,8 +159,8 @@ def threshold_fair(
         )
 
     # Step 4. - Final labeling
-    I_m = final_labeling(I_m=I_m, beta=beta)
+    I_m = final_labeling(I_m=I_m, beta=postprocess_beta)
 
-    I_m = (1 - I_m).astype(np.uint8)  # reverse so that 0 is text and 1 is background
+    I_m = (1 - I_m).astype(np.uint8) * 255  # reverse now 0 is text and 1 is background
 
     return I_m

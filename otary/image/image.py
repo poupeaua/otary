@@ -849,21 +849,6 @@ class Image:
         self.transformer.binarizer.threshold_su(window_size=window_size, n_min=n_min)
         return self
 
-    def threshold_singh(self, window_size: int = 15, k: float = 0.06) -> Self:
-        """Apply Singh local thresholding.
-
-        Paper (2010):
-        https://arxiv.org/pdf/1201.5227
-
-        Args:
-            window_size (int, optional): apply on the
-                image. Defaults to 15.
-            k (float, optional): factor to apply to regulate the impact
-                of the std. Defaults to 0.06.
-        """
-        self.transformer.binarizer.threshold_singh(window_size=window_size, k=k)
-        return self
-
     def threshold_phansalkar(
         self, window_size: int = 40, k: float = 0.25, p: float = 3.0, q: float = 10.0
     ) -> Self:
@@ -881,10 +866,131 @@ class Image:
                 Defaults to 3.0.
             q (float, optional): Phansalkar parameter to regulate low contrast zones.
                 Defaults to 10.0.
+
+        Returns:
+            (Self): output thresholded image
         """
         self.transformer.binarizer.threshold_phansalkar(
             window_size=window_size, k=k, p=p, q=q
         )
+        return self
+
+    def threshold_adotsu(
+        self, grid_size: int = 50, k_sigma: float = 1.6, n_steps: int = 2
+    ) -> Self:
+        """Apply Adotsu local thresholding.
+
+        Paper (2011):
+        https://www.researchgate.net/publication/224226466
+
+        Args:
+            grid_size (int, optional): window size for local computations.
+                Defaults to 15.
+            k_sigma (float, optional): k_sigma value in [1, 2]. Defaults to 1.6.
+            n_steps (int, optional): number of iterations to update the binarization by
+                estimating a new background surface. Defaults to 2.
+
+        Returns:
+            (Self): output thresholded image
+        """
+        self.transformer.binarizer.threshold_adotsu(
+            grid_size=grid_size, k_sigma=k_sigma, n_steps=n_steps
+        )
+        return self
+
+    def threshold_fair(
+        self,
+        sfair_window_size: int = 5,
+        sfair_max_iter: int = 50,
+        sfair_thining: float = 1.0,
+        sfair_alpha: float = 0.38,
+        postprocess_stain_max_pixels: int = 50,
+        postprocess_misclass_txt: bool = True,
+        postprocess_max_iter: int = 15,
+        postprocess_em_max_iter: int = 10,
+        postprocess_window_size: int = 75,
+        postprocess_beta: float = 1.0,
+    ) -> Self:
+        """Apply FAIR local thresholding.
+
+        Paper (2013):
+        https://amu.hal.science/hal-01479805/document
+
+        Args:
+            sfair_window_size (int, optional): window size for the EM algorithm and
+                hence to cluster background and foreground pixels around edge pixels.
+                This parameter is important as a higher value will make the method
+                more robust to noise but also more computationally expensive and slow.
+                Defaults to 5.
+            sfair_max_iter (int, optional): maximum number of iterations for the EM
+                algorithm within the S-FAIR step. Defaults to 50.
+            sfair_thining (float, optional): thining factor in [0, 1]. 0 means no
+                thining which means that all edge pixels are processed. 1 means that
+                only every sfair_window_size // 2 edge pixels are processed which
+                signicantly speeds up the computation. Defaults to 1.0.
+            sfair_alpha (float, optional): It defines the ratio to compute the lower
+                threshold in the 1st step of the S-FAIR step. It is generally in
+                [0.3, 0.5].
+                Defaults to 0.38.
+            stain_max_pixels (int, optional): maximum number of pixels for a stain to be
+                considered as an unknown connected component. Defaults to 50.
+            postprocess_misclass_txt (bool, optional): whether to perform
+                the post-processing correct_misclassified_text_pixels step.
+                Defaults to True.
+            postprocess_max_iter (int, optional): maximum number of iterations for the
+                correct_misclassified_text_pixels step within the post-processing step.
+                Defaults to 15.
+            postprocess_em_max_iter (int, optional): maximum number of iterations for
+                the EM algorithm within the post-processing step. Defaults to 10.
+            postprocess_window_size (int, optional): window size for the EM algorithm
+                and hence to cluster background and foreground pixels around edge
+                pixels. This parameter is important as a higher value will make the
+                method more robust to noise but also more computationally expensive and
+                slow. Defaults to 75.
+            postprocess_beta (float, optional): factor to define if the unkown pixels
+                should be set as text or background. If beta is 1 then
+                unknown pixels are set to text if the number of surrounding text pixels
+                (N_t) is higher than the number of surrounding background pixels (N_b).
+                Simply N_t > N_b. Beta is the value to put more flexibility on the rule
+                and thus set unknown pixels to text if N_t > beta * N_b
+                Defaults to 1.0.
+
+        Returns:
+            (Self): output thresholded image
+        """
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
+        self.transformer.binarizer.threshold_fair(
+            sfair_window_size=sfair_window_size,
+            sfair_max_iter=sfair_max_iter,
+            sfair_thining=sfair_thining,
+            sfair_alpha=sfair_alpha,
+            postprocess_stain_max_pixels=postprocess_stain_max_pixels,
+            postprocess_misclass_txt=postprocess_misclass_txt,
+            postprocess_max_iter=postprocess_max_iter,
+            postprocess_em_max_iter=postprocess_em_max_iter,
+            postprocess_window_size=postprocess_window_size,
+            postprocess_beta=postprocess_beta,
+        )
+        return self
+
+    def threshold_singh(self, window_size: int = 15, k: float = 0.06) -> Self:
+        """Apply Singh local thresholding.
+        This is essentially the same as Sauvola but should be faster to compute
+        but less accurate.
+
+        Paper (2012):
+        https://www.researchgate.net/publication/220485031
+
+        Args:
+            window_size (int, optional): apply on the
+                image. Defaults to 15.
+            k (float, optional): factor to apply to regulate the impact
+                of the std. Defaults to 0.06.
+
+        Returns:
+            (Self): output thresholded image
+        """
+        self.transformer.binarizer.threshold_singh(window_size=window_size, k=k)
         return self
 
     def threshold_isauvola(
