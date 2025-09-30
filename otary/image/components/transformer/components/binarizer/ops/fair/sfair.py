@@ -10,8 +10,8 @@ from otary.image.components.transformer.components.binarizer.ops.fair.constant i
     UNKNOWN_LABEL,
 )
 from otary.image.utils.local import gradient_magnitude
-from otary.image.components.transformer.components.binarizer.ops.fair.expectation_maximization import (
-    expectation_maximization,
+from otary.image.components.transformer.components.binarizer.ops.fair.clustering.fair_cluster import (
+    fair_clustering,
 )
 
 
@@ -20,7 +20,8 @@ def threshold_sfair(
     k: float = 1.0,
     alpha: float = 0.5,
     n: int = 15,
-    max_iter: int = 10,
+    clustering_algo: str = "kmeans",
+    clustering_max_iter: int = 10,
     thining: float = 1.0,
 ) -> NDArray:
     """S-FAIR thresholding method.
@@ -40,8 +41,12 @@ def threshold_sfair(
             This parameter is important as a higher value will make the method
             more robust to noise but also more computationally expensive and slow.
             Defaults to 51.
-        max_iter (int, optional): maximum number of iterations for the EM algorithm.
-            Defaults to 10.
+        clustering_algo (str, optional): clustering algorithm to use.
+            Clustering algorithms implemented: "kmeans", "em" and "otsu".
+            em stands for Expectation Maximization.
+            Defaults to "kmeans".
+        clustering_max_iter (int, optional): maximum number of iterations for the
+            clustering algorithm. Defaults to 10.
         thining (float, optional): thining factor in [0, 1]. 0 means no thinning which
             means that all edge pixels are processed. 1 means that only every
             n // 2 edge pixels are processed which signicantly speeds up the
@@ -74,7 +79,9 @@ def threshold_sfair(
     img_pad = cv2.copyMakeBorder(img, pad, pad, pad, pad, borderType=cv2.BORDER_DEFAULT)
     patches = np.lib.stride_tricks.sliding_window_view(x=img_pad, window_shape=(n, n))
     x = patches[s[:, 0], s[:, 1]]  # shape (n_edges, n, n)
-    gamma = expectation_maximization(x=x, max_iter=max_iter)
+    gamma = fair_clustering(
+        x=x, max_iter=clustering_max_iter, algorithm=clustering_algo
+    )
 
     # compute the mean responsability for each pixel
     # to get a smoother result (as each pixel can be in multiple patches)
@@ -83,12 +90,11 @@ def threshold_sfair(
     for i, (r, c) in enumerate(s):
         resp_sum[r : r + n, c : c + n] += gamma[i]
         resp_count[r : r + n, c : c + n] += 1
-    resp_count[resp_count == 0] = 1  # avoid division by zero
-    gamma_tilde = resp_sum / resp_count  # average the responsibilities
+    gamma_tilde = np.divide(resp_sum, resp_count, where=resp_count != 0)
 
     # compute z_i = 1 if gamma_tilde > 0.5 else 0
     z = np.where(gamma_tilde > 0.5, 1, 0).astype(np.float32)
-    z[resp_sum == 0] = UNKNOWN_LABEL
+    z[resp_count == 0] = UNKNOWN_LABEL
     z = z[pad:-pad, pad:-pad]  # remove padding to get back to original img size
 
     return z

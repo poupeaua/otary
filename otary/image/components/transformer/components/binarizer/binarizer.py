@@ -486,15 +486,15 @@ class BinarizerImage:
         self.base.asarray = threshold_fair(
             img=self.base.asarray,
             sfair_window_size=sfair_window_size,
-            sfair_max_iter=sfair_max_iter,
+            sfair_clustering_max_iter=sfair_max_iter,
             sfair_thining=sfair_thining,
             sfair_alpha=sfair_alpha,
-            postprocess_stain_max_pixels=postprocess_stain_max_pixels,
-            postprocess_misclass_txt=postprocess_misclass_txt,
-            postprocess_max_iter=postprocess_max_iter,
-            postprocess_em_max_iter=postprocess_em_max_iter,
-            postprocess_window_size=postprocess_window_size,
-            postprocess_beta=postprocess_beta,
+            post_stain_max_pixels=postprocess_stain_max_pixels,
+            post_misclass_txt=postprocess_misclass_txt,
+            post_max_iter=postprocess_max_iter,
+            post_clustering_max_iter=postprocess_em_max_iter,
+            post_window_size=postprocess_window_size,
+            post_beta=postprocess_beta,
         )
 
     def threshold_isauvola(

@@ -4,8 +4,8 @@ import numpy as np
 from numpy.typing import NDArray
 import cv2
 
-from otary.image.components.transformer.components.binarizer.ops.fair.expectation_maximization import (
-    expectation_maximization,
+from otary.image.components.transformer.components.binarizer.ops.fair.clustering.fair_cluster import (
+    fair_clustering,
 )
 from otary.image.components.transformer.components.binarizer.ops.fair.constant import (
     UNKNOWN_LABEL,
@@ -74,7 +74,8 @@ def correct_misclassified_text_pixels(
     img: NDArray,
     n: int,
     max_iter: int,
-    em_max_iter: int,
+    clustering_algo: str,
+    clustering_max_iter: int,
 ) -> NDArray:
     """Correct potentially misclassified text pixels.
     This is a postprocessing step in the FAIR algorithm.
@@ -85,7 +86,7 @@ def correct_misclassified_text_pixels(
         n (int): window size
         max_iter (int): maximum number of iterations to try to correct misclassified
             pixels
-        em_max_iter (int): Expectation-Maximation (EM)algorithm maximum number of
+        clustering_max_iter (int): clustering algorithm maximum number of
             iterations
 
     Returns:
@@ -122,7 +123,9 @@ def correct_misclassified_text_pixels(
         # we chose the max value which should be a random background pixel value
         max_per_patch = x.max(axis=(1, 2), keepdims=True)
         x = np.where(x != 0, x, max_per_patch)
-        gamma = expectation_maximization(x=x, max_iter=em_max_iter)
+        gamma = fair_clustering(
+            x=x, max_iter=clustering_max_iter, algorithm=clustering_algo
+        )
         centers = gamma[:, pad, pad]
         z = np.where(centers > 0.5, 1, 0)
         I_m[s[:, 0], s[:, 1]] = z

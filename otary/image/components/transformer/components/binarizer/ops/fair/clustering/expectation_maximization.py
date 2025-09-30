@@ -55,7 +55,7 @@ def responsibility(
 
 def expectation_maximization(
     x: NDArray,
-    rel_tol: float = 1e-2,
+    tol: float = 1e-2,
     max_iter: int = 100,
 ) -> NDArray:
     """EM algorithm for a mixture of two gaussians.
@@ -71,7 +71,7 @@ def expectation_maximization(
 
     Args:
         x (NDArray): input image or patches
-        rel_tol (float, optional): relative tolerance to check convergence.
+        tol (float, optional): tolerance to check convergence.
             A higher value will make the algorithm more robust to noise but
             also more computationally expensive.
             Defaults to 1e-3.
@@ -113,14 +113,15 @@ def expectation_maximization(
         _var_t = np.sum(gamma * (x - mu_t) ** 2) / (np.sum(gamma) + 1e-9)
         _var_b = np.sum(ngamma * (x - mu_b) ** 2) / (np.sum(ngamma) + 1e-9)
 
-        # check convergence
-        if (
-            np.all(np.abs(omega - _omega) < rel_tol).astype(bool)
-            and np.all(np.abs(mu_t - _mu_t) < rel_tol).astype(bool)
-            and np.all(np.abs(mu_b - _mu_b) < rel_tol).astype(bool)
-            and np.all(np.abs(var_t - _var_t) < rel_tol).astype(bool)
-            and np.all(np.abs(var_b - _var_b) < rel_tol).astype(bool)
-        ):
+        converged = (
+            np.all(np.abs(omega - _omega) < tol).astype(bool)
+            and np.all(np.abs(mu_t - _mu_t) < tol).astype(bool)
+            and np.all(np.abs(mu_b - _mu_b) < tol).astype(bool)
+            and np.all(np.abs(var_t - _var_t) < tol).astype(bool)
+            and np.all(np.abs(var_b - _var_b) < tol).astype(bool)
+        )
+
+        if converged:
             break
 
         # update parameters
