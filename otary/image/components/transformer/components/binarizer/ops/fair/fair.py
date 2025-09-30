@@ -27,7 +27,7 @@ def threshold_fair(
     img: NDArray,
     sfair_window_size: int = 33,
     sfair_clustering_algo: str = "otsu",
-    sfair_clustering_max_iter: int = 50,
+    sfair_clustering_max_iter: int = 20,
     sfair_thining: float = 1.0,
     sfair_alpha: float = 0.38,
     post_stain_max_pixels: int = 25,
@@ -114,9 +114,9 @@ def threshold_fair(
             more robust to noise but also more computationally expensive and slow.
             Defaults to 5.
         sfair_clustering_algo (str, optional): clustering algorithm for the S-FAIR
-            step. Defaults to "kmeans".
+            step. Defaults to "otsu".
         sfair_clustering_max_iter (int, optional): maximum number of iterations for the
-            clustering algorithm within the S-FAIR step. Defaults to 50.
+            clustering algorithm within the S-FAIR step. Defaults to 20.
         sfair_thining (float, optional): thining factor in [0, 1]. 0 means no thinning
             which means that all edge pixels are processed. 1 means that only every
             sfair_window_size // 2 edge pixels are processed which signicantly speeds
@@ -129,9 +129,9 @@ def threshold_fair(
         post_misclass_txt (bool, optional): whether to perform the
             post-processing correct_misclassified_text_pixels step. Defaults to True.
         post_clustering_algo (str, optional): clustering algorithm for the
-            post-processing step. Defaults to "kmeans".
+            post-processing step. Defaults to "otsu".
         post_clustering_max_iter (int, optional): maximum number of iterations for the
-            EM algorithm within the post-processing step. Defaults to 10.
+            clustering algorithm within the post-processing step. Defaults to 10.
         post_max_iter (int, optional): maximum number of iterations for the
                 correct_misclassified_text_pixels step within the post-processing step.
                 Defaults to 15.

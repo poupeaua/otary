@@ -427,16 +427,18 @@ class BinarizerImage:
 
     def threshold_fair(
         self,
-        sfair_window_size: int = 5,
-        sfair_max_iter: int = 50,
+        sfair_window_size: int = 33,
+        sfair_clustering_algo: str = "otsu",
+        sfair_clustering_max_iter: int = 20,
         sfair_thining: float = 1.0,
         sfair_alpha: float = 0.38,
-        postprocess_stain_max_pixels: int = 50,
-        postprocess_misclass_txt: bool = True,
-        postprocess_max_iter: int = 15,
-        postprocess_em_max_iter: int = 10,
-        postprocess_window_size: int = 75,
-        postprocess_beta: float = 1.0,
+        post_stain_max_pixels: int = 25,
+        post_misclass_txt: bool = True,
+        post_clustering_algo: str = "otsu",
+        post_clustering_max_iter: int = 10,
+        post_max_iter: int = 15,
+        post_window_size: int = 75,
+        post_beta: float = 1.0,
     ) -> None:
         """Apply FAIR local thresholding.
 
@@ -444,35 +446,43 @@ class BinarizerImage:
         https://amu.hal.science/hal-01479805/document
 
         Args:
-            sfair_window_size (int, optional): window size for the EM algorithm and hence
+            sfair_window_size (int, optional): window size in preprocess
+            to cluster background and foreground pixels around edge pixels.
+            This parameter is important as a higher value will make the method
+            more robust to noise but also more computationally expensive and slow.
+            Defaults to 5.
+            sfair_clustering_algo (str, optional): clustering algorithm for the S-FAIR
+                step. Defaults to "otsu".
+            sfair_clustering_max_iter (int, optional): maximum number of iterations for
+                the clustering algorithm within the S-FAIR step. Defaults to 20.
+            sfair_thining (float, optional): thining factor in [0, 1]. 0 means no
+                thinning which means that all edge pixels are processed.
+                1 means that only every
+                sfair_window_size // 2 edge pixels are processed which signicantly
+                speeds up the computation. Defaults to 1.0.
+            sfair_alpha (float, optional): It defines the ratio to compute the lower
+                threshold in the 1st step of the S-FAIR step.
+                It is generally in [0.3, 0.5].
+                Defaults to 0.38.
+            post_stain_max_pixels (int, optional): maximum number of pixels for a stain
+                to be considered as an unknown connected component. Defaults to 25.
+            post_misclass_txt (bool, optional): whether to perform the
+                post-processing correct_misclassified_text_pixels step.
+                Defaults to True.
+            post_clustering_algo (str, optional): clustering algorithm for the
+                post-processing step. Defaults to "otsu".
+            post_clustering_max_iter (int, optional): maximum number of iterations for
+                the clustering algorithm within the post-processing step.
+                Defaults to 10.
+            post_max_iter (int, optional): maximum number of iterations for the
+                correct_misclassified_text_pixels step within the post-processing step.
+                Defaults to 15.
+            post_window_size (int, optional): window size in postprocess
                 to cluster background and foreground pixels around edge pixels.
                 This parameter is important as a higher value will make the method
                 more robust to noise but also more computationally expensive and slow.
-                Defaults to 5.
-            sfair_max_iter (int, optional): maximum number of iterations for the EM
-                algorithm within the S-FAIR step. Defaults to 50.
-            sfair_thining (float, optional): thining factor in [0, 1]. 0 means no thinning
-                which means that all edge pixels are processed. 1 means that only every
-                sfair_window_size // 2 edge pixels are processed which signicantly speeds
-                up the computation. Defaults to 1.0.
-            sfair_alpha (float, optional): It defines the ratio to compute the lower
-                threshold in the 1st step of the S-FAIR step. It is generally in [0.3, 0.5].
-                Defaults to 0.38.
-            stain_max_pixels (int, optional): maximum number of pixels for a stain to be
-                considered as an unknown connected component. Defaults to 50.
-            postprocess_misclass_txt (bool, optional): whether to perform the
-                post-processing correct_misclassified_text_pixels step. Defaults to True.
-            postprocess_max_iter (int, optional): maximum number of iterations for the
-                correct_misclassified_text_pixels step within the post-processing step.
-                Defaults to 15.
-            postprocess_em_max_iter (int, optional): maximum number of iterations for the
-                EM algorithm within the post-processing step. Defaults to 10.
-            postprocess_window_size (int, optional): window size for the EM algorithm and
-                hence to cluster background and foreground pixels around edge pixels.
-                This parameter is important as a higher value will make the method
-                more robust to noise but also more computationally expensive and slow.
                 Defaults to 75.
-            postprocess_beta (float, optional): factor to define if the unkown pixels
+            post_beta (float, optional): factor to define if the unkown pixels
                 should be set as text or background. If beta is 1 then
                 unknown pixels are set to text if the number of surrounding text pixels
                 (N_t) is higher than the number of surrounding background pixels (N_b).
@@ -486,15 +496,17 @@ class BinarizerImage:
         self.base.asarray = threshold_fair(
             img=self.base.asarray,
             sfair_window_size=sfair_window_size,
-            sfair_clustering_max_iter=sfair_max_iter,
+            sfair_clustering_algo=sfair_clustering_algo,
+            sfair_clustering_max_iter=sfair_clustering_max_iter,
             sfair_thining=sfair_thining,
             sfair_alpha=sfair_alpha,
-            post_stain_max_pixels=postprocess_stain_max_pixels,
-            post_misclass_txt=postprocess_misclass_txt,
-            post_max_iter=postprocess_max_iter,
-            post_clustering_max_iter=postprocess_em_max_iter,
-            post_window_size=postprocess_window_size,
-            post_beta=postprocess_beta,
+            post_stain_max_pixels=post_stain_max_pixels,
+            post_misclass_txt=post_misclass_txt,
+            post_clustering_algo=post_clustering_algo,
+            post_max_iter=post_max_iter,
+            post_clustering_max_iter=post_clustering_max_iter,
+            post_window_size=post_window_size,
+            post_beta=post_beta,
         )
 
     def threshold_isauvola(
