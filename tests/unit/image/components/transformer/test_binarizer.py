@@ -1,7 +1,21 @@
 import pytest
 import numpy as np
 
+from otary.geometry.discrete.shape.axis_aligned_rectangle import AxisAlignedRectangle
 from otary.image import Image
+
+
+@pytest.fixture
+def im_pdf_crop() -> Image:
+    """Fixture to produce an image of text from a sample pdf that can be
+    used to verify the quality of binarization processes
+
+    Returns:
+        Image: output image
+    """
+    aabb = AxisAlignedRectangle.from_topleft_bottomright([0.3, 0.125], [0.7, 0.225])
+    im = Image.from_pdf("tests/data/test.pdf", resolution=1000, clip_pct=aabb)
+    return im
 
 
 class TestTransformerThresholdGeneral:
@@ -178,53 +192,52 @@ class TestTransformerBradleyRothMethods:
         assert img.asarray[4, 4] == 0
 
 
-# class TestTransformerGatosMethods:
+class TestTransformerGatosMethods:
 
-#     def test_threshold_gatos(self):
-#         img = Image.from_fillvalue(shape=(5, 5), value=0)
-#         img.asarray[0, 0] = 200
-#         img.asarray[4, 4] = 200
-#         img.threshold_gatos()
-#         assert img.asarray[0, 0] == 255
-#         assert img.asarray[4, 4] == 255
+    def test_threshold_gatos(self, im_pdf_crop: Image):
+        img = im_pdf_crop
+        img.threshold_gatos()
+        assert img.asarray[0, 0] == 255
+        assert img.asarray[53, 36] == 0
 
 
-# class TestTransformerFairMethods:
+class TestTransformerFairMethods:
 
-#     def test_threshold_fair_otsu(self):
-#         img = Image.from_file(filepath=pdf_filepath, resolution=50)
-#         img.threshold_fair(
-#             sfair_clustering_algo="otsu",
-#             sfair_window_size=3,
-#             post_stain_max_pixels=0,
-#             post_misclass_txt=False
-#         )
-#         assert img.asarray[0, 0] == 255
-#         assert img.asarray[4, 4] == 255
-#         print(np.unique(img.asarray))
-#         print(img.asarray)
-#         assert img.asarray[1, 1] == 0
+    def test_threshold_fair_otsu(self, im_pdf_crop: Image):
+        img = im_pdf_crop
+        img.threshold_fair(
+            sfair_clustering_algo="otsu",
+            sfair_window_size=15,
+            sfair_clustering_max_iter=15,
+        )
+        assert img.asarray[0, 0] == 255
+        assert img.asarray[52, 35] == 0
 
-#     def test_threshold_fair_em(self):
-#         img = Image.from_fillvalue(shape=(10, 10), value=10)
-#         img.asarray[0, 0] = 200
-#         img.asarray[4, 4] = 200
-#         img.threshold_fair(sfair_clustering_algo="em", sfair_window_size=3)
-#         assert img.asarray[0, 0] == 255
-#         assert img.asarray[4, 4] == 255
+    def test_threshold_fair_em(self, im_pdf_crop: Image):
 
-#     def test_threshold_fair_kmeans(self):
-#         img = Image.from_fillvalue(shape=(10, 10), value=127)
-#         img.asarray[0, 0] = 200
-#         img.asarray[4, 4] = 200
-#         img.threshold_fair(sfair_clustering_algo="kmeans", sfair_window_size=3)
-#         assert img.asarray[0, 0] == 255
-#         assert img.asarray[4, 4] == 255
+        img = im_pdf_crop
+        img.threshold_fair(
+            sfair_clustering_algo="em",
+            sfair_window_size=60,
+            sfair_clustering_max_iter=15,
+        )
+        assert img.asarray[0, 0] == 255
+        assert img.asarray[52, 35] == 0
 
-#     def test_threshold_fair_unknown_clustering(self):
-#         with pytest.raises(ValueError):
-#             img = Image.from_fillvalue(shape=(5, 5), value=127)
-#             img.threshold_fair(sfair_clustering_algo="unkown")
+    def test_threshold_fair_kmeans(self, im_pdf_crop: Image):
+        img = im_pdf_crop
+        img.threshold_fair(
+            sfair_clustering_algo="kmeans",
+            sfair_window_size=11,
+            sfair_clustering_max_iter=15,
+        )
+        assert img.asarray[0, 0] == 255
+        assert img.asarray[52, 35] == 0
+
+    def test_threshold_fair_unknown_clustering(self):
+        with pytest.raises(ValueError):
+            img = Image.from_fillvalue(shape=(5, 5), value=127)
+            img.threshold_fair(sfair_clustering_algo="unkown")
 
 
 class TestTransformerThresholdBinary:

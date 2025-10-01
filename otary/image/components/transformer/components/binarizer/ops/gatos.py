@@ -100,7 +100,7 @@ def threshold_gatos(
         lh = im_side / 20
 
     # 1. Preprocessing I(x,y) from I_s(x,y) which is input image or source
-    im_ = wiener_filter(img=img, window_size=3)
+    im_ = wiener_filter(img=img, window_size=3).astype(np.uint8)
 
     # 2. Sauvola thresholding S(x,y) with parameters from paper
     s = (
