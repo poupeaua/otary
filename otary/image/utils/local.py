@@ -320,6 +320,7 @@ def wiener_filter(img: NDArray, window_size: int = 3) -> NDArray[np.uint8]:
     var = sqmean - mean**2
     avg_var = mean_local(img=var, window_size=window_size)  # mean of the variance
     wiener = mean + (var - avg_var) * (img - mean) / (var + 1e-9)
+    wiener = np.clip(wiener, 0, 255).astype(np.uint8)
     return wiener
 
 

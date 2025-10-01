@@ -148,7 +148,7 @@ def background_surface_estimation_adotsu(
             blocks=mean_vals,
             grid_size=scale,
             original_shape=(img.shape[0], img.shape[1]),
-        ).astype(np.uint8)
+        )
 
         gbls.append(mean_vals)
 

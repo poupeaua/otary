@@ -1,8 +1,12 @@
+from typing import Literal
 import pytest
 import numpy as np
 
 from otary.geometry.discrete.shape.axis_aligned_rectangle import AxisAlignedRectangle
 from otary.image import Image
+from otary.image.components.transformer.components.binarizer.ops.niblack_like import (
+    threshold_niblack_like,
+)
 
 
 @pytest.fixture
@@ -18,21 +22,18 @@ def im_pdf_crop() -> Image:
     return im
 
 
-class TestTransformerThresholdGeneral:
+class TestTransformerThresholdSimple:
 
     @pytest.mark.parametrize("thresh", [25, 50, 100, 150])
-    def test_threshold_simple(self, thresh):
+    def test_threshold_simple(
+        self, thresh: Literal[25] | Literal[50] | Literal[100] | Literal[150]
+    ):
         img = Image.from_fillvalue(shape=(5, 5), value=thresh - 1)
         img.asarray[0, 0] = 255
         img.threshold_simple(thresh=thresh)
         assert img.asarray[0, 0] == 255
         img.asarray[0, 0] = 0
         assert np.all(img.asarray == 0)
-
-    def test_binary_error_method(self):
-        img = Image.from_fillvalue(shape=(5, 5), value=55)
-        with pytest.raises(ValueError):
-            img.binary(method="not_an_expected_binary_method")
 
 
 class TestTransformerThresholdAdaptative:
@@ -64,6 +65,14 @@ class TestTransformerThresholdAdaptative:
         assert img.asarray[4, 4] == 0
 
 
+class TestTransformerNiblackLike:
+
+    def test_threshold_unknown_method(self):
+        with pytest.raises(ValueError):
+            img = Image.from_fillvalue(shape=(5, 5), value=127)
+            threshold_niblack_like(img.asarray, method="not_an_expected_binary_method")
+
+
 class TestTransformerThresholdNiblack:
 
     def test_threshold_niblack_basic(self):
@@ -93,7 +102,9 @@ class TestTransformerThresholdNiblack:
         assert img.asarray[4, 4] == 0
 
     @pytest.mark.parametrize("window_size, k", [(15, 0.2), (25, 0.5), (5, 0.1)])
-    def test_threshold_niblack_parametrized(self, window_size, k):
+    def test_threshold_niblack_parametrized(
+        self, window_size: Literal[15] | Literal[25] | Literal[5], k: float
+    ):
         img = Image.from_fillvalue(shape=(5, 5), value=127)
         img.threshold_niblack(window_size=window_size, k=k)
         assert np.all((img.asarray == 0) | (img.asarray == 255))
@@ -124,6 +135,13 @@ class TestTransformerISauvolaMethods:
         img.threshold_isauvola()
         assert img.asarray[0, 0] == 255
         assert img.asarray[4, 4] == 0
+
+    def test_threshold_isauvola_opening(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=255)
+        img.asarray[0, 0] = 0
+        img.asarray[4, 4] = 0
+        img.threshold_isauvola(opening_n_min_pixels=1)
+        assert np.unique(img.asarray).size == 2
 
 
 class TestTransformerFengMethods:
@@ -192,6 +210,39 @@ class TestTransformerBradleyRothMethods:
         assert img.asarray[4, 4] == 0
 
 
+class TestTransformerWANMethods:
+
+    def test_threshold_wan(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=127)
+        img.asarray[0, 0] = 200
+        img.asarray[4, 4] = 50
+        img.threshold_wan()
+        assert img.asarray[0, 0] == 255
+        assert img.asarray[4, 4] == 0
+
+
+class TestTransformerNickMethods:
+
+    def test_threshold_nick(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=127)
+        img.asarray[0, 0] = 200
+        img.asarray[4, 4] = 50
+        img.threshold_nick(window_size=20)
+        assert img.asarray[0, 0] == 255
+        assert img.asarray[4, 4] == 0
+
+
+class TestTransformerSinghMethods:
+
+    def test_threshold_singh(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=127)
+        img.asarray[0, 0] = 200
+        img.asarray[4, 4] = 50
+        img.threshold_singh()
+        assert img.asarray[0, 0] == 255
+        assert img.asarray[4, 4] == 0
+
+
 class TestTransformerGatosMethods:
 
     def test_threshold_gatos(self, im_pdf_crop: Image):
@@ -199,6 +250,36 @@ class TestTransformerGatosMethods:
         img.threshold_gatos()
         assert img.asarray[0, 0] == 255
         assert img.asarray[53, 36] == 0
+
+    def test_threshold_gatos_upsampling(self, im_pdf_crop: Image):
+        img = im_pdf_crop
+        img.threshold_gatos(upsampling=True)
+        assert img.asarray[0, 0] == 255
+        assert img.asarray[53, 36] == 0
+
+    def test_threshold_gatos_upsampling_negative_integer(self, im_pdf_crop: Image):
+        with pytest.raises(ValueError):
+            img = im_pdf_crop
+            img.threshold_gatos(upsampling=True, upsampling_factor=-2)
+
+    def test_threshold_gatos_upsampling_non_integer(self, im_pdf_crop: Image):
+        with pytest.raises(ValueError):
+            img = im_pdf_crop
+            img.threshold_gatos(upsampling=True, upsampling_factor="random_string")
+
+    def test_threshold_gatos_upsampling_p1_error(self, im_pdf_crop: Image):
+        with pytest.raises(ValueError):
+            img = im_pdf_crop
+            img.threshold_gatos(p1=1.2)
+
+
+class TestTransformerAdOtsuMethods:
+
+    def test_threshold_adotsu(self, im_pdf_crop: Image):
+        img = im_pdf_crop
+        img.threshold_adotsu()
+        assert img.asarray[0, 0] == 255
+        assert img.asarray[52, 35] == 0
 
 
 class TestTransformerFairMethods:
@@ -241,6 +322,11 @@ class TestTransformerFairMethods:
 
 
 class TestTransformerThresholdBinary:
+
+    def test_binary_error_method(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=55)
+        with pytest.raises(ValueError):
+            img.binary(method="not_an_expected_binary_method")
 
     def test_binary_sauvola(self):
         img = Image.from_fillvalue(shape=(5, 5), value=55)

@@ -55,7 +55,7 @@ def grid_view(arr: np.ndarray, grid_size: int, pad_value=0):
 
 def ungrid(
     blocks: NDArray, grid_size: int, original_shape: Optional[tuple[int, int]] = None
-):
+) -> NDArray:
     """
     Reconstructs the original 2D array from grid blocks, with options to crop or resize
     to a target shape.

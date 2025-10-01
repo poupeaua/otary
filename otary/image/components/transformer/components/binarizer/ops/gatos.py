@@ -24,41 +24,7 @@ from otary.image.components.transformer.components.binarizer.ops.niblack_like im
     threshold_niblack_like,
 )
 from otary.image.utils.background import background_surface_estimation_gatos
-from otary.image.utils.local import sum_local, wiener_filter
-
-
-def gatos_postprocess(thresh: NDArray, lh: float) -> NDArray:
-    """Gatos thresholding postprocess function
-
-    Args:
-        thresh (NDArray): threshold image
-        lh (float): postprocess parameter which should be the length of the
-            height of a character in the image
-
-    Returns:
-        NDArray: _description_
-    """
-    n = int(0.15 * lh)
-    ksh = 0.9 * n**2
-    # ksw = 0.05 * n**2
-    ksw1 = 0.35 * n**2
-    # dx = 0.25 * n
-    # dy = 0.25 * n
-
-    # 6.1. shrink thresholding for each foreground pixel check nb of background pixels
-    psh = sum_local(img=thresh, window_size=n)
-    shrink_condition = (thresh == 0) & (psh > ksh)
-    thresh[shrink_condition] = 1  # set to background
-
-    # 6.2 swell filter - for each background pixel
-    # TODO
-
-    # 6.3 swell filter for each background pixel check nb of foreground pixels
-    psw1 = sum_local(img=1 - thresh, window_size=n)
-    swell2_cond = (thresh == 1) & (psw1 > ksw1)
-    thresh[swell2_cond] = 0  # set to foreground
-
-    return thresh
+from otary.image.utils.local import wiener_filter
 
 
 def threshold_gatos(
@@ -100,7 +66,7 @@ def threshold_gatos(
         lh = im_side / 20
 
     # 1. Preprocessing I(x,y) from I_s(x,y) which is input image or source
-    im_ = wiener_filter(img=img, window_size=3).astype(np.uint8)
+    im_ = wiener_filter(img=img, window_size=3)
 
     # 2. Sauvola thresholding S(x,y) with parameters from paper
     s = (
@@ -135,13 +101,10 @@ def threshold_gatos(
         # 5. Optional Upsampling using bicubic interpolation
         # using the bicubic interpolation to upsample the base image I(x,y)
         # but using the nearest neighbour to replicate pixels in background B(x,y)
-        if upsampling_factor <= 0:
+        if not isinstance(upsampling_factor, int) or upsampling_factor <= 0:
             raise ValueError(
-                f"The upsampling factor {upsampling_factor} must be stricly positive"
-            )
-        if not isinstance(upsampling_factor, int):
-            raise ValueError(
-                f"The upsampling factor {upsampling_factor} must be an integer"
+                f"The upsampling factor {upsampling_factor} must be a stricly positive "
+                "integer."
             )
         i_u = cv2.resize(
             im_,
@@ -173,7 +136,7 @@ def threshold_gatos(
         )
 
     if postprocess:  # 6. post-processing
-        thresh = gatos_postprocess(thresh=thresh, lh=lh)
+        raise NotImplementedError("Post-processing is not implemented yet")
 
     img_thresholded = thresh.astype(np.uint8) * 255
     return img_thresholded

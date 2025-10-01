@@ -117,7 +117,7 @@ def adotsu_single_step(
         blocks=tmp,
         grid_size=grid_size,
         original_shape=(img.shape[0], img.shape[1]),
-    ).astype(np.uint8)
+    )
 
     # intermediate step for threshold value interpolation after grid-based approach
     grid_size_odd = grid_size + 1 if grid_size % 2 == 0 else grid_size

@@ -594,3 +594,50 @@ class TestImageCropHQFromAABBAndPDF:
         assert cropped.asarray.size > 0
 
         assert factor_scale == pytest.approx(cropped.height / cropped.width, rel=0.05)
+
+
+class TestImageAsReversedColorChannel:
+
+    def test_as_reversed_color_channel_rgb_to_bgr(self):
+        # Create an RGB image (red pixel)
+        arr = np.zeros((2, 2, 3), dtype=np.uint8)
+        arr[0, 0] = [255, 0, 0]  # Red
+        arr[0, 1] = [0, 255, 0]  # Green
+        arr[1, 0] = [0, 0, 255]  # Blue
+        arr[1, 1] = [255, 255, 0]  # Yellow
+        img = Image(arr.copy())
+        img.as_reversed_color_channel()
+        # Check that channels are reversed
+        assert np.array_equal(img.asarray[0, 0], [0, 0, 255])  # Red -> Blue
+        assert np.array_equal(
+            img.asarray[0, 1], [0, 255, 0]
+        )  # Green -> Green (middle channel unchanged)
+        assert np.array_equal(img.asarray[1, 0], [255, 0, 0])  # Blue -> Red
+        assert np.array_equal(img.asarray[1, 1], [0, 255, 255])  # Yellow -> Cyan
+
+    def test_as_reversed_color_channel_twice_returns_original(self):
+        arr = np.random.randint(0, 256, (5, 5, 3), dtype=np.uint8)
+        img = Image(arr.copy())
+        img.as_reversed_color_channel()
+        img.as_reversed_color_channel()
+        assert np.array_equal(img.asarray, arr)
+
+    def test_as_reversed_color_channel_grayscale_no_change(self):
+        arr = np.random.randint(0, 256, (5, 5), dtype=np.uint8)
+        img = Image(arr.copy())
+        img.as_reversed_color_channel()
+        # Grayscale image should remain unchanged
+        assert np.array_equal(img.asarray, arr)
+
+
+class TestImageRepr:
+
+    def test_repr_png(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=0)
+        _bytes = img._repr_png_()
+        assert isinstance(_bytes, bytes)
+
+    def test_repr_jpeg(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=0)
+        _bytes = img._repr_jpeg_()
+        assert isinstance(_bytes, bytes)

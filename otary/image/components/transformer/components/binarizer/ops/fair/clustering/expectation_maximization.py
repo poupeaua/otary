@@ -67,7 +67,6 @@ def expectation_maximization(
     It assumes a x input of shape:
     - (N, w, n) or 3D input: N patches of size (w, n). Generally the window is a square
         so it would be (N, n, n).
-    - (N, m) or 2D input: N vectors of size m
 
     Args:
         x (NDArray): input image or patches
@@ -80,12 +79,6 @@ def expectation_maximization(
             good result.
             Defaults to 100.
     """
-    # ensure x is always 3D: (n, m, c) to make the code compatible with 2D tensor input
-    squeeze_back = False
-    if x.ndim == 2:
-        x = x[..., np.newaxis]
-        squeeze_back = True
-
     n_edges = x.shape[0]
 
     # EM initialization - mu (mean), sigma (std), omega (mixing coefficient)
@@ -128,19 +121,14 @@ def expectation_maximization(
         mu_t, mu_b, var_t, var_b, omega = _mu_t, _mu_b, _var_t, _var_b, _omega
 
     # swap params so that _t always refers to text (darker pixels) and _b to background
+    if np.mean(mu_t) >= np.mean(mu_b):
+        # swap variances too based on mean values
+        var_t, var_b = var_b, var_t
     swap_mask = mu_t > mu_b
     mu_t_old, mu_b_old = mu_t, mu_b
     mu_t = np.where(swap_mask, mu_b_old, mu_t_old)
     mu_b = np.where(swap_mask, mu_t_old, mu_b_old)
     omega = np.where(swap_mask, 1 - omega, omega)
     gamma = np.where(swap_mask, 1 - gamma, gamma)
-
-    if np.mean(mu_t) >= np.mean(mu_b):
-        # swap variances too based on mean values
-        var_t, var_b = var_b, var_t
-
-    # restore shape if input was 2D
-    if squeeze_back:
-        gamma = gamma.squeeze(-1)
 
     return gamma
