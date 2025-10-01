@@ -19,10 +19,10 @@ import numpy as np
 from numpy.typing import NDArray
 import cv2
 import PIL.Image as ImagePIL
-import pymupdf
 
 import otary.geometry as geo
 from otary.geometry.discrete.linear.entity import LinearEntity
+from otary.geometry.discrete.shape.axis_aligned_rectangle import AxisAlignedRectangle
 from otary.utils.cv.ocrsingleoutput import OcrSingleOutput
 from otary.image.base import BaseImage
 from otary.image.components import (
@@ -119,7 +119,7 @@ class Image:
         as_grayscale: bool = False,
         page_nb: int = 0,
         resolution: Optional[int] = None,
-        clip_pct: Optional[pymupdf.Rect] = None,
+        clip_pct: Optional[AxisAlignedRectangle] = None,
     ) -> Image:
         """Create an Image array from a pdf file.
 
@@ -129,9 +129,9 @@ class Image:
                 Defaults to False.
             page_nb (int, optional): page number to extract. Defaults to 0.
             resolution (Optional[int], optional): resolution of the image.
-            clip_pct (Optional[pymupdf.Rect], optional): clip percentage of the image
-                to only load a small part of the image (crop) for faster loading and
-                less memory usage. Defaults to None.
+            clip_pct (Optional[AxisAlignedRectangle], optional): clip percentage of the
+                image to only load a small part of the image (crop) for faster loading
+                and less memory usage. Defaults to None.
 
         Returns:
             Image: Image object from pdf
@@ -1250,7 +1250,7 @@ class Image:
         """
         # pylint: disable=too-many-arguments, too-many-positional-arguments
         # get the bbox normalized
-        clip_pct = bbox.copy().normalize(x=self.width, y=self.height).as_pymupdf_rect
+        clip_pct = bbox.copy().normalize(x=self.width, y=self.height)
 
         # obtain the High Quality crop image by reading
         im_crop = Image.from_pdf(

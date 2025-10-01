@@ -101,6 +101,132 @@ class TestTransformerSauvolaMethods:
         assert np.all(img.asarray == 255)
 
 
+class TestTransformerISauvolaMethods:
+
+    def test_threshold_isauvola(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=127)
+        img.asarray[0, 0] = 200
+        img.asarray[4, 4] = 50
+        img.threshold_isauvola()
+        assert img.asarray[0, 0] == 255
+        assert img.asarray[4, 4] == 0
+
+
+class TestTransformerFengMethods:
+
+    def test_threshold_feng(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=127)
+        img.asarray[0, 0] = 200
+        img.asarray[4, 4] = 50
+        img.threshold_feng()
+        assert img.asarray[0, 0] == 255
+        assert img.asarray[4, 4] == 0
+
+
+class TestTransformerSuMethods:
+
+    def test_threshold_su(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=127)
+        img.asarray[0, 0] = 200
+        img.asarray[4, 4] = 50
+        img.threshold_su()
+        assert img.asarray[0, 0] == 255
+        assert img.asarray[4, 4] == 0
+
+
+class TestTransformerPhansalkarMethods:
+
+    def test_threshold_phansalkar(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=127)
+        img.asarray[0, 0] = 200
+        img.asarray[4, 4] = 50
+        img.threshold_phansalkar()
+        assert img.asarray[0, 0] == 255
+        assert img.asarray[4, 4] == 0
+
+
+class TestTransformerWolfMethods:
+
+    def test_threshold_wolf(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=127)
+        img.asarray[0, 0] = 200
+        img.asarray[4, 4] = 50
+        img.threshold_wolf()
+        assert img.asarray[0, 0] == 255
+        assert img.asarray[4, 4] == 0
+
+
+class TestTransformerBernsenMethods:
+
+    def test_threshold_bernsen(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=127)
+        img.asarray[0, 0] = 200
+        img.asarray[4, 4] = 50
+        img.threshold_bernsen()
+        assert img.asarray[0, 0] == 255
+        assert img.asarray[4, 4] == 0
+
+
+class TestTransformerBradleyRothMethods:
+
+    def test_threshold_bradley_roth(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=127)
+        img.asarray[0, 0] = 200
+        img.asarray[4, 4] = 50
+        img.threshold_bradley_roth()
+        assert img.asarray[0, 0] == 255
+        assert img.asarray[4, 4] == 0
+
+
+# class TestTransformerGatosMethods:
+
+#     def test_threshold_gatos(self):
+#         img = Image.from_fillvalue(shape=(5, 5), value=0)
+#         img.asarray[0, 0] = 200
+#         img.asarray[4, 4] = 200
+#         img.threshold_gatos()
+#         assert img.asarray[0, 0] == 255
+#         assert img.asarray[4, 4] == 255
+
+
+# class TestTransformerFairMethods:
+
+#     def test_threshold_fair_otsu(self):
+#         img = Image.from_file(filepath=pdf_filepath, resolution=50)
+#         img.threshold_fair(
+#             sfair_clustering_algo="otsu",
+#             sfair_window_size=3,
+#             post_stain_max_pixels=0,
+#             post_misclass_txt=False
+#         )
+#         assert img.asarray[0, 0] == 255
+#         assert img.asarray[4, 4] == 255
+#         print(np.unique(img.asarray))
+#         print(img.asarray)
+#         assert img.asarray[1, 1] == 0
+
+#     def test_threshold_fair_em(self):
+#         img = Image.from_fillvalue(shape=(10, 10), value=10)
+#         img.asarray[0, 0] = 200
+#         img.asarray[4, 4] = 200
+#         img.threshold_fair(sfair_clustering_algo="em", sfair_window_size=3)
+#         assert img.asarray[0, 0] == 255
+#         assert img.asarray[4, 4] == 255
+
+#     def test_threshold_fair_kmeans(self):
+#         img = Image.from_fillvalue(shape=(10, 10), value=127)
+#         img.asarray[0, 0] = 200
+#         img.asarray[4, 4] = 200
+#         img.threshold_fair(sfair_clustering_algo="kmeans", sfair_window_size=3)
+#         assert img.asarray[0, 0] == 255
+#         assert img.asarray[4, 4] == 255
+
+#     def test_threshold_fair_unknown_clustering(self):
+#         with pytest.raises(ValueError):
+#             img = Image.from_fillvalue(shape=(5, 5), value=127)
+#             img.threshold_fair(sfair_clustering_algo="unkown")
+
+
 class TestTransformerThresholdBinary:
 
     def test_binary_sauvola(self):

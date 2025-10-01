@@ -1,6 +1,6 @@
 import pytest
-import pymupdf
 
+from otary.geometry.discrete.shape.axis_aligned_rectangle import AxisAlignedRectangle
 from otary.image import Image
 
 
@@ -99,6 +99,8 @@ class TestBaseImageFromPdf:
         img = Image.from_pdf(
             filepath=pdf_filepath,
             resolution=50,
-            clip_pct=pymupdf.Rect(x0=0, y0=0, x1=10, y1=10),
+            clip_pct=AxisAlignedRectangle.from_topleft_bottomright(
+                topleft=[0, 0], bottomright=[10, 10]
+            ),
         )
         assert len(img.shape_array) == 3

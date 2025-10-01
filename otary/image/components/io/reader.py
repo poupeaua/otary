@@ -7,8 +7,8 @@ from typing import Optional
 import cv2
 import numpy as np
 from numpy.typing import NDArray
-import pymupdf
 
+from otary.geometry.discrete.shape.axis_aligned_rectangle import AxisAlignedRectangle
 from otary.image.components.io.utils.readfile import read_pdf_to_images
 
 
@@ -87,7 +87,7 @@ class ReaderImage:
         as_grayscale: bool = False,
         page_nb: int = 0,
         resolution: Optional[int] = None,
-        clip_pct: Optional[pymupdf.Rect] = None,
+        clip_pct: Optional[AxisAlignedRectangle] = None,
     ) -> NDArray:
         # pylint: disable=too-many-arguments, too-many-positional-arguments
         """Create an Image array from a pdf file.
@@ -100,10 +100,11 @@ class ReaderImage:
                 page that will be turned into an image. Defaults to 0.
             resolution (Optional[int], optional): resolution of the loaded image.
                 Defaults to 3508.
-            clip_pct (pymmupdf.Rect, optional): optional zone to extract in the image.
-                This is particularly useful to load into memory only a small part of the
-                image without loading everything into memory. This reduces considerably
-                the image loading time especially combined with a high resolution.
+            clip_pct (AxisAlignedRectangle, optional): optional zone to extract in the
+                image. This is particularly useful to load into memory only a small
+                part of the image without loading everything into memory.
+                This reduces considerably the image loading time especially combined
+                with a high resolution.
 
         Returns:
             NDArray: Image as array
