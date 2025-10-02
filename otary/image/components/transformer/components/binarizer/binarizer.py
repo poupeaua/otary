@@ -2,7 +2,7 @@
 Binarizer component
 """
 
-from typing import Literal, Optional, get_args
+from typing import Literal, Optional, get_args, TYPE_CHECKING
 
 import cv2
 import numpy as np
@@ -22,6 +22,9 @@ from otary.image.components.transformer.components.binarizer.ops import (
     threshold_fair,
 )
 
+if TYPE_CHECKING:  # pragma: no cover
+    from otary.image import Image
+
 BinarizationMethods = Literal[
     "adaptive",
     "otsu",
@@ -31,7 +34,7 @@ BinarizationMethods = Literal[
     "wolf",
     "feng",
     "gatos",
-    "bradley_roth",
+    "bradley",
     "nick",
     "su",
     "phansalkar",
@@ -67,7 +70,7 @@ class BinarizerImage:
     | Singh          | 2012 | [A New Local Adaptive Thresholding Technique in Binarization](https://www.researchgate.net/publication/220485031)                        |
     | FAIR           | 2013 | [FAIR: A Fast Algorithm for document Image Restoration](https://amu.hal.science/hal-01479805/document)                                   |
     | ISauvola       | 2016 | [ISauvola: Improved Sauvola’s Algorithm for Document Image Binarization](https://www.researchgate.net/publication/304621554_ISauvola_Improved_Sauvola) |
-    | Wan            | 2018 | [Binarization of Document Image Using Optimum Threshold Modification](https://www.researchgate.net/publication/326026836)                 |
+    | WAN            | 2018 | [Binarization of Document Image Using Optimum Threshold Modification](https://www.researchgate.net/publication/326026836)                 |
     """
 
     def __init__(self, base: BaseImage) -> None:
@@ -75,7 +78,7 @@ class BinarizerImage:
 
     # ----------------------------- GLOBAL THRESHOLDING -------------------------------
 
-    def threshold_simple(self, thresh: int) -> None:
+    def threshold_simple(self, thresh: int) -> "Image":
         """Compute the image thesholded by a single value T.
         All pixels with value v <= T are turned black and those with value v > T are
         turned white. This is a global thresholding method.
@@ -85,8 +88,9 @@ class BinarizerImage:
         """
         self.base.as_grayscale()
         self.base.asarray = np.array((self.base.asarray > thresh) * 255, dtype=np.uint8)
+        return self.base.parent
 
-    def threshold_otsu(self) -> None:
+    def threshold_otsu(self) -> "Image":
         """Apply Otsu global thresholding.
         This is a global thresholding method that automatically determines
         an optimal threshold value from the image histogram.
@@ -105,10 +109,13 @@ class BinarizerImage:
             self.base.asarray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
         )
         self.base.asarray = img_thresholded
+        return self.base.parent
 
     # ------------------------------ LOCAL THRESHOLDING -------------------------------
 
-    def threshold_adaptive(self, block_size: int = 11, constant: float = 2.0) -> None:
+    def threshold_adaptive(
+        self, block_size: int = 11, constant: float = 2.0
+    ) -> "Image":
         """Apply adaptive local thresholding.
         This is a local thresholding method that computes the threshold for a pixel
         based on a small region around it.
@@ -136,13 +143,14 @@ class BinarizerImage:
             blockSize=block_size,
             C=constant,
         )
+        return self.base.parent
 
     def threshold_bernsen(
         self,
         window_size: int = 75,
         contrast_limit: float = 25,
         threshold_global: int = 100,
-    ) -> None:
+    ) -> "Image":
         """Apply Bernsen local thresholding.
 
         Paper (1986):
@@ -165,8 +173,9 @@ class BinarizerImage:
             contrast_limit=contrast_limit,
             threshold_global=threshold_global,
         )
+        return self.base.parent
 
-    def threshold_niblack(self, window_size: int = 15, k: float = -0.2) -> None:
+    def threshold_niblack(self, window_size: int = 15, k: float = -0.2) -> "Image":
         """Apply Niblack local thresholding.
 
         Book (1986):
@@ -184,10 +193,11 @@ class BinarizerImage:
         self.base.asarray = threshold_niblack_like(
             img=self.base.asarray, method="niblack", window_size=window_size, k=k
         )[1]
+        return self.base.parent
 
     def threshold_sauvola(
         self, window_size: int = 15, k: float = 0.5, r: float = 128.0
-    ) -> None:
+    ) -> "Image":
         """Apply Sauvola local thresholding.
         This is a local thresholding method that computes the threshold for a pixel
         based on a small region around it.
@@ -211,8 +221,9 @@ class BinarizerImage:
         self.base.asarray = threshold_niblack_like(
             img=self.base.asarray, method="sauvola", window_size=window_size, k=k, r=r
         )[1]
+        return self.base.parent
 
-    def threshold_wolf(self, window_size: int = 15, k: float = 0.5) -> None:
+    def threshold_wolf(self, window_size: int = 15, k: float = 0.5) -> "Image":
         """Apply Wolf local thresholding.
 
         Paper (2003):
@@ -228,6 +239,7 @@ class BinarizerImage:
         self.base.asarray = threshold_niblack_like(
             img=self.base.asarray, method="wolf", window_size=window_size, k=k
         )[1]
+        return self.base.parent
 
     def threshold_feng(
         self,
@@ -237,7 +249,7 @@ class BinarizerImage:
         k1: float = 0.25,
         k2: float = 0.04,
         gamma: float = 2.0,
-    ) -> None:
+    ) -> "Image":
         """Implementation of the Feng thresholding method.
 
         Paper (2004):
@@ -262,6 +274,7 @@ class BinarizerImage:
             k2=k2,
             gamma=gamma,
         )
+        return self.base.parent
 
     def threshold_gatos(
         self,
@@ -271,7 +284,7 @@ class BinarizerImage:
         lh: Optional[float] = None,
         upsampling: bool = False,
         upsampling_factor: int = 2,
-    ) -> None:
+    ) -> "Image":
         """Apply Gatos local thresholding.
 
         Paper (2005):
@@ -300,8 +313,9 @@ class BinarizerImage:
             upsampling=upsampling,
             upsampling_factor=upsampling_factor,
         )
+        return self.base.parent
 
-    def threshold_bradley(self, window_size: int = 15, t: float = 0.15) -> None:
+    def threshold_bradley(self, window_size: int = 15, t: float = 0.15) -> "Image":
         """Implementation of the Bradley & Roth thresholding method.
 
         Paper (2007):
@@ -319,8 +333,9 @@ class BinarizerImage:
         self.base.asarray = threshold_bradley(
             img=self.base.asarray, window_size=window_size, t=t
         )
+        return self.base.parent
 
-    def threshold_nick(self, window_size: int = 19, k: float = -0.1) -> None:
+    def threshold_nick(self, window_size: int = 19, k: float = -0.1) -> "Image":
         """Apply Nick local thresholding.
 
         Paper (2009):
@@ -338,12 +353,13 @@ class BinarizerImage:
         self.base.asarray = threshold_niblack_like(
             img=self.base.asarray, method="nick", window_size=window_size, k=k
         )[1]
+        return self.base.parent
 
     def threshold_su(
         self,
         window_size: int = 3,
         n_min: int = -1,
-    ) -> None:
+    ) -> "Image":
         """Compute the Su local thresholding.
 
         Paper (2010):
@@ -359,10 +375,11 @@ class BinarizerImage:
         self.base.asarray = threshold_su(
             img=self.base.asarray, window_size=window_size, n_min=n_min
         )
+        return self.base.parent
 
     def threshold_phansalkar(
         self, window_size: int = 40, k: float = 0.25, p: float = 3.0, q: float = 10.0
-    ) -> None:
+    ) -> "Image":
         """Apply Phansalkar et al. local thresholding.
 
         Paper (2011):
@@ -387,10 +404,11 @@ class BinarizerImage:
             p=p,
             q=q,
         )[1]
+        return self.base.parent
 
     def threshold_adotsu(
         self, grid_size: int = 50, k_sigma: float = 1.6, n_steps: int = 2
-    ) -> None:
+    ) -> "Image":
         """Apply Adotsu local thresholding.
 
         Paper (2011):
@@ -407,8 +425,9 @@ class BinarizerImage:
         self.base.asarray = threshold_adotsu(
             img=self.base.asarray, grid_size=grid_size, k_sigma=k_sigma, n_steps=n_steps
         )
+        return self.base.parent
 
-    def threshold_singh(self, window_size: int = 15, k: float = 0.06) -> None:
+    def threshold_singh(self, window_size: int = 15, k: float = 0.06) -> "Image":
         """Apply Singh local thresholding.
 
         Paper (2012):
@@ -424,6 +443,7 @@ class BinarizerImage:
         self.base.asarray = threshold_niblack_like(
             img=self.base.asarray, method="singh", window_size=window_size, k=k
         )[1]
+        return self.base.parent
 
     def threshold_fair(
         self,
@@ -439,7 +459,7 @@ class BinarizerImage:
         post_max_iter: int = 15,
         post_window_size: int = 75,
         post_beta: float = 1.0,
-    ) -> None:
+    ) -> "Image":
         """Apply FAIR local thresholding.
 
         Paper (2013):
@@ -508,6 +528,7 @@ class BinarizerImage:
             post_window_size=post_window_size,
             post_beta=post_beta,
         )
+        return self.base.parent
 
     def threshold_isauvola(
         self,
@@ -518,7 +539,7 @@ class BinarizerImage:
         contrast_window_size: int = 3,
         opening_n_min_pixels: int = 0,
         opening_connectivity: int = 8,
-    ) -> None:
+    ) -> "Image":
         """Apply ISauvola local thresholding.
 
         Paper (2016):
@@ -552,10 +573,11 @@ class BinarizerImage:
             opening_n_min_pixels=opening_n_min_pixels,
             opening_connectivity=opening_connectivity,
         )
+        return self.base.parent
 
     def threshold_wan(
         self, window_size: int = 15, k: float = 0.5, r: float = 128.0
-    ) -> None:
+    ) -> "Image":
         """Apply Wan local thresholding.
 
         Paper (2018):
@@ -571,6 +593,7 @@ class BinarizerImage:
         self.base.asarray = threshold_niblack_like(
             img=self.base.asarray, method="wan", window_size=window_size, k=k, r=r
         )[1]
+        return self.base.parent
 
     # ---------------------------- BINARY REPRESENTATION ------------------------------
 
