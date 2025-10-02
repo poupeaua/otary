@@ -40,18 +40,18 @@ class TestTransformerThresholdAdaptative:
 
     def test_threshold_adaptative_basic(self):
         img = Image.from_fillvalue(shape=(5, 5), value=127)
-        img.threshold_adaptative()
+        img.threshold_adaptive()
         assert np.all((img.asarray == 0) | (img.asarray == 255))
 
     def test_threshold_adaptative_uniform_image(self):
         img = Image.from_fillvalue(shape=(5, 5), value=200)
-        img.threshold_adaptative()
+        img.threshold_adaptive()
         assert np.all(img.asarray == 255)
 
     def test_threshold_adaptative_low_values(self):
         img = Image.from_fillvalue(shape=(5, 5), value=55)
         img.asarray[2, 2] = 200
-        img.threshold_adaptative()
+        img.threshold_adaptive()
         assert img.asarray[2, 2] == 255
         assert img.asarray[0, 0] == 0
         assert img.asarray[4, 4] == 0
@@ -60,7 +60,7 @@ class TestTransformerThresholdAdaptative:
         img = Image.from_fillvalue(shape=(5, 5), value=127)
         img.asarray[0, 0] = 200
         img.asarray[4, 4] = 50
-        img.threshold_adaptative()
+        img.threshold_adaptive()
         assert img.asarray[0, 0] == 255
         assert img.asarray[4, 4] == 0
 
@@ -205,7 +205,7 @@ class TestTransformerBradleyRothMethods:
         img = Image.from_fillvalue(shape=(5, 5), value=127)
         img.asarray[0, 0] = 200
         img.asarray[4, 4] = 50
-        img.threshold_bradley_roth()
+        img.threshold_bradley()
         assert img.asarray[0, 0] == 255
         assert img.asarray[4, 4] == 0
 

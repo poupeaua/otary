@@ -14,7 +14,7 @@ import numpy as np
 from otary.image.utils.local import mean_local
 
 
-def threshold_bradley_roth(
+def threshold_bradley(
     img: NDArray, window_size: int = 15, t: float = 0.15
 ) -> NDArray[np.uint8]:
     """Implementation of the Bradley & Roth thresholding method.

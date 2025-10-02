@@ -12,7 +12,7 @@ from otary.image.base import BaseImage
 
 from otary.image.components.transformer.components.binarizer.ops import (
     threshold_bernsen,
-    threshold_bradley_roth,
+    threshold_bradley,
     threshold_feng,
     threshold_gatos,
     threshold_isauvola,
@@ -23,7 +23,7 @@ from otary.image.components.transformer.components.binarizer.ops import (
 )
 
 BinarizationMethods = Literal[
-    "adaptative",
+    "adaptive",
     "otsu",
     "bernsen",
     "niblack",
@@ -51,7 +51,7 @@ class BinarizerImage:
 
     | Name           | Year | Reference / Paper                                                                                                                        |
     |----------------|------|------------------------------------------------------------------------------------------------------------------------------------------|
-    | Adaptative     |  -   | [OpenCV Adaptive Thresholding Documentation](https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html)                           |
+    | Adaptive     |  -   | [OpenCV Adaptive Thresholding Documentation](https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html)                           |
     | Otsu           | 1979 | [A Threshold Selection Method from Gray-Level Histograms](https://ieeexplore.ieee.org/document/4310076)                                  |
     | Bernsen        | 1986 | "Dynamic thresholding of grey-level images" by Bernsen                                                                                   |
     | Niblack        | 1986 | "An Introduction to Digital Image Processing" by Wayne Niblack                                                                           |
@@ -108,7 +108,7 @@ class BinarizerImage:
 
     # ------------------------------ LOCAL THRESHOLDING -------------------------------
 
-    def threshold_adaptative(self, block_size: int = 11, constant: float = 2.0) -> None:
+    def threshold_adaptive(self, block_size: int = 11, constant: float = 2.0) -> None:
         """Apply adaptive local thresholding.
         This is a local thresholding method that computes the threshold for a pixel
         based on a small region around it.
@@ -301,7 +301,7 @@ class BinarizerImage:
             upsampling_factor=upsampling_factor,
         )
 
-    def threshold_bradley_roth(self, window_size: int = 15, t: float = 0.15) -> None:
+    def threshold_bradley(self, window_size: int = 15, t: float = 0.15) -> None:
         """Implementation of the Bradley & Roth thresholding method.
 
         Paper (2007):
@@ -316,7 +316,7 @@ class BinarizerImage:
             NDArray[np.uint8]: output thresholded image
         """
         self.base.as_grayscale()
-        self.base.asarray = threshold_bradley_roth(
+        self.base.asarray = threshold_bradley(
             img=self.base.asarray, window_size=window_size, t=t
         )
 

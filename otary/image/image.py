@@ -601,7 +601,7 @@ class Image:
         self.transformer.binarizer.threshold_otsu()
         return self
 
-    def threshold_adaptative(self, block_size: int = 11, constant: float = 2.0) -> Self:
+    def threshold_adaptive(self, block_size: int = 11, constant: float = 2.0) -> Self:
         """Apply adaptive local thresholding.
         This is a local thresholding method that computes the threshold for a pixel
         based on a small region around it.
@@ -623,7 +623,7 @@ class Image:
         Returns:
             (Self): output thresholded image
         """
-        self.transformer.binarizer.threshold_adaptative(
+        self.transformer.binarizer.threshold_adaptive(
             block_size=block_size, constant=constant
         )
         return self
@@ -790,7 +790,7 @@ class Image:
         )
         return self
 
-    def threshold_bradley_roth(self, window_size: int = 15, t: float = 0.15) -> Self:
+    def threshold_bradley(self, window_size: int = 15, t: float = 0.15) -> Self:
         """Implementation of the Bradley & Roth thresholding method.
 
         Paper (2007):
@@ -804,7 +804,7 @@ class Image:
         Returns:
             NDArray[np.uint8]: output thresholded image
         """
-        self.transformer.binarizer.threshold_bradley_roth(window_size=window_size, t=t)
+        self.transformer.binarizer.threshold_bradley(window_size=window_size, t=t)
         return self
 
     def threshold_nick(self, window_size: int = 19, k: float = -0.1) -> Self:

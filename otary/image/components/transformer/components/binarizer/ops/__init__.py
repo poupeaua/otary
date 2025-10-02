@@ -8,7 +8,7 @@ __all__ = [
     "threshold_gatos",
     "threshold_su",
     "threshold_bernsen",
-    "threshold_bradley_roth",
+    "threshold_bradley",
     "threshold_feng",
     "threshold_adotsu",
     "threshold_fair",
@@ -30,7 +30,7 @@ from otary.image.components.transformer.components.binarizer.ops.bernsen import 
     threshold_bernsen,
 )
 from otary.image.components.transformer.components.binarizer.ops.bradley_roth import (
-    threshold_bradley_roth,
+    threshold_bradley,
 )
 from otary.image.components.transformer.components.binarizer.ops.feng import (
     threshold_feng,
