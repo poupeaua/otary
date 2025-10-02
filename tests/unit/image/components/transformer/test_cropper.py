@@ -4,7 +4,25 @@ from otary.image import Image
 from otary.geometry import Rectangle
 
 
+class TestTransformerImageCrop:
+
+    def test_crop_error_clip_and_pad_true(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=0)
+        with pytest.raises(ValueError):
+            img.crop(x0=0, y0=0, x1=3, y1=3, clip=True, pad=True)
+
+    def test_crop_error_clip_and_pad_false(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=0)
+        with pytest.raises(ValueError):
+            img.crop(x0=0, y0=0, x1=3, y1=3, clip=False, pad=False)
+
+
 class TestTransformerImageCropClipping:
+
+    def test_crop_error_clipping_error(self):
+        img = Image.from_fillvalue(shape=(5, 5), value=0)
+        with pytest.raises(ValueError):
+            img.crop(x0=5, y0=0, x1=3, y1=3, clip=True)
 
     def test_crop_clipping(self):
         img = Image.from_fillvalue(shape=(5, 5), value=0)

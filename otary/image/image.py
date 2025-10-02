@@ -1353,6 +1353,26 @@ class Image:
         self.transformer.morphologyzer.add_border(size=size, fill_value=fill_value)
         return self
 
+    def add_noise_salt_and_pepper(self, amount: float = 0.05) -> Self:
+        """Add salt and pepper noise to the image.
+
+        Args:
+            amount (float, optional): Proportion of image pixels to alter.
+                Defaults to 0.05.
+        """
+        self.transformer.morphologyzer.add_noise_salt_and_pepper(amount=amount)
+        return self
+
+    def add_noise_gaussian(self, mean: float = 0, std: float = 0.05) -> Self:
+        """Add Gaussian noise to the image.
+
+        Args:
+            amount (float, optional): Proportion of image pixels to alter.
+                Defaults to 0.05.
+        """
+        self.transformer.morphologyzer.add_noise_gaussian(mean=mean, std=std)
+        return self
+
     # -------------------------- ASSEMBLED COMPOSED METHODS ---------------------------
     # methods that use multiple components
     # ---------------------------------------------------------------------------------

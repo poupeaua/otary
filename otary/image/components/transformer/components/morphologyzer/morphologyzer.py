@@ -233,3 +233,46 @@ class MorphologyzerImage:
             borderType=cv2.BORDER_CONSTANT,
             value=fill_value,
         )  # type: ignore[call-overload]
+
+    def add_noise_salt_and_pepper(self, amount: float = 0.05) -> None:
+        """Add salt and pepper noise to the image.
+
+        Args:
+            amount (float, optional): Proportion of image pixels to alter.
+                Defaults to 0.05.
+        """
+        if not 0 <= amount <= 1:
+            raise ValueError(
+                "Parameter amount must be between 0 and 1 when adding salt and pepper "
+                f"noise. Current value is {amount}."
+            )
+
+        img = self.base.asarray
+        row, col = img.shape[:2]
+        n_pixels_to_alter = int(amount * row * col)
+
+        # Generate random unique indices for salt and pepper
+        indices = np.random.choice(row * col, size=n_pixels_to_alter, replace=False)
+        salt_indices = indices[: n_pixels_to_alter // 2]
+        pepper_indices = indices[n_pixels_to_alter // 2 :]
+
+        salt_coords = np.unravel_index(salt_indices, (row, col))
+        pepper_coords = np.unravel_index(pepper_indices, (row, col))
+
+        img[salt_coords] = 255  # broadcast even if n channels > 1
+        img[pepper_coords] = 0
+
+        self.base.asarray = img
+
+    def add_noise_gaussian(self, mean: float = 0, std: float = 0.05) -> None:
+        """Add Gaussian noise to the image.
+
+        Args:
+            amount (float, optional): Proportion of image pixels to alter.
+                Defaults to 0.05.
+        """
+        self.base.asarray = np.clip(
+            self.base.asarray + np.random.normal(mean, std, self.base.asarray.shape),
+            0,
+            255,
+        ).astype(np.uint8)
