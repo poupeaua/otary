@@ -241,6 +241,24 @@ class TestEntityEnclosing:
         expected_aabb = Polygon([[10, 20], [81, 20], [81, 81], [10, 81]])
         assert polygon.enclosing_axis_aligned_bbox().is_equal(expected_aabb)
 
+    def test_aabb_alias(self):
+        polygon = Polygon(
+            points=[
+                [10, 70],
+                [30, 30],
+                [30, 20],
+                [50, 20],
+                [60, 30],
+                [70, 20],
+                [80, 40],
+                [70, 50],
+                [50, 80],
+                [40, 70],
+            ]
+        )
+        expected_aabb = Polygon([[10, 20], [81, 20], [81, 81], [10, 81]])
+        assert polygon.aabb().is_equal(expected_aabb)
+
     def test_enclosing_oriented_bbox(self):
         polygon = Polygon(
             points=[
@@ -258,6 +276,24 @@ class TestEntityEnclosing:
         )
         expected_obb = Polygon([[9, 70], [35, 6], [85, 26], [60, 90]])
         assert polygon.enclosing_oriented_bbox().is_equal(expected_obb)
+
+    def test_obb_alias(self):
+        polygon = Polygon(
+            points=[
+                [10, 70],
+                [30, 30],
+                [30, 20],
+                [50, 20],
+                [60, 30],
+                [70, 20],
+                [80, 40],
+                [70, 50],
+                [50, 80],
+                [40, 70],
+            ]
+        )
+        expected_obb = Polygon([[9, 70], [35, 6], [85, 26], [60, 90]])
+        assert polygon.obb().is_equal(expected_obb)
 
     def test_enclosing_convex_hull(self):
         polygon = Polygon(
