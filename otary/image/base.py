@@ -15,6 +15,7 @@ from PIL import Image as ImagePIL
 
 if TYPE_CHECKING:  # pragma: no cover
     from typing_extensions import Self
+    from otary.image import Image
 else:  # pragma: no cover
     try:
         from typing import Self
@@ -27,8 +28,9 @@ class BaseImage:
 
     # pylint: disable=too-many-public-methods
 
-    def __init__(self, image: NDArray) -> None:
+    def __init__(self, image: NDArray, parent: Image) -> None:
         self.__asarray: NDArray = image.copy()
+        self.parent = parent  # reference back to Image for fluent API
 
     @property
     def asarray(self) -> NDArray:

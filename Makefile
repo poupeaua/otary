@@ -70,6 +70,8 @@ test-unit:
 		--junitxml=junit/test-unit-results.xml \
 		--cov=otary --cov-report=xml --cov-report=html tests/unit/
 
+# -------------------------------------- CHECK ----------------------------------------
+
 check: check-pylint check-ruff check-mypy check-black
 
 check-pylint:

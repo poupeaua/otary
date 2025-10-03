@@ -141,7 +141,6 @@ class Polygon(DiscreteGeometryEntity):
         share common points. This method computes the intersection points between lines.
 
         Args:
-            img (_type_): array of shape (lx, ly)
             lines (NDArray): array of lines of shape (n, 2, 2)
             max_dist_thresh (float, optional): For any given point,
                 the maximum distance to consider two points as close. Defaults to 50.

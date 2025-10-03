@@ -19,10 +19,10 @@ import numpy as np
 from numpy.typing import NDArray
 import cv2
 import PIL.Image as ImagePIL
-import pymupdf
 
 import otary.geometry as geo
 from otary.geometry.discrete.linear.entity import LinearEntity
+from otary.geometry.discrete.shape.axis_aligned_rectangle import AxisAlignedRectangle
 from otary.utils.cv.ocrsingleoutput import OcrSingleOutput
 from otary.image.base import BaseImage
 from otary.image.components import (
@@ -69,7 +69,7 @@ class Image:
     reader = ReaderImage()
 
     def __init__(self, image: NDArray) -> None:
-        self.base = BaseImage(image=image)
+        self.base = BaseImage(image=image, parent=self)
         self.drawer = DrawerImage(base=self.base)
         self.writer = WriterImage(base=self.base)
         self.transformer = TransformerImage(base=self.base)
@@ -119,7 +119,7 @@ class Image:
         as_grayscale: bool = False,
         page_nb: int = 0,
         resolution: Optional[int] = None,
-        clip_pct: Optional[pymupdf.Rect] = None,
+        clip_pct: Optional[AxisAlignedRectangle] = None,
     ) -> Image:
         """Create an Image array from a pdf file.
 
@@ -129,9 +129,9 @@ class Image:
                 Defaults to False.
             page_nb (int, optional): page number to extract. Defaults to 0.
             resolution (Optional[int], optional): resolution of the image.
-            clip_pct (Optional[pymupdf.Rect], optional): clip percentage of the image
-                to only load a small part of the image (crop) for faster loading and
-                less memory usage. Defaults to None.
+            clip_pct (Optional[AxisAlignedRectangle], optional): clip percentage of the
+                image to only load a small part of the image (crop) for faster loading
+                and less memory usage. Defaults to None.
 
         Returns:
             Image: Image object from pdf
@@ -570,88 +570,107 @@ class Image:
     def threshold_simple(self, thresh: int) -> Self:
         """Compute the image thesholded by a single value T.
         All pixels with value v <= T are turned black and those with value v > T are
-        turned white.
+        turned white. This is a global thresholding method.
 
         Args:
             thresh (int): value to separate the black from the white pixels.
 
         Returns:
-            Image: new image thresholded with only two values 0 and 255.
+            (Self): output thresholded image
         """
         self.transformer.binarizer.threshold_simple(thresh=thresh)
         return self
 
-    def threshold_adaptative(self) -> Self:
-        """Apply adaptive thresholding.
-
-        A median blur is applied before for better thresholding results.
-        See https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html.
-
-        As the input image must be a grayscale before applying any thresholding
-        methods we convert the image to grayscale.
-
-        Returns:
-            Self: image thresholded where its values are now pure 0 or 255
-        """
-        self.transformer.binarizer.threshold_adaptative()
-        return self
-
     def threshold_otsu(self) -> Self:
-        """Apply Ostu thresholding.
+        """Apply Otsu global thresholding.
+        This is a global thresholding method that automatically determines
+        an optimal threshold value from the image histogram.
 
-        A gaussian blur is applied before for better thresholding results.
-        See https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html.
+        Paper (1979):
+        https://ieeexplore.ieee.org/document/4310076
+
+        Consider applying a gaussian blur before for better thresholding results.
+        See why in https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html.
 
         As the input image must be a grayscale before applying any thresholding
         methods we convert the image to grayscale.
 
         Returns:
-            Self: image thresholded where its values are now pure 0 or 255
+            (Self): output thresholded image
         """
         self.transformer.binarizer.threshold_otsu()
         return self
 
-    def threshold_niblack(self, window_size: int = 15, k: float = 0.2) -> Self:
-        """Apply Niblack thresholding.
-        See https://scikit-image.org/docs/stable/auto_examples/segmentation/\
-                plot_niblack_sauvola.html
+    def threshold_adaptive(self, block_size: int = 11, constant: float = 2.0) -> Self:
+        """Apply adaptive local thresholding.
+        This is a local thresholding method that computes the threshold for a pixel
+        based on a small region around it.
+
+        A gaussian blur is applied before for better thresholding results.
+        See why in https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html.
 
         As the input image must be a grayscale before applying any thresholding
         methods we convert the image to grayscale.
 
         Args:
-            window_size (int, optional): apply on the
-                image. Defaults to 15.
-            k (float, optional): factor to apply to regulate the impact
-                of the std. Defaults to 0.2.
+            block_size (int, optional): Size of a pixel neighborhood that is used to
+                calculate a threshold value for the pixel: 3, 5, 7, and so on.
+                Defaults to 11.
+            constant (int, optional): Constant subtracted from the mean or weighted
+                mean. Normally, it is positive but may be zero or negative as well.
+                Defaults to 2.
 
         Returns:
-            Self: image thresholded where its values are now pure 0 or 255
+            (Self): output thresholded image
         """
-        self.transformer.binarizer.threshold_niblack(window_size=window_size, k=k)
+        self.transformer.binarizer.threshold_adaptive(
+            block_size=block_size, constant=constant
+        )
         return self
 
     def threshold_sauvola(
-        self, window_size: int = 15, k: float = 0.2, r: float = 128.0
+        self, window_size: int = 15, k: float = 0.5, r: float = 128.0
     ) -> Self:
-        """Apply Sauvola thresholding.
-        See https://scikit-image.org/docs/stable/auto_examples/segmentation/\
-                plot_niblack_sauvola.html.
+        """Apply Sauvola local thresholding.
+         This is a local thresholding method that computes the threshold for a pixel
+         based on a small region around it.
 
-        As the input image must be a grayscale before applying any thresholding
-        methods we convert the image to grayscale.
+         Paper (1997):
+         https://www.researchgate.net/publication/3710586
 
-        Args:
-            window_size (int, optional): sauvola window size to apply on the
-                image. Defaults to 15.
-            k (float, optional): sauvola k factor to apply to regulate the impact
-                of the std. Defaults to 0.2.
-            r (float, optional): sauvola r value. Defaults to 128.
+         See https://scikit-image.org/docs/stable/auto_examples/segmentation/plot_niblack_sauvola.html # pylint: disable=line-too-long
+
+         As the input image must be a grayscale before applying any thresholding
+         methods we convert the image to grayscale.
+
+         Args:
+             window_size (int, optional): sauvola window size to apply on the
+                 image. Defaults to 15.
+             k (float, optional): sauvola k factor to apply to regulate the impact
+                 of the std. Defaults to 0.5.
+             r (float, optional): sauvola r value. Defaults to 128.
 
         Returns:
-            Self: image thresholded where its values are now pure 0 or 255
+             (Self): output thresholded image
         """
         self.transformer.binarizer.threshold_sauvola(window_size=window_size, k=k, r=r)
+        return self
+
+    def threshold_bradley(self, window_size: int = 15, t: float = 0.15) -> Self:
+        """Implementation of the Bradley & Roth thresholding method.
+
+        Paper (2007):
+        https://www.researchgate.net/publication/220494200_Adaptive_Thresholding_using_the_Integral_Image
+
+        Args:
+            window_size (int, optional): window size for local computations.
+                Defaults to 15.
+            t (float, optional): t value in [0, 1]. Defaults to 0.15.
+
+        Returns:
+            NDArray[np.uint8]: output thresholded image
+        """
+        self.transformer.binarizer.threshold_bradley(window_size=window_size, t=t)
         return self
 
     def binary(self, method: BinarizationMethods = "sauvola") -> NDArray:
@@ -836,7 +855,7 @@ class Image:
         """
         # pylint: disable=too-many-arguments, too-many-positional-arguments
         # get the bbox normalized
-        clip_pct = bbox.copy().normalize(x=self.width, y=self.height).as_pymupdf_rect
+        clip_pct = bbox.copy().normalize(x=self.width, y=self.height)
 
         # obtain the High Quality crop image by reading
         im_crop = Image.from_pdf(
@@ -1332,6 +1351,26 @@ class Image:
             color (int, optional): border color. Defaults to 0.
         """
         self.transformer.morphologyzer.add_border(size=size, fill_value=fill_value)
+        return self
+
+    def add_noise_salt_and_pepper(self, amount: float = 0.05) -> Self:
+        """Add salt and pepper noise to the image.
+
+        Args:
+            amount (float, optional): Proportion of image pixels to alter.
+                Defaults to 0.05.
+        """
+        self.transformer.morphologyzer.add_noise_salt_and_pepper(amount=amount)
+        return self
+
+    def add_noise_gaussian(self, mean: float = 0, std: float = 0.05) -> Self:
+        """Add Gaussian noise to the image.
+
+        Args:
+            amount (float, optional): Proportion of image pixels to alter.
+                Defaults to 0.05.
+        """
+        self.transformer.morphologyzer.add_noise_gaussian(mean=mean, std=std)
         return self
 
     # -------------------------- ASSEMBLED COMPOSED METHODS ---------------------------

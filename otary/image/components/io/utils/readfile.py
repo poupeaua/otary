@@ -10,6 +10,8 @@ import numpy as np
 import pymupdf
 from PIL import Image as ImagePIL
 
+from otary.geometry.discrete.shape.axis_aligned_rectangle import AxisAlignedRectangle
+
 
 def read_pdf_document(
     filepath_or_stream: str | io.BytesIO, page_nb: Optional[int] = None
@@ -52,7 +54,7 @@ def read_pdf_to_images(
     filepath_or_stream: str | io.BytesIO,
     resolution: Optional[int] = 3508,
     page_nb: Optional[int] = None,
-    clip_pct: Optional[pymupdf.Rect] = None,
+    clip_pct: Optional[AxisAlignedRectangle] = None,
 ) -> list[np.ndarray]:
     """Read a pdf and turn it into a list of images in a given image resolution.
 
@@ -62,7 +64,7 @@ def read_pdf_to_images(
             Defaults to 3508.
         page_nb (int, optional): page to load. Default to None which indicates that
             we load all pages from the pdf.
-        clip_pct (pymmupdf.Rect, optional): optional zone to extract in the image.
+        clip_pct (AxisAlignedRectangle, optional): optional zone to extract in the image
             This is particularly useful to load into memory only a small part of the
             image without loading everything into memory. This reduces considerably
             the image loading time especially combined with a high resolution.
@@ -75,10 +77,10 @@ def read_pdf_to_images(
     if clip_pct is not None:
         page_rect = pages[0].bound()
         clip = pymupdf.Rect(
-            x0=clip_pct.x0 * page_rect.width,
-            y0=clip_pct.y0 * page_rect.height,
-            x1=clip_pct.x1 * page_rect.width,
-            y1=clip_pct.y1 * page_rect.height,
+            x0=clip_pct.xmin * page_rect.width,
+            y0=clip_pct.ymin * page_rect.height,
+            x1=clip_pct.xmax * page_rect.width,
+            y1=clip_pct.ymax * page_rect.height,
         )
     else:
         clip = None
