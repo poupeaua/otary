@@ -272,8 +272,8 @@ class TestEntityEnclosing:
 
     def test_enclosing_convex_hull(self, polygon_and_enclosings):
         polygon: Polygon = polygon_and_enclosings["polygon"]
-        expected_aabb: Polygon = polygon_and_enclosings["convex_hull"]
-        assert polygon.enclosing_convex_hull().is_equal(expected_aabb)
+        expected_convex_hull: Polygon = polygon_and_enclosings["convex_hull"]
+        assert polygon.enclosing_convex_hull().is_equal(expected_convex_hull)
 
 
 class TestEntityIntersection:
