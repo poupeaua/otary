@@ -157,7 +157,6 @@ class BinarizerImage:
         "Dynamic thresholding of grey-level images" by Bernsen.
 
         Args:
-            img (NDArray): input image
             window_size (int, optional): window size for local computations.
                 Defaults to 75.
             contrast_limit (float, optional): contrast limit. If the
@@ -467,10 +466,10 @@ class BinarizerImage:
 
         Args:
             sfair_window_size (int, optional): window size in preprocess
-            to cluster background and foreground pixels around edge pixels.
-            This parameter is important as a higher value will make the method
-            more robust to noise but also more computationally expensive and slow.
-            Defaults to 5.
+                to cluster background and foreground pixels around edge pixels.
+                This parameter is important as a higher value will make the method
+                more robust to noise but also more computationally expensive and slow.
+                Defaults to 5.
             sfair_clustering_algo (str, optional): clustering algorithm for the S-FAIR
                 step. Defaults to "otsu".
             sfair_clustering_max_iter (int, optional): maximum number of iterations for

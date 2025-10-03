@@ -268,8 +268,8 @@ class MorphologyzerImage:
         """Add Gaussian noise to the image.
 
         Args:
-            amount (float, optional): Proportion of image pixels to alter.
-                Defaults to 0.05.
+            mean (float, optional): mean of the noise. Defaults to 0.
+            std (float, optional): standard deviation of the noise. Defaults to 0.05.
         """
         self.base.asarray = np.clip(
             self.base.asarray + np.random.normal(mean, std, self.base.asarray.shape),
