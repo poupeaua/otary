@@ -4,9 +4,6 @@ import numpy as np
 
 from otary.geometry.discrete.shape.axis_aligned_rectangle import AxisAlignedRectangle
 from otary.image import Image
-from otary.image.components.transformer.components.binarizer.ops.niblack_like import (
-    threshold_niblack_like,
-)
 
 
 @pytest.fixture
@@ -20,90 +17,6 @@ def im_pdf_crop() -> Image:
     aabb = AxisAlignedRectangle.from_topleft_bottomright([0.3, 0.125], [0.7, 0.225])
     im = Image.from_pdf("tests/data/test.pdf", resolution=1000, clip_pct=aabb)
     return im
-
-
-# --------------------------- BASIC BINARIZATION METHODS ------------------------------
-
-
-class TestThresholdNiblackLike:
-
-    def test_threshold_unknown_method(self):
-        with pytest.raises(ValueError):
-            img = Image.from_fillvalue(shape=(5, 5), value=127)
-            threshold_niblack_like(img.asarray, method="not_an_expected_binary_method")
-
-
-class TestThresholdSimple:
-
-    @pytest.mark.parametrize("thresh", [25, 50, 100, 150])
-    def test_threshold_simple(
-        self, thresh: Literal[25] | Literal[50] | Literal[100] | Literal[150]
-    ):
-        img = Image.from_fillvalue(shape=(5, 5), value=thresh - 1)
-        img.asarray[0, 0] = 255
-        img.threshold_simple(thresh=thresh)
-        assert img.asarray[0, 0] == 255
-        img.asarray[0, 0] = 0
-        assert np.all(img.asarray == 0)
-
-
-class TestThresholdAdaptative:
-
-    def test_threshold_adaptative_basic(self):
-        img = Image.from_fillvalue(shape=(5, 5), value=127)
-        img.threshold_adaptive()
-        assert np.all((img.asarray == 0) | (img.asarray == 255))
-
-    def test_threshold_adaptative_uniform_image(self):
-        img = Image.from_fillvalue(shape=(5, 5), value=200)
-        img.threshold_adaptive()
-        assert np.all(img.asarray == 255)
-
-    def test_threshold_adaptative_low_values(self):
-        img = Image.from_fillvalue(shape=(5, 5), value=55)
-        img.asarray[2, 2] = 200
-        img.threshold_adaptive()
-        assert img.asarray[2, 2] == 255
-        assert img.asarray[0, 0] == 0
-        assert img.asarray[4, 4] == 0
-
-    def test_threshold_adaptative_mixed_values(self):
-        img = Image.from_fillvalue(shape=(5, 5), value=127)
-        img.asarray[0, 0] = 200
-        img.asarray[4, 4] = 50
-        img.threshold_adaptive()
-        assert img.asarray[0, 0] == 255
-        assert img.asarray[4, 4] == 0
-
-
-class TestThresholdOtsu:
-
-    def test_threshold_otsu(self):
-        img = Image.from_fillvalue(shape=(5, 5), value=200)
-        img.threshold_otsu()
-        assert np.all(img.asarray == 255)
-
-
-class TestThresholdSauvola:
-
-    def test_threshold_sauvola(self):
-        img = Image.from_fillvalue(shape=(5, 5), value=127)
-        img.threshold_sauvola()
-        assert np.all(img.asarray == 255)
-
-
-class TestThresholdBradley:
-
-    def test_threshold_bradley(self):
-        img = Image.from_fillvalue(shape=(5, 5), value=127)
-        img.asarray[0, 0] = 200
-        img.asarray[4, 4] = 50
-        img.threshold_bradley()
-        assert img.asarray[0, 0] == 255
-        assert img.asarray[4, 4] == 0
-
-
-# -------------------------------- SPECIALIZED METHODS --------------------------------
 
 
 class TestThresholdNiblack:
@@ -329,30 +242,3 @@ class TestThresholdFair:
         with pytest.raises(ValueError):
             img = Image.from_fillvalue(shape=(5, 5), value=127)
             img.transformer.binarizer.threshold_fair(sfair_clustering_algo="unkown")
-
-
-# --------------------------------- BINARY [0, 1] TESTS -------------------------------
-
-
-class TestThresholdThresholdBinary:
-
-    def test_binary_error_method(self):
-        img = Image.from_fillvalue(shape=(5, 5), value=55)
-        with pytest.raises(ValueError):
-            img.binary(method="not_an_expected_binary_method")
-
-    def test_binary_sauvola(self):
-        img = Image.from_fillvalue(shape=(5, 5), value=55)
-        assert np.all(img.binary(method="sauvola") == 1)
-
-    def test_binaryrev_sauvola(self):
-        img = Image.from_fillvalue(shape=(5, 5), value=55)
-        assert np.all(img.binaryrev(method="sauvola") == 0)
-
-    def test_binary_otsu(self):
-        img = Image.from_fillvalue(shape=(5, 5), value=0)
-        assert np.all(img.binary(method="otsu") == 0)
-
-    def test_binaryrev_otsu(self):
-        img = Image.from_fillvalue(shape=(5, 5), value=0)
-        assert np.all(img.binaryrev(method="otsu") == 1)
