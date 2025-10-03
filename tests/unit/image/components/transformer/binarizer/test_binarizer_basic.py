@@ -1,7 +1,9 @@
 import numpy as np
 from typing import Literal
 from otary.image import Image
-from otary.image.components.transformer.components.binarizer.ops.niblack_like import threshold_niblack_like
+from otary.image.components.transformer.components.binarizer.ops.niblack_like import (
+    threshold_niblack_like,
+)
 
 
 import pytest

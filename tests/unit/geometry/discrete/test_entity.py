@@ -240,7 +240,7 @@ def polygon_and_enclosings() -> dict[str, Polygon]:
     )
     aabb = Polygon([[10, 20], [81, 20], [81, 81], [10, 81]])
     obb = Polygon([[9, 70], [35, 6], [85, 26], [60, 90]])
-    convex_hull = Polygon([[10, 70], [30, 20], [70, 20], [80, 40], [50, 80]])    
+    convex_hull = Polygon([[10, 70], [30, 20], [70, 20], [80, 40], [50, 80]])
     return {
         "polygon": polygon,
         "aabb": aabb,
