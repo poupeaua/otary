@@ -2,26 +2,15 @@
 `BinarizerImage` component is a subpart of the Image Transformer component.
 
 Binarization is the process of converting an image to black and white.
-This means that a binarized image is a grayscale image where all the pixels are
-either black or white. Any colorscale or grayscale image can be binarized.
-
-To be more precise, here, we call methods where the image is turned into a black or
-white image a *Thresholding method*: they are the methods called `threshold_xxx`.
-Therefore the output of thresholding method is a grayscale Otary Image object with
-only two values: 0 (black) and 255 (white).
-
-This class provides also a way to compute the binary representation of the image.
-Here, binary means that all the values are either 0 (black) or 1 (white) in the
-strict binary sense (0 or 1). In this case, the output is a numpy array with 0 and 1
-with the same shape as the input image.
-
+This means that a binarized image is a grayscale image where all the pixels are either 
+value 0 or 255. Any colorscale or grayscale image can be binarized. 
 Binarized methods can be global or local:
 
 - A **global** binarization method applies the same threshold to all the pixels of the
 image.
 
 - A **local** binarization method applies a different threshold to each pixel of the
-image. Generally, a local binarization method is better overall especially for images
+image. Generally, a local binarization method is better overall, especially for images
 with luminosity variations.
 """
 

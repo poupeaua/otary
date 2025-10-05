@@ -120,6 +120,7 @@ nav:
 
   - About:
     - about/history.md
+    - A Fair Advice: about/fair_advice.md
     - Contributing: about/contributing.md
     - License: about/license.md
 
