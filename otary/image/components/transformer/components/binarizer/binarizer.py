@@ -1,5 +1,28 @@
 """
-Binarizer component
+`BinarizerImage` component is a subpart of the Image Transformer component.
+
+Binarization is the process of converting an image to black and white.
+This means that a binarized image is a grayscale image where all the pixels are
+either black or white. Any colorscale or grayscale image can be binarized.
+
+To be more precise, here, we call methods where the image is turned into a black or
+white image a *Thresholding method*: they are the methods called `threshold_xxx`.
+Therefore the output of thresholding method is a grayscale Otary Image object with
+only two values: 0 (black) and 255 (white).
+
+This class provides also a way to compute the binary representation of the image.
+Here, binary means that all the values are either 0 (black) or 1 (white) in the
+strict binary sense (0 or 1). In this case, the output is a numpy array with 0 and 1
+with the same shape as the input image.
+
+Binarized methods can be global or local:
+
+- A **global** binarization method applies the same threshold to all the pixels of the
+image.
+
+- A **local** binarization method applies a different threshold to each pixel of the
+image. Generally, a local binarization method is better overall especially for images
+with luminosity variations.
 """
 
 from typing import Literal, Optional, get_args, TYPE_CHECKING
@@ -48,13 +71,15 @@ BinarizationMethods = Literal[
 
 class BinarizerImage:
     # pylint: disable=line-too-long
-    """BinarizerImage class
+    """BinarizerImage class contains all the binarization methods.
 
-    It includes different binarization methods:
+    It includes only two global thresholding methods: `threshold_simple` and `threshold_otsu`. The other methods are local thresholding methods.
 
-    | Name           | Year | Reference / Paper                                                                                                                        |
+    It includes the following binarization methods, sorted by year of publication:
+
+    | Name           | Year | Reference                                                                                                                        |
     |----------------|------|------------------------------------------------------------------------------------------------------------------------------------------|
-    | Adaptive     |  -   | [OpenCV Adaptive Thresholding Documentation](https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html)                           |
+    | Adaptive       |  -   | [OpenCV Adaptive Thresholding Documentation](https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html)                           |
     | Otsu           | 1979 | [A Threshold Selection Method from Gray-Level Histograms](https://ieeexplore.ieee.org/document/4310076)                                  |
     | Bernsen        | 1986 | "Dynamic thresholding of grey-level images" by Bernsen                                                                                   |
     | Niblack        | 1986 | "An Introduction to Digital Image Processing" by Wayne Niblack                                                                           |
@@ -64,7 +89,7 @@ class BinarizerImage:
     | Gatos          | 2005 | [Adaptive degraded document image binarization](https://users.iit.demokritos.gr/~bgat/PatRec2006.pdf)                                    |
     | Bradley & Roth | 2007 | [Adaptive Thresholding using the Integral Image](https://www.researchgate.net/publication/220494200_Adaptive_Thresholding_using_the_Integral_Image) |
     | Nick           | 2009 | [Comparison of Niblack inspired Binarization Methods for Ancient Documents](https://www.researchgate.net/publication/221253803)           |
-    | Su             | 2010 | [Su Local Thresholding](https://www.researchgate.net/publication/220933012)                                                             |
+    | Su             | 2010 | [Binarization of historical document images using the local maximum and minimum](https://www.researchgate.net/publication/220933012)                                                             |
     | Phansalkar     | 2011 | [Adaptive Local Thresholding for Detection of Nuclei in Diversely Stained Cytology Images](https://www.researchgate.net/publication/224226466) |
     | Adotsu         | 2011 | [AdOtsu: An adaptive and parameterless generalization of Otsu’s method for document image binarization](https://www.researchgate.net/publication/220602345) |
     | Singh          | 2012 | [A New Local Adaptive Thresholding Technique in Binarization](https://www.researchgate.net/publication/220485031)                        |
@@ -79,7 +104,7 @@ class BinarizerImage:
     # ----------------------------- GLOBAL THRESHOLDING -------------------------------
 
     def threshold_simple(self, thresh: int) -> "Image":
-        """Compute the image thesholded by a single value T.
+        """Compute the image thresholded by a single value T.
         All pixels with value v <= T are turned black and those with value v > T are
         turned white. This is a global thresholding method.
 
@@ -96,13 +121,10 @@ class BinarizerImage:
         an optimal threshold value from the image histogram.
 
         Paper (1979):
-        https://ieeexplore.ieee.org/document/4310076
+        [A Threshold Selection Method from Gray-Level Histograms](https://ieeexplore.ieee.org/document/4310076)
 
         Consider applying a gaussian blur before for better thresholding results.
-        See why in https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html.
-
-        As the input image must be a grayscale before applying any thresholding
-        methods we convert the image to grayscale.
+        See why in the [OpenCV documentation](https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html).
         """
         self.base.as_grayscale()
         _, img_thresholded = cv2.threshold(
@@ -120,11 +142,8 @@ class BinarizerImage:
         This is a local thresholding method that computes the threshold for a pixel
         based on a small region around it.
 
-        A gaussian blur is applied before for better thresholding results.
-        See why in https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html.
-
-        As the input image must be a grayscale before applying any thresholding
-        methods we convert the image to grayscale.
+        Consider applying a gaussian blur before for better thresholding results.
+        See why in the [OpenCV documentation](https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html).
 
         Args:
             block_size (int, optional): Size of a pixel neighborhood that is used to
@@ -180,8 +199,6 @@ class BinarizerImage:
         Book (1986):
         "An Introduction to Digital Image Processing" by Wayne Niblack.
 
-        See https://scikit-image.org/docs/stable/auto_examples/segmentation/plot_niblack_sauvola.html
-
         Args:
             window_size (int, optional): apply on the
                 image. Defaults to 15.
@@ -202,12 +219,7 @@ class BinarizerImage:
         based on a small region around it.
 
         Paper (1997):
-        https://www.researchgate.net/publication/3710586
-
-        See https://scikit-image.org/docs/stable/auto_examples/segmentation/plot_niblack_sauvola.html.
-
-        As the input image must be a grayscale before applying any thresholding
-        methods we convert the image to grayscale.
+        [Adaptive Document Binarization](https://www.researchgate.net/publication/3710586_Adaptive_Document_Binarization)
 
         Args:
             window_size (int, optional): sauvola window size to apply on the
@@ -226,7 +238,7 @@ class BinarizerImage:
         """Apply Wolf local thresholding.
 
         Paper (2003):
-        https://hal.science/hal-01504401v1
+        [Extraction and Recognition of Artificial Text in Multimedia Documents](https://hal.science/hal-01504401v1)
 
         Args:
             window_size (int, optional): apply on the
@@ -252,7 +264,7 @@ class BinarizerImage:
         """Implementation of the Feng thresholding method.
 
         Paper (2004):
-        https://www.jstage.jst.go.jp/article/elex/1/16/1_16_501/_pdf
+        [Contrast adaptive binarization of low quality document images](https://www.jstage.jst.go.jp/article/elex/1/16/1_16_501/_pdf)
 
         Args:
             w1 (int, optional): primary window size. Defaults to 19.
@@ -287,7 +299,7 @@ class BinarizerImage:
         """Apply Gatos local thresholding.
 
         Paper (2005):
-        https://users.iit.demokritos.gr/~bgat/PatRec2006.pdf
+        [Adaptive degraded document image binarization](https://users.iit.demokritos.gr/~bgat/PatRec2006.pdf)
 
         Args:
             q (float, optional): q gatos factor. Defaults to 0.6.
@@ -318,7 +330,7 @@ class BinarizerImage:
         """Implementation of the Bradley & Roth thresholding method.
 
         Paper (2007):
-        https://www.researchgate.net/publication/220494200_Adaptive_Thresholding_using_the_Integral_Image
+        [Adaptive Thresholding using the Integral Image](https://www.researchgate.net/publication/220494200_Adaptive_Thresholding_using_the_Integral_Image)
 
         Args:
             window_size (int, optional): window size for local computations.
@@ -338,7 +350,7 @@ class BinarizerImage:
         """Apply Nick local thresholding.
 
         Paper (2009):
-        https://www.researchgate.net/publication/221253803
+        [Comparison of Niblack inspired Binarization Methods for Ancient Documents](https://www.researchgate.net/publication/221253803)
 
         The paper suggests to use a window size of 19 and a k factor in [-0.2, -0.1].
 
@@ -362,7 +374,7 @@ class BinarizerImage:
         """Compute the Su local thresholding.
 
         Paper (2010):
-        https://www.researchgate.net/publication/220933012
+        [Binarization of historical document images using the local maximum and minimum](https://www.researchgate.net/publication/220933012)
 
         Args:
             window_size (int, optional): window size for high contrast image
@@ -382,7 +394,7 @@ class BinarizerImage:
         """Apply Phansalkar et al. local thresholding.
 
         Paper (2011):
-        https://www.researchgate.net/publication/224226466
+        [Adaptive Local Thresholding for Detection of Nuclei in Diversely Stained Cytology Images](https://www.researchgate.net/publication/224226466)
 
         Args:
             window_size (int, optional): apply on the
@@ -411,7 +423,7 @@ class BinarizerImage:
         """Apply Adotsu local thresholding.
 
         Paper (2011):
-        https://www.researchgate.net/publication/224226466
+        [AdOtsu: An adaptive and parameterless generalization of Otsu’s method for document image binarization](https://www.researchgate.net/publication/220602345)
 
         Args:
             grid_size (int, optional): window size for local computations.
@@ -430,7 +442,7 @@ class BinarizerImage:
         """Apply Singh local thresholding.
 
         Paper (2012):
-        https://www.researchgate.net/publication/220485031
+        [A New Local Adaptive Thresholding Technique in Binarization](https://www.researchgate.net/publication/220485031)
 
         Args:
             window_size (int, optional): apply on the
@@ -462,7 +474,7 @@ class BinarizerImage:
         """Apply FAIR local thresholding.
 
         Paper (2013):
-        https://amu.hal.science/hal-01479805/document
+        [FAIR: A Fast Algorithm for document Image Restoration](https://amu.hal.science/hal-01479805/document)
 
         Args:
             sfair_window_size (int, optional): window size in preprocess
@@ -542,7 +554,7 @@ class BinarizerImage:
         """Apply ISauvola local thresholding.
 
         Paper (2016):
-        https://www.researchgate.net/publication/304621554
+        [ISauvola: Improved Sauvola’s Algorithm for Document Image Binarization](https://www.researchgate.net/publication/304621554_ISauvola_Improved_Sauvola)
 
         Args:
             window_size (int, optional): apply on the
@@ -580,7 +592,7 @@ class BinarizerImage:
         """Apply Wan local thresholding.
 
         Paper (2018):
-        https://www.researchgate.net/publication/326026836
+        [Binarization of Document Image Using Optimum Threshold Modification](https://www.researchgate.net/publication/326026836)
 
         Args:
             window_size (int, optional): apply on the
@@ -608,7 +620,7 @@ class BinarizerImage:
 
         Args:
             method (str, optional): the binarization method to apply.
-                Must be in ["adaptative", "otsu", "sauvola", "niblack", "nick", "wolf"].
+                Look at the BinarizationMethods to see all the available methods.
                 Defaults to "sauvola".
 
         Returns:

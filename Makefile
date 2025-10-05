@@ -104,7 +104,7 @@ docs-serve:
 	@echo "\n------------------"
 	@echo "Serve documentation"
 	@echo "-------------------"
-	poetry run mkdocs serve
+	poetry run mkdocs serve --watch otary
 
 docs-deploy:
 	@echo "\n-------------------"
