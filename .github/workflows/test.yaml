@@ -44,7 +44,7 @@ jobs:
           sudo apt-get install libgl1 -y
           python -m pip install --upgrade pip
           poetry config virtualenvs.create false
-          poetry install --without docs
+          poetry install --without docs,dev,test
 
       - name: ✅ Check Code Quality - Pylint
         run: |
@@ -104,7 +104,7 @@ jobs:
           sudo apt-get install libgl1 -y
           python -m pip install --upgrade pip
           poetry config virtualenvs.create false
-          poetry install --without docs
+          poetry install --without docs,dev,check
 
       - run: mkdir coverage
 

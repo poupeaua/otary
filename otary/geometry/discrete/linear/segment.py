@@ -116,7 +116,7 @@ class Segment(LinearEntity):
         this implies also two parallel lines.
 
         Args:
-            segment (np.array): segment of shape (2, 2)
+            other (np.array): segment of shape (2, 2)
             margin_error_angle (float, optional): Threshold value for validating
                 if the lines are parallel. Defaults to DEFAULT_MARGIN_ANGLE_ERROR.
 
