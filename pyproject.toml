@@ -1,6 +1,6 @@
 [project]
 name = "otary"
-version = "0.3.1"
+version = "0.4.0"
 description = "Otary — elegant, readable, and powerful image and 2D geometry Python library."
 authors = [
     {name="Alexandre Poupeau", email="alexandre.poupeau.contact@gmail.com"}
