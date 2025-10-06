@@ -1,7 +1,7 @@
 # A Fair Advice
 
 I, the author of the Otary library, want to be really fair about the use of this
-framework. 
+framework.
 
 !!! quote "Robert C. Martin in the book `Clean Architecture` at page 292"
     Most frameworks authors offer their work for free because they want to be helpful
@@ -17,7 +17,7 @@ framework.
     such overlap exists, frameworks can be very useful indeed.
 
 I totally agree with this. In fact, this corresponds exactly to the history of Otary.
-Otary was born to solve my *personal* problems for my *personal* project. 
+Otary was born to solve my *personal* problems for my *personal* project.
 Otary exists because I needed something that did not exist. And I was not satisfied with what existed.
 
 Otary was born from real-world experience: the recurring problems I faced in previous projects and the pain points my colleagues often shared.

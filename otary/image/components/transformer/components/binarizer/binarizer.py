@@ -1,17 +1,30 @@
 """
 `BinarizerImage` component is a subpart of the Image Transformer component.
 
-Binarization is the process of converting an image to black and white.
-This means that a binarized image is a grayscale image where all the pixels are either 
-value 0 or 255. Any colorscale or grayscale image can be binarized. 
-Binarized methods can be global or local:
+Binarization converts an image to black and white, making every pixel either 0 or 255.
+Any color or grayscale image can be binarized. Methods fall into two types:
 
-- A **global** binarization method applies the same threshold to all the pixels of the
-image.
+- **Global**: applies a single threshold to all pixels.
+- **Local**: applies varying thresholds per pixel, usually performing better on images
+with uneven lighting.
 
-- A **local** binarization method applies a different threshold to each pixel of the
-image. Generally, a local binarization method is better overall, especially for images
-with luminosity variations.
+Otary offers **5 basic** and **12 advanced** binarization methods.
+
+Basic methods: simple, otsu, adaptive, bradley, and sauvola are available directly
+from the Image object:
+
+```python
+import otary as ot
+
+im = ot.Image.from_file(filepath="path/to/file/image")
+im.threshold_sauvola()
+```
+
+Advanced methods are accessible via the transformer.binarizer attribute:
+
+```python
+im.transformer.binarizer.threshold_isauvola()
+```
 """
 
 from typing import Literal, Optional, get_args, TYPE_CHECKING
