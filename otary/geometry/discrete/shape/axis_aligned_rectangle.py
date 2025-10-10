@@ -1,5 +1,5 @@
 """
-Axis Aligned Rectangle python file
+Axis Aligned Rectangle class
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ class AxisAlignedRectangle(Rectangle):
     """
     Axis Aligned Rectangle class that inherits from Rectangle.
     It defines a rectangle that is axis-aligned, meaning:
+    
      - its sides are parallel to the X and Y axes
      - the first point is the top-left point (considering the y-axis pointing downwards)
      - the points are ordered clockwise
@@ -162,8 +163,9 @@ class AxisAlignedRectangle(Rectangle):
         Returns:
             Rectangle: object resulting from the rotation
 
-        Examples:
+        Example:
             The rotate method does not modify the original AxisAlignedRectangle object:
+            ```python
             >>> rect = ot.AxisAlignedRectangle(points=[[0, 0], [4, 0], [4, 3], [0, 3]])
             >>> rot_rect = rect.rotate(angle=45, is_degree=True)
             >>> rot_rect.asarray
@@ -176,6 +178,7 @@ class AxisAlignedRectangle(Rectangle):
                    [4, 0],
                    [4, 3],
                    [0, 3]], dtype=int32)
+            ```
         """
         # pylint: disable=R0801
         if pivot is None:

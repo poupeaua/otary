@@ -101,6 +101,7 @@ nav:
           - Shape:
             - Polygon: api/geometry/discrete/shape/polygon.md
             - Rectangle: api/geometry/discrete/shape/rectangle.md
+            - Axis Aligned Rectangle: api/geometry/discrete/shape/axis_aligned_rectangle.md
             - Triangle: api/geometry/discrete/shape/triangle.md
 
           - Linear:
