@@ -243,7 +243,7 @@ class TestPolygonRearrange:
 
 class TestPolygonFromUnorderedLinesApprox:
     @pytest.mark.parametrize(
-        "input,output",
+        "_input,output",
         (
             (
                 [  # square
@@ -269,12 +269,12 @@ class TestPolygonFromUnorderedLinesApprox:
             ),
         ),
     )
-    def test_cnt_fula_general(self, input: list, output: list):
-        cnt = Polygon.from_unordered_lines_approx(input)
+    def test_cnt_fula_general(self, _input: list, output: list):
+        cnt = Polygon.from_unordered_lines_approx(_input)
         assert np.all([o in output for o in cnt.edges.tolist()])
 
     @pytest.mark.parametrize(
-        "input",
+        "_input",
         (
             (
                 [  # square
@@ -293,9 +293,9 @@ class TestPolygonFromUnorderedLinesApprox:
             ),
         ),
     )
-    def test_cnt_fula_dist_sup_thresh(self, input: list):
+    def test_cnt_fula_dist_sup_thresh(self, _input: list):
         with pytest.raises(RuntimeError):
-            Polygon.from_unordered_lines_approx(input, max_dist_thresh=10)
+            Polygon.from_unordered_lines_approx(_input, max_dist_thresh=10)
 
 
 class TestPolygonScoreEdgesInPoints:
