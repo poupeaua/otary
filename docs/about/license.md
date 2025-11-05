@@ -2,9 +2,6 @@
 
 Otary is released under the [BSD 3-Clause License](https://opensource.org/licenses/BSD-3-Clause).
 
-!!! quote "George E. P. Box"
-    “All models are wrong, but some are useful.”
-
 ```
 BSD 3-Clause License
 
