@@ -122,6 +122,7 @@ Thank you for respecting the following principles when contributing:
 - Try not to add new dependencies
 
 About tests:
+
 - Tests are written using pytest and are grouped within classes when possible when they are related
 - Try to respect TDD (Test Driven Development) if possible
 
