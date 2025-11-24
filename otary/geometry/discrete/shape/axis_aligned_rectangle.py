@@ -16,7 +16,7 @@ class AxisAlignedRectangle(Rectangle):
     """
     Axis Aligned Rectangle class that inherits from Rectangle.
     It defines a rectangle that is axis-aligned, meaning:
-    
+
      - its sides are parallel to the X and Y axes
      - the first point is the top-left point (considering the y-axis pointing downwards)
      - the points are ordered clockwise
