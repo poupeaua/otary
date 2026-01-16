@@ -3,7 +3,7 @@ name = "otary"
 version = "0.4.0"
 description = "Otary — elegant, readable, and powerful image and 2D geometry Python library."
 authors = [
-    {name="Alexandre Poupeau", email="alexandre.poupeau.contact@gmail.com"}
+    {name="Alexandre Poupeau", email="contact@alexandrepoupeau.com"}
 ]
 readme = "README.md"
 package-mode = true
