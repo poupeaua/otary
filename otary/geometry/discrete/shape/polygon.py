@@ -337,8 +337,9 @@ class Polygon(DiscreteGeometryEntity):
         diag2 = Segment(points=self.asarray[diag2_idxs])
 
         # rectangular criteria = the diagonals have same lengths
-        normed_length = np.sqrt(diag1.length * diag2.length)
-        if np.abs(diag1.length - diag2.length) > normed_length * margin_dist_error_pct:
+        normed_length = (diag1.length + diag2.length) / 2
+        err_tol = normed_length * margin_dist_error_pct
+        if np.abs(diag1.length - diag2.length) > err_tol:
             return False
 
         # there should exist only one intersection point
@@ -351,8 +352,8 @@ class Polygon(DiscreteGeometryEntity):
         dist_mid_cross_diag1 = np.linalg.norm(cross_point - diag1.centroid)
         dist_mid_cross_diag2 = np.linalg.norm(cross_point - diag2.centroid)
         if (
-            np.abs(dist_mid_cross_diag1) > normed_length * margin_dist_error_pct
-            or np.abs(dist_mid_cross_diag2) > normed_length * margin_dist_error_pct
+            dist_mid_cross_diag1 > err_tol
+            or dist_mid_cross_diag2 > err_tol
         ):
             return False
 
