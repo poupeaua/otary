@@ -28,7 +28,7 @@ class Rectangle(Polygon):
         self,
         points: NDArray | list,
         is_cast_int: bool = False,
-        regularity_margin_error: float = 1e-2,
+        regularity_rtol: float = 1e-2,
         desintersect: bool = True,
     ) -> None:
         """Create a Rectangle object.
@@ -36,13 +36,13 @@ class Rectangle(Polygon):
         Args:
             points (NDArray | list): 2D points that define the rectangle
             is_cast_int (bool, optional): cast points to int. Defaults to False.
-            regularity_margin_error (float, optional): defines the allowed margin
+            regularity_rtol (float, optional): defines the allowed relative tolerance
                 distance error when checking if the points form a rectangle or not
-                on initialization.
+                on initialization. Must be in [0, 1]. Defaults to 1e-2.
             desintersect (bool, optional): whether to desintersect the rectangle or not.
                 Can be useful if the input points are in a random order and
-                self-intersection is possible. In any case, if you try to instantiate
-                a self-intersected rectangle a ValueError will be raised.
+                self-intersection is possible. If you try to force to 
+                instantiate a self-intersected rectangle a ValueError will be raised.
                 Defaults to True.
         """
         if len(points) != 4:
@@ -58,12 +58,14 @@ class Rectangle(Polygon):
                 f"allowed for a {self.__class__.__name__}"
             )
 
-        if not self.is_regular(margin_dist_error_pct=regularity_margin_error):
+        if not self.is_regular(margin_dist_error_pct=regularity_rtol):
             raise ValueError(
                 "Try to create a Rectangle object but the coordinates "
                 "do not form a valid Rectangle. Please check your input coordinates, "
-                "the regularity_margin_error and the desintersect parameters."
+                "the regularity_rtol and the desintersect parameters."
             )
+        
+        self.regularity_rtol = regularity_rtol
 
     @classmethod
     def unit(cls) -> Rectangle:
@@ -448,6 +450,20 @@ class Rectangle(Polygon):
             topleft_index=topleft_index, vertice="topright"
         )
         return Vector([self[topleft_index], rect_topright_vertice])
+    
+    def copy(self) -> Self:
+        """Create a copy of the Rectangle object.
+
+        Returns:
+            Rectangle: new Rectangle object
+        """
+        # having a dedicated copy method is important here because of the 
+        # regularity_rtol attribute in the special case of the Rectangle class.
+        return Rectangle(
+            points=self.asarray.copy(),
+            is_cast_int=self.is_cast_int,
+            regularity_rtol=self.regularity_rtol,
+        )
 
     def __str__(self) -> str:
         return (  # pylint: disable=duplicate-code

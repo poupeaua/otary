@@ -80,7 +80,7 @@ class TestRectangleCreation:
 
     def test_create_rectangle_valid_irregular(self):
         points = [[0, 0], [100, 0], [100, 100], [0, 101]]
-        Rectangle(points, regularity_margin_error=1e-2)
+        Rectangle(points, regularity_rtol=1e-2)
 
 
 class TestRectangleIsSquare:
@@ -322,3 +322,16 @@ class TestRectangleGetVerticeFromTopleft:
         topleft_index = 0
         with pytest.raises(ValueError, match="Parameter vertice must be one of"):
             rect.get_vertice_from_topleft(topleft_index, "invalid_vertice")
+
+
+class TestRectangleCopy:
+
+    def test_copy(self):
+        """Useful test where a Rectangle that is not that regular should be copied
+        with the same not that regular condition. 
+        """
+        rect = Rectangle([[422, 440], [419, 470], [499, 476], [500, 445]], regularity_rtol=1e-1)
+        rect_copy = rect.copy()
+        assert rect is not rect_copy
+        assert np.array_equal(rect.asarray, rect_copy.asarray)
+        assert rect.regularity_rtol == rect_copy.regularity_rtol
