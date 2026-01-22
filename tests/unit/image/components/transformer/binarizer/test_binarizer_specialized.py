@@ -226,7 +226,7 @@ class TestThresholdFair:
             sfair_clustering_max_iter=15,
         )
         assert img.asarray[0, 0] == 255
-        assert img.asarray[55, 53] == 0 #TODO bypass error 3.14 
+        assert img.asarray[55, 53] == 0  # TODO bypass error 3.14
 
     def test_threshold_fair_kmeans(self, im_pdf_crop: Image):
         img = im_pdf_crop
