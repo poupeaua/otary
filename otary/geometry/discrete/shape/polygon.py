@@ -351,10 +351,7 @@ class Polygon(DiscreteGeometryEntity):
         cross_point = intersection_points[0]
         dist_mid_cross_diag1 = np.linalg.norm(cross_point - diag1.centroid)
         dist_mid_cross_diag2 = np.linalg.norm(cross_point - diag2.centroid)
-        if (
-            dist_mid_cross_diag1 > err_tol
-            or dist_mid_cross_diag2 > err_tol
-        ):
+        if dist_mid_cross_diag1 > err_tol or dist_mid_cross_diag2 > err_tol:
             return False
 
         return True

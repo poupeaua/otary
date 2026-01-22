@@ -41,7 +41,7 @@ class Rectangle(Polygon):
                 on initialization. Must be in [0, 1]. Defaults to 1e-2.
             desintersect (bool, optional): whether to desintersect the rectangle or not.
                 Can be useful if the input points are in a random order and
-                self-intersection is possible. If you try to force to 
+                self-intersection is possible. If you try to force to
                 instantiate a self-intersected rectangle a ValueError will be raised.
                 Defaults to True.
         """
@@ -64,7 +64,7 @@ class Rectangle(Polygon):
                 "do not form a valid Rectangle. Please check your input coordinates, "
                 "the regularity_rtol and the desintersect parameters."
             )
-        
+
         self.regularity_rtol = regularity_rtol
 
     @classmethod
@@ -450,14 +450,14 @@ class Rectangle(Polygon):
             topleft_index=topleft_index, vertice="topright"
         )
         return Vector([self[topleft_index], rect_topright_vertice])
-    
-    def copy(self) -> Self:
+
+    def copy(self) -> Rectangle:
         """Create a copy of the Rectangle object.
 
         Returns:
             Rectangle: new Rectangle object
         """
-        # having a dedicated copy method is important here because of the 
+        # having a dedicated copy method is important here because of the
         # regularity_rtol attribute in the special case of the Rectangle class.
         return Rectangle(
             points=self.asarray.copy(),

@@ -166,3 +166,25 @@ class TestAxisAlignedRectangleRotate:
         # Attempt to rotate the rectangle by 45 degrees
         with pytest.raises(TypeError):
             rect.rotate(angle=45)
+
+
+class TestAxisAlignedRectangleCopy:
+
+    def test_copy_base(self):
+        # Create an axis-aligned rectangle
+        rect = AxisAlignedRectangle.from_topleft(topleft=[1, 1], width=3, height=2)
+
+        # Create a copy of the rectangle
+        rect_copy = rect.copy()
+
+        assert isinstance(rect_copy, AxisAlignedRectangle)
+
+        # Assert the copy has the same properties as the original
+        assert rect_copy.xmin == rect.xmin
+        assert rect_copy.ymin == rect.ymin
+        assert rect_copy.xmax == rect.xmax
+        assert rect_copy.ymax == rect.ymax
+        assert (rect_copy.asarray == rect.asarray).all()
+
+        # Assert the copy is a different object
+        assert rect_copy is not rect
