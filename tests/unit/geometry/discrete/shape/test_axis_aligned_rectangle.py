@@ -42,6 +42,17 @@ class TestAxisAlignedRectangleCreation:
         assert (rect.points[2] == [7, 6]).all()
         assert (rect.points[3] == [3, 6]).all()
 
+    def test_create_axis_aligned_rectangle_from_rectangle(self):
+        # Create an axis-aligned rectangle from a Rectangle object
+        rect = Rectangle.from_center(center=[5, 5], width=4, height=2)
+        rect = AxisAlignedRectangle.from_rectangle(rectangle=rect)
+
+        # Assert the rectangle has correct coordinates
+        assert rect.xmin == 3
+        assert rect.ymin == 4
+        assert rect.xmax == 7
+        assert rect.ymax == 6
+
     def test_create_non_axis_aligned_rectangle_raises(self):
         # Attempt to create a non-axis-aligned rectangle
         with pytest.raises(ValueError):
