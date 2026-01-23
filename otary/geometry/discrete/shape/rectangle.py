@@ -118,7 +118,7 @@ class Rectangle(Polygon):
             ]
         )
 
-        return Rectangle(points=points, is_cast_int=is_cast_int)
+        return cls(points=points, is_cast_int=is_cast_int)
 
     @classmethod
     def from_topleft_bottomright(

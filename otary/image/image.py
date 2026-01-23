@@ -1484,7 +1484,6 @@ class Image:
         score_segments: list[float] = []
 
         for segment in segments:
-
             im = self.crop_segment_faster(
                 segment=segment.asarray,
                 dim_crop_rect=(-1, height_crop),
@@ -1564,7 +1563,6 @@ class Image:
         extra_border_size = 10
         scores: list[float] = []
         for polygon in polygons:
-
             im = self.crop_from_polygon(
                 polygon=polygon,
                 copy=True,

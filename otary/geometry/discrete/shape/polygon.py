@@ -99,8 +99,8 @@ class Polygon(DiscreteGeometryEntity):
             if not cond_first_pt_is_equal_prev_entity_last_pt:
                 raise ValueError(
                     f"The first point of entity {i} ({linear_entity.points[0]}) "
-                    f"is not equal to the last point of entity {i-1} "
-                    f"({linear_entities[i-1].points[-1]})"
+                    f"is not equal to the last point of entity {i - 1} "
+                    f"({linear_entities[i - 1].points[-1]})"
                 )
             pts_except_last = linear_entity.points[:-1, :]
             points.append(pts_except_last)
@@ -670,13 +670,13 @@ class Polygon(DiscreteGeometryEntity):
         if index >= size:
             raise ValueError(
                 f"The index value {index} is too big. "
-                f"The maximum possible index value is {size-1}."
+                f"The maximum possible index value is {size - 1}."
             )
         if index < 0:
             if abs(index) > size + 1:
                 raise ValueError(
                     f"The index value {index} is too small. "
-                    f"The minimum possible index value is {-(size+1)}"
+                    f"The minimum possible index value is {-(size + 1)}"
                 )
             index = size + index + 1
 
@@ -701,7 +701,7 @@ class Polygon(DiscreteGeometryEntity):
         if index >= size:
             raise ValueError(
                 f"The index value {index} is too big. "
-                f"The maximum possible index value is {size-1}."
+                f"The maximum possible index value is {size - 1}."
             )
         if index < 0:
             if abs(index) > size:

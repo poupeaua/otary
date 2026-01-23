@@ -192,7 +192,6 @@ class DrawerImage:
         _splines = prep_obj_draw(objects=splines, _type=geo.LinearSpline)
         im_array = self._pre_draw(n_objects=len(_splines), render=render)
         for spline, color in zip(_splines, render.colors_processed):
-
             if render.as_vectors:
                 cv2.polylines(
                     img=im_array,
