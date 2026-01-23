@@ -192,3 +192,13 @@ class AxisAlignedRectangle(Rectangle):
             is_clockwise=is_clockwise,
         )
         return Rectangle(points=rot_points)
+
+    def copy(self) -> AxisAlignedRectangle:
+        """Create a copy of the AxisAlignedRectangle object.
+
+        Returns:
+            AxisAlignedRectangle: copy of the object
+        """
+        return AxisAlignedRectangle(
+            points=self.asarray.copy(), is_cast_int=self.is_cast_int
+        )

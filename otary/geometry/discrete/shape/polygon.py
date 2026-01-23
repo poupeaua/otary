@@ -99,8 +99,8 @@ class Polygon(DiscreteGeometryEntity):
             if not cond_first_pt_is_equal_prev_entity_last_pt:
                 raise ValueError(
                     f"The first point of entity {i} ({linear_entity.points[0]}) "
-                    f"is not equal to the last point of entity {i-1} "
-                    f"({linear_entities[i-1].points[-1]})"
+                    f"is not equal to the last point of entity {i - 1} "
+                    f"({linear_entities[i - 1].points[-1]})"
                 )
             pts_except_last = linear_entity.points[:-1, :]
             points.append(pts_except_last)
@@ -337,8 +337,9 @@ class Polygon(DiscreteGeometryEntity):
         diag2 = Segment(points=self.asarray[diag2_idxs])
 
         # rectangular criteria = the diagonals have same lengths
-        normed_length = np.sqrt(diag1.length * diag2.length)
-        if np.abs(diag1.length - diag2.length) > normed_length * margin_dist_error_pct:
+        normed_length = (diag1.length + diag2.length) / 2
+        err_tol = normed_length * margin_dist_error_pct
+        if np.abs(diag1.length - diag2.length) > err_tol:
             return False
 
         # there should exist only one intersection point
@@ -350,10 +351,7 @@ class Polygon(DiscreteGeometryEntity):
         cross_point = intersection_points[0]
         dist_mid_cross_diag1 = np.linalg.norm(cross_point - diag1.centroid)
         dist_mid_cross_diag2 = np.linalg.norm(cross_point - diag2.centroid)
-        if (
-            np.abs(dist_mid_cross_diag1) > normed_length * margin_dist_error_pct
-            or np.abs(dist_mid_cross_diag2) > normed_length * margin_dist_error_pct
-        ):
+        if dist_mid_cross_diag1 > err_tol or dist_mid_cross_diag2 > err_tol:
             return False
 
         return True
@@ -672,13 +670,13 @@ class Polygon(DiscreteGeometryEntity):
         if index >= size:
             raise ValueError(
                 f"The index value {index} is too big. "
-                f"The maximum possible index value is {size-1}."
+                f"The maximum possible index value is {size - 1}."
             )
         if index < 0:
             if abs(index) > size + 1:
                 raise ValueError(
                     f"The index value {index} is too small. "
-                    f"The minimum possible index value is {-(size+1)}"
+                    f"The minimum possible index value is {-(size + 1)}"
                 )
             index = size + index + 1
 
@@ -703,7 +701,7 @@ class Polygon(DiscreteGeometryEntity):
         if index >= size:
             raise ValueError(
                 f"The index value {index} is too big. "
-                f"The maximum possible index value is {size-1}."
+                f"The maximum possible index value is {size - 1}."
             )
         if index < 0:
             if abs(index) > size:

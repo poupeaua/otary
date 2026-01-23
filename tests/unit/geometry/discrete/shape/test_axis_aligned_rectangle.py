@@ -42,6 +42,17 @@ class TestAxisAlignedRectangleCreation:
         assert (rect.points[2] == [7, 6]).all()
         assert (rect.points[3] == [3, 6]).all()
 
+    def test_create_axis_aligned_rectangle_from_rectangle(self):
+        # Create an axis-aligned rectangle from a Rectangle object
+        rect = Rectangle.from_center(center=[5, 5], width=4, height=2)
+        rect = AxisAlignedRectangle.from_rectangle(rectangle=rect)
+
+        # Assert the rectangle has correct coordinates
+        assert rect.xmin == 3
+        assert rect.ymin == 4
+        assert rect.xmax == 7
+        assert rect.ymax == 6
+
     def test_create_non_axis_aligned_rectangle_raises(self):
         # Attempt to create a non-axis-aligned rectangle
         with pytest.raises(ValueError):
@@ -166,3 +177,25 @@ class TestAxisAlignedRectangleRotate:
         # Attempt to rotate the rectangle by 45 degrees
         with pytest.raises(TypeError):
             rect.rotate(angle=45)
+
+
+class TestAxisAlignedRectangleCopy:
+
+    def test_copy_base(self):
+        # Create an axis-aligned rectangle
+        rect = AxisAlignedRectangle.from_topleft(topleft=[1, 1], width=3, height=2)
+
+        # Create a copy of the rectangle
+        rect_copy = rect.copy()
+
+        assert isinstance(rect_copy, AxisAlignedRectangle)
+
+        # Assert the copy has the same properties as the original
+        assert rect_copy.xmin == rect.xmin
+        assert rect_copy.ymin == rect.ymin
+        assert rect_copy.xmax == rect.xmax
+        assert rect_copy.ymax == rect.ymax
+        assert (rect_copy.asarray == rect.asarray).all()
+
+        # Assert the copy is a different object
+        assert rect_copy is not rect

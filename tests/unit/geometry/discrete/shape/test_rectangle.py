@@ -80,7 +80,7 @@ class TestRectangleCreation:
 
     def test_create_rectangle_valid_irregular(self):
         points = [[0, 0], [100, 0], [100, 100], [0, 101]]
-        Rectangle(points, regularity_margin_error=1e-2)
+        Rectangle(points, regularity_rtol=1e-2)
 
 
 class TestRectangleIsSquare:
@@ -322,3 +322,32 @@ class TestRectangleGetVerticeFromTopleft:
         topleft_index = 0
         with pytest.raises(ValueError, match="Parameter vertice must be one of"):
             rect.get_vertice_from_topleft(topleft_index, "invalid_vertice")
+
+
+class TestRectangleCopy:
+
+    def test_copy_with_regularity_condition(self):
+        """Test where a Rectangle that is not-perfectly-regular should be copied
+        with the same not-perfectly-regular condition.
+
+        This is important because it makes the copy method special for the Rectangle
+        class compared to other geometry classes.
+        """
+        rect = Rectangle(
+            [[422, 440], [419, 470], [499, 476], [500, 445]], regularity_rtol=1e-1
+        )
+        rect_copy = rect.copy()
+        assert rect is not rect_copy
+        assert np.array_equal(rect.asarray, rect_copy.asarray)
+        assert rect.regularity_rtol == rect_copy.regularity_rtol
+
+    def test_copy_desintersected(self):
+        """Test where a Rectangle that is self-intersected should be copied
+        and the copy should be desintersected.
+        """
+        rect = Rectangle([[0, 0], [100, 100], [100, 0], [0, 100]])
+        rect_copy = rect.copy()
+        assert rect is not rect_copy
+        expected_points = [[0, 0], [100, 0], [100, 100], [0, 100]]
+        assert np.array_equal(rect.asarray, expected_points)
+        assert np.array_equal(rect_copy.asarray, expected_points)
