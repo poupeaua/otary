@@ -5,6 +5,7 @@ Image Drawer module. It only contains methods to draw objects in images.
 from __future__ import annotations
 
 from typing import Sequence
+import warnings
 
 import cv2
 import numpy as np
@@ -271,10 +272,10 @@ class DrawerImage:
         im_array = self._pre_draw(n_objects=len(ocr_outputs), render=render)
         for ocrso, color in zip(ocr_outputs, render.colors_processed):
             if not isinstance(ocrso, OcrSingleOutput) or ocrso.bbox is None:
-                # warnings.warn(
-                #     f"Object {ocrso} is not an OcrSingleOutput or has no bbox. "
-                #     "Skipping it."
-                # )
+                warnings.warn(
+                    f"Object {ocrso} is not an OcrSingleOutput or has no bbox. "
+                    "Skipping it."
+                )
                 continue
             cnt = [ocrso.bbox.asarray.reshape((-1, 1, 2)).astype(np.int32)]
             im_array = cv2.drawContours(

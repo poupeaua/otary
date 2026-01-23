@@ -2,6 +2,8 @@
 Unit Tests for the drawer image methods
 """
 
+import pytest
+
 import numpy as np
 
 from otary.utils.cv.ocrsingleoutput import OcrSingleOutput
@@ -127,6 +129,7 @@ class TestDrawerOcrImage:
             ocr_outputs=[ocrso]
         )
 
+    @pytest.mark.filterwarnings("ignore")
     def test_draw_ocrso_empty(self):
         ocrso = OcrSingleOutput(
             bbox=None,
