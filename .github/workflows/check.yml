@@ -44,11 +44,8 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install libgl1 -y
           python -m pip install --upgrade pip
-          mkdir .venv
-          poetry config virtualenvs.create true
+          poetry config virtualenvs.create false
           poetry install --without docs,dev,test
-          source .venv/bin/activate
-          which python
 
       - name: ✅ Check Code Quality - Pylint
         run: |
@@ -67,7 +64,11 @@ jobs:
 
       - name: ✅ Check Code Quality - Ty
         run: |
-          make check-ty
+          echo "\n----------------------------"
+          echo "Checking typing quality - Ty"
+          echo "----------------------------"
+          PYTHON_PATH=$(poetry env info | grep '^Path:' | tail -n1 | sed 's/^Path:[[:space:]]*//')
+          ty check --python=$PYTHON_PATH otary/
         continue-on-error: false
 
       - name: ✅ Check Code Quality - Black
