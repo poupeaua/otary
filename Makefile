@@ -72,7 +72,7 @@ test-unit:
 
 # -------------------------------------- CHECK ----------------------------------------
 
-check: check-pylint check-ruff check-mypy check-black
+check: check-pylint check-ruff check-mypy check-ty check-black
 
 check-pylint:
 	@echo "\n------------------------------"
@@ -87,14 +87,20 @@ check-ruff:
 	@ruff check otary/
 
 check-mypy:
-	@echo "\n----------------------------"
-	@echo "Checking code quality - Mypy"
+	@echo "\n------------------------------"
+	@echo "Checking typing quality - Mypy"
 	@echo "----------------------------"
 	@mypy otary/
 
+check-ty:
+	@echo "\n----------------------------"
+	@echo "Checking typing quality - Ty"
+	@echo "----------------------------"
+	@ty check otary/
+
 check-black:
-	@echo "\n-----------------------------"
-	@echo "Checking code quality - Black"
+	@echo "\n-------------------------------"
+	@echo "Checking format quality - Black"
 	@echo "-----------------------------"
 	@black otary/ --check
 
