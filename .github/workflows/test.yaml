@@ -61,6 +61,11 @@ jobs:
           make check-mypy
         continue-on-error: false
 
+      - name: ✅ Check Code Quality - Ty
+        run: |
+          make check-ty
+        continue-on-error: false
+
       - name: ✅ Check Code Quality - Black
         run: |
           make check-black
