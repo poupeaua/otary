@@ -1118,7 +1118,7 @@ class Image:
 
     # ------------------------------- GEOMETRY METHODS --------------------------------
 
-    def shift(self, shift: NDArray, fill_value: Sequence[float] = (0.0,)) -> Self:
+    def shift(self, shift: NDArray, fill_value: Sequence[int] | int = (0,)) -> Self:
         """Shift the image by performing a translation operation
 
         Args:
@@ -1126,7 +1126,7 @@ class Image:
             fill_value (int | tuple[int, int, int], optional): value to fill the
                 border of the image after the rotation in case reshape is True.
                 Can be a tuple of 3 integers for RGB image or a single integer for
-                grayscale image. Defaults to (0.0,) which is black.
+                grayscale image. Defaults to (0,) which is black.
 
         Returns:
             Self: shifted image

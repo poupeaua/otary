@@ -10,7 +10,7 @@ class TestThresholdThresholdBinary:
     def test_binary_error_method(self):
         img = Image.from_fillvalue(shape=(5, 5), value=55)
         with pytest.raises(ValueError):
-            img.binary(method="not_an_expected_binary_method")
+            img.binary(method="not_an_expected_binary_method")  # type: ignore[arg-type]
 
     def test_binary_sauvola(self):
         img = Image.from_fillvalue(shape=(5, 5), value=55)

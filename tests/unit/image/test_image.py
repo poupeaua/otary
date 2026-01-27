@@ -48,7 +48,7 @@ class TestImageScoreDistanceFromCenter:
     def test_score_distance_from_center_error_method(self):
         with pytest.raises(ValueError):
             Image.from_fillvalue(shape=(5, 5), value=0).score_distance_from_center(
-                point=[0, 0], method="method_not_exist"
+                point=[0, 0], method="method_not_exist"  # type: ignore[arg-type]
             )
 
     def test_score_distance_from_center_linear1(self):
@@ -565,7 +565,7 @@ class TestImageScoreContainsLinearEntities:
 
         dummy = DummyEntity()
         with pytest.raises(TypeError):
-            img.score_contains_linear_entities([dummy])
+            img.score_contains_linear_entities([dummy])  # type: ignore[arg-type]
 
 
 class TestImageCropHQFromAABBAndPDF:

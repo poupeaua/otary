@@ -52,14 +52,14 @@ class TestDrawerColors:
         points = np.array([[0, 0], [1, 1], [2, 3]])
         cnt = Polygon(points=points)
         Image.from_fillvalue(shape=(5, 5, 3), value=0).draw_polygons(
-            polygons=[cnt], render=PolygonsRender(default_color=["blue"])
+            polygons=[cnt], render=PolygonsRender(default_color=["blue"])  # type: ignore[arg-type]
         )
 
     def test_draw_default_color_as_str_bad(self):
         points = np.array([[0, 0], [1, 1], [2, 3]])
         cnt = Polygon(points=points)
         Image.from_fillvalue(shape=(5, 5, 3), value=0).draw_polygons(
-            polygons=[cnt], render=PolygonsRender(default_color=["pi$?7_="])
+            polygons=[cnt], render=PolygonsRender(default_color=["pi$?7_="])  # type: ignore[arg-type]
         )
 
     def test_draw_default_color_hard_case(self):

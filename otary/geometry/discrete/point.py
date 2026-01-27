@@ -3,7 +3,7 @@ Point class useful to describe any kind of points
 """
 
 import numpy as np
-from numpy.typing import NDArray, ArrayLike
+from numpy.typing import NDArray
 from shapely import Point as SPoint
 
 from otary.geometry.discrete.entity import DiscreteGeometryEntity
@@ -12,12 +12,12 @@ from otary.geometry.discrete.entity import DiscreteGeometryEntity
 class Point(DiscreteGeometryEntity):
     """Point class"""
 
-    def __init__(self, point: ArrayLike, is_cast_int: bool = False) -> None:
+    def __init__(self, point: NDArray, is_cast_int: bool = False) -> None:
         point = self._ensure_transform_point_array(point=point)
         super().__init__(points=point, is_cast_int=is_cast_int)
 
     @staticmethod
-    def _ensure_transform_point_array(point: ArrayLike) -> NDArray:
+    def _ensure_transform_point_array(point: NDArray) -> NDArray:
         point = np.asarray(point)
         if point.shape == (2,):
             point = point.reshape((1, 2))
