@@ -1,4 +1,4 @@
-name: test
+name: static-check
 
 on:
   push:
@@ -16,7 +16,7 @@ permissions:
 
 jobs:
 
-  check:
+  static-check:
 
     runs-on: ubuntu-latest
 
