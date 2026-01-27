@@ -44,7 +44,7 @@ jobs:
           sudo apt-get install libgl1 -y
           python -m pip install --upgrade pip
           poetry config virtualenvs.create false
-          poetry install --without docs,dev,test
+          poetry install --with check
 
       - name: ✅ Check Code Quality - Pylint
         run: |
