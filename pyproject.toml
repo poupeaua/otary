@@ -26,6 +26,7 @@ pylint-exit = "^1.2.0"
 ruff = "^0.4.4"
 black = "^24.4.2"
 pre-commit = "^3.7.1"
+ty = "^0.0.14"
 
 [tool.poetry.group.dev.dependencies]
 setuptools = "^70.0.0"

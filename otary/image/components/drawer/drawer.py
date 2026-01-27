@@ -50,18 +50,18 @@ class DrawerImage:
         """
         im_array = self._pre_draw(n_objects=len(circles), render=render)
         for circle, color in zip(circles, render.colors_processed):
-            cv2.circle(  # type: ignore[call-overload]
+            cv2.circle(
                 img=im_array,
-                center=circle.center.astype(int),
+                center=tuple(circle.center.astype(int)),
                 radius=int(circle.radius),
                 color=color,
                 thickness=render.thickness if not render.is_filled else -1,
                 lineType=render.line_type,
             )
             if render.is_draw_center_point_enabled:
-                cv2.circle(  # type: ignore[call-overload]
+                cv2.circle(
                     img=im_array,
-                    center=circle.center.astype(int),
+                    center=tuple(circle.center.astype(int)),
                     radius=1,
                     color=color,
                     thickness=render.thickness,
@@ -83,9 +83,9 @@ class DrawerImage:
         im_array = self._pre_draw(n_objects=len(ellipses), render=render)
         for ellipse, color in zip(ellipses, render.colors_processed):
             axes = (int(ellipse.semi_major_axis), int(ellipse.semi_minor_axis))
-            cv2.ellipse(  # type: ignore[call-overload]
+            cv2.ellipse(
                 img=im_array,
-                center=ellipse.centroid.astype(int),
+                center=tuple(ellipse.centroid.astype(int)),
                 axes=axes,
                 angle=ellipse.angle(degree=True),
                 startAngle=0,
@@ -95,9 +95,9 @@ class DrawerImage:
                 lineType=render.line_type,
             )
             if render.is_draw_center_point_enabled:
-                cv2.circle(  # type: ignore[call-overload]
+                cv2.circle(
                     img=im_array,
-                    center=ellipse.centroid.astype(int),
+                    center=tuple(ellipse.centroid.astype(int)),
                     radius=1,
                     color=color,
                     thickness=render.thickness,
@@ -105,9 +105,9 @@ class DrawerImage:
                 )
             if render.is_draw_focis_enabled:
                 for foci in [ellipse.foci1, ellipse.foci2]:
-                    cv2.circle(  # type: ignore[call-overload]
+                    cv2.circle(
                         img=im_array,
-                        center=foci.astype(int),
+                        center=tuple(foci.astype(int)),
                         radius=1,
                         color=color,
                         thickness=render.thickness,

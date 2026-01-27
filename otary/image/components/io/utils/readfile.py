@@ -35,6 +35,9 @@ def read_pdf_document(
             raise ValueError(f"The filepath is not in any valid format {valid_format}")
         pages = pymupdf.open(filename=filepath_or_stream)
 
+    # turns open document type into list of pages
+    pages = [pages[i] for i in range(len(pages))]
+
     # set pages if page_nb
     if page_nb is not None:
         if page_nb < 0:

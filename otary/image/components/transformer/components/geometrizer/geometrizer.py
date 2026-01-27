@@ -42,7 +42,7 @@ class GeometrizerImage:
             flags=cv2.INTER_LINEAR,
             borderMode=cv2.BORDER_CONSTANT,
             borderValue=fill_value,
-        )  # type: ignore[call-overload]
+        )
 
     def rotate(
         self,
@@ -106,7 +106,7 @@ class GeometrizerImage:
             flags=cv2.INTER_LINEAR,
             borderMode=cv2.BORDER_CONSTANT,
             borderValue=fill_value,
-        )  # type: ignore[call-overload]
+        )
 
     def center_to_point(self, point: NDArray) -> NDArray:
         """Shift the image so that the input point ends up in the middle of the
