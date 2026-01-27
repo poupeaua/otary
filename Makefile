@@ -89,7 +89,7 @@ check-ruff:
 check-mypy:
 	@echo "\n------------------------------"
 	@echo "Checking typing quality - Mypy"
-	@echo "----------------------------"
+	@echo "------------------------------"
 	@mypy otary/
 
 check-ty:
@@ -101,7 +101,7 @@ check-ty:
 check-black:
 	@echo "\n-------------------------------"
 	@echo "Checking format quality - Black"
-	@echo "-----------------------------"
+	@echo "-------------------------------"
 	@black otary/ --check
 
 # -------------------------------------- DOCS -----------------------------------------
