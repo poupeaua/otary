@@ -9,7 +9,7 @@ import time
 from functools import wraps
 
 import numpy as np
-from otary.utils.cv.ocrsingleoutput import OcrSingleOutput
+from otary.vision.bbox.ocr_single_output import OcrSingleOutput
 
 
 def timer(func):

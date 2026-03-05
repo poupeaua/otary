@@ -12,7 +12,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 import otary.geometry as geo
-from otary.utils.cv.ocrsingleoutput import OcrSingleOutput
+from otary.vision.bbox.ocr_single_output import OcrSingleOutput
 from otary.image.components.drawer.utils.tools import prep_obj_draw
 from otary.image.components.drawer.utils.render import (
     Render,
