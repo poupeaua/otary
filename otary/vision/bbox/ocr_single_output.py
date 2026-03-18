@@ -18,20 +18,23 @@ class OcrSingleOutput:
     def __init__(
         self,
         bbox: geo.Rectangle,
-        objectness: Optional[float] = None,
         text: Optional[str] = None,
         confidence: Optional[float] = None,
+        objectness: Optional[float] = None,
     ) -> None:
         """Initialize an OcrSingleOutput object
 
         Args:
             bbox (Rectangle): bounding boxes
+            text (Optional[str], optional): text extracted by OCR within the bounding
+                box. It can be None if no text was extracted. Imagine only using this
+                after a simple text detection model. No text recognition model.
+                In that case, we would have only the bounding box and no text.
+                Defaults to None.
+            confidence (Optional[float], optional): text confidence score.
+                Defaults to None.
             objectness (Optional[float], optional): bounding box objectness score.
                 which can be seen as the bounding box confidence score.
-                Defaults to None.
-            text (Optional[str], optional): text extracted by OCR within the bounding
-                box. Defaults to None.
-            confidence (Optional[float], optional): text confidence score.
                 Defaults to None.
         """
         self.bbox = bbox
@@ -151,4 +154,3 @@ class OcrSingleOutput:
             f"OcrSingleOutput(bbox={str(self.bbox)}, text='{self.text}', "
             f"confidence={self.confidence})"
         )
-

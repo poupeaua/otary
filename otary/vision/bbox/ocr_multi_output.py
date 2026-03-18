@@ -13,6 +13,7 @@ import numpy as np
 import otary.geometry as geo
 from otary.vision.bbox import OcrSingleOutput
 
+
 class OcrMultiOutput:
     """Class for keeping track of multiple OCR extracted information from an image
 
@@ -446,7 +447,7 @@ class OcrMultiOutput:
             new_ocrso = OcrSingleOutput(
                 text=groupwords_txt,
                 bbox=new_bbox,
-                confidence=np.min([o.confidence for o in words]),
+                confidence=np.min(np.array([o.confidence for o in words])),
             )
             groupwords.append(new_ocrso)
 
