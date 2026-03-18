@@ -23,7 +23,7 @@ import PIL.Image as ImagePIL
 import otary.geometry as geo
 from otary.geometry.discrete.linear.entity import LinearEntity
 from otary.geometry.discrete.shape.axis_aligned_rectangle import AxisAlignedRectangle
-from otary.vision.bbox.ocr_single_output import OcrSingleOutput
+from otary.vision.ocr.ocr_single_output import OcrSingleOutput
 from otary.image.base import BaseImage
 from otary.image.components import (
     ReaderImage,

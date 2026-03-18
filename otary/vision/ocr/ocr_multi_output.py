@@ -5,13 +5,21 @@ OCR Output used to gather information about the output of any OCR model
 from __future__ import annotations
 
 import re
-from typing import Optional, Self, Sequence
+from typing import Optional, Sequence, TYPE_CHECKING
 
 import math
 import numpy as np
 
 import otary.geometry as geo
-from otary.vision.bbox import OcrSingleOutput
+from otary.vision.ocr import OcrSingleOutput
+
+if TYPE_CHECKING:  # pragma: no cover
+    from typing_extensions import Self
+else:  # pragma: no cover
+    try:
+        from typing import Self
+    except ImportError:  # make Self available in Python <= 3.10
+        from typing_extensions import Self
 
 
 class OcrMultiOutput:
@@ -274,17 +282,18 @@ class OcrMultiOutput:
         closest_word_idx = np.argmin(dist_bottom[idxs_valid])
         return ocrsos[idxs_valid[closest_word_idx]]
 
-    def _separate_groupwords_by_colon(
-        self, groupwords: list[OcrSingleOutput]
+    def _separate_groupwords_by_symbol(
+        self, groupwords: list[OcrSingleOutput], symbol: str = ":"
     ) -> list[OcrSingleOutput]:
         """
-        Splits group words containing a colon (":") into two separate `OcrSingleOutput`
-        instances, one for the part before the colon (including the colon) and one for
-        the part after the colon.
+        Splits group words containing a symbol into two separate `OcrSingleOutput`
+        instances, one for the part before the symbol (including the symbol) and one for
+        the part after the symbol.
         The bounding boxes are adjusted to match the split text regions.
 
         Args:
             groupwords (list[OcrSingleOutput]): List of OCR output objects to process.
+            symbol (str, optional): The symbol to split on. Defaults to ":".
 
         Returns:
             list[OcrSingleOutput]: A new list of `OcrSingleOutput` objects with words
@@ -295,7 +304,7 @@ class OcrMultiOutput:
         words_with_colon = [
             ocrso
             for ocrso in self.ocrsos
-            if ocrso.text is not None and ":" in ocrso.text
+            if ocrso.text is not None and symbol in ocrso.text
         ]
         gw_indexes_used = []
         for w in words_with_colon:
@@ -315,7 +324,7 @@ class OcrMultiOutput:
 
             # start part
             ocrso1 = OcrSingleOutput(
-                text=gw.text.split(":")[0].strip() + ":",
+                text=gw.text.split(symbol)[0].strip() + symbol,
                 bbox=geo.Rectangle.from_topleft_bottomright(
                     topleft=gw.bbox[0],
                     bottomright=np.array([xsep, gw.bbox.ymax]),
@@ -329,7 +338,7 @@ class OcrMultiOutput:
 
             # end part
             ocrso2 = OcrSingleOutput(
-                text=gw.text.split(":")[1].strip(),
+                text=gw.text.split(symbol)[1].strip(),
                 bbox=geo.Rectangle.from_topleft_bottomright(
                     topleft=np.array([xsep, gw.bbox.ymin]),
                     bottomright=gw.bbox.get_vertice_from_topleft(0, "bottomright"),
@@ -350,7 +359,7 @@ class OcrMultiOutput:
         dist_thresh: float,
         max_n_words: int = 10,
         min_n_words: int = 2,
-        separate_by_colon: bool = False,
+        symbol_splitter: Optional[str] = None,
         restrict_word_definition: bool = False,
         word_definition_regex: str = "[a-zA-Z0-9]+",
     ) -> tuple[OcrMultiOutput, OcrMultiOutput]:
@@ -372,9 +381,9 @@ class OcrMultiOutput:
                 Defaults to 5.
             min_n_words (int, optional): Minimum number of words required to form a
                 group. Defaults to 2.
-            separate_by_colon (bool, optional): If True, each group of words will be
-                split by colons (":"). Each part will be treated as a separate group.
-                Defaults to False.
+            symbol_splitter (str, optional): If provided, each group of words will be
+                split by this symbol. Each part will be treated as a separate group.
+                Defaults to None.
             restrict_word_definition (bool, optional): If True, only groups matching
                 the `word_definition_regex` pattern are considered valid.
                 Defaults to False.
@@ -451,8 +460,10 @@ class OcrMultiOutput:
             )
             groupwords.append(new_ocrso)
 
-        if separate_by_colon:
-            new_groupwords = self._separate_groupwords_by_colon(groupwords)
+        if symbol_splitter is not None:
+            new_groupwords = self._separate_groupwords_by_symbol(
+                groupwords=groupwords, symbol=symbol_splitter
+            )
             groupwords = new_groupwords
 
         return OcrMultiOutput(ocrsos=groupwords), OcrMultiOutput(ocrsos=unused_words)
