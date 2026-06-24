@@ -4,8 +4,10 @@ Tests for the AxisAlignedRectangle class
 
 import pymupdf
 import pytest
+import numpy as np
 
 from otary.geometry import AxisAlignedRectangle, Rectangle
+from otary.geometry.discrete.shape.polygon import Polygon
 
 
 class TestAxisAlignedRectangleCreation:
@@ -199,3 +201,162 @@ class TestAxisAlignedRectangleCopy:
 
         # Assert the copy is a different object
         assert rect_copy is not rect
+
+
+class TestAxisAlignedRectangleFromPolygon:
+
+    def test_from_polygon_with_axis_aligned_polygon(self):
+        # create an axis aligned rectangle and use its point array as polygon
+        rect = AxisAlignedRectangle.from_topleft(topleft=[2, 3], width=4, height=6)
+        polygon = rect.asarray
+
+        rect_from_poly = AxisAlignedRectangle.from_polygon(polygon=polygon)
+
+        assert isinstance(rect_from_poly, AxisAlignedRectangle)
+        assert rect_from_poly.xmin == rect.xmin
+        assert rect_from_poly.ymin == rect.ymin
+        assert rect_from_poly.xmax == rect.xmax
+        assert rect_from_poly.ymax == rect.ymax
+
+    def test_axis_aligned_rectangle_input(self):
+        """A rectangle whose AABB is itself should round-trip exactly."""
+        pts = np.array([[0, 0], [4.5, -1], [4, 3], [0, 3.3]], dtype=np.float32)
+        polygon = Polygon(pts)
+        rect = AxisAlignedRectangle.from_polygon(polygon)
+        assert rect.xmin == pytest.approx(0.0)
+        assert rect.xmax == pytest.approx(4.5)
+        assert rect.ymin == pytest.approx(-1)
+        assert rect.ymax == pytest.approx(3.3)
+
+    def test_axis_aligned_rectangle_input(self):
+        """A rectangle whose AABB is itself should round-trip exactly."""
+        pts = np.array([[0, 0], [4, 0], [4, 3], [0, 3]], dtype=np.float32)
+        rect = AxisAlignedRectangle.from_polygon(pts)
+        assert rect.xmin == pytest.approx(0.0)
+        assert rect.xmax == pytest.approx(4.0)
+        assert rect.ymin == pytest.approx(0.0)
+        assert rect.ymax == pytest.approx(3.0)
+
+    def test_triangle(self):
+        pts = np.array([[1, 2], [5, 0], [3, 6]], dtype=np.float32)
+        rect = AxisAlignedRectangle.from_polygon(pts)
+        assert rect.xmin == pytest.approx(1.0)
+        assert rect.xmax == pytest.approx(5.0)
+        assert rect.ymin == pytest.approx(0.0)
+        assert rect.ymax == pytest.approx(6.0)
+
+    def test_negative_coordinates(self):
+        pts = np.array([[-3, -7], [-1, -2], [-5, -1]], dtype=np.float32)
+        rect = AxisAlignedRectangle.from_polygon(pts)
+        assert rect.xmin == pytest.approx(-5.0)
+        assert rect.xmax == pytest.approx(-1.0)
+        assert rect.ymin == pytest.approx(-7.0)
+        assert rect.ymax == pytest.approx(-1.0)
+
+    def test_mixed_sign_coordinates(self):
+        pts = np.array([[-10, 5], [10, -5], [0, 0]], dtype=np.float32)
+        rect = AxisAlignedRectangle.from_polygon(pts)
+        assert rect.xmin == pytest.approx(-10.0)
+        assert rect.xmax == pytest.approx(10.0)
+        assert rect.ymin == pytest.approx(-5.0)
+        assert rect.ymax == pytest.approx(5.0)
+
+    def test_self_intersected_aabb(self):
+        pts = np.array([[0, 0], [100, 100], [0, 100], [100, 0]], dtype=np.float32)
+        rect = AxisAlignedRectangle.from_polygon(pts)
+        assert rect.xmin == pytest.approx(0.0)
+        assert rect.xmax == pytest.approx(100.0)
+        assert rect.ymin == pytest.approx(0.0)
+        assert rect.ymax == pytest.approx(100.0)
+
+
+class TestAxisAlignedRectangleFromPolygonErrors:
+
+    def test_error_empty_polygon(self):
+        pts = "nonsense"
+        with pytest.raises(TypeError):
+            AxisAlignedRectangle.from_polygon(pts)
+
+    def test_error_single_point_degenerates_to_zero_area(self):
+        pts = np.array([[3, 7]], dtype=np.float32)
+        with pytest.raises(ValueError):
+            AxisAlignedRectangle.from_polygon(pts)
+
+    def test_collinear_points_error_self_intersected(self):
+        pts = np.array([[0, 0], [1, 0], [2, 0], [3, 0]], dtype=np.float32)
+        with pytest.raises(ValueError):
+            AxisAlignedRectangle.from_polygon(pts)
+
+    def test_1d_array_raises_value_error(self):
+        with pytest.raises(ValueError):
+            AxisAlignedRectangle.from_polygon(np.array([0, 1, 2, 3]))
+
+    def test_3d_points_raises_value_error(self):
+        with pytest.raises(ValueError):
+            AxisAlignedRectangle.from_polygon(np.array([[0, 1, 2], [3, 4, 5]]))
+
+    def test_wrong_second_dim_raises_value_error(self):
+        with pytest.raises(ValueError):
+            AxisAlignedRectangle.from_polygon(np.ones((5, 3)))
+
+# ---------------------------------------------------------------------------
+# Random-polygon tests (fixed seed for reproducibility)
+# ---------------------------------------------------------------------------
+
+def make_random_polygon_array(n_points: int, seed: int | None = None) -> np.ndarray:
+    rng = np.random.default_rng(seed)
+    return rng.uniform(-1000, 1000, size=(n_points, 2)).astype(np.float32)
+
+class TestFromPolygonRandom:
+
+    @pytest.mark.parametrize("seed", range(20))
+    def test_bounding_box_contains_all_points(self, seed: int):
+        """Every input point must lie inside (or on the edge of) the AABB."""
+        pts = make_random_polygon_array(n_points=50, seed=seed)
+        rect = AxisAlignedRectangle.from_polygon(pts)
+        assert np.all(pts[:, 0] >= rect.xmin - 1e-5)
+        assert np.all(pts[:, 0] <= rect.xmax + 1e-5)
+        assert np.all(pts[:, 1] >= rect.ymin - 1e-5)
+        assert np.all(pts[:, 1] <= rect.ymax + 1e-5)
+
+    @pytest.mark.parametrize("seed", range(20))
+    def test_bounding_box_is_tight(self, seed: int):
+        """At least one point must touch each of the four sides."""
+        pts = make_random_polygon_array(n_points=50, seed=seed)
+        rect = AxisAlignedRectangle.from_polygon(pts)
+        tol = 1e-5
+        assert np.any(pts[:, 0] <= rect.xmin + tol), "No point on left edge"
+        assert np.any(pts[:, 0] >= rect.xmax - tol), "No point on right edge"
+        assert np.any(pts[:, 1] <= rect.ymin + tol), "No point on bottom edge"
+        assert np.any(pts[:, 1] >= rect.ymax - tol), "No point on top edge"
+
+    @pytest.mark.parametrize("seed", range(20))
+    def test_output_has_four_corners(self, seed: int):
+        pts = make_random_polygon_array(n_points=30, seed=seed)
+        rect = AxisAlignedRectangle.from_polygon(pts)
+        assert len(rect.asarray) == 4
+
+    @pytest.mark.parametrize("n_points", [3, 10, 100, 500])
+    def test_various_polygon_sizes(self, n_points: int):
+        pts = make_random_polygon_array(n_points=n_points, seed=42)
+        rect = AxisAlignedRectangle.from_polygon(pts)
+        assert rect.xmin <= rect.xmax
+        assert rect.ymin <= rect.ymax
+
+    def test_float32_input_preserves_dtype(self):
+        pts = make_random_polygon_array(50, seed=7).astype(np.float32)
+        rect = AxisAlignedRectangle.from_polygon(pts)
+        # Bounds should still be numerically correct despite float32 input
+        assert rect.xmin == pytest.approx(float(pts[:, 0].min()), rel=1e-5)
+        assert rect.xmax == pytest.approx(float(pts[:, 0].max()), rel=1e-5)
+
+    def test_polygon_object_matches_ndarray(self):
+        """Passing a Polygon object and the equivalent ndarray must yield the same AABB."""
+        pts = make_random_polygon_array(40, seed=99)
+        polygon_obj = Polygon(pts)
+        rect_from_obj = AxisAlignedRectangle.from_polygon(polygon_obj)
+        rect_from_arr = AxisAlignedRectangle.from_polygon(pts)
+        assert rect_from_obj.xmin == pytest.approx(rect_from_arr.xmin)
+        assert rect_from_obj.xmax == pytest.approx(rect_from_arr.xmax)
+        assert rect_from_obj.ymin == pytest.approx(rect_from_arr.ymin)
+        assert rect_from_obj.ymax == pytest.approx(rect_from_arr.ymax)
