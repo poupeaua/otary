@@ -7,7 +7,9 @@ from typing import Optional
 
 import pymupdf
 from numpy.typing import NDArray
+import numpy as np
 
+from otary.geometry.discrete.shape.polygon import Polygon
 from otary.geometry.discrete.shape.rectangle import Rectangle
 from otary.geometry.utils.tools import rotate_2d_points
 
@@ -36,6 +38,9 @@ class AxisAlignedRectangle(Rectangle):
         """Create an AxisAlignedRectangle from an ordinary Rectangle.
         Only works if the input Rectangle forms an AxisAlignedRectangle with its points.
 
+        If you want to create an AxisAlignedRectangle from any Rectangle, use the
+        from_polygon method instead.
+
         Args:
             rectangle (Rectangle): Rectangle object
 
@@ -43,6 +48,49 @@ class AxisAlignedRectangle(Rectangle):
             AxisAlignedRectangle: AxisAlignedRectangle object
         """
         return cls(points=rectangle.points)
+
+    @classmethod
+    def from_polygon(cls, polygon: Polygon | NDArray) -> AxisAlignedRectangle:
+        """Create an AxisAlignedRectangle from any Polygon by computing its
+        Axis Aligned Bounding Box (AABB).
+        The resulting AxisAlignedRectangle will be the smallest axis-aligned rectangle
+        that fully contains the input polygon.
+
+        Args:
+            polygon (Polygon | NDArray): Polygon object or array of points
+
+        Returns:
+            AxisAlignedRectangle: AxisAlignedRectangle object
+        """
+        if isinstance(polygon, Polygon):
+            polygon_arr = polygon.asarray
+        elif isinstance(polygon, np.ndarray):
+            polygon_arr = polygon
+        else:
+            raise TypeError(
+                "Input must be a Polygon object or a numpy ndarray of points."
+            )
+        
+        if len(polygon_arr) <= 2:
+            raise ValueError(
+                "Cannot create an AxisAlignedRectangle from a Polygon with less than " \
+                "3 points."
+            )
+        
+        if len(polygon_arr.shape) != 2 or polygon_arr.shape[1] != 2:
+            raise ValueError(
+                "Cannot create an AxisAlignedRectangle from a Polygon with more than " \
+                "2 dimensions."
+            )
+
+        polygon_arr = polygon_arr.astype(np.float32)
+
+        xmin = np.min(polygon_arr[:, 0])
+        xmax = np.max(polygon_arr[:, 0])
+        ymin = np.min(polygon_arr[:, 1])
+        ymax = np.max(polygon_arr[:, 1])
+
+        return cls(points=[[xmin, ymin], [xmax, ymin], [xmax, ymax], [xmin, ymax]])
 
     @classmethod
     def from_center(
