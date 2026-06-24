@@ -71,9 +71,9 @@ class OcrMultiOutput:
                     text=e[1],
                     confidence=e[2],
                 )
+                ocrsos.append(ocrso)
             except ValueError:
                 continue  # skip invalid boxes
-            ocrsos.append(ocrso)
         return cls(ocrsos=ocrsos)
 
     @classmethod
@@ -108,29 +108,29 @@ class OcrMultiOutput:
         for block in page["blocks"]:
             for line in block["lines"]:
                 for word in line["words"]:
-                    bbox_arr = np.array(word["geometry"], dtype=float) * arr_dim
-                    if not assume_straight_pages:
-                        try:
+                    try:
+                        bbox_arr = np.array(word["geometry"], dtype=float) * arr_dim
+                        if not assume_straight_pages:
                             bbox = geo.Rectangle(
                                 points=bbox_arr,
                                 regularity_rtol=0.1,
                                 is_cast_int=is_bbox_cast_int_enabled,
                             )
-                        except ValueError:
-                            continue  # skip invalid boxes
-                    else:
-                        bbox = geo.Rectangle.from_topleft_bottomright(
-                            topleft=bbox_arr[0],
-                            bottomright=bbox_arr[1],
-                            is_cast_int=is_bbox_cast_int_enabled,
+                        else:
+                            bbox = geo.Rectangle.from_topleft_bottomright(
+                                topleft=bbox_arr[0],
+                                bottomright=bbox_arr[1],
+                                is_cast_int=is_bbox_cast_int_enabled,
+                            )
+                        orcso = OcrSingleOutput(
+                            text=word["value"],
+                            bbox=bbox,
+                            confidence=word["confidence"],
+                            objectness=word["objectness_score"],
                         )
-                    orcso = OcrSingleOutput(
-                        text=word["value"],
-                        bbox=bbox,
-                        confidence=word["confidence"],
-                        objectness=word["objectness_score"],
-                    )
-                    ocrsos.append(orcso)
+                        ocrsos.append(orcso)
+                    except ValueError:
+                        continue  # skip invalid boxes
 
         return cls(ocrsos=ocrsos)
 
@@ -205,7 +205,7 @@ class OcrMultiOutput:
         dist_thresh: float,
         _to: str = "right",
         enforce_horizontal_alignment: bool = True,
-        alignment_angle_error: float = math.pi / 50,
+        alignment_angle_error: float = math.pi / 50
     ) -> Optional[OcrSingleOutput]:
         """Given a OcrSingleOutput object, get the closest word in the image to the
         right or to the left.
@@ -242,11 +242,11 @@ class OcrMultiOutput:
 
         if _to == "right":
             ocrsos = [
-                ocrso for ocrso in self.ocrsos if ocrso.bbox.xmin >= word.bbox.xmax
+                ocrso for ocrso in self.ocrsos if ocrso.bbox.xmin >= word.bbox.centroid[0]
             ]
         else:
             ocrsos = [
-                ocrso for ocrso in self.ocrsos if ocrso.bbox.xmax <= word.bbox.xmin
+                ocrso for ocrso in self.ocrsos if ocrso.bbox.xmax <= word.bbox.centroid[0]
             ]
 
         # gather the other points
@@ -269,10 +269,20 @@ class OcrMultiOutput:
             idxs_valid2: list[int] = []
             for idx in idxs_valid:
                 cur_word: OcrSingleOutput = ocrsos[idx]
-                slope_value = geo.Segment(
-                    [word.bbox.centroid, cur_word.bbox.centroid]
-                ).slope_angle()
-                if np.abs(slope_value) < alignment_angle_error:
+                seg1 = geo.Segment(
+                    [
+                        word.bbox.get_vertice_from_topleft(0, "bottomleft"),
+                        word.bbox.get_vertice_from_topleft(0, "bottomright"),
+                    ]
+                )
+                seg2 = geo.Segment(
+                    [
+                        cur_word.bbox.get_vertice_from_topleft(0, "bottomleft"),
+                        cur_word.bbox.get_vertice_from_topleft(0, "bottomright"),
+                    ]
+                )
+                abs_slope_diff = np.abs(seg1.slope_angle() - seg2.slope_angle())
+                if abs_slope_diff < alignment_angle_error:
                     idxs_valid2.append(idx)
             idxs_valid = idxs_valid2
 
@@ -404,7 +414,6 @@ class OcrMultiOutput:
         unused_words: list[OcrSingleOutput] = []
         groupwords: list[OcrSingleOutput] = []
         for word in self.ocrsos:
-
             left_word = self.closest_word(
                 word=word, _to="left", dist_thresh=dist_thresh
             )
