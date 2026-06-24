@@ -2,11 +2,26 @@
 Test the OcrMultiOutput class.
 """
 
+import json
+
 import pytest
 import numpy as np
 
 from otary.vision.ocr import OcrMultiOutput, OcrSingleOutput
 from otary import Rectangle
+
+
+@pytest.fixture
+def ocrmultioutput_from_example1() -> OcrMultiOutput:
+    """Document """
+    example1_easyocr_output = json.load(open("tests/data/vision/example1/output_easyocr.json", "r"))
+    return OcrMultiOutput.from_easyocr(example1_easyocr_output)
+
+@pytest.fixture
+def ocrmultioutput_from_example2() -> OcrMultiOutput:
+    """Document """
+    example2_easyocr_output = json.load(open("tests/data/vision/example2/output_easyocr.json", "r"))
+    return OcrMultiOutput.from_easyocr(example2_easyocr_output)
 
 
 class TestOCRMOFromEasyOcr:
@@ -16,6 +31,7 @@ class TestOCRMOFromEasyOcr:
         return [
             ([[0, 0], [1, 0], [1, 1], [0, 1]], "Hello", 0.9),
             ([[2, 2], [3, 2], [3, 3], [2, 3]], "World", 0.8),
+            ([[4, 4, 4043], [5, 4, "fef"], [5, 5, -111], [4, 5, 45]], "Test", 0.7), # invalid
         ]
 
     @pytest.fixture
@@ -89,6 +105,12 @@ class TestOCRMOFromDoctr:
                                             "confidence": 0.85,
                                             "objectness_score": 0.8,
                                         },
+                                        { # invalid one
+                                            "geometry": [[0.3, 0.3, 95], [0.4, 0.4, -23]],
+                                            "value": "World",
+                                            "confidence": 0.85,
+                                            "objectness_score": 0.8,
+                                        },
                                     ]
                                 }
                             ]
@@ -126,6 +148,17 @@ class TestOCRMOFromDoctr:
                                                 [0.3, 0.4],
                                                 [0.4, 0.4],
                                                 [0.4, 0.3],
+                                            ],
+                                            "value": "World",
+                                            "confidence": 0.85,
+                                            "objectness_score": 0.8,
+                                        },
+                                        { # invalid one
+                                            "geometry": [
+                                                [0.3, 0.3, 4],
+                                                [0.3, 0.4, 4],
+                                                [0.4, 0.4, 4],
+                                                [0.4, 0.3, 155],
                                             ],
                                             "value": "World",
                                             "confidence": 0.85,
@@ -193,6 +226,8 @@ class TestOCRMOFromDoctr:
             result.ocrsos[1].bbox.asarray,
             [[600, 300], [600, 400], [800, 400], [800, 300]],
         )
+
+
 
 
 class TestOCRMOConfidenceMean:
@@ -353,3 +388,189 @@ class TestOCRMODropDuplicates:
         ocrmo = ocrmo_with_dup.copy()
         with pytest.raises(ValueError):
             ocrmo.drop_duplicates(dist_thresh=1.0, criteria="invalid_criteria")
+
+
+class TestOCRMOMerge:
+
+    @pytest.fixture
+    def ocrmultioutput_1(self) -> OcrMultiOutput:
+        return OcrMultiOutput(
+            ocrsos=[
+                OcrSingleOutput(
+                    bbox=Rectangle([[0, 0], [1, 0], [1, 1], [0, 1]]),
+                    text="Hello",
+                    confidence=0.9,
+                ),
+                OcrSingleOutput(
+                    bbox=Rectangle([[2, 2], [3, 2], [3, 3], [2, 3]]),
+                    text="World",
+                    confidence=0.8,
+                ),
+            ]
+        )
+
+    @pytest.fixture
+    def ocrmultioutput_2(self) -> OcrMultiOutput:
+        return OcrMultiOutput(
+            ocrsos=[
+                OcrSingleOutput(
+                    bbox=Rectangle([[4, 4], [5, 4], [5, 5], [4, 5]]),
+                    text="Test",
+                    confidence=0.7,
+                ),
+                OcrSingleOutput(
+                    bbox=Rectangle([[6, 6], [7, 6], [7, 7], [6, 7]]),
+                    text="Merge",
+                    confidence=0.85,
+                ),
+            ]
+        )
+
+    @pytest.fixture
+    def ocrmultioutput_empty(self) -> OcrMultiOutput:
+        return OcrMultiOutput(ocrsos=[])
+
+    def test_merge_two_non_empty_outputs(
+        self, ocrmultioutput_1: OcrMultiOutput, ocrmultioutput_2: OcrMultiOutput
+    ):
+        result = OcrMultiOutput.merge([ocrmultioutput_1, ocrmultioutput_2])
+
+        assert len(result.ocrsos) == 4
+        assert result.ocrsos[0].text == "Hello"
+        assert result.ocrsos[1].text == "World"
+        assert result.ocrsos[2].text == "Test"
+        assert result.ocrsos[3].text == "Merge"
+
+    def test_merge_single_output(self, ocrmultioutput_1: OcrMultiOutput):
+        result = OcrMultiOutput.merge([ocrmultioutput_1])
+
+        assert len(result.ocrsos) == 2
+        assert result.ocrsos[0].text == "Hello"
+        assert result.ocrsos[1].text == "World"
+
+    def test_merge_with_empty_outputs(
+        self, ocrmultioutput_1: OcrMultiOutput, ocrmultioutput_empty: OcrMultiOutput
+    ):
+        result = OcrMultiOutput.merge([ocrmultioutput_1, ocrmultioutput_empty])
+
+        assert len(result.ocrsos) == 2
+        assert result.ocrsos[0].text == "Hello"
+        assert result.ocrsos[1].text == "World"
+
+    def test_merge_all_empty_outputs(
+        self, ocrmultioutput_empty: OcrMultiOutput
+    ):
+        result = OcrMultiOutput.merge([ocrmultioutput_empty, ocrmultioutput_empty])
+
+        assert len(result.ocrsos) == 0
+
+    def test_merge_multiple_outputs(
+        self, ocrmultioutput_1: OcrMultiOutput, ocrmultioutput_2: OcrMultiOutput
+    ):
+        ocrmultioutput_3 = OcrMultiOutput(
+            ocrsos=[
+                OcrSingleOutput(
+                    bbox=Rectangle([[8, 8], [9, 8], [9, 9], [8, 9]]),
+                    text="Three",
+                    confidence=0.75,
+                )
+            ]
+        )
+        result = OcrMultiOutput.merge(
+            [ocrmultioutput_1, ocrmultioutput_2, ocrmultioutput_3]
+        )
+
+        assert len(result.ocrsos) == 5
+        assert result.ocrsos[4].text == "Three"
+
+    def test_merge_preserves_bbox_and_confidence(
+        self, ocrmultioutput_1: OcrMultiOutput, ocrmultioutput_2: OcrMultiOutput
+    ):
+        result = OcrMultiOutput.merge([ocrmultioutput_1, ocrmultioutput_2])
+
+        assert result.ocrsos[0].confidence == 0.9
+        assert result.ocrsos[1].confidence == 0.8
+        assert result.ocrsos[2].confidence == 0.7
+        assert result.ocrsos[3].confidence == 0.85
+        assert result.ocrsos[0].bbox is not None
+        assert result.ocrsos[1].bbox is not None
+        assert result.ocrsos[2].bbox is not None
+        assert result.ocrsos[3].bbox is not None
+
+    def test_merge_empty_list(self):
+        result = OcrMultiOutput.merge([])
+        assert len(result.ocrsos) == 0
+
+    def test_merge_with_none_text_and_confidence(self):
+        ocrmultioutput_1 = OcrMultiOutput(
+            ocrsos=[
+                OcrSingleOutput(
+                    bbox=Rectangle([[0, 0], [1, 0], [1, 1], [0, 1]]),
+                    text=None,
+                    confidence=None,
+                )
+            ]
+        )
+        ocrmultioutput_2 = OcrMultiOutput(
+            ocrsos=[
+                OcrSingleOutput(
+                    bbox=Rectangle([[2, 2], [3, 2], [3, 3], [2, 3]]),
+                    text="Valid",
+                    confidence=0.8,
+                )
+            ]
+        )
+        result = OcrMultiOutput.merge([ocrmultioutput_1, ocrmultioutput_2])
+
+        assert len(result.ocrsos) == 2
+        assert result.ocrsos[0].text is None
+        assert result.ocrsos[0].confidence is None
+        assert result.ocrsos[1].text == "Valid"
+        assert result.ocrsos[1].confidence == 0.8
+
+
+class TestOCRMClosestWord:
+
+    def test_closest_word_returns_nearest1_right(self, ocrmultioutput_from_example1: OcrMultiOutput):
+        word = ocrmultioutput_from_example1.ocrsos[0]
+        assert word.text == "This"
+        result = ocrmultioutput_from_example1.closest_word(word, dist_thresh=3)
+        assert result is not None
+        assert result.text == "is"
+
+    def test_closest_word_returns_nearest1_left(self, ocrmultioutput_from_example1: OcrMultiOutput):
+        word = ocrmultioutput_from_example1.ocrsos[1]
+        assert word.text == "is"
+        result = ocrmultioutput_from_example1.closest_word(word, dist_thresh=3, _to="left")
+        assert result is not None
+        assert result.text == "This"
+
+    def test_closest_word_returns_left_empty(self, ocrmultioutput_from_example1: OcrMultiOutput):
+        word = ocrmultioutput_from_example1.ocrsos[0]
+        assert word.text == "This"
+        result = ocrmultioutput_from_example1.closest_word(word, dist_thresh=3, _to="left")
+        assert result is None
+
+    def test_closest_word_returns_right_empty(self, ocrmultioutput_from_example1: OcrMultiOutput):
+        word = ocrmultioutput_from_example1.ocrsos[5]
+        assert word.text == "document."
+        result = ocrmultioutput_from_example1.closest_word(word, dist_thresh=3, _to="right")
+        assert result is None
+
+    def test_closest_word_invalid_direction(self, ocrmultioutput_from_example1: OcrMultiOutput):
+        word = OcrSingleOutput(bbox=Rectangle([[0, 0], [1, 0], [1, 1], [0, 1]]), text=None, confidence=None)
+        
+        with pytest.raises(ValueError):
+            ocrmultioutput_from_example1.closest_word(word, dist_thresh=3, _to="invalid")
+
+    def test_closest_word_right_no_horizontal_enforcement(self, ocrmultioutput_from_example2: OcrMultiOutput):
+        ocrsos_area = [ocrso for ocrso in ocrmultioutput_from_example2.ocrsos if "AREA" in ocrso.text]
+        result = ocrmultioutput_from_example2.closest_word(
+            word=ocrsos_area[0], 
+            dist_thresh=3,
+            enforce_horizontal_alignment=False
+        )
+
+        assert result is not None
+        assert result.text == "COMUN"
+
