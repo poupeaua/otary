@@ -2,11 +2,27 @@
 Test the OcrMultiOutput class.
 """
 
+import json
+
 import pytest
 import numpy as np
 
 from otary.vision.ocr import OcrMultiOutput, OcrSingleOutput
 from otary import Rectangle
+
+
+class TestOCRMOFromPytesseract:
+
+    @pytest.fixture
+    def pytesseract_output(self) -> list:
+        """Document"""
+        return json.load(
+            open("tests/data/vision/example1/output_pytesseract.json", "r")
+        )
+
+    def test_from_pytesseract(self, pytesseract_output: dict):
+        ocrmo = OcrMultiOutput.from_pytesseract(pytesseract_output)
+        assert isinstance(ocrmo, OcrMultiOutput)
 
 
 class TestOCRMOFromEasyOcr:

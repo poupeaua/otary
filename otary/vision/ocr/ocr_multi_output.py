@@ -43,6 +43,57 @@ class OcrMultiOutput:
         self.ocrsos = ocrsos
 
     @classmethod
+    def from_pytesseract(cls, data: dict, min_conf: float = 0.0) -> OcrMultiOutput:
+        """
+        Convert a pytesseract image_to_data dictionary into a list of ``OcrSingleOutput`` objects.
+
+        Args:
+            data (dcit): Dictionary returned by ``pytesseract.image_to_data(..., output_type=pytesseract.Output.DICT)``.
+            min_conf (int): Minimum confidence threshold on the Tesseract scale [0, 100].
+                Words below this value are dropped. Defaults to ``0`` (keep all
+                valid words). Tesseract uses ``-1`` as a sentinel for non-word
+                layout tokens; those are always dropped regardless.
+
+        Returns:
+            OcrMultiOutput: an OcrMultiOutput object, one per recognized word.
+        """
+        ocrsos = []
+
+        for i in range(len(data["text"])):
+            word = data["text"][i]
+            conf = int(data["conf"][i])
+
+            # Skip layout-level tokens (conf == -1) and empty strings
+            if not word or conf < 0:
+                continue
+
+            # Apply optional confidence filter (Tesseract scale 0–100)
+            if conf < min_conf:
+                continue
+
+            x, y, width, height = (
+                data["left"][i],
+                data["top"][i],
+                data["width"][i],
+                data["height"][i],
+            )
+
+            # top-left → top-right → bottom-right → bottom-left
+            bbox = geo.Rectangle.from_topleft(
+                topleft=np.array([x, y]), width=width, height=height
+            )
+
+            ocrsos.append(
+                OcrSingleOutput(
+                    bbox=bbox,
+                    text=word,
+                    confidence=conf / 100.0,
+                )
+            )
+
+        return cls(ocrsos=ocrsos)
+
+    @classmethod
     def from_easyocr(
         cls, easyocr_output: list, is_bbox_cast_int_enabled: bool = False
     ) -> OcrMultiOutput:
