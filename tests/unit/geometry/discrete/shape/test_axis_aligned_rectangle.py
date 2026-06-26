@@ -299,13 +299,16 @@ class TestAxisAlignedRectangleFromPolygonErrors:
         with pytest.raises(ValueError):
             AxisAlignedRectangle.from_polygon(np.ones((5, 3)))
 
+
 # ---------------------------------------------------------------------------
 # Random-polygon tests (fixed seed for reproducibility)
 # ---------------------------------------------------------------------------
 
+
 def make_random_polygon_array(n_points: int, seed: int | None = None) -> np.ndarray:
     rng = np.random.default_rng(seed)
     return rng.uniform(-1000, 1000, size=(n_points, 2)).astype(np.float32)
+
 
 class TestFromPolygonRandom:
 

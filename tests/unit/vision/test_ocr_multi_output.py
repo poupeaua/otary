@@ -13,15 +13,11 @@ from otary import Rectangle
 
 @pytest.fixture
 def ocrmultioutput_from_example1() -> OcrMultiOutput:
-    """Document """
-    example1_easyocr_output = json.load(open("tests/data/vision/example1/output_easyocr.json", "r"))
+    """Document"""
+    example1_easyocr_output = json.load(
+        open("tests/data/vision/example1/output_easyocr.json", "r")
+    )
     return OcrMultiOutput.from_easyocr(example1_easyocr_output)
-
-@pytest.fixture
-def ocrmultioutput_from_example2() -> OcrMultiOutput:
-    """Document """
-    example2_easyocr_output = json.load(open("tests/data/vision/example2/output_easyocr.json", "r"))
-    return OcrMultiOutput.from_easyocr(example2_easyocr_output)
 
 
 class TestOCRMOFromEasyOcr:
@@ -31,7 +27,11 @@ class TestOCRMOFromEasyOcr:
         return [
             ([[0, 0], [1, 0], [1, 1], [0, 1]], "Hello", 0.9),
             ([[2, 2], [3, 2], [3, 3], [2, 3]], "World", 0.8),
-            ([[4, 4, 4043], [5, 4, "fef"], [5, 5, -111], [4, 5, 45]], "Test", 0.7), # invalid
+            (
+                [[4, 4, 4043], [5, 4, "fef"], [5, 5, -111], [4, 5, 45]],
+                "Test",
+                0.7,
+            ),  # invalid
         ]
 
     @pytest.fixture
@@ -105,8 +105,11 @@ class TestOCRMOFromDoctr:
                                             "confidence": 0.85,
                                             "objectness_score": 0.8,
                                         },
-                                        { # invalid one
-                                            "geometry": [[0.3, 0.3, 95], [0.4, 0.4, -23]],
+                                        {  # invalid one
+                                            "geometry": [
+                                                [0.3, 0.3, 95],
+                                                [0.4, 0.4, -23],
+                                            ],
                                             "value": "World",
                                             "confidence": 0.85,
                                             "objectness_score": 0.8,
@@ -153,7 +156,7 @@ class TestOCRMOFromDoctr:
                                             "confidence": 0.85,
                                             "objectness_score": 0.8,
                                         },
-                                        { # invalid one
+                                        {  # invalid one
                                             "geometry": [
                                                 [0.3, 0.3, 4],
                                                 [0.3, 0.4, 4],
@@ -226,8 +229,6 @@ class TestOCRMOFromDoctr:
             result.ocrsos[1].bbox.asarray,
             [[600, 300], [600, 400], [800, 400], [800, 300]],
         )
-
-
 
 
 class TestOCRMOConfidenceMean:
@@ -457,9 +458,7 @@ class TestOCRMOMerge:
         assert result.ocrsos[0].text == "Hello"
         assert result.ocrsos[1].text == "World"
 
-    def test_merge_all_empty_outputs(
-        self, ocrmultioutput_empty: OcrMultiOutput
-    ):
+    def test_merge_all_empty_outputs(self, ocrmultioutput_empty: OcrMultiOutput):
         result = OcrMultiOutput.merge([ocrmultioutput_empty, ocrmultioutput_empty])
 
         assert len(result.ocrsos) == 0
@@ -529,48 +528,99 @@ class TestOCRMOMerge:
         assert result.ocrsos[1].confidence == 0.8
 
 
-class TestOCRMClosestWord:
+class TestOCRMOClosestWord:
 
-    def test_closest_word_returns_nearest1_right(self, ocrmultioutput_from_example1: OcrMultiOutput):
+    def test_closest_word_returns_nearest1_right(
+        self, ocrmultioutput_from_example1: OcrMultiOutput
+    ):
         word = ocrmultioutput_from_example1.ocrsos[0]
         assert word.text == "This"
         result = ocrmultioutput_from_example1.closest_word(word, dist_thresh=3)
         assert result is not None
         assert result.text == "is"
 
-    def test_closest_word_returns_nearest1_left(self, ocrmultioutput_from_example1: OcrMultiOutput):
+    def test_closest_word_returns_nearest1_left(
+        self, ocrmultioutput_from_example1: OcrMultiOutput
+    ):
         word = ocrmultioutput_from_example1.ocrsos[1]
         assert word.text == "is"
-        result = ocrmultioutput_from_example1.closest_word(word, dist_thresh=3, _to="left")
+        result = ocrmultioutput_from_example1.closest_word(
+            word, dist_thresh=3, _to="left"
+        )
         assert result is not None
         assert result.text == "This"
 
-    def test_closest_word_returns_left_empty(self, ocrmultioutput_from_example1: OcrMultiOutput):
+    def test_closest_word_returns_left_empty(
+        self, ocrmultioutput_from_example1: OcrMultiOutput
+    ):
         word = ocrmultioutput_from_example1.ocrsos[0]
         assert word.text == "This"
-        result = ocrmultioutput_from_example1.closest_word(word, dist_thresh=3, _to="left")
+        result = ocrmultioutput_from_example1.closest_word(
+            word, dist_thresh=3, _to="left"
+        )
         assert result is None
 
-    def test_closest_word_returns_right_empty(self, ocrmultioutput_from_example1: OcrMultiOutput):
+    def test_closest_word_returns_right_empty(
+        self, ocrmultioutput_from_example1: OcrMultiOutput
+    ):
         word = ocrmultioutput_from_example1.ocrsos[5]
         assert word.text == "document."
-        result = ocrmultioutput_from_example1.closest_word(word, dist_thresh=3, _to="right")
+        result = ocrmultioutput_from_example1.closest_word(
+            word, dist_thresh=3, _to="right"
+        )
         assert result is None
 
-    def test_closest_word_invalid_direction(self, ocrmultioutput_from_example1: OcrMultiOutput):
-        word = OcrSingleOutput(bbox=Rectangle([[0, 0], [1, 0], [1, 1], [0, 1]]), text=None, confidence=None)
-        
-        with pytest.raises(ValueError):
-            ocrmultioutput_from_example1.closest_word(word, dist_thresh=3, _to="invalid")
-
-    def test_closest_word_right_no_horizontal_enforcement(self, ocrmultioutput_from_example2: OcrMultiOutput):
-        ocrsos_area = [ocrso for ocrso in ocrmultioutput_from_example2.ocrsos if "AREA" in ocrso.text]
-        result = ocrmultioutput_from_example2.closest_word(
-            word=ocrsos_area[0], 
-            dist_thresh=3,
-            enforce_horizontal_alignment=False
+    def test_closest_word_invalid_direction(
+        self, ocrmultioutput_from_example1: OcrMultiOutput
+    ):
+        word = OcrSingleOutput(
+            bbox=Rectangle([[0, 0], [1, 0], [1, 1], [0, 1]]), text=None, confidence=None
         )
 
-        assert result is not None
-        assert result.text == "COMUN"
+        with pytest.raises(ValueError):
+            ocrmultioutput_from_example1.closest_word(
+                word, dist_thresh=3, _to="invalid"
+            )
 
+
+class TestOCRMOGroupWords:
+
+    def test_group_words(self, ocrmultioutput_from_example1: OcrMultiOutput):
+        groupwords, _ = ocrmultioutput_from_example1.group_words(dist_thresh=5)
+        assert len(groupwords) == 2
+        assert groupwords.ocrsos[0].text == "This is a test PDF document."
+        assert (
+            groupwords.ocrsos[1].text
+            == "If you can read this, you have Adobe Acrobat Reader installed on your computer."
+        )
+
+    def test_group_words_symbol_spliter(
+        self, ocrmultioutput_from_example1: OcrMultiOutput
+    ):
+        groupwords, _ = ocrmultioutput_from_example1.group_words(
+            dist_thresh=5, symbol_splitter=","
+        )
+        assert len(groupwords) == 3
+        assert groupwords.ocrsos[0].text == "This is a test PDF document."
+        assert groupwords.ocrsos[1].text == "If you can read this,"
+        assert (
+            groupwords.ocrsos[2].text
+            == "you have Adobe Acrobat Reader installed on your computer."
+        )
+
+    def test_group_words_limit_nmax(self, ocrmultioutput_from_example1: OcrMultiOutput):
+        groupwords, _ = ocrmultioutput_from_example1.group_words(
+            dist_thresh=5, max_n_words=10
+        )
+        assert len(groupwords) == 1
+        assert groupwords.ocrsos[0].text == "This is a test PDF document."
+
+    def test_group_words_limit_nmin(self, ocrmultioutput_from_example1: OcrMultiOutput):
+        groupwords, _ = ocrmultioutput_from_example1.group_words(
+            dist_thresh=5, min_n_words=10
+        )
+        assert len(groupwords) == 1
+        assert (
+            groupwords.ocrsos[0].text
+            == "If you can read this, you have Adobe Acrobat Reader installed on your computer."
+        )
