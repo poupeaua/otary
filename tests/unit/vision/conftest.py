@@ -9,6 +9,7 @@ import pytest
 
 from otary.vision.ocr.ocr_multi_output import OcrMultiOutput
 
+
 @pytest.fixture
 def ocrmultioutput_from_example1() -> OcrMultiOutput:
     """Document"""

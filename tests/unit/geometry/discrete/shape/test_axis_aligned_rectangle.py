@@ -228,7 +228,7 @@ class TestAxisAlignedRectangleFromPolygon:
         assert rect.ymin == pytest.approx(-1)
         assert rect.ymax == pytest.approx(3.3)
 
-    def test_axis_aligned_rectangle_input(self):
+    def test_axis_aligned_rectangle_input2(self):
         """A rectangle whose AABB is itself should round-trip exactly."""
         pts = np.array([[0, 0], [4, 0], [4, 3], [0, 3]], dtype=np.float32)
         rect = AxisAlignedRectangle.from_polygon(pts)
