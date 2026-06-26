@@ -7,7 +7,6 @@ from otary.vision.ocr import OcrMultiOutput, OcrSingleOutput
 
 
 class HeuristicKeyInformationExtractor:
-
     @staticmethod
     def extract(
         ocr_outputs: OcrMultiOutput,
@@ -35,8 +34,11 @@ class HeuristicKeyInformationExtractor:
                 return False
             if exact_key_match:
                 return ocrso.text.lower() == key.lower()
-            levenshtein_score = Levenshtein.ratio(key.lower(), ocrso.text.lower())
-            return levenshtein_score >= levenshtein_threshold
+            else:
+                levenshtein_score = Levenshtein.similarity(
+                    key.lower(), ocrso.text.lower()
+                )
+                return levenshtein_score >= levenshtein_threshold
 
         # find the good candidates for the key
         candidates = [

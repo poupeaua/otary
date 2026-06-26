@@ -4,7 +4,6 @@ Utils for KIE (Key Information Extraction) in the vision module of Otary.
 
 
 class Levenshtein:
-
     @staticmethod
     def distance(s1: str, s2: str) -> int:
         """Calculates the Levenshtein distance between two strings.
@@ -43,17 +42,18 @@ class Levenshtein:
         return previous_row[-1]
 
     @staticmethod
-    def ratio(s1: str, s2: str) -> float:
-        """Normalized Levenshtein distance between two strings.
+    def similarity(s1: str, s2: str) -> float:
+        """Normalized Levenshtein similarity between two strings.
 
         Args:
             s1 (str): First string.
             s2 (str): Second string.
 
         Returns:
-            float: Normalized Levenshtein distance.
+            float: Similarity score in [0, 1], where 1 means identical strings
+                and 0 means maximally different.
         """
         denominator = max(len(s1), len(s2))
         if denominator == 0:
-            return 0.0
-        return Levenshtein.distance(s1, s2) / max(len(s1), len(s2))
+            return 1.0
+        return 1.0 - Levenshtein.distance(s1, s2) / denominator

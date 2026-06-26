@@ -2,22 +2,11 @@
 Test the OcrMultiOutput class.
 """
 
-import json
-
 import pytest
 import numpy as np
 
 from otary.vision.ocr import OcrMultiOutput, OcrSingleOutput
 from otary import Rectangle
-
-
-@pytest.fixture
-def ocrmultioutput_from_example1() -> OcrMultiOutput:
-    """Document"""
-    example1_easyocr_output = json.load(
-        open("tests/data/vision/example1/output_easyocr.json", "r")
-    )
-    return OcrMultiOutput.from_easyocr(example1_easyocr_output)
 
 
 class TestOCRMOFromEasyOcr:
