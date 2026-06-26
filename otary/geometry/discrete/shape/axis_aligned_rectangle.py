@@ -70,16 +70,16 @@ class AxisAlignedRectangle(Rectangle):
             raise TypeError(
                 "Input must be a Polygon object or a numpy ndarray of points."
             )
-        
+
         if len(polygon_arr) <= 2:
             raise ValueError(
-                "Cannot create an AxisAlignedRectangle from a Polygon with less than " \
+                "Cannot create an AxisAlignedRectangle from a Polygon with less than "
                 "3 points."
             )
-        
+
         if len(polygon_arr.shape) != 2 or polygon_arr.shape[1] != 2:
             raise ValueError(
-                "Cannot create an AxisAlignedRectangle from a Polygon with more than " \
+                "Cannot create an AxisAlignedRectangle from a Polygon with more than "
                 "2 dimensions."
             )
 

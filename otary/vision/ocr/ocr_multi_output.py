@@ -205,7 +205,7 @@ class OcrMultiOutput:
         dist_thresh: float,
         _to: str = "right",
         enforce_horizontal_alignment: bool = True,
-        alignment_angle_error: float = math.pi / 50
+        alignment_angle_error: float = math.pi / 50,
     ) -> Optional[OcrSingleOutput]:
         """Given a OcrSingleOutput object, get the closest word in the image to the
         right or to the left.
@@ -242,11 +242,15 @@ class OcrMultiOutput:
 
         if _to == "right":
             ocrsos = [
-                ocrso for ocrso in self.ocrsos if ocrso.bbox.xmin >= word.bbox.centroid[0]
+                ocrso
+                for ocrso in self.ocrsos
+                if ocrso.bbox.xmin >= word.bbox.centroid[0]
             ]
         else:
             ocrsos = [
-                ocrso for ocrso in self.ocrsos if ocrso.bbox.xmax <= word.bbox.centroid[0]
+                ocrso
+                for ocrso in self.ocrsos
+                if ocrso.bbox.xmax <= word.bbox.centroid[0]
             ]
 
         # gather the other points
@@ -293,7 +297,10 @@ class OcrMultiOutput:
         return ocrsos[idxs_valid[closest_word_idx]]
 
     def _separate_groupwords_by_symbol(
-        self, groupwords: list[OcrSingleOutput], symbol: str = ":"
+        self,
+        groupwords: list[OcrSingleOutput],
+        symbol: str = ":",
+        min_area_score: float = 0.8,
     ) -> list[OcrSingleOutput]:
         """
         Splits group words containing a symbol into two separate `OcrSingleOutput`
@@ -310,64 +317,77 @@ class OcrMultiOutput:
             containing colons split into two, and all other group words included
             unchanged.
         """
-        new_groupwords: list[OcrSingleOutput] = []
-        words_with_colon = [
+        words_with_symbol = [
             ocrso
             for ocrso in self.ocrsos
             if ocrso.text is not None and symbol in ocrso.text
         ]
-        gw_indexes_used = []
-        for w in words_with_colon:
-            iou_scores = [w.bbox.iou(other=gw.bbox) for gw in groupwords]
 
-            if np.max(iou_scores) < 0.1:
-                # no groupwords are close enough to the word with colon
-                continue
-
-            index = np.argmax(iou_scores)
-            gw = groupwords[index]
+        new_groupwords: list[OcrSingleOutput] = []
+        for gw in groupwords:
             if gw.text is None:
-                continue
-            gw_indexes_used.append(index)
-
-            xsep = w.bbox.xmax
-
-            # start part
-            ocrso1 = OcrSingleOutput(
-                text=gw.text.split(symbol)[0].strip() + symbol,
-                bbox=geo.Rectangle.from_topleft_bottomright(
-                    topleft=gw.bbox[0],
-                    bottomright=np.array([xsep, gw.bbox.ymax]),
-                ),
-                confidence=gw.confidence,
-            )
-            new_groupwords.append(ocrso1)
-
-            if gw.bbox.xmax == w.bbox.xmax:
-                continue
-
-            # end part
-            ocrso2 = OcrSingleOutput(
-                text=gw.text.split(symbol)[1].strip(),
-                bbox=geo.Rectangle.from_topleft_bottomright(
-                    topleft=np.array([xsep, gw.bbox.ymin]),
-                    bottomright=gw.bbox.get_vertice_from_topleft(0, "bottomright"),
-                ),
-                confidence=gw.confidence,
-            )
-
-            new_groupwords.append(ocrso2)
-
-        for i, gw in enumerate(groupwords):
-            if i not in gw_indexes_used:
                 new_groupwords.append(gw)
+                continue
+
+            # Find all symbol-words that overlap sufficiently with this groupword
+            remaining_words_with_symbol = []
+            matching_words: list[OcrSingleOutput] = []
+            for w in words_with_symbol:
+                if w.bbox.inter_area(other=gw.bbox) / w.bbox.area >= min_area_score:
+                    matching_words.append(w)
+                else:
+                    remaining_words_with_symbol.append(w)
+            words_with_symbol = remaining_words_with_symbol
+
+            if not matching_words:
+                new_groupwords.append(gw)
+                continue
+
+            # Sort matches left-to-right so we can split the groupword in order
+            matching_words = sorted(matching_words, key=lambda w: w.bbox.xmax)
+
+            # Split the groupword text on each symbol occurrence, pairing each
+            # segment with the x-boundary of the corresponding symbol-word
+            parts = gw.text.split(symbol)
+            xseps = [w.bbox.xmax for w in matching_words]
+
+            for i, (part, xsep) in enumerate(zip(parts[:-1], xseps)):
+                x_start = xseps[i - 1] if i > 0 else gw.bbox.xmin
+                new_groupwords.append(
+                    OcrSingleOutput(
+                        text=(part + symbol).strip(),
+                        bbox=geo.Rectangle.from_topleft_bottomright(
+                            topleft=np.array([x_start, gw.bbox.ymin]),
+                            bottomright=np.array([xsep, gw.bbox.ymax]),
+                        ),
+                        confidence=gw.confidence,
+                    )
+                )
+
+            # Trailing segment after the last symbol (if any text remains)
+            last_xsep = xseps[-1]
+            if last_xsep < gw.bbox.xmax:
+                trailing_text = parts[-1].strip()
+                if trailing_text:
+                    new_groupwords.append(
+                        OcrSingleOutput(
+                            text=trailing_text,
+                            bbox=geo.Rectangle.from_topleft_bottomright(
+                                topleft=np.array([last_xsep, gw.bbox.ymin]),
+                                bottomright=gw.bbox.get_vertice_from_topleft(
+                                    0, "bottomright"
+                                ),
+                            ),
+                            confidence=gw.confidence,
+                        )
+                    )
 
         return new_groupwords
 
     def group_words(
         self,
         dist_thresh: float,
-        max_n_words: int = 10,
+        max_n_words: int = 1_000_000,
         min_n_words: int = 2,
         symbol_splitter: Optional[str] = None,
         restrict_word_definition: bool = False,
@@ -388,12 +408,12 @@ class OcrMultiOutput:
             dist_thresh (float): Maximum allowed distance between consecutive words to
                 be grouped together.
             max_n_words (int, optional): Maximum number of words allowed in a group.
-                Defaults to 5.
+                Defaults to 1000000.
             min_n_words (int, optional): Minimum number of words required to form a
                 group. Defaults to 2.
             symbol_splitter (str, optional): If provided, each group of words will be
                 split by this symbol. Each part will be treated as a separate group.
-                Defaults to None.
+                Defaults to None which implies no split.
             restrict_word_definition (bool, optional): If True, only groups matching
                 the `word_definition_regex` pattern are considered valid.
                 Defaults to False.
