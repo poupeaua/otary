@@ -25,9 +25,7 @@ def color_str_to_tuple(
         Optional[tuple]: color tuple or None if not possible
     """
     try:
-        color_tuple = ImageColor.getrgb(color_str)
-        if len(color_tuple) != 3:
-            raise ValueError
+        color_tuple = ImageColor.getrgb(color_str)[:3]  # in case of RGBA format
         if is_bgr:
             color_tuple = color_tuple[::-1]
     except ValueError:

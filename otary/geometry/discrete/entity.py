@@ -328,19 +328,20 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         4. bottom left
 
         Returns:
-            Rectangle: Rectangle object
+            AxisAlignedRectangle: AxisAlignedRectangle object
         """
         # pylint: disable=import-outside-toplevel
         from otary.geometry import (
             AxisAlignedRectangle,
         )  # delayed import to avoid circular import
 
-        topleft_x, topleft_y, width, height = cv2.boundingRect(
-            array=self.asarray.astype(np.float32)
-        )
-        topleft = np.array([topleft_x, topleft_y])
-        return AxisAlignedRectangle.from_topleft(
-            topleft=topleft, width=width, height=height
+        return AxisAlignedRectangle(
+            points=[
+                [self.xmin, self.ymin],
+                [self.xmax, self.ymin],
+                [self.xmax, self.ymax],
+                [self.xmin, self.ymax],
+            ]
         )
 
     def enclosing_oriented_bbox(self) -> Rectangle:

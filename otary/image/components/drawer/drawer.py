@@ -5,13 +5,14 @@ Image Drawer module. It only contains methods to draw objects in images.
 from __future__ import annotations
 
 from typing import Sequence
+import warnings
 
 import cv2
 import numpy as np
 from numpy.typing import NDArray
 
 import otary.geometry as geo
-from otary.utils.cv.ocrsingleoutput import OcrSingleOutput
+from otary.vision.ocr.ocr_single_output import OcrSingleOutput
 from otary.image.components.drawer.utils.tools import prep_obj_draw
 from otary.image.components.drawer.utils.render import (
     Render,
@@ -49,18 +50,18 @@ class DrawerImage:
         """
         im_array = self._pre_draw(n_objects=len(circles), render=render)
         for circle, color in zip(circles, render.colors_processed):
-            cv2.circle(  # type: ignore[call-overload]
+            cv2.circle(
                 img=im_array,
-                center=circle.center.astype(int),
+                center=tuple(circle.center.astype(int)),
                 radius=int(circle.radius),
                 color=color,
                 thickness=render.thickness if not render.is_filled else -1,
                 lineType=render.line_type,
             )
             if render.is_draw_center_point_enabled:
-                cv2.circle(  # type: ignore[call-overload]
+                cv2.circle(
                     img=im_array,
-                    center=circle.center.astype(int),
+                    center=tuple(circle.center.astype(int)),
                     radius=1,
                     color=color,
                     thickness=render.thickness,
@@ -82,9 +83,9 @@ class DrawerImage:
         im_array = self._pre_draw(n_objects=len(ellipses), render=render)
         for ellipse, color in zip(ellipses, render.colors_processed):
             axes = (int(ellipse.semi_major_axis), int(ellipse.semi_minor_axis))
-            cv2.ellipse(  # type: ignore[call-overload]
+            cv2.ellipse(
                 img=im_array,
-                center=ellipse.centroid.astype(int),
+                center=tuple(ellipse.centroid.astype(int)),
                 axes=axes,
                 angle=ellipse.angle(degree=True),
                 startAngle=0,
@@ -94,9 +95,9 @@ class DrawerImage:
                 lineType=render.line_type,
             )
             if render.is_draw_center_point_enabled:
-                cv2.circle(  # type: ignore[call-overload]
+                cv2.circle(
                     img=im_array,
-                    center=ellipse.centroid.astype(int),
+                    center=tuple(ellipse.centroid.astype(int)),
                     radius=1,
                     color=color,
                     thickness=render.thickness,
@@ -104,9 +105,9 @@ class DrawerImage:
                 )
             if render.is_draw_focis_enabled:
                 for foci in [ellipse.foci1, ellipse.foci2]:
-                    cv2.circle(  # type: ignore[call-overload]
+                    cv2.circle(
                         img=im_array,
-                        center=foci.astype(int),
+                        center=tuple(foci.astype(int)),
                         radius=1,
                         color=color,
                         thickness=render.thickness,
@@ -271,10 +272,10 @@ class DrawerImage:
         im_array = self._pre_draw(n_objects=len(ocr_outputs), render=render)
         for ocrso, color in zip(ocr_outputs, render.colors_processed):
             if not isinstance(ocrso, OcrSingleOutput) or ocrso.bbox is None:
-                # warnings.warn(
-                #     f"Object {ocrso} is not an OcrSingleOutput or has no bbox. "
-                #     "Skipping it."
-                # )
+                warnings.warn(
+                    f"Object {ocrso} is not an OcrSingleOutput or has no bbox. "
+                    "Skipping it."
+                )
                 continue
             cnt = [ocrso.bbox.asarray.reshape((-1, 1, 2)).astype(np.int32)]
             im_array = cv2.drawContours(

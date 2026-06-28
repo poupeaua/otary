@@ -23,7 +23,7 @@ import PIL.Image as ImagePIL
 import otary.geometry as geo
 from otary.geometry.discrete.linear.entity import LinearEntity
 from otary.geometry.discrete.shape.axis_aligned_rectangle import AxisAlignedRectangle
-from otary.utils.cv.ocrsingleoutput import OcrSingleOutput
+from otary.vision.ocr.ocr_single_output import OcrSingleOutput
 from otary.image.base import BaseImage
 from otary.image.components import (
     ReaderImage,
@@ -1118,7 +1118,7 @@ class Image:
 
     # ------------------------------- GEOMETRY METHODS --------------------------------
 
-    def shift(self, shift: NDArray, fill_value: Sequence[float] = (0.0,)) -> Self:
+    def shift(self, shift: NDArray, fill_value: Sequence[int] | int = (0,)) -> Self:
         """Shift the image by performing a translation operation
 
         Args:
@@ -1126,7 +1126,7 @@ class Image:
             fill_value (int | tuple[int, int, int], optional): value to fill the
                 border of the image after the rotation in case reshape is True.
                 Can be a tuple of 3 integers for RGB image or a single integer for
-                grayscale image. Defaults to (0.0,) which is black.
+                grayscale image. Defaults to (0,) which is black.
 
         Returns:
             Self: shifted image

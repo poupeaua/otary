@@ -42,7 +42,7 @@ class TestTransformerMorphologyBlur:
         img = Image.from_fillvalue(shape=(5, 5), value=0)
         img.asarray[2, 2] = 255
         with pytest.raises(ValueError):
-            img.blur(method="not_a_valid_method")
+            img.blur(method="not_a_valid_method")  # type: ignore[arg-type]
 
 
 class TestTransformerMorphologyDilate:

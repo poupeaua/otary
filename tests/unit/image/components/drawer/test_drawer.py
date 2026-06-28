@@ -2,9 +2,11 @@
 Unit Tests for the drawer image methods
 """
 
+import pytest
+
 import numpy as np
 
-from otary.utils.cv.ocrsingleoutput import OcrSingleOutput
+from otary.vision.ocr.ocr_single_output import OcrSingleOutput
 from otary.geometry import Polygon, Rectangle, Circle, Ellipse, LinearSpline
 from otary.image import (
     Image,
@@ -50,14 +52,14 @@ class TestDrawerColors:
         points = np.array([[0, 0], [1, 1], [2, 3]])
         cnt = Polygon(points=points)
         Image.from_fillvalue(shape=(5, 5, 3), value=0).draw_polygons(
-            polygons=[cnt], render=PolygonsRender(default_color=["blue"])
+            polygons=[cnt], render=PolygonsRender(default_color=["blue"])  # type: ignore[arg-type]
         )
 
     def test_draw_default_color_as_str_bad(self):
         points = np.array([[0, 0], [1, 1], [2, 3]])
         cnt = Polygon(points=points)
         Image.from_fillvalue(shape=(5, 5, 3), value=0).draw_polygons(
-            polygons=[cnt], render=PolygonsRender(default_color=["pi$?7_="])
+            polygons=[cnt], render=PolygonsRender(default_color=["pi$?7_="])  # type: ignore[arg-type]
         )
 
     def test_draw_default_color_hard_case(self):
@@ -127,6 +129,7 @@ class TestDrawerOcrImage:
             ocr_outputs=[ocrso]
         )
 
+    @pytest.mark.filterwarnings("ignore")
     def test_draw_ocrso_empty(self):
         ocrso = OcrSingleOutput(
             bbox=None,

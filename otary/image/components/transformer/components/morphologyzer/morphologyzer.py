@@ -232,7 +232,7 @@ class MorphologyzerImage:
             right=size,
             borderType=cv2.BORDER_CONSTANT,
             value=fill_value,
-        )  # type: ignore[call-overload]
+        )
 
     def add_noise_salt_and_pepper(self, amount: float = 0.05) -> None:
         """Add salt and pepper noise to the image.

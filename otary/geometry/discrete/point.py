@@ -58,7 +58,7 @@ class Point(DiscreteGeometryEntity):
         return SPoint(self.asarray)
 
     @property
-    def shapely_surface(self) -> SPoint:
+    def shapely_surface(self) -> None:
         """Returns None since a point has no surface
 
         Returns:

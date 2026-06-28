@@ -187,7 +187,7 @@ class TestThresholdGatos:
         with pytest.raises(ValueError):
             img = im_pdf_crop
             img.transformer.binarizer.threshold_gatos(
-                upsampling=True, upsampling_factor="random_string"
+                upsampling=True, upsampling_factor="random_string"  # type: ignore[arg-type]
             )
 
     def test_threshold_gatos_upsampling_p1_error(self, im_pdf_crop: Image):

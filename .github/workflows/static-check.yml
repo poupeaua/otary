@@ -1,0 +1,75 @@
+name: static-check
+
+'on':
+  push:
+    branches:
+      - master
+      - dev
+      - feature/**
+  pull_request:
+    branches:
+      - master
+      - release
+
+permissions:
+  contents: read
+
+jobs:
+
+  static-check:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
+      - uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: Gr1N/setup-poetry@48b0f77c8c1b1b19cb962f0f00dff7b4be8f81ec
+        with:
+          poetry-version: 2.4.1
+
+      - name: 🚀 Install Dependencies
+        run: |
+          # libgl1 library install needed for opencv-python to be imported to work
+          sudo apt-get update -y
+          sudo apt-get install libgl1 -y
+          python -m pip install --upgrade pip
+          poetry config virtualenvs.create false
+          poetry install --without docs,dev,test
+
+      - name: ✅ Check Code Quality - Pylint
+        run: |
+          make check-pylint
+        continue-on-error: false
+
+      - name: ✅ Check Code Quality - Ruff
+        run: |
+          make check-ruff
+        continue-on-error: false
+
+      - name: ✅ Check Code Quality - Mypy
+        run: |
+          make check-mypy
+        continue-on-error: false
+
+      - name: ✅ Check Code Quality - Ty
+        run: |
+          PYTHON_PATH=$(poetry env info | grep '^Path:' | tail -n1 | sed 's/^Path:[[:space:]]*//')
+          echo $PYTHON_PATH
+          ty check --python=$PYTHON_PATH otary/
+        continue-on-error: false
+
+      - name: ✅ Check Code Quality - Black
+        run: |
+          make check-black
+        continue-on-error: false

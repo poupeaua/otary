@@ -1,6 +1,6 @@
 [project]
 name = "otary"
-version = "0.4.1"
+version = "0.4.2"
 description = "Otary — elegant, readable, and powerful image and 2D geometry Python library."
 authors = [
     {name="Alexandre Poupeau", email="contact@alexandrepoupeau.com"}
@@ -26,6 +26,7 @@ pylint-exit = "^1.2.0"
 ruff = "^0.4.4"
 black = "^24.4.2"
 pre-commit = "^3.7.1"
+ty = "^0.0.14"
 
 [tool.poetry.group.dev.dependencies]
 setuptools = "^70.0.0"
@@ -61,11 +62,15 @@ good-names = [
 line-length = 88
 
 [tool.mypy]
+plugins = ["numpy.typing.mypy_plugin"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "yaml,requests"
 ignore_missing_imports = true
+
+[tool.ty.rules]
+unused-ignore-comment = "ignore"
 
 [tool.bandit]
 skips = ["B101"]

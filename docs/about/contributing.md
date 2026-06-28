@@ -91,6 +91,20 @@ This will run all the code quality checks and the tests. Tools used for Otary de
 
 For a fine-grained control on checks and tests, you can take a look at the `Makefile` at the root of the repository.
 
+## Contribute to CI/CD pipelines
+
+If you want to contribute to CI/CD pipelines you are welcome!
+
+I encourage you to try and adopt the tool named [`act`](https://github.com/nektos/act) for this purpose in order to iterate more quickly by executing GitHub Actions locally.
+
+You can select the jobs you want to run by executing the following command for example:
+
+```bash
+act -j check
+```
+
+This way you would be executing the check job only locally.
+
 ### Interactive Jupyter Notebook development
 
 Since Otary is a image and geometry processing library, **having a visual interface to play with is a must**.

@@ -52,7 +52,7 @@ class TestPointSetArray:
 
     def test_asarray_setter_casts_to_numpy_array(self):
         p = Point(np.array([0.0, 0.0]))
-        p.asarray = [7.0, 8.0]
+        p.asarray = np.array([7.0, 8.0])
         np.testing.assert_array_equal(p.asarray, np.array([[7.0, 8.0]]))
 
 
