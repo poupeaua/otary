@@ -34,9 +34,9 @@ jobs:
         with:
           python-version: '3.12'
 
-      - uses: Gr1N/setup-poetry@v8
+      - uses: Gr1N/setup-poetry@v9
         with:
-          poetry-version: 2.2.1
+          poetry-version: 2.4.1
 
       - name: 🚀 Install Dependencies
         run: |
