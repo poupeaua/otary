@@ -69,6 +69,9 @@ ignore_missing_imports = true
 module = "yaml,requests"
 ignore_missing_imports = true
 
+[tool.ty.rules]
+unused-ignore-comment = "ignore"
+
 [tool.bandit]
 skips = ["B101"]
 exclude_dirs = ['tests']

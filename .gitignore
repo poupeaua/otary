@@ -1,11 +1,12 @@
 # custom
 tmp/
-data/
+/data/
 .credentials/
 junit/
 .vscode
 .DS_Store
 notebooks
+*venv*
 
 # ruff
 .ruff_cache

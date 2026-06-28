@@ -6,7 +6,7 @@ import pytest
 
 import numpy as np
 
-from otary.utils.cv.ocrsingleoutput import OcrSingleOutput
+from otary.vision.ocr.ocr_single_output import OcrSingleOutput
 from otary.geometry import Polygon, Rectangle, Circle, Ellipse, LinearSpline
 from otary.image import (
     Image,
