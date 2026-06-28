@@ -30,6 +30,7 @@ class OcrMultiOutput:
     program.
 
     Already handles:
+    - Tesseract (https://github.com/madmaze/pytesseract)
     - EasyOCR (https://github.com/JaidedAI/EasyOCR)
     - DocTR (https://github.com/mindee/doctr)
     """

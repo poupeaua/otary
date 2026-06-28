@@ -23,7 +23,10 @@ class HeuristicKeyInformationExtractor:
             ocr_outputs (List[OCRSingleOutput]): OCR results, each containing a value
                 and access to closest_word(to="left").
             key (str): expected keys to match.
-            threshold (float): Minimum normalized distance for a valid match.
+            closest_word_dist_thresh (float): Maximum distance between the OCR key
+                bounding box and the closest word bounding box for the value.
+            levenshtein_threshold (float): Minimum normalized distance for a valid match
+            exact_key_match (bool): Whether to match keys exactly
 
         Returns:
             Dict[str, str]: Dictionary mapping expected keys to matched values.

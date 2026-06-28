@@ -116,6 +116,17 @@ nav:
           - Circle: api/geometry/continuous/circle.md
           - Ellipse: api/geometry/continuous/ellipse.md
 
+      - Vision: # ------------------------------- VISION ------------------------------
+        - api/vision/index.md
+
+        - OCR:
+          - OCR Single Output: api/vision/ocr/ocr_single_output.md
+          - OCR Multi Output: api/vision/ocr/ocr_multi_output.md
+
+        - Key Information Extraction:
+          - Heuristic: api/vision/kie/heuristic.md
+
+
   - Learn:
     - learn/index.md
 

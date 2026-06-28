@@ -107,13 +107,13 @@ check-black:
 # -------------------------------------- DOCS -----------------------------------------
 
 docs-serve:
-	@echo "\n------------------"
+	@echo "\n-------------------"
 	@echo "Serve documentation"
 	@echo "-------------------"
-	poetry run mkdocs serve --watch otary
+	poetry run mkdocs serve --watch otary --livereload
 
 docs-deploy:
-	@echo "\n-------------------"
+	@echo "\n--------------------"
 	@echo "Deploy documentation"
 	@echo "--------------------"
 	poetry run mkdocs gh-deploy --force
