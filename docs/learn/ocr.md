@@ -36,8 +36,10 @@ object easily this way:
 ```python
 import otary as ot
 
+your_ocr_outputs = ... # from your favorite OCR engine
+
 ocrsos = []
-for ocr_output in you_ocr_outputs:
+for ocr_output in your_ocr_outputs:
     ocrso = ot.OcrSingleOutput(
         bbox=ot.Rectangle(ocr_output["bounding_box"]),
         text=ocr_output["text"],
@@ -51,14 +53,20 @@ ocrmo = ot.OcrMultiOutput(ocrsos)
 
 ## Displaying
 
-### Example to display OCR outputs
+### Display OCR outputs
+
+Here is a very quick example using Otary and Pytesseract as the OCR engine:
 
 ```python
 import otary as ot
+import pytesseract
 
 im = ot.Image.from_pdf('../tests/data/vision/example1/test.pdf')
 
-ocr_outputs = pytesseract.image_to_data(im.as_pil(), output_type=pytesseract.Output.DICT)
+ocr_outputs = pytesseract.image_to_data(
+    im.as_pil(),
+    output_type=pytesseract.Output.DICT
+)
 ocrmo = ot.OcrMultiOutput.from_pytesseract(ocr_outputs)
 
 im.copy().draw_ocr_outputs(
@@ -71,7 +79,7 @@ Here is what the following code would display:
 
 ![ocr](../img/learn/example-otary-ocr-sample-pdf.png)
 
-### OCR with rotated Bounding Boxes
+### Rotated Bounding Boxes
 
 If you have OCR outputs with rotated bounding boxes, you can also manipulating them
 with Otary.
@@ -87,7 +95,7 @@ ocr_outputs = ... # from Azure Document Intelligence OCR engine for example
 img = ot.Image.from_file(FILEPATH)
 
 ocrmo = ot.OcrMultiOutput.from_azure_document_intelligence(
-    azure_output=ocr_outputs, 
+    azure_output=ocr_outputs,
     image_dim=(img.width, img.height),
     page_nb_to_analyze=0,
     level="word",
@@ -102,14 +110,14 @@ im = img.copy().draw_ocr_outputs(
 
 ![ocr](../img/learn/example-otary-ocr-obb.png)
 
-### OCR into Axis-Aligned Bounding Boxes
+### Axis-Aligned Bounding Boxes
 
 You can force the usage of Axis-Aligned Bounding Boxes (AABB) instead of rotated Bounding Boxes (OBB) by setting `assume_straight_pages=True`
 
 ```python
 
 ocrmo = ot.OcrMultiOutput.from_azure_document_intelligence(
-    azure_output=ocr_outputs, 
+    azure_output=ocr_outputs,
     image_dim=(img.width, img.height),
     page_nb_to_analyze=0,
     level="word",
@@ -130,7 +138,7 @@ im = img.copy().draw_ocr_outputs(
 
 Using Otary, you can easily extract key information from your OCR outputs.
 
-Given the following image: 
+Given the following image:
 
 ![ocr](../img/learn/example-otary-ocr-image.png)
 
@@ -149,7 +157,8 @@ ocrmo = OcrMultiOutput.from_aws_textract(ocr_output)
 value = ot.HeuristicKeyInformationExtractor.extract(
     ocr_outputs=ocrmo,
     key="MUNICIPIO",
-    closest_word_dist_thresh=im.dist_pct(pct=0.1) # 10% of image diagonal
+    closest_word_dist_thresh=im.dist_pct(pct=0.05), # 5% of image diagonal distance
+    levenshtein_threshold=0.85
 )
 
 print(value.text) # BESTCITYTOWN
@@ -157,8 +166,77 @@ print(value.text) # BESTCITYTOWN
 
 ### Group Words
 
-### Find words in a given spatial region
+Modern OCR engines now have layout capabilities. They contain information about
+pages, paragraphs, lines, words and more.
 
-### Find closest word to other
+However, some OCR engines do not provide this information. In those cases, Otary
+can help. You can reconstruct lines for example using the following code:
+
+```python
+import otary as ot
+
+im = ot.Image.from_pdf('../tests/data/vision/example1/test.pdf')
+
+ocr_outputs = pytesseract.image_to_data(
+    im.as_pil(),
+    output_type=pytesseract.Output.DICT
+)
+ocrmo = ot.OcrMultiOutput.from_pytesseract(ocr_outputs)
+
+ocrmo_groups, _ = ocrmo.group_words(
+    min_word_dist=im.dist_pct(pct=0.05)
+)
+
+im.copy().draw_ocr_outputs(
+    ocr_outputs=ocrmo_groups.ocrsos,
+    render=ot.OcrSingleOutputRender(thickness=1, default_color="red")
+).show()
+```
+
+![ocr](../img/learn/example-otary-ocr-groupwords.png)
+
+### Find closest word to another
+
+Using Otary, you can find the closest word to the right of any word.
+
+Given the following document:
+
+![ocr](../img/learn/example-otary-ocr-sample-pdf-base.png)
+
+You could compute:
+
+```python
+
+import otary as ot
+
+im = ot.Image.from_pdf('../tests/data/vision/example1/test.pdf')
+
+ocr_outputs = ... # from your favorite OCR engine
+ocrmos = ...
+
+print(ocrmo.ocrsos[4].text) # PDF
+
+closest_word = ocrmo.find_closest_word(
+    word=ocrmo.ocrsos[4],
+    direction="right",
+    dist_thresh=im.dist_pct(pct=0.05) # 5% of image diagonal distance
+)
+
+print(closest_word.text) # document.
+```
+
+You can do the same to the left:
+
+```python
+closest_word = ocrmo.find_closest_word(
+    word=ocrmo.ocrsos[4],
+    direction="left",
+    dist_thresh=im.dist_pct(pct=0.05)
+)
+
+print(closest_word.text) # test
+```
+
+### Find words in a given spatial region
 
 ### Drop duplicates

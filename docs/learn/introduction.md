@@ -1,6 +1,6 @@
 # General example
 
-Otary unifies geometry and image processing in a single API. 
+Otary unifies geometry and image processing in a single API.
 
 You can construct geometric entities, render them onto an image, and apply image-processing transformations, all within the same workflow, without switching between libraries.
 
@@ -28,7 +28,7 @@ im.copy().draw_polygons(
 
 ## Advanced Image Manipulation
 
-Suppose you what to manipulate the image in a given part of it. Here is 
+Suppose you what to manipulate the image in a given part of it. Here is
 an example of what you could do.
 
 ```python

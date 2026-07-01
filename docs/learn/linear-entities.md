@@ -138,7 +138,7 @@ for linear_entity in dle:
         )
     else:
         raise RuntimeError(f"Unknown type {type(linear_entity)}")
-        
+
 score = im.score_contains_v2(im_other) # compare two images
 
 print(score) # 0.97

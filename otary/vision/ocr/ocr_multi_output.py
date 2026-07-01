@@ -138,16 +138,15 @@ class OcrMultiOutput:
     def from_doctr(
         cls,
         doctr_output: dict,
-        assume_straight_pages: bool = False,
+        force_aabb: bool = False,
         is_bbox_cast_int_enabled: bool = True,
     ) -> OcrMultiOutput:
         """Transform a single page DocTR output into a OcrMultiOutput object.
 
         Args:
             doctr_output (dict): the output of the DocTR OCR pipeline.
-            assume_straight_pages (bool): whether to assume that the pages are straight
-                or not. This has an impact on the geometry bounding boxes coordinates
-                output representation.
+            force_aabb (bool): whether to force the use of axis-aligned bounding boxes
+                (AABB). Defaults to False.
             is_bbox_cast_int_enabled (bool, optional): whether to cast all bounding
                 boxes coordinates into integers.
 
@@ -168,14 +167,14 @@ class OcrMultiOutput:
                 for word in line["words"]:
                     try:
                         bbox_arr = np.array(word["geometry"], dtype=float) * arr_dim
-                        if not assume_straight_pages:
+                        if not force_aabb:
                             bbox = geo.Rectangle(
                                 points=bbox_arr,
                                 regularity_rtol=0.1,
                                 is_cast_int=is_bbox_cast_int_enabled,
                             )
                         else:
-                            bbox = geo.Rectangle.from_topleft_bottomright(
+                            bbox = geo.AxisAlignedRectangle.from_topleft_bottomright(
                                 topleft=bbox_arr[0],
                                 bottomright=bbox_arr[1],
                                 is_cast_int=is_bbox_cast_int_enabled,
@@ -199,7 +198,7 @@ class OcrMultiOutput:
         image_dim: tuple[int, int],
         page_nb_to_analyze: int = 0,
         level: str = "word",
-        assume_straight_pages: bool = False,
+        force_aabb: bool = False,
     ) -> OcrMultiOutput:
         """Instantiate OcrMultiOutput object from OCR Azure Intelligence.
 
@@ -209,8 +208,8 @@ class OcrMultiOutput:
             page_nb_to_analyze (int, optional): page number to analyze. Defaults to 0.
             level (str, optional): level of granularity for OCR results.
                 Defaults to "word".
-            assume_straight_pages (bool, optional): whether to assume straight pages.
-                Defaults to False.
+            force_aabb (bool, optional): whether to force the use of axis-aligned
+                bounding boxes (AABB). Defaults to False.
 
         Returns:
             OcrMultiOutput: OcrMultiOutput object
@@ -243,7 +242,7 @@ class OcrMultiOutput:
                 )
                 bbox = geo.Polygon(polygon_in_pixels)
 
-                if assume_straight_pages:
+                if force_aabb:
                     bbox = bbox.aabb()
                 else:
                     bbox = bbox.obb()
@@ -271,7 +270,7 @@ class OcrMultiOutput:
                 )
                 bbox = geo.Polygon(polygon_in_pixels)
 
-                if assume_straight_pages:
+                if force_aabb:
                     bbox = bbox.aabb()
                 else:
                     bbox = bbox.obb()
@@ -301,7 +300,7 @@ class OcrMultiOutput:
                 )
                 bbox = geo.Polygon(polygon_in_pixels)
 
-                if assume_straight_pages:
+                if force_aabb:
                     bbox = bbox.aabb()
                 else:
                     bbox = bbox.obb()
