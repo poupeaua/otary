@@ -22,6 +22,9 @@ __all__ = [
     "LinearSpline",
     "Vector",
     "VectorizedLinearSpline",
+    "OcrSingleOutput",
+    "OcrMultiOutput",
+    "HeuristicKeyInformationExtractor",
 ]
 
 from otary.image import (
@@ -46,4 +49,9 @@ from otary.geometry import (
     LinearSpline,
     Vector,
     VectorizedLinearSpline,
+)
+from otary.vision import (
+    OcrSingleOutput,
+    OcrMultiOutput,
+    HeuristicKeyInformationExtractor,
 )

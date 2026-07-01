@@ -92,6 +92,8 @@ nav:
           - Drawing: api/image/drawer/drawing.md
           - Renderers: api/image/drawer/renderers.md
 
+        - Utils: api/image/utils.md
+
       - Geometry: # ---------------------------- GEOMETRY -----------------------------
         - api/geometry/index.md
 
@@ -129,6 +131,9 @@ nav:
 
   - Learn:
     - learn/index.md
+    - learn/introduction.md
+    - learn/linear-entities.md
+    - learn/ocr.md
 
   - About:
     - about/history.md

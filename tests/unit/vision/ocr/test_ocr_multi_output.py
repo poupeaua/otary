@@ -236,6 +236,144 @@ class TestOCRMOFromDoctr:
         )
 
 
+class TestOCRMOFromAzure:
+
+    def test_from_azure_obb(self, azure_output: dict):
+        image_dim = (1000, 2000)  # (height, width)
+        result = OcrMultiOutput.from_azure_document_intelligence(
+            azure_output,
+            image_dim=image_dim,
+            page_nb_to_analyze=0,
+            level="word",
+            assume_straight_pages=False,
+        )
+
+        assert len(result.ocrsos) > 0
+        for ocrso in result.ocrsos:
+            assert ocrso.text is not None
+            assert ocrso.confidence is not None
+            assert ocrso.bbox is not None
+
+    def test_from_azure_aabb(self, azure_output: dict):
+        image_dim = (1000, 2000)  # (height, width)
+        result = OcrMultiOutput.from_azure_document_intelligence(
+            azure_output,
+            image_dim=image_dim,
+            page_nb_to_analyze=0,
+            level="word",
+            assume_straight_pages=True,
+        )
+
+        assert len(result.ocrsos) > 0
+        for ocrso in result.ocrsos:
+            assert ocrso.text is not None
+            assert ocrso.confidence is not None
+            assert ocrso.bbox is not None
+
+    def test_from_azure_lines_obb(self, azure_output: dict):
+        image_dim = (1000, 2000)  # (height, width)
+        result = OcrMultiOutput.from_azure_document_intelligence(
+            azure_output,
+            image_dim=image_dim,
+            page_nb_to_analyze=0,
+            level="line",
+            assume_straight_pages=False,
+        )
+
+        assert len(result.ocrsos) > 0
+        for ocrso in result.ocrsos:
+            assert ocrso.text is not None
+            assert ocrso.confidence is None
+            assert ocrso.bbox is not None
+
+    def test_from_azure_lines_aabb(self, azure_output: dict):
+        image_dim = (1000, 2000)  # (height, width)
+        result = OcrMultiOutput.from_azure_document_intelligence(
+            azure_output,
+            image_dim=image_dim,
+            page_nb_to_analyze=0,
+            level="line",
+            assume_straight_pages=True,
+        )
+
+        assert len(result.ocrsos) > 0
+        for ocrso in result.ocrsos:
+            assert ocrso.text is not None
+            assert ocrso.confidence is None
+            assert ocrso.bbox is not None
+
+    def test_from_azure_paragraph_obb(self, azure_output: dict):
+        image_dim = (1000, 2000)  # (height, width)
+        result = OcrMultiOutput.from_azure_document_intelligence(
+            azure_output,
+            image_dim=image_dim,
+            page_nb_to_analyze=0,
+            level="paragraph",
+            assume_straight_pages=False,
+        )
+
+        assert len(result.ocrsos) > 0
+        for ocrso in result.ocrsos:
+            assert ocrso.text is not None
+            assert ocrso.confidence is None
+            assert ocrso.bbox is not None
+
+    def test_from_azure_paragraph_aabb(self, azure_output: dict):
+        image_dim = (1000, 2000)  # (height, width)
+        result = OcrMultiOutput.from_azure_document_intelligence(
+            azure_output,
+            image_dim=image_dim,
+            page_nb_to_analyze=0,
+            level="paragraph",
+            assume_straight_pages=True,
+        )
+
+        assert len(result.ocrsos) > 0
+        for ocrso in result.ocrsos:
+            assert ocrso.text is not None
+            assert ocrso.confidence is None
+            assert ocrso.bbox is not None
+
+    def test_from_azure_invalid_level(self, azure_output: dict):
+        image_dim = (1000, 2000)  # (height, width)
+        with pytest.raises(ValueError):
+            OcrMultiOutput.from_azure_document_intelligence(
+                azure_output,
+                image_dim=image_dim,
+                page_nb_to_analyze=0,
+                level="invalid_level",
+                assume_straight_pages=True,
+            )
+
+
+class TestOCRMOFromAWSTextract:
+
+    def test_from_textract_with_valid_input(self, textract_output: dict):
+        image_dim = (1000, 2000)  # (height, width)
+        result = OcrMultiOutput.from_aws_textract(
+            textract_output,
+            image_dim=image_dim,
+            block_type="WORD",
+            is_bbox_cast_int_enabled=True,
+        )
+
+        assert len(result.ocrsos) > 0
+        for ocrso in result.ocrsos:
+            assert ocrso.text is not None
+            assert ocrso.confidence is not None
+            assert ocrso.bbox is not None
+
+    def test_from_textract_with_invalid_block_type(self, textract_output: dict):
+        image_dim = (1000, 2000)  # (height, width)
+        with pytest.raises(ValueError):
+            OcrMultiOutput.from_aws_textract(
+                textract_output,
+                image_dim=image_dim,
+                block_type="INVALID_BLOCK_TYPE",
+                is_bbox_cast_int_enabled=True,
+            )
+
+
 class TestOCRMOConfidenceMean:
 
     @pytest.fixture
