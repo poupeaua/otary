@@ -11,7 +11,7 @@ manipulating in your workflow.
 
 ## Basic Example
 
-```python
+``` py linenums="1"
 from otary import (
     Image,
     Segment,
@@ -79,7 +79,7 @@ If you have a similar use-case where you need to create geometrical objects next
 In the previous example, we displayed not only the OCR boxes but also boxes when
 on the symbol "angle" on the left of some OCR boxes. Here is the section of code you would need to add:
 
-```python
+``` py linenums="1" 
 for is_angled, ocrso, color in zip(
     self.ocrmo_angle_flags, self.ocrmo.ocrsos, colors
 ):
@@ -106,69 +106,3 @@ for is_angled, ocrso, color in zip(
             render=PolygonsRender(thickness=2, default_color=color),
         )
 ```
-
-### Score Geometry entities
-
-Otary allows you to score the confidence of your detected Linear Entities.
-
-You may have detected you Segments or a Contour using OpenCV. Now, you need to
-evaluate the quality of the detected objects. Otary allows you to compare the
-Linear Entities to the pixels of the image (ground truth).
-
-```python
-im_other = im.copy().as_white()
-
-for linear_entity in dle:
-    if isinstance(linear_entity, VectorizedLinearSpline):
-        im_other.draw_splines(
-            splines=[linear_entity],
-            render=LinearSplinesRender(
-                thickness=5,
-                default_color="black",
-                as_vectors=False,
-                pct_ix_head=0.25,
-            ),
-        )
-    elif isinstance(linear_entity, Segment):
-        im_other.draw_segments(
-            segments=[linear_entity],
-            render=SegmentsRender(
-                thickness=5, default_color="black", as_vectors=False
-            ),
-        )
-    else:
-        raise RuntimeError(f"Unknown type {type(linear_entity)}")
-
-score = im.score_contains_v2(im_other) # compare two images
-
-print(score) # 0.97
-```
-
-If you prefer to have a list of scores for each detected Linear Entity, you can
-use `score_contains_linear_entities` method instead.
-
-```python
-scores = im.score_contains_linear_entities(entities=linear_entities)
-
-print(scores) # [0.96, 0.98, 0.94, 0.89, 0.99, 0.76, 0.82]
-```
-
-You can even be more tolerant about the detected objects by dilating the pixels
-of the ground truth image. This can be controled by the dilate_kernel and
-the dilate_iterations parameters. This way if does not fit exactly but is still close
-enough the detected geometry object can be considered as valid for a threshold that you
-may choose.
-
-```python
-scores = im.score_contains_linear_entities(
-    entities=linear_entities,
-    dilate_kernel=(5, 5),
-    dilate_iterations=2,
-)
-
-print(scores) # [0.99, 1.0, 0.99, 0.98, 1.0, 0.95, 0.97]
-```
-
-Explore the [Analysis](/api/image/analysis/scoring/#otary.image.image.Image.score_contains_v2) part of the Otary Image module.
-With Otary, you can compute the confidence of all your detected Geometry objects or
-use it to compare two images.

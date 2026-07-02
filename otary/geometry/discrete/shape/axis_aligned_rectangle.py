@@ -90,7 +90,11 @@ class AxisAlignedRectangle(Rectangle):
         ymin = np.min(polygon_arr[:, 1])
         ymax = np.max(polygon_arr[:, 1])
 
-        return cls(points=[[xmin, ymin], [xmax, ymin], [xmax, ymax], [xmin, ymax]])
+        return cls(
+            points=np.array([[xmin, ymin], [xmax, ymin], [xmax, ymax], [xmin, ymax]], 
+                dtype=np.float32
+            )
+        )
 
     @classmethod
     def from_center(

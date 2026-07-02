@@ -1,6 +1,7 @@
 # API
 
-Otary is built upon two core modules **Image** and **Geometry**, each designed with a distinct architectural pattern to provide flexibility and power.
+Otary is built upon three core modules **Image**, **Geometry** and **Vision**,
+each designed with a distinct architectural pattern to provide flexibility and power.
 
 ## [Image: A Composition-Based Approach](image/index.md)
 

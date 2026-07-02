@@ -4,7 +4,7 @@ Conversion is the process of converting an image to something else, which can be
 
 For example, here is an example to convert an image to grayscale:
 
-```python
+``` py linenums="1"
 import otary as ot
 
 im = ot.Image.from_file(filepath="path/to/file/image")

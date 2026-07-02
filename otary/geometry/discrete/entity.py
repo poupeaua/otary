@@ -232,6 +232,7 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
             is_degree=is_degree,
             is_clockwise=is_clockwise,
         )
+        self.points = self.points.astype(np.float32)
         return self
 
     def rotate_around_image_center(
@@ -336,12 +337,12 @@ class DiscreteGeometryEntity(GeometryEntity, ABC):
         )  # delayed import to avoid circular import
 
         return AxisAlignedRectangle(
-            points=[
+            points=np.array([
                 [self.xmin, self.ymin],
                 [self.xmax, self.ymin],
                 [self.xmax, self.ymax],
                 [self.xmin, self.ymax],
-            ]
+            ], dtype=np.float32)
         )
 
     def enclosing_oriented_bbox(self) -> Rectangle:

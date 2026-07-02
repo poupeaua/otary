@@ -133,6 +133,9 @@ nav:
     - learn/index.md
     - learn/introduction.md
     - learn/linear-entities.md
+    - learn/scoring.md
+    - learn/area-computation.md
+    - learn/intersection.md
     - learn/ocr.md
 
   - About:

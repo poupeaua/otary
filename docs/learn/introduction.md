@@ -8,7 +8,7 @@ You can construct geometric entities, render them onto an image, and apply image
 
 Because visual output is the best way to verify a transformation, the example below walks through this end-to-end.
 
-```python
+``` py linenums="1"
 im = ot.Image.from_file("../tests/data/vision/example2/sample-otary-img1.pdf")
 
 polygon_array = np.array(
@@ -31,7 +31,7 @@ im.copy().draw_polygons(
 Suppose you what to manipulate the image in a given part of it. Here is
 an example of what you could do.
 
-```python
+``` py linenums="14"
 im.crop_from_axis_aligned_bbox(aabb, copy=True) \
   .threshold_sauvola(k=0.1) \
   .resize(factor=2, copy=True) \
