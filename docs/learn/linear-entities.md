@@ -28,8 +28,8 @@ from otary import (
 from otary.geometry.discrete.linear.directed.entity import DirectedLinearEntity
 
 points = ... # instantiate your contour list of points
-dle: list[DirectedLinearEntity] = ... # instantiate you Directed Linear Entities (DLE)
-ocrmo: OcrMultiOutput = ... # OCR Multi Output
+dle: list[DirectedLinearEntity] = ...
+ocrmo: OcrMultiOutput = ...
 
 colors = [
     interpolate_color(i / len(dle)) for i in range(len(dle))
@@ -79,9 +79,11 @@ If you have a similar use-case where you need to create geometrical objects next
 In the previous example, we displayed not only the OCR boxes but also boxes when
 on the symbol "angle" on the left of some OCR boxes. Here is the section of code you would need to add:
 
-``` py linenums="1" 
+``` py linenums="1"
+ocrmo_angle_flags: list[bool] = ...
+
 for is_angled, ocrso, color in zip(
-    self.ocrmo_angle_flags, self.ocrmo.ocrsos, colors
+    ocrmo_angle_flags, ocrmo.ocrsos, colors
 ):
     if is_angled:
         shift = -ocrso.bbox.get_vector_left_from_topleft(0).normalized * 40
@@ -105,4 +107,38 @@ for is_angled, ocrso, color in zip(
             polygons=[square],
             render=PolygonsRender(thickness=2, default_color=color),
         )
+```
+
+### Cardinal Direction
+
+Otary provides a set of tools to help you work with cardinal directions.
+Cardinal directions are East (E), North (N), West (W) and South (S). 
+
+Otary allows you to get even more fine-grained directions from your directec linear
+objects.
+
+Level-2 cardinal directions such as NE, NW, SE, SW.
+Level-3 cardinal directions such as NNE, NNE, SSE, SSW etc...
+
+From a Segment or a Spline, you can get the cardinal direction of the
+object.
+
+Given the previous image, you could extract the cardinal direction of each
+directed linear object like so:
+
+``` py linenums="1"
+import otary as ot
+from otary.geometry.discrete.linear.directed.entity import DirectedLinearEntity
+
+dle: list[DirectedLinearEntity] = ...
+
+results: list[str] = []
+for entity in dle:
+    cardinal_direction = entity.cardinal_direction(
+        full=False, # whether to return just E not East for example
+        level=2 # level of angle detail (1 = N/E/S/W, 2 = N/NE/E/SE, 3 = N/NNE/NE/ENE)
+    )
+    results.append(cardinal_direction)
+
+print(results) # ["E", "E", "SE", "S", "S", "O", "N"]
 ```
