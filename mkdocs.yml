@@ -61,9 +61,24 @@ nav:
     - Why Otary?: why.md
     - Quickstart: quickstart.md
     - Installation: installation.md
+    - Contributing:
+      - Guidelines: about/contributing.md
+      - Report an Issue: https://github.com/poupeaua/otary/issues
+      - Request a new Feature: https://github.com/poupeaua/otary/issues
+      - Join the Discussion: https://github.com/poupeaua/otary/discussions
     - PyPI Releases: https://pypi.org/project/otary
 
-  - API:
+  - Tutorials:
+    - learn/index.md
+    - learn/introduction.md
+    - learn/crop-before-load-img.md
+    - learn/linear-entities.md
+    - learn/scoring.md
+    - learn/area-computation.md
+    - learn/intersection.md
+    - learn/ocr.md
+
+  - API Reference:
       - api/index.md
       - Image: # -------------------------------- IMAGE -------------------------------
         - api/image/index.md
@@ -127,17 +142,6 @@ nav:
 
         - Key Information Extraction:
           - Heuristic: api/vision/kie/heuristic.md
-
-
-  - Learn:
-    - learn/index.md
-    - learn/introduction.md
-    - learn/crop-before-load-img.md
-    - learn/linear-entities.md
-    - learn/scoring.md
-    - learn/area-computation.md
-    - learn/intersection.md
-    - learn/ocr.md
 
   - About:
     - about/history.md

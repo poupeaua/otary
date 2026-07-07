@@ -4,6 +4,16 @@ If you are new to contributing to open-source projects, please check out [this g
 
 This section assumes you have some familiarity with Git, GitHub, and Python virtualenvs.
 
+If you want to contribute please read the Contributing guidelines below.
+
+## Straight to the point
+
+Found a bug or have an idea?
+
+* **Report a bug** by opening a [GitHub issue](https://github.com/poupeaua/otary/issues).
+* **Request a feature** by opening a [GitHub issue](https://github.com/poupeaua/otary/issues).
+* **Want to discuss ideas**? Join the [Github Discussion](https://github.com/poupeaua/otary/discussions)
+
 ## Set Up the Repository
 
 Here are the 3 steps you need to follow to set up the repository:
@@ -150,7 +160,7 @@ Start by running the following command:
 make docs-serve
 ```
 
-The documentation website will be available at `http://127.0.0.1:8000/`
+The documentation website will be available at `http://127.0.0.1:8027/`
 
 It will be **automatically be updated** when you make any change to files in the `docs/` directory or the `mkdocs.yml` file at the root of the repository. You do not need to re-run the command over and over again after each change.
 

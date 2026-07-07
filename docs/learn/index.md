@@ -1,4 +1,4 @@
-# Learn
+# Tutorials
 
 This part of the documentation contains examples of what you one can do with Otary.
 
