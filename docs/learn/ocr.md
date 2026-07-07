@@ -139,7 +139,7 @@ Using Otary, you can easily extract key information from your OCR outputs.
 
 ![ocr](../img/learn/example-otary-ocr-image.png)
 
-Given the previous image, you can extract the value of the key "MUNICIPIO" 
+Given the previous image, you can extract the value of the key "MUNICIPIO"
 (located at the bottom right of the image) this way:
 
 ``` py linenums="1"

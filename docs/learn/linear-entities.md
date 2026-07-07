@@ -112,7 +112,7 @@ for is_angled, ocrso, color in zip(
 ### Cardinal Direction
 
 Otary provides a set of tools to help you work with cardinal directions.
-Cardinal directions are East (E), North (N), West (W) and South (S). 
+Cardinal directions are East (E), North (N), West (W) and South (S).
 
 Otary allows you to get even more fine-grained directions from your directec linear
 objects.

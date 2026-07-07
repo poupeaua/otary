@@ -132,6 +132,7 @@ nav:
   - Learn:
     - learn/index.md
     - learn/introduction.md
+    - learn/crop-before-load-img.md
     - learn/linear-entities.md
     - learn/scoring.md
     - learn/area-computation.md

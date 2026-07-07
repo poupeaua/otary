@@ -14,7 +14,7 @@ together seamlessly.
 
 The `geometry` module uses a more traditional **inheritance** model. It provides a clear and hierarchical structure for geometric entities. Base classes define common behaviors, and specialized subclasses inherit and extend this functionality. This approach is ideal for creating a well-defined and logical classification of shapes and geometric objects.
 
-## [Vision: Computer Vision tools](vision/index.md)
+## [Vision: Computer Vision Utilities](vision/index.md)
 
 The `vision` module provides tools for manipulating OCR outputs. Otary does not include
 any OCR engine, but it provides an interface for working with OCR outputs.

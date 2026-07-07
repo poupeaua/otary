@@ -29,4 +29,3 @@ im.copy().draw_polygons(
 ```
 
 ![intersection](../img/learn/example-otary-intersection-points.png)
-

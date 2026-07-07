@@ -91,8 +91,9 @@ class AxisAlignedRectangle(Rectangle):
         ymax = np.max(polygon_arr[:, 1])
 
         return cls(
-            points=np.array([[xmin, ymin], [xmax, ymin], [xmax, ymax], [xmin, ymax]], 
-                dtype=np.float32
+            points=np.array(
+                [[xmin, ymin], [xmax, ymin], [xmax, ymax], [xmin, ymax]],
+                dtype=np.float32,
             )
         )
 
