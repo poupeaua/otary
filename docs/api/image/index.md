@@ -5,7 +5,7 @@ Otary aims to make image processing easy and accessible to everyone.
 
 Here is a sample python code to show what Otary can do:
 
-```python
+``` py linenums="1"
 import otary as ot
 
 im = ot.Image.from_file(filepath="path/to/file/image")

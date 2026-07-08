@@ -5,7 +5,7 @@ The `analyzer` module provides a set of functions for analyzing images.
 For example, if you want to know whether a given segment is present in the image you
 can use the `score_contains_segments` function:
 
-```python
+``` py linenums="1"
 import otary as ot
 
 im = ot.Image.from_file(filepath="path/to/file/image")

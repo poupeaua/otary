@@ -110,7 +110,7 @@ docs-serve:
 	@echo "\n-------------------"
 	@echo "Serve documentation"
 	@echo "-------------------"
-	poetry run mkdocs serve --watch otary --livereload
+	poetry run mkdocs serve --watch otary --livereload --dev-addr 127.0.0.1:8027
 
 docs-deploy:
 	@echo "\n--------------------"

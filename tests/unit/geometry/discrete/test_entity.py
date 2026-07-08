@@ -152,25 +152,27 @@ class TestEntityShift:
 class TestEntityRotate:
     def test_segment_rotate_pi_over_4(self):
         seg = Segment([[1, 1], [2, 2]])
-        assert np.array_equal(
-            np.round(seg.rotate(angle=np.pi / 4).asarray, 5),
-            np.round([[1.5, 1.5 - np.sqrt(2) / 2], [1.5, 1.5 + np.sqrt(2) / 2]], 5),
+        result = seg.rotate(angle=np.pi / 4).asarray
+        expected = np.array(
+            [[1.5, 1.5 - np.sqrt(2) / 2], [1.5, 1.5 + np.sqrt(2) / 2]],
         )
+        np.testing.assert_array_almost_equal(result, expected)
 
     def test_segment_rotate_pi_over_4_counter_clockwise_pivot(self):
         seg = Segment([[1, 1], [2, 2]])
-        seg.rotate(angle=np.pi / 4, is_clockwise=False, pivot=[1, 1])
-        assert np.array_equal(
-            np.round(seg.asarray, 5),
-            np.round([[1, 1], [1 + np.sqrt(2), 1]], 5),
+        result = seg.rotate(angle=np.pi / 4, is_clockwise=False, pivot=[1, 1]).asarray
+        expected = np.array(
+            [[1, 1], [1 + np.sqrt(2), 1]],
         )
+        np.testing.assert_array_almost_equal(result, expected)
 
     def test_segment_rotate_pi_over_4_degree(self):
         seg = Segment([[1, 1], [2, 2]])
-        assert np.array_equal(
-            np.round(seg.rotate(angle=45, is_degree=True).asarray, 5),
-            np.round([[1.5, 1.5 - np.sqrt(2) / 2], [1.5, 1.5 + np.sqrt(2) / 2]], 5),
+        result = seg.rotate(angle=45, is_degree=True).asarray
+        expected = np.array(
+            [[1.5, 1.5 - np.sqrt(2) / 2], [1.5, 1.5 + np.sqrt(2) / 2]],
         )
+        np.testing.assert_array_almost_equal(result, expected)
 
     def test_segment_rotate_pi_over_2(self):
         seg = Segment([[1, 1], [2, 2]])
@@ -186,10 +188,11 @@ class TestEntityRotate:
 
     def test_segment_rotate_neg_pi_over_4(self):
         seg = Segment([[1, 1], [2, 2]])
-        assert np.array_equal(
-            np.round(seg.rotate(angle=-np.pi / 4).asarray, 5),
-            np.round([[1.5 - np.sqrt(2) / 2, 1.5], [1.5 + np.sqrt(2) / 2, 1.5]], 5),
+        result = seg.rotate(angle=-np.pi / 4).asarray
+        expected = np.array(
+            [[1.5 - np.sqrt(2) / 2, 1.5], [1.5 + np.sqrt(2) / 2, 1.5]],
         )
+        np.testing.assert_array_almost_equal(result, expected)
 
     def test_segment_rotate_neg_pi_over_2(self):
         seg = Segment([[1, 1], [2, 2]])

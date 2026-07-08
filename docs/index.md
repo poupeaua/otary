@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-<a href="https://alexandrepoupeau.com/otary/" > <img src="img/badge-enjoy-otary-gradient.svg"/></a>
+<a href="https://alexandrepoupeau.com/otary/" > <img src="https://raw.githubusercontent.com/poupeaua/otary/refs/heads/master/docs/img/badge-enjoy-otary-gradient.svg"/></a>
 <a href="https://github.com/poupeaua/otary/actions/workflows/test.yaml" > <img src="https://github.com/poupeaua/otary/actions/workflows/test.yaml/badge.svg"/></a>
 <a href="https://codecov.io/github/poupeaua/otary" > <img src="https://codecov.io/github/poupeaua/otary/graph/badge.svg?token=LE040UGFZU"/></a>
 <a href="https://app.codacy.com/gh/poupeaua/otary/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade" > <img src="https://app.codacy.com/project/badge/Grade/704a873ee08c40318423a47ec71b9bf4"/></a>

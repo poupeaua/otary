@@ -5,7 +5,7 @@ Drawing methods can be accessed through the `drawer` attribute of the image obje
 However all the methods of the drawer are also available as direct methods of the image object to provide a more user friendly API.
 For example, drawing a circle in the image is as easy as:
 
-```python
+``` py linenums="1"
 import otary as ot
 
 im = ot.Image.from_file(filepath="path/to/file/image")

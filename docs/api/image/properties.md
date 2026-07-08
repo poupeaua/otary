@@ -5,7 +5,7 @@ They provide basic information about the image, such as its dimensions, shape, e
 
 Here is for example a python sample code to get the width of the image:
 
-```python
+``` py linenums="1"
 import otary as ot
 
 im = ot.Image.from_fillvalue(shape=(256, 128, 3), value=255)

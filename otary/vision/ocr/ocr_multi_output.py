@@ -11,7 +11,7 @@ import math
 import numpy as np
 
 import otary.geometry as geo
-from otary.vision.ocr import OcrSingleOutput
+from otary.vision.ocr.ocr_single_output import OcrSingleOutput
 
 if TYPE_CHECKING:  # pragma: no cover
     from typing_extensions import Self
@@ -26,13 +26,17 @@ class OcrMultiOutput:
     """Class for keeping track of multiple OCR extracted information from an image
 
     The idea is to make the code agnostic of the OCR engine used.
-    The OCR could be EasyOCR, Tesserocr, KerasOCR, etc... this would not affect the
-    program.
+    The OCR output can be the yur favorite OCR engine such as
+    Tesseract, EasyOCR, DocTR, Azure Document Intelligence, AWS Textract
 
     Already handles:
-    - Tesseract (https://github.com/madmaze/pytesseract)
-    - EasyOCR (https://github.com/JaidedAI/EasyOCR)
-    - DocTR (https://github.com/mindee/doctr)
+
+    - [Tesseract](https://github.com/madmaze/pytesseract)
+    - [EasyOCR](https://github.com/JaidedAI/EasyOCR)
+    - [DocTR](https://github.com/mindee/doctr)
+    - [Azure Document Intelligence](
+    https://azure.microsoft.com/en-us/products/ai-foundry/tools/document-intelligence)
+    - [AWS Textract](https://aws.amazon.com/textract/)
     """
 
     def __init__(self, ocrsos: list[OcrSingleOutput]) -> None:
@@ -46,11 +50,13 @@ class OcrMultiOutput:
     @classmethod
     def from_pytesseract(cls, data: dict, min_conf: float = 0.0) -> OcrMultiOutput:
         """
-        Convert a pytesseract image_to_data dictionary into a list of ``OcrSingleOutput`` objects.
+        Convert a pytesseract image_to_data dictionary into a list of
+        ``OcrSingleOutput`` objects.
 
         Args:
-            data (dcit): Dictionary returned by ``pytesseract.image_to_data(..., output_type=pytesseract.Output.DICT)``.
-            min_conf (int): Minimum confidence threshold on the Tesseract scale [0, 100].
+            data (dict): Dictionary returned by
+                ``pytesseract.image_to_data(..., output_type=pytesseract.Output.DICT)``.
+            min_conf (int): Minimum confidence threshold on the Tesseract scale [0, 100]
                 Words below this value are dropped. Defaults to ``0`` (keep all
                 valid words). Tesseract uses ``-1`` as a sentinel for non-word
                 layout tokens; those are always dropped regardless.
@@ -132,16 +138,15 @@ class OcrMultiOutput:
     def from_doctr(
         cls,
         doctr_output: dict,
-        assume_straight_pages: bool,
+        force_aabb: bool = False,
         is_bbox_cast_int_enabled: bool = True,
     ) -> OcrMultiOutput:
         """Transform a single page DocTR output into a OcrMultiOutput object.
 
         Args:
             doctr_output (dict): the output of the DocTR OCR pipeline.
-            assume_straight_pages (bool): whether to assume that the pages are straight
-                or not. This has an impact on the geometry bounding boxes coordinates
-                output representation.
+            force_aabb (bool): whether to force the use of axis-aligned bounding boxes
+                (AABB). Defaults to False.
             is_bbox_cast_int_enabled (bool, optional): whether to cast all bounding
                 boxes coordinates into integers.
 
@@ -162,14 +167,14 @@ class OcrMultiOutput:
                 for word in line["words"]:
                     try:
                         bbox_arr = np.array(word["geometry"], dtype=float) * arr_dim
-                        if not assume_straight_pages:
+                        if not force_aabb:
                             bbox = geo.Rectangle(
                                 points=bbox_arr,
                                 regularity_rtol=0.1,
                                 is_cast_int=is_bbox_cast_int_enabled,
                             )
                         else:
-                            bbox = geo.Rectangle.from_topleft_bottomright(
+                            bbox = geo.AxisAlignedRectangle.from_topleft_bottomright(
                                 topleft=bbox_arr[0],
                                 bottomright=bbox_arr[1],
                                 is_cast_int=is_bbox_cast_int_enabled,
@@ -184,6 +189,185 @@ class OcrMultiOutput:
                     except ValueError:
                         continue  # skip invalid boxes
 
+        return cls(ocrsos=ocrsos)
+
+    @classmethod
+    def from_azure_document_intelligence(
+        cls,
+        azure_output: dict,
+        image_dim: tuple[int, int],
+        page_nb_to_analyze: int = 0,
+        level: str = "word",
+        force_aabb: bool = False,
+    ) -> OcrMultiOutput:
+        """Instantiate OcrMultiOutput object from OCR Azure Intelligence.
+
+        Args:
+            azure_output (dict): azure OCR output dictionnary
+            image_dim (tuple[int, int]): image dimensions (width, height)
+            page_nb_to_analyze (int, optional): page number to analyze. Defaults to 0.
+            level (str, optional): level of granularity for OCR results.
+                Defaults to "word".
+            force_aabb (bool, optional): whether to force the use of axis-aligned
+                bounding boxes (AABB). Defaults to False.
+
+        Returns:
+            OcrMultiOutput: OcrMultiOutput object
+        """
+        # pylint: disable=too-many-arguments, too-many-locals, too-many-positional-arguments, too-many-branches, too-many-statements
+        supported_levels = ["word", "line", "paragraph"]
+        if level not in supported_levels:
+            raise ValueError(
+                f"Level {level} is not supported. Use one of {supported_levels}"
+            )
+
+        # compute height and width for scaling reasons
+        img_width, img_height = image_dim
+        width_ocr = azure_output["pages"][page_nb_to_analyze]["width"]
+        height_ocr = azure_output["pages"][page_nb_to_analyze]["height"]
+
+        if level == "word":  # ----------------------- WORD LEVEL ----------------------
+            ocrsos = []
+            for cur_word in azure_output["pages"][page_nb_to_analyze]["words"]:
+                cur_polygon = cur_word["polygon"]
+
+                # convert format [x0, y0, x1, y1, x2, y2, x3, y3] ->
+                # [[x0, y0], [x1, y1], [x2, y2], [x3, y3]]
+                polygon_in_pixels = np.asarray(
+                    [
+                        [x * (img_width / width_ocr), y * (img_height / height_ocr)]
+                        for x, y in zip(cur_polygon[::2], cur_polygon[1::2])
+                    ],
+                    dtype=np.float32,
+                )
+                bbox = geo.Polygon(polygon_in_pixels)
+
+                if force_aabb:
+                    bbox = bbox.aabb()
+                else:
+                    bbox = bbox.obb()
+
+                ocrso = OcrSingleOutput(
+                    text=cur_word["content"],
+                    bbox=bbox,
+                    confidence=cur_word["confidence"],
+                )
+                ocrsos.append(ocrso)
+
+        elif level == "line":  # -------------------- LINE LEVEL -----------------------
+            ocrsos = []
+            for cur_line in azure_output["pages"][page_nb_to_analyze]["lines"]:
+                cur_polygon = cur_line["polygon"]
+
+                # convert format [x0, y0, x1, y1, x2, y2, x3, y3] ->
+                # [[x0, y0], [x1, y1], [x2, y2], [x3, y3]]
+                polygon_in_pixels = np.asarray(
+                    [
+                        [x * (img_width / width_ocr), y * (img_height / height_ocr)]
+                        for x, y in zip(cur_polygon[::2], cur_polygon[1::2])
+                    ],
+                    dtype=np.float32,
+                )
+                bbox = geo.Polygon(polygon_in_pixels)
+
+                if force_aabb:
+                    bbox = bbox.aabb()
+                else:
+                    bbox = bbox.obb()
+
+                ocrso = OcrSingleOutput(
+                    text=cur_line["content"],
+                    bbox=bbox,
+                    confidence=None,
+                )
+                ocrsos.append(ocrso)
+
+        elif level == "paragraph":  # --------------- PARAGRAPH LEVEL ------------------
+            ocrsos = []
+            for cur_word in azure_output["paragraphs"]:
+                if (
+                    cur_word["boundingRegions"][0]["pageNumber"]
+                    != page_nb_to_analyze + 1
+                ):
+                    continue
+                cur_polygon = cur_word["boundingRegions"][0]["polygon"]
+                polygon_in_pixels = np.asarray(
+                    [
+                        [x * (img_width / width_ocr), y * (img_height / height_ocr)]
+                        for x, y in zip(cur_polygon[::2], cur_polygon[1::2])
+                    ],
+                    dtype=np.float32,
+                )
+                bbox = geo.Polygon(polygon_in_pixels)
+
+                if force_aabb:
+                    bbox = bbox.aabb()
+                else:
+                    bbox = bbox.obb()
+
+                ocrso = OcrSingleOutput(
+                    text=cur_word["content"],
+                    bbox=bbox,
+                    confidence=None,
+                )
+                ocrsos.append(ocrso)
+
+        return cls(ocrsos=ocrsos)
+
+    @classmethod
+    def from_aws_textract(
+        cls,
+        textract_output: dict,
+        image_dim: tuple[int, int],
+        block_type: str = "WORD",
+        is_bbox_cast_int_enabled: bool = False,
+    ) -> OcrMultiOutput:
+        """Convert a Textract formatted output (DetectDocumentText / AnalyzeDocument)
+        into a common OcrMultiOutput format.
+
+        Args:
+            textract_output (dict): Raw JSON response from Textract, containing a
+                "Blocks" list.
+            image_dim (tuple[int, int]): Dimensions of the image (width, height).
+            block_type (str, optional): Which Textract BlockType to extract as OCR
+                outputs, typically "LINE" or "WORD". Defaults to "WORD".
+            is_bbox_cast_int_enabled (bool, optional): whether to cast all bounding
+                boxes coordinates into integers.
+
+        Returns:
+            OcrMultiOutput: OcrMultiOutput object
+        """
+        supported_block_types = ["WORD", "LINE"]
+        if block_type not in supported_block_types:
+            raise ValueError(
+                f"Block type {block_type} is not supported. Use one of "
+                f"{supported_block_types}"
+            )
+
+        image_width, image_height = image_dim
+
+        ocrsos: list[OcrSingleOutput] = []
+        for block in textract_output.get("Blocks", []):
+            if block.get("BlockType") != block_type:
+                continue
+            try:
+                polygon = block["Geometry"]["Polygon"]
+                points = [
+                    (p["X"] * image_width, p["Y"] * image_height) for p in polygon
+                ]
+                bbox = geo.Rectangle(
+                    points=points,
+                    is_cast_int=is_bbox_cast_int_enabled,
+                    regularity_rtol=0.1,
+                )
+                ocrso = OcrSingleOutput(
+                    bbox=bbox,
+                    text=block.get("Text", ""),
+                    confidence=block.get("Confidence", None) / 100.0,
+                )
+                ocrsos.append(ocrso)
+            except (KeyError, ValueError):
+                continue  # skip invalid or missing boxes
         return cls(ocrsos=ocrsos)
 
     @classmethod
@@ -278,6 +462,7 @@ class OcrMultiOutput:
             Optional[Word]: None if no OcrSingleOutput can be found else a
                 OcrSingleOutput.
         """
+        # pylint: disable=too-many-locals
         valid_direction = ["right", "left"]
         if _to not in valid_direction:
             raise ValueError(
@@ -369,6 +554,7 @@ class OcrMultiOutput:
             containing colons split into two, and all other group words included
             unchanged.
         """
+        # pylint: disable=too-many-locals
         words_with_symbol = [
             ocrso
             for ocrso in self.ocrsos
@@ -480,7 +666,7 @@ class OcrMultiOutput:
                 - The second element is an `OcrMultiOutput` containing words that were
                     not used in any group.
         """
-        # pylint: disable=too-many-arguments,too-many-positional-arguments
+        # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
         assert max_n_words > min_n_words > 1
 
         unused_words: list[OcrSingleOutput] = []
@@ -567,6 +753,7 @@ class OcrMultiOutput:
         Returns:
             Self: returns the OcrMultiOutput object itself without duplicates
         """
+        # pylint: disable=too-many-locals, too-many-branches
         valid_criterion = ["max_area"]
         if criteria not in valid_criterion:
             raise ValueError(f"Criteria is expected to be in {valid_criterion}")
