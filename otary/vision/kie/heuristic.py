@@ -7,6 +7,10 @@ from otary.vision.ocr import OcrMultiOutput, OcrSingleOutput
 
 
 class HeuristicKeyInformationExtractor:
+    """Key Information Extraction (KIE) heuristic class"""
+
+    # pylint: disable=too-few-public-methods
+
     @staticmethod
     def extract(
         ocr_outputs: OcrMultiOutput,
@@ -23,7 +27,10 @@ class HeuristicKeyInformationExtractor:
             ocr_outputs (List[OCRSingleOutput]): OCR results, each containing a value
                 and access to closest_word(to="left").
             key (str): expected keys to match.
-            threshold (float): Minimum normalized distance for a valid match.
+            closest_word_dist_thresh (float): Maximum distance between the OCR key
+                bounding box and the closest word bounding box for the value.
+            levenshtein_threshold (float): Minimum normalized distance for a valid match
+            exact_key_match (bool): Whether to match keys exactly
 
         Returns:
             Dict[str, str]: Dictionary mapping expected keys to matched values.
@@ -32,13 +39,12 @@ class HeuristicKeyInformationExtractor:
         def is_valid_ocrso_and_key(ocrso: OcrSingleOutput) -> bool:
             if ocrso.text is None:
                 return False
+
             if exact_key_match:
                 return ocrso.text.lower() == key.lower()
-            else:
-                levenshtein_score = Levenshtein.similarity(
-                    key.lower(), ocrso.text.lower()
-                )
-                return levenshtein_score >= levenshtein_threshold
+
+            levenshtein_score = Levenshtein.similarity(key.lower(), ocrso.text.lower())
+            return levenshtein_score >= levenshtein_threshold
 
         # find the good candidates for the key
         candidates = [

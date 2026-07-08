@@ -17,7 +17,7 @@ Each category contains other sub-categories like shape, linear, etc.
     - **Linear**:
         - [Segment](discrete/linear/segment.md)
         - [Linear Spline](discrete/linear/linear_spline.md)
-        - Directed:
+        - **Directed**:
             - [Vector](discrete/linear/directed/vector.md)
             - [Vectorized Linear Spline](discrete/linear/directed/vectorized_linear_spline.md)
 

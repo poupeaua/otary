@@ -1,4 +1,4 @@
-# Conversion Methods
+# Utils Methods
 
 Conversion is the process of converting an image to something else, which can be anything.
 
@@ -9,7 +9,7 @@ import otary as ot
 
 im = ot.Image.from_file(filepath="path/to/file/image")
 
-im.as_grayscale()
+im.dict_pct(0.01) # represent 1% of the image diagonal length
 ```
 
 ::: otary.image.image.Image
@@ -18,10 +18,7 @@ im.as_grayscale()
         show_root_toc_entry: false
         show_source: true
         members:
-            - as_grayscale
-            - as_colorscale
-            - as_filled
-            - as_white
-            - as_black
-            - as_pil
-            - as_api_file_input
+            - copy
+            - dist_pct
+            - is_equal_shape
+            - rev

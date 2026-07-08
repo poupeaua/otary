@@ -184,9 +184,7 @@ class TestOCRMOFromDoctr:
     def test_from_doctr_with_valid_input_assume_straight_page_true(
         self, doctr_output_straight_page: dict
     ):
-        result = OcrMultiOutput.from_doctr(
-            doctr_output_straight_page, assume_straight_pages=True
-        )
+        result = OcrMultiOutput.from_doctr(doctr_output_straight_page, force_aabb=True)
 
         # Assertions
         assert len(result.ocrsos) == 2
@@ -209,13 +207,13 @@ class TestOCRMOFromDoctr:
         doctr_output = {"pages": [{"dimensions": [1000, 2000], "blocks": []}]}
 
         # Call the method
-        result = OcrMultiOutput.from_doctr(doctr_output, assume_straight_pages=True)
+        result = OcrMultiOutput.from_doctr(doctr_output, force_aabb=True)
 
         # Assertions
         assert len(result.ocrsos) == 0
 
     def test_from_doctr_normal(self, doctr_output: dict):
-        result = OcrMultiOutput.from_doctr(doctr_output, assume_straight_pages=False)
+        result = OcrMultiOutput.from_doctr(doctr_output, force_aabb=False)
 
         # Assertions
         assert len(result.ocrsos) == 2
@@ -234,6 +232,144 @@ class TestOCRMOFromDoctr:
             result.ocrsos[1].bbox.asarray,
             [[600, 300], [600, 400], [800, 400], [800, 300]],
         )
+
+
+class TestOCRMOFromAzure:
+
+    def test_from_azure_obb(self, azure_output: dict):
+        image_dim = (1000, 2000)  # (height, width)
+        result = OcrMultiOutput.from_azure_document_intelligence(
+            azure_output,
+            image_dim=image_dim,
+            page_nb_to_analyze=0,
+            level="word",
+            force_aabb=False,
+        )
+
+        assert len(result.ocrsos) > 0
+        for ocrso in result.ocrsos:
+            assert ocrso.text is not None
+            assert ocrso.confidence is not None
+            assert ocrso.bbox is not None
+
+    def test_from_azure_aabb(self, azure_output: dict):
+        image_dim = (1000, 2000)  # (height, width)
+        result = OcrMultiOutput.from_azure_document_intelligence(
+            azure_output,
+            image_dim=image_dim,
+            page_nb_to_analyze=0,
+            level="word",
+            force_aabb=True,
+        )
+
+        assert len(result.ocrsos) > 0
+        for ocrso in result.ocrsos:
+            assert ocrso.text is not None
+            assert ocrso.confidence is not None
+            assert ocrso.bbox is not None
+
+    def test_from_azure_lines_obb(self, azure_output: dict):
+        image_dim = (1000, 2000)  # (height, width)
+        result = OcrMultiOutput.from_azure_document_intelligence(
+            azure_output,
+            image_dim=image_dim,
+            page_nb_to_analyze=0,
+            level="line",
+            force_aabb=False,
+        )
+
+        assert len(result.ocrsos) > 0
+        for ocrso in result.ocrsos:
+            assert ocrso.text is not None
+            assert ocrso.confidence is None
+            assert ocrso.bbox is not None
+
+    def test_from_azure_lines_aabb(self, azure_output: dict):
+        image_dim = (1000, 2000)  # (height, width)
+        result = OcrMultiOutput.from_azure_document_intelligence(
+            azure_output,
+            image_dim=image_dim,
+            page_nb_to_analyze=0,
+            level="line",
+            force_aabb=True,
+        )
+
+        assert len(result.ocrsos) > 0
+        for ocrso in result.ocrsos:
+            assert ocrso.text is not None
+            assert ocrso.confidence is None
+            assert ocrso.bbox is not None
+
+    def test_from_azure_paragraph_obb(self, azure_output: dict):
+        image_dim = (1000, 2000)  # (height, width)
+        result = OcrMultiOutput.from_azure_document_intelligence(
+            azure_output,
+            image_dim=image_dim,
+            page_nb_to_analyze=0,
+            level="paragraph",
+            force_aabb=False,
+        )
+
+        assert len(result.ocrsos) > 0
+        for ocrso in result.ocrsos:
+            assert ocrso.text is not None
+            assert ocrso.confidence is None
+            assert ocrso.bbox is not None
+
+    def test_from_azure_paragraph_aabb(self, azure_output: dict):
+        image_dim = (1000, 2000)  # (height, width)
+        result = OcrMultiOutput.from_azure_document_intelligence(
+            azure_output,
+            image_dim=image_dim,
+            page_nb_to_analyze=0,
+            level="paragraph",
+            force_aabb=True,
+        )
+
+        assert len(result.ocrsos) > 0
+        for ocrso in result.ocrsos:
+            assert ocrso.text is not None
+            assert ocrso.confidence is None
+            assert ocrso.bbox is not None
+
+    def test_from_azure_invalid_level(self, azure_output: dict):
+        image_dim = (1000, 2000)  # (height, width)
+        with pytest.raises(ValueError):
+            OcrMultiOutput.from_azure_document_intelligence(
+                azure_output,
+                image_dim=image_dim,
+                page_nb_to_analyze=0,
+                level="invalid_level",
+                force_aabb=True,
+            )
+
+
+class TestOCRMOFromAWSTextract:
+
+    def test_from_textract_with_valid_input(self, textract_output: dict):
+        image_dim = (1000, 2000)  # (height, width)
+        result = OcrMultiOutput.from_aws_textract(
+            textract_output,
+            image_dim=image_dim,
+            block_type="WORD",
+            is_bbox_cast_int_enabled=True,
+        )
+
+        assert len(result.ocrsos) > 0
+        for ocrso in result.ocrsos:
+            assert ocrso.text is not None
+            assert ocrso.confidence is not None
+            assert ocrso.bbox is not None
+
+    def test_from_textract_with_invalid_block_type(self, textract_output: dict):
+        image_dim = (1000, 2000)  # (height, width)
+        with pytest.raises(ValueError):
+            OcrMultiOutput.from_aws_textract(
+                textract_output,
+                image_dim=image_dim,
+                block_type="INVALID_BLOCK_TYPE",
+                is_bbox_cast_int_enabled=True,
+            )
 
 
 class TestOCRMOConfidenceMean:

@@ -6,7 +6,7 @@ From here you can access all the specific transformer attributes: `cropper`, `ge
 However to make the developer experience more user friendly, the transformers are also available as direct methods of the image object.
 For example, cropping an image is as easy as:
 
-```python
+``` py linenums="1"
 import otary as ot
 
 im = ot.Image.from_file(filepath="path/to/file/image")

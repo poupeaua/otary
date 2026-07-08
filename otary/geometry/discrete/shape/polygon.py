@@ -765,7 +765,7 @@ class Polygon(DiscreteGeometryEntity):
             return self
 
         center = self.centroid
-        self.asarray = self.asarray.astype(float)
+        self.asarray = self.asarray.astype(np.float32)
         for i, point in enumerate(self.asarray):
             self.asarray[i] = Vector([center, point]).rescale_head(scale).head
         return self
