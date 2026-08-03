@@ -206,6 +206,24 @@ class GeometryEntity(ABC):
 
         return np.array([])
 
+    def point_isin_boundary(
+        self,
+        point: NDArray,
+        error_dist: float,
+    ) -> bool:
+        """
+        Check whether a point lies on the boundary of the geometry.
+
+        Args:
+            point (NDArray): 2D point.
+            error_dist (float): Maximum allowed distance from the boundary.
+
+        Returns:
+            bool: True if the point lies on the boundary, False otherwise.
+        """
+        shapely_point = SPoint(point)
+        return shapely_point.distance(self.shapely_edges) <= error_dist
+
     @abstractmethod
     def enclosing_axis_aligned_bbox(self) -> AxisAlignedRectangle:
         """Compute the smallest area enclosing Axis-Aligned Bounding Box (AABB)
