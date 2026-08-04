@@ -459,6 +459,44 @@ class TestEntityDistVerticesToPoint:
         assert rect.longest_dist_vertices_to_point(point) == np.sqrt(2 * 10**2)
 
 
+class TestEntityPointIsInBoundary:
+
+    def test_point_exactly_on_edge_midpoint(self):
+        rect = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        point = np.array([1, 0])
+        assert rect.point_isin_boundary(point, error_dist=0.0) is True
+
+    def test_point_exactly_on_vertex(self):
+        rect = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        point = np.array([0, 0])
+        assert rect.point_isin_boundary(point, error_dist=0.0) is True
+
+    def test_point_within_tolerance_of_edge(self):
+        rect = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        point = np.array([1, 0.05])
+        assert rect.point_isin_boundary(point, error_dist=0.1) is True
+
+    def test_point_outside_tolerance_of_edge(self):
+        rect = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        point = np.array([1, 0.5])
+        assert rect.point_isin_boundary(point, error_dist=0.1) is False
+
+    def test_point_inside_shape_not_on_boundary(self):
+        rect = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        point = np.array([1, 1])
+        assert rect.point_isin_boundary(point, error_dist=0.01) is False
+
+    def test_point_far_outside_shape(self):
+        rect = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        point = np.array([5, 5])
+        assert rect.point_isin_boundary(point, error_dist=0.01) is False
+
+    def test_zero_error_dist_requires_exact_match(self):
+        rect = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
+        point = np.array([1, 0.0001])
+        assert rect.point_isin_boundary(point, error_dist=0.0) is False
+
+
 class TestEntitySharedApproxVertices:
     def test_shared_vertices_with_overlap(self):
         entity1 = Rectangle([[0, 0], [0, 2], [2, 2], [2, 0]])
