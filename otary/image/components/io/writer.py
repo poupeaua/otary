@@ -2,6 +2,7 @@
 WriterImage module
 """
 
+import numpy as np
 from PIL import Image as ImagePIL
 
 from otary.image.base import BaseImage
@@ -40,7 +41,13 @@ class WriterImage:
         figsize = (int(figsize[0]), int(figsize[1]))
 
         self.base.as_reversed_color_channel()
-        im = self.base.as_pil().resize(size=figsize)
+
+        array = self.base.asarray
+
+        if array.dtype != np.uint8:
+            array = np.clip(array, 0, 255).astype(np.uint8)
+
+        im = ImagePIL.fromarray(array).resize(size=figsize)
 
         if popup_window_display:
             im.show()
