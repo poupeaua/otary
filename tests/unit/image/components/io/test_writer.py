@@ -4,6 +4,7 @@ Unit tests for the writer image class
 
 from unittest import mock
 import numpy as np
+import pytest
 from otary.image import Image
 
 
@@ -18,6 +19,32 @@ class TestWriterShow:
         arr = np.ones((3, 3, 3), dtype=np.uint8)
         im = Image(arr)
         im.show()
+
+    @pytest.mark.parametrize(
+        "dtype",
+        [
+            np.float32,
+            np.float64,
+            np.int32,
+            np.uint16,
+        ],
+    )
+    def test_show_non_uint8_image(self, dtype):
+        arr = np.ones((3, 3, 3), dtype=dtype)
+        im = Image(arr)
+        im.show()
+
+    @mock.patch("otary.image.components.io.writer.ImagePIL.fromarray")
+    def test_show_clips_non_uint8_image(self, mock_fromarray):
+        arr = np.array([[[-10, 0, 300]]], dtype=np.float32)
+        im = Image(arr)
+        im.show()
+
+        passed_array = mock_fromarray.call_args.args[0]
+
+        assert passed_array.dtype == np.uint8
+        assert passed_array.min() == 0
+        assert passed_array.max() == 255
 
     @mock.patch("PIL.Image.Image.show")
     def test_show_popup_window(self, mock_show):
