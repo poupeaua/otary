@@ -89,6 +89,12 @@ Using Otary makes the code:
 - Much more **interactive**
 - Much simpler, simplifying **libraries management** by only using one library and not manipulating multiple libraries like Pillow, OpenCV, Scikit-Image, PyMuPDF etc.
 
+## Image Channel Order
+
+Otary follows OpenCV's BGR channel convention for 3-channel image arrays. Make sure the image arrays are in BGR order when working with Otary.
+
+If the image is already in RGB order, pass `is_bgr=False` when calling output methods such as `show()` or `save()`.
+
 ## Enhanced Interactivity
 
 In a Jupyter notebook, you can easily test and iterate on transformations by simply commenting part of the code as you need it.

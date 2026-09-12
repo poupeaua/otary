@@ -197,6 +197,20 @@ class BaseImage:
         """
         return np.array([0, 0], dtype=int)
 
+    def as_rgb_array(self, is_bgr: bool = True) -> NDArray:
+        """Return RGB ordered array without mutating image
+
+        Args:
+            is_bgr (bool, optional): whether image is BGR format.
+                Defaults to True.
+
+        Returns:
+            NDArray: RGB ordered image array when image has 3 channels.
+        """
+        if is_bgr and not self.is_gray and self.channels == 3:
+            return self.asarray[..., ::-1]
+        return self.asarray
+
     def as_pil(self) -> ImagePIL.Image:
         """Return the image as PIL Image
 
