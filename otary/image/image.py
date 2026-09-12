@@ -417,18 +417,21 @@ class Image:
 
     # -------------------------------- WRITE METHODS ----------------------------------
 
-    def save(self, fp: str) -> None:
+    def save(self, fp: str, is_bgr: bool = True) -> None:
         """Save the image in a local file
 
         Args:
             fp (str): fp stands for filepath which is the path to the file
+            is_bgr (bool, optional): whether image is BGR format.
+                Defaults to True.
         """
-        self.writer.save(fp=fp)
+        self.writer.save(fp=fp, is_bgr=is_bgr)
 
     def show(
         self,
         figsize: tuple[float, float] = (-1, -1),
         popup_window_display: bool = False,
+        is_bgr: bool = True,
     ) -> ImagePIL.Image:
         """Show the image
 
@@ -437,9 +440,11 @@ class Image:
                 Defaults to (-1, -1), meaning the original size of the image.
             popup_window_display (bool, optional): whether to display the image in a
                 popup window. Defaults to False.
+            is_bgr (bool, optional): whether image is BGR format.
+                Defaults to True.
         """
         return self.writer.show(
-            figsize=figsize, popup_window_display=popup_window_display
+            figsize=figsize, popup_window_display=popup_window_display, is_bgr=is_bgr
         )
 
     # -------------------------------- DRAWER METHODS ---------------------------------
