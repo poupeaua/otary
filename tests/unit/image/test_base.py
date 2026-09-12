@@ -14,6 +14,42 @@ class TestBaseImageGlobalMethods:
         assert len(img.shape_array) == 3
 
 
+class TestBaseImageAsRgbArray:
+
+    def test_as_rgb_array_reverses_color_channels(self):
+        arr = np.array([[[10, 20, 30]]], dtype=np.uint8)
+        img = Image(arr)
+
+        rgb = img.base.as_rgb_array()
+
+        assert np.array_equal(rgb, [[[30, 20, 10]]])
+
+    def test_as_rgb_array_does_not_mutate_array(self):
+        arr = np.array([[[10, 20, 30]]], dtype=np.uint8)
+        img = Image(arr)
+
+        img.base.as_rgb_array()
+
+        assert np.array_equal(img.asarray, arr)
+
+    def test_as_rgb_array_keeps_rgb(self):
+        arr = np.array([[[10, 20, 30]]], dtype=np.uint8)
+        img = Image(arr)
+
+        rgb = img.base.as_rgb_array(is_bgr=False)
+
+        assert np.array_equal(rgb, arr)
+        assert np.array_equal(img.asarray, arr)
+
+    def test_as_rgb_array_keeps_grayscale(self):
+        arr = np.array([[1, 2], [3, 4]], dtype=np.uint8)
+        img = Image(arr)
+
+        rgb = img.base.as_rgb_array()
+
+        assert np.array_equal(rgb, arr)
+
+
 class TestImageAsArray:
 
     def test_asarray_getter(self):

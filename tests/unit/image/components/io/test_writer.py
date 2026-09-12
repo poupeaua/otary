@@ -19,6 +19,16 @@ class TestWriterShow:
         im = Image(arr)
         im.show()
 
+    def test_show_does_not_mutate_array(self):
+        arr = np.array([[[10, 20, 30]]], dtype=np.uint8)
+        im = Image(arr)
+
+        im.show()
+        assert np.array_equal(im.asarray, arr)
+
+        im.show()
+        assert np.array_equal(im.asarray, arr)
+
     @mock.patch("PIL.Image.Image.show")
     def test_show_popup_window(self, mock_show):
         arr = np.ones((3, 3, 3), dtype=np.uint8)
@@ -27,6 +37,17 @@ class TestWriterShow:
 
 
 class TestWriterSave:
+
+    @mock.patch("PIL.Image.Image.save")
+    def test_save_does_not_mutate_array(self, mock_save):
+        arr = np.array([[[10, 20, 30]]], dtype=np.uint8)
+        im = Image(arr)
+
+        im.save("output.png")
+        assert np.array_equal(im.asarray, arr)
+
+        im.save("output.png")
+        assert np.array_equal(im.asarray, arr)
 
     @mock.patch("PIL.Image.Image.save")
     def test_save_calls_show_with_filepath(self, mock_save):
