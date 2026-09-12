@@ -17,6 +17,22 @@ im.save(save_filepath="path/to/file/image")
 im.show()
 ```
 
+## Image Channel Order
+
+Otary follows OpenCV's BGR channel convention for 3-channel images. Make sure image arrays are in BGR order when working with Otary.
+
+If the image is already in RGB order, pass `is_bgr=False` when calling output methods such as `show()` or `save()`.
+
+```python
+import otary as ot
+
+im = ot.Image(rgb_array)
+
+im.show(is_bgr=False)
+
+im.save("output.png", is_bgr=False)
+```
+
 ## Components
 
 The `image` module is built around the following components:
